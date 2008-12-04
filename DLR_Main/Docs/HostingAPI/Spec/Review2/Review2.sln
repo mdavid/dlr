@@ -1,0 +1,26 @@
+
+Microsoft Visual Studio Solution File, Format Version 10.00
+# Visual Studio 2008
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Review2", "Review2.csproj", "{C870EF8A-B790-4FB9-821D-4702E45D4A66}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		DelaySigned Release|Any CPU = DelaySigned Release|Any CPU
+		DelaySigned Silverlight Release|Any CPU = DelaySigned Silverlight Release|Any CPU
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{7D07B0CE-FFA3-4402-BFF2-5F42B4267D2A}.DelaySigned Release|Any CPU.Build.0 = DelaySigned Release|Any CPU
+		{7D07B0CE-FFA3-4402-BFF2-5F42B4267D2A}.DelaySigned Release|Any CPU.ActiveCfg = DelaySigned Release|Any CPU
+		{C870EF8A-B790-4FB9-821D-4702E45D4A66}.DelaySigned Release|Any CPU.Build.0 = DelaySigned Release|Any CPU
+		{C870EF8A-B790-4FB9-821D-4702E45D4A66}.DelaySigned Release|Any CPU.ActiveCfg = DelaySigned Release|Any CPU
+		{C870EF8A-B790-4FB9-821D-4702E45D4A66}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{C870EF8A-B790-4FB9-821D-4702E45D4A66}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{C870EF8A-B790-4FB9-821D-4702E45D4A66}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{C870EF8A-B790-4FB9-821D-4702E45D4A66}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+EndGlobal

@@ -1,0 +1,1141 @@
+MIME-Version: 1.0
+Content-Type: multipart/related; boundary="----=_NextPart_01C6F751.907E8460"
+
+This document is a Single File Web Page, also known as a Web Archive file.  If you are seeing this message, your browser or editor doesn't support Web Archive files.  Please download a browser that supports Web Archive, such as Microsoft Internet Explorer.
+
+------=_NextPart_01C6F751.907E8460
+Content-Location: file:///C:/510B4D03/hosting-spec.htm
+Content-Transfer-Encoding: quoted-printable
+Content-Type: text/html; charset="us-ascii"
+
+<html xmlns:v=3D"urn:schemas-microsoft-com:vml"
+xmlns:o=3D"urn:schemas-microsoft-com:office:office"
+xmlns:w=3D"urn:schemas-microsoft-com:office:word"
+xmlns:dt=3D"uuid:C2F41010-65B3-11d1-A29F-00AA00C14882"
+xmlns=3D"http://www.w3.org/TR/REC-html40">
+
+<head>
+<meta http-equiv=3DContent-Type content=3D"text/html; charset=3Dus-ascii">
+<meta name=3DProgId content=3DWord.Document>
+<meta name=3DGenerator content=3D"Microsoft Word 11">
+<meta name=3DOriginator content=3D"Microsoft Word 11">
+<link rel=3DFile-List href=3D"hosting-spec_files/filelist.xml">
+<title> </title>
+<!--[if gte mso 9]><xml>
+ <o:DocumentProperties>
+  <o:Author>Blake Stone, Randy Kimmerly</o:Author>
+  <o:LastAuthor>Microsoft Employee</o:LastAuthor>
+  <o:Revision>3</o:Revision>
+  <o:TotalTime>2</o:TotalTime>
+  <o:Created>2006-10-20T15:49:00Z</o:Created>
+  <o:LastSaved>2006-10-24T16:48:00Z</o:LastSaved>
+  <o:Pages>1</o:Pages>
+  <o:Words>410</o:Words>
+  <o:Characters>2337</o:Characters>
+  <o:Lines>19</o:Lines>
+  <o:Paragraphs>5</o:Paragraphs>
+  <o:CharactersWithSpaces>2742</o:CharactersWithSpaces>
+  <o:Version>11.8107</o:Version>
+ </o:DocumentProperties>
+ <o:CustomDocumentProperties>
+  <o:DocType dt:dt=3D"string">Working Doc</o:DocType>
+  <o:Milestone dt:dt=3D"string">n M1'</o:Milestone>
+  <o:Area dt:dt=3D"string">Planning</o:Area>
+  <o:Status dt:dt=3D"string">Current</o:Status>
+ </o:CustomDocumentProperties>
+</xml><![endif]--><!--[if gte mso 9]><xml>
+ <w:WordDocument>
+  <w:Zoom>110</w:Zoom>
+  <w:PunctuationKerning/>
+  <w:ValidateAgainstSchemas/>
+  <w:SaveIfXMLInvalid>false</w:SaveIfXMLInvalid>
+  <w:IgnoreMixedContent>false</w:IgnoreMixedContent>
+  <w:AlwaysShowPlaceholderText>false</w:AlwaysShowPlaceholderText>
+  <w:Compatibility>
+   <w:SpaceForUL/>
+   <w:BalanceSingleByteDoubleByteWidth/>
+   <w:DoNotLeaveBackslashAlone/>
+   <w:ULTrailSpace/>
+   <w:DoNotExpandShiftReturn/>
+   <w:AdjustLineHeightInTable/>
+   <w:BreakWrappedTables/>
+   <w:SnapToGridInCell/>
+   <w:WrapTextWithPunct/>
+   <w:UseAsianBreakRules/>
+   <w:DontGrowAutofit/>
+  </w:Compatibility>
+  <w:BrowserLevel>MicrosoftInternetExplorer4</w:BrowserLevel>
+ </w:WordDocument>
+</xml><![endif]--><!--[if gte mso 9]><xml>
+ <w:LatentStyles DefLockedState=3D"false" LatentStyleCount=3D"156">
+ </w:LatentStyles>
+</xml><![endif]-->
+<style>
+<!--
+ /* Font Definitions */
+ @font-face
+	{font-family:Tahoma;
+	panose-1:2 11 6 4 3 5 4 4 2 4;
+	mso-font-charset:0;
+	mso-generic-font-family:swiss;
+	mso-font-pitch:variable;
+	mso-font-signature:1627421319 -2147483648 8 0 66047 0;}
+@font-face
+	{font-family:Georgia;
+	panose-1:2 4 5 2 5 4 5 2 3 3;
+	mso-font-charset:0;
+	mso-generic-font-family:roman;
+	mso-font-pitch:variable;
+	mso-font-signature:647 0 0 0 159 0;}
+@font-face
+	{font-family:Verdana;
+	panose-1:2 11 6 4 3 5 4 4 2 4;
+	mso-font-charset:0;
+	mso-generic-font-family:swiss;
+	mso-font-pitch:variable;
+	mso-font-signature:536871559 0 0 0 415 0;}
+@font-face
+	{font-family:"Century Gothic";
+	panose-1:2 11 5 2 2 2 2 2 2 4;
+	mso-font-charset:0;
+	mso-generic-font-family:swiss;
+	mso-font-pitch:variable;
+	mso-font-signature:647 0 0 0 159 0;}
+ /* Style Definitions */
+ p.MsoNormal, li.MsoNormal, div.MsoNormal
+	{mso-style-parent:"";
+	margin-top:0in;
+	margin-right:0in;
+	margin-bottom:6.0pt;
+	margin-left:0in;
+	mso-pagination:widow-orphan;
+	font-size:10.0pt;
+	font-family:Georgia;
+	mso-fareast-font-family:"Times New Roman";
+	mso-bidi-font-family:"Times New Roman";}
+h1
+	{mso-style-next:Normal;
+	margin-top:24.0pt;
+	margin-right:0in;
+	margin-bottom:10.0pt;
+	margin-left:.3in;
+	text-indent:-.3in;
+	mso-pagination:widow-orphan;
+	page-break-after:avoid;
+	mso-outline-level:1;
+	mso-list:l2 level1 lfo2;
+	tab-stops:list .3in;
+	font-size:14.0pt;
+	font-family:Verdana;
+	mso-bidi-font-family:Arial;
+	color:#183A64;
+	mso-font-kerning:16.0pt;}
+h2
+	{mso-style-parent:"Heading 1";
+	mso-style-next:Normal;
+	margin-top:20.0pt;
+	margin-right:0in;
+	margin-bottom:10.0pt;
+	margin-left:.4in;
+	text-indent:-.4in;
+	mso-pagination:widow-orphan;
+	page-break-after:avoid;
+	mso-outline-level:2;
+	mso-list:l2 level2 lfo2;
+	tab-stops:list .4in;
+	font-size:12.0pt;
+	mso-bidi-font-size:13.0pt;
+	font-family:Verdana;
+	mso-bidi-font-family:Arial;
+	color:#183A64;
+	mso-font-kerning:16.0pt;
+	mso-bidi-font-weight:normal;
+	mso-bidi-font-style:italic;}
+h3
+	{mso-style-parent:"Heading 2";
+	mso-style-next:Normal;
+	margin-top:15.0pt;
+	margin-right:0in;
+	margin-bottom:6.0pt;
+	margin-left:.6in;
+	text-indent:-.6in;
+	mso-pagination:widow-orphan;
+	page-break-after:avoid;
+	mso-outline-level:3;
+	mso-list:l2 level3 lfo2;
+	tab-stops:.6in;
+	font-size:12.0pt;
+	font-family:Verdana;
+	mso-bidi-font-family:Arial;
+	color:#183A64;
+	mso-font-kerning:16.0pt;
+	mso-bidi-font-style:italic;}
+h4
+	{mso-style-next:Normal;
+	margin-top:12.0pt;
+	margin-right:0in;
+	margin-bottom:3.0pt;
+	margin-left:.6in;
+	text-indent:-.6in;
+	mso-pagination:widow-orphan;
+	page-break-after:avoid;
+	mso-outline-level:4;
+	mso-list:l2 level4 lfo2;
+	tab-stops:list .6in;
+	font-size:14.0pt;
+	font-family:Georgia;}
+h5
+	{mso-style-next:Normal;
+	margin-top:12.0pt;
+	margin-right:0in;
+	margin-bottom:3.0pt;
+	margin-left:.7in;
+	text-indent:-.7in;
+	mso-pagination:widow-orphan;
+	mso-outline-level:5;
+	mso-list:l2 level5 lfo2;
+	tab-stops:list .7in;
+	font-size:13.0pt;
+	font-family:Georgia;
+	font-style:italic;}
+h6
+	{mso-style-next:Normal;
+	margin-top:12.0pt;
+	margin-right:0in;
+	margin-bottom:3.0pt;
+	margin-left:.8in;
+	text-indent:-.8in;
+	mso-pagination:widow-orphan;
+	mso-outline-level:6;
+	mso-list:l2 level6 lfo2;
+	tab-stops:list .8in;
+	font-size:11.0pt;
+	font-family:Georgia;}
+p.MsoHeading7, li.MsoHeading7, div.MsoHeading7
+	{mso-style-next:Normal;
+	margin-top:12.0pt;
+	margin-right:0in;
+	margin-bottom:3.0pt;
+	margin-left:.9in;
+	text-indent:-.9in;
+	mso-pagination:widow-orphan;
+	mso-outline-level:7;
+	mso-list:l2 level7 lfo2;
+	tab-stops:list .9in;
+	font-size:10.0pt;
+	font-family:Georgia;
+	mso-fareast-font-family:"Times New Roman";
+	mso-bidi-font-family:"Times New Roman";}
+p.MsoHeading8, li.MsoHeading8, div.MsoHeading8
+	{mso-style-next:Normal;
+	margin-top:12.0pt;
+	margin-right:0in;
+	margin-bottom:3.0pt;
+	margin-left:1.0in;
+	text-indent:-1.0in;
+	mso-pagination:widow-orphan;
+	mso-outline-level:8;
+	mso-list:l2 level8 lfo2;
+	tab-stops:list 1.0in;
+	font-size:10.0pt;
+	font-family:Georgia;
+	mso-fareast-font-family:"Times New Roman";
+	mso-bidi-font-family:"Times New Roman";
+	font-style:italic;}
+p.MsoHeading9, li.MsoHeading9, div.MsoHeading9
+	{mso-style-next:Normal;
+	margin-top:12.0pt;
+	margin-right:0in;
+	margin-bottom:3.0pt;
+	margin-left:1.1in;
+	text-indent:-1.1in;
+	mso-pagination:widow-orphan;
+	mso-outline-level:9;
+	mso-list:l2 level9 lfo2;
+	tab-stops:list 1.1in;
+	font-size:11.0pt;
+	font-family:Georgia;
+	mso-fareast-font-family:"Times New Roman";
+	mso-bidi-font-family:Arial;}
+p.MsoToc1, li.MsoToc1, div.MsoToc1
+	{mso-style-update:auto;
+	mso-style-noshow:yes;
+	mso-style-next:Normal;
+	margin-top:0in;
+	margin-right:0in;
+	margin-bottom:6.0pt;
+	margin-left:0in;
+	mso-pagination:widow-orphan;
+	font-size:10.0pt;
+	font-family:Georgia;
+	mso-fareast-font-family:"Times New Roman";
+	mso-bidi-font-family:"Times New Roman";}
+p.MsoToc2, li.MsoToc2, div.MsoToc2
+	{mso-style-update:auto;
+	mso-style-noshow:yes;
+	mso-style-next:Normal;
+	margin-top:0in;
+	margin-right:0in;
+	margin-bottom:6.0pt;
+	margin-left:10.0pt;
+	mso-pagination:widow-orphan;
+	font-size:10.0pt;
+	font-family:Georgia;
+	mso-fareast-font-family:"Times New Roman";
+	mso-bidi-font-family:"Times New Roman";}
+p.MsoToc3, li.MsoToc3, div.MsoToc3
+	{mso-style-update:auto;
+	mso-style-noshow:yes;
+	mso-style-next:Normal;
+	margin-top:0in;
+	margin-right:0in;
+	margin-bottom:6.0pt;
+	margin-left:20.0pt;
+	mso-pagination:widow-orphan;
+	font-size:10.0pt;
+	font-family:Georgia;
+	mso-fareast-font-family:"Times New Roman";
+	mso-bidi-font-family:"Times New Roman";}
+p.MsoFootnoteText, li.MsoFootnoteText, div.MsoFootnoteText
+	{mso-style-noshow:yes;
+	margin-top:0in;
+	margin-right:0in;
+	margin-bottom:6.0pt;
+	margin-left:0in;
+	mso-pagination:widow-orphan;
+	font-size:10.0pt;
+	font-family:Georgia;
+	mso-fareast-font-family:"Times New Roman";
+	mso-bidi-font-family:"Times New Roman";}
+p.MsoFooter, li.MsoFooter, div.MsoFooter
+	{margin-top:0in;
+	margin-right:0in;
+	margin-bottom:6.0pt;
+	margin-left:0in;
+	mso-pagination:widow-orphan;
+	tab-stops:center 3.0in right 6.0in;
+	font-size:10.0pt;
+	font-family:Georgia;
+	mso-fareast-font-family:"Times New Roman";
+	mso-bidi-font-family:"Times New Roman";}
+span.MsoFootnoteReference
+	{mso-style-noshow:yes;
+	vertical-align:super;}
+p.MsoListBullet, li.MsoListBullet, div.MsoListBullet
+	{mso-style-link:"Char Char2";
+	margin-top:0in;
+	margin-right:0in;
+	margin-bottom:0in;
+	margin-left:.5in;
+	margin-bottom:.0001pt;
+	text-indent:-.25in;
+	mso-pagination:widow-orphan;
+	mso-list:l0 level1 lfo5;
+	tab-stops:list .25in;
+	font-size:10.0pt;
+	font-family:Georgia;
+	mso-fareast-font-family:"Times New Roman";
+	mso-bidi-font-family:"Times New Roman";}
+p.MsoTitle, li.MsoTitle, div.MsoTitle
+	{mso-style-link:"Char Char1";
+	mso-style-next:Normal;
+	margin-top:0in;
+	margin-right:0in;
+	margin-bottom:15.0pt;
+	margin-left:0in;
+	mso-add-space:auto;
+	text-align:center;
+	mso-pagination:widow-orphan;
+	border:none;
+	mso-border-bottom-alt:solid #4F81BD 1.0pt;
+	padding:0in;
+	mso-padding-alt:0in 0in 4.0pt 0in;
+	font-size:28.0pt;
+	mso-bidi-font-size:26.0pt;
+	font-family:Verdana;
+	mso-fareast-font-family:"Times New Roman";
+	mso-bidi-font-family:"Times New Roman";
+	color:#183A64;
+	letter-spacing:.25pt;
+	mso-font-kerning:14.0pt;}
+p.MsoTitleCxSpFirst, li.MsoTitleCxSpFirst, div.MsoTitleCxSpFirst
+	{mso-style-link:"Char Char1";
+	mso-style-next:Normal;
+	mso-style-type:export-only;
+	margin:0in;
+	margin-bottom:.0001pt;
+	mso-add-space:auto;
+	text-align:center;
+	mso-pagination:widow-orphan;
+	border:none;
+	mso-border-bottom-alt:solid #4F81BD 1.0pt;
+	padding:0in;
+	mso-padding-alt:0in 0in 4.0pt 0in;
+	font-size:28.0pt;
+	mso-bidi-font-size:26.0pt;
+	font-family:Verdana;
+	mso-fareast-font-family:"Times New Roman";
+	mso-bidi-font-family:"Times New Roman";
+	color:#183A64;
+	letter-spacing:.25pt;
+	mso-font-kerning:14.0pt;}
+p.MsoTitleCxSpMiddle, li.MsoTitleCxSpMiddle, div.MsoTitleCxSpMiddle
+	{mso-style-link:"Char Char1";
+	mso-style-next:Normal;
+	mso-style-type:export-only;
+	margin:0in;
+	margin-bottom:.0001pt;
+	mso-add-space:auto;
+	text-align:center;
+	mso-pagination:widow-orphan;
+	border:none;
+	mso-border-bottom-alt:solid #4F81BD 1.0pt;
+	padding:0in;
+	mso-padding-alt:0in 0in 4.0pt 0in;
+	font-size:28.0pt;
+	mso-bidi-font-size:26.0pt;
+	font-family:Verdana;
+	mso-fareast-font-family:"Times New Roman";
+	mso-bidi-font-family:"Times New Roman";
+	color:#183A64;
+	letter-spacing:.25pt;
+	mso-font-kerning:14.0pt;}
+p.MsoTitleCxSpLast, li.MsoTitleCxSpLast, div.MsoTitleCxSpLast
+	{mso-style-link:"Char Char1";
+	mso-style-next:Normal;
+	mso-style-type:export-only;
+	margin-top:0in;
+	margin-right:0in;
+	margin-bottom:15.0pt;
+	margin-left:0in;
+	mso-add-space:auto;
+	text-align:center;
+	mso-pagination:widow-orphan;
+	border:none;
+	mso-border-bottom-alt:solid #4F81BD 1.0pt;
+	padding:0in;
+	mso-padding-alt:0in 0in 4.0pt 0in;
+	font-size:28.0pt;
+	mso-bidi-font-size:26.0pt;
+	font-family:Verdana;
+	mso-fareast-font-family:"Times New Roman";
+	mso-bidi-font-family:"Times New Roman";
+	color:#183A64;
+	letter-spacing:.25pt;
+	mso-font-kerning:14.0pt;}
+a:link, span.MsoHyperlink
+	{color:blue;
+	text-decoration:underline;
+	text-underline:single;}
+a:visited, span.MsoHyperlinkFollowed
+	{color:purple;
+	text-decoration:underline;
+	text-underline:single;}
+p.MsoDocumentMap, li.MsoDocumentMap, div.MsoDocumentMap
+	{mso-style-noshow:yes;
+	margin-top:0in;
+	margin-right:0in;
+	margin-bottom:6.0pt;
+	margin-left:0in;
+	mso-pagination:widow-orphan;
+	background:navy;
+	font-size:10.0pt;
+	font-family:Tahoma;
+	mso-fareast-font-family:"Times New Roman";}
+p.MsoAcetate, li.MsoAcetate, div.MsoAcetate
+	{mso-style-link:"Char Char";
+	margin:0in;
+	margin-bottom:.0001pt;
+	mso-pagination:widow-orphan;
+	font-size:8.0pt;
+	font-family:Tahoma;
+	mso-fareast-font-family:"Times New Roman";}
+span.CharChar2
+	{mso-style-name:"Char Char2";
+	mso-style-locked:yes;
+	mso-style-link:"List Bullet";
+	font-family:Georgia;
+	mso-ascii-font-family:Georgia;
+	mso-hansi-font-family:Georgia;
+	mso-ansi-language:EN-US;
+	mso-fareast-language:EN-US;
+	mso-bidi-language:AR-SA;}
+span.CharChar1
+	{mso-style-name:"Char Char1";
+	mso-style-locked:yes;
+	mso-style-link:Title;
+	mso-ansi-font-size:28.0pt;
+	mso-bidi-font-size:26.0pt;
+	font-family:Verdana;
+	mso-ascii-font-family:Verdana;
+	mso-hansi-font-family:Verdana;
+	color:#183A64;
+	letter-spacing:.25pt;
+	mso-font-kerning:14.0pt;
+	mso-ansi-language:EN-US;
+	mso-fareast-language:EN-US;
+	mso-bidi-language:AR-SA;}
+span.CharChar
+	{mso-style-name:"Char Char";
+	mso-style-locked:yes;
+	mso-style-link:"Balloon Text";
+	mso-ansi-font-size:8.0pt;
+	mso-bidi-font-size:8.0pt;
+	font-family:Tahoma;
+	mso-ascii-font-family:Tahoma;
+	mso-hansi-font-family:Tahoma;
+	mso-bidi-font-family:Tahoma;}
+p.Designation, li.Designation, div.Designation
+	{mso-style-name:Designation;
+	mso-style-next:Normal;
+	margin-top:0in;
+	margin-right:0in;
+	margin-bottom:10.0pt;
+	margin-left:.4in;
+	mso-pagination:widow-orphan;
+	font-size:8.0pt;
+	font-family:"Century Gothic";
+	mso-fareast-font-family:"Times New Roman";
+	mso-bidi-font-family:"Times New Roman";
+	color:gray;
+	font-style:italic;
+	mso-bidi-font-style:normal;}
+p.NoteBox, li.NoteBox, div.NoteBox
+	{mso-style-name:"Note Box";
+	mso-style-next:Normal;
+	margin-top:12.0pt;
+	margin-right:0in;
+	margin-bottom:12.0pt;
+	margin-left:0in;
+	mso-pagination:widow-orphan;
+	background:#E0E0E0;
+	border:none;
+	mso-border-alt:solid windowtext 1.0pt;
+	padding:0in;
+	mso-padding-alt:4.0pt 8.0pt 4.0pt 8.0pt;
+	font-size:10.0pt;
+	font-family:Georgia;
+	mso-fareast-font-family:"Times New Roman";
+	mso-bidi-font-family:"Times New Roman";
+	font-style:italic;
+	mso-bidi-font-style:normal;}
+span.RequirementsCharChar
+	{mso-style-name:"Requirements Char Char";
+	mso-style-locked:yes;
+	mso-style-parent:"Char Char2";
+	mso-style-link:Requirements;
+	font-family:Georgia;
+	mso-ascii-font-family:Georgia;
+	mso-hansi-font-family:Georgia;
+	mso-ansi-language:EN-US;
+	mso-fareast-language:EN-US;
+	mso-bidi-language:AR-SA;}
+p.Requirements, li.Requirements, div.Requirements
+	{mso-style-name:Requirements;
+	mso-style-link:"Requirements Char Char";
+	margin-top:0in;
+	margin-right:0in;
+	margin-bottom:6.0pt;
+	margin-left:.75in;
+	text-indent:-.25in;
+	mso-pagination:widow-orphan;
+	mso-list:l1 level1 lfo7;
+	tab-stops:list 1.45in;
+	font-size:10.0pt;
+	font-family:Georgia;
+	mso-fareast-font-family:"Times New Roman";
+	mso-bidi-font-family:"Times New Roman";}
+p.RequirementsHeader, li.RequirementsHeader, div.RequirementsHeader
+	{mso-style-name:"Requirements Header";
+	mso-style-next:Requirements;
+	margin-top:6.0pt;
+	margin-right:0in;
+	margin-bottom:0in;
+	margin-left:.5in;
+	margin-bottom:.0001pt;
+	mso-pagination:widow-orphan;
+	font-size:10.0pt;
+	font-family:"Century Gothic";
+	mso-fareast-font-family:"Times New Roman";
+	mso-bidi-font-family:"Times New Roman";
+	font-style:italic;
+	mso-bidi-font-style:normal;}
+p.Heading2-Block, li.Heading2-Block, div.Heading2-Block
+	{mso-style-name:"Heading 2 - Block";
+	mso-style-parent:"Heading 2";
+	mso-style-next:Designation;
+	margin-top:20.0pt;
+	margin-right:0in;
+	margin-bottom:10.0pt;
+	margin-left:.4in;
+	text-indent:-.4in;
+	mso-pagination:widow-orphan;
+	page-break-after:avoid;
+	mso-outline-level:2;
+	mso-list:l2 level2 lfo2;
+	tab-stops:list .4in;
+	font-size:12.0pt;
+	mso-bidi-font-size:13.0pt;
+	font-family:Verdana;
+	mso-fareast-font-family:"Times New Roman";
+	mso-bidi-font-family:Arial;
+	color:#183A64;
+	mso-font-kerning:16.0pt;
+	font-weight:bold;
+	mso-bidi-font-weight:normal;
+	mso-bidi-font-style:italic;}
+span.StyleRequirementsBoldChar
+	{mso-style-name:"Style Requirements + Bold Char";
+	mso-style-locked:yes;
+	mso-style-parent:"Requirements Char Char";
+	mso-style-link:"Style Requirements + Bold";
+	font-family:Georgia;
+	mso-ascii-font-family:Georgia;
+	mso-hansi-font-family:Georgia;
+	mso-ansi-language:EN-US;
+	mso-fareast-language:EN-US;
+	mso-bidi-language:AR-SA;
+	font-weight:bold;}
+p.StyleRequirementsBold, li.StyleRequirementsBold, div.StyleRequirementsBold
+	{mso-style-name:"Style Requirements + Bold";
+	mso-style-parent:Requirements;
+	mso-style-link:"Style Requirements + Bold Char";
+	margin-top:0in;
+	margin-right:0in;
+	margin-bottom:6.0pt;
+	margin-left:.75in;
+	text-indent:-.25in;
+	mso-pagination:widow-orphan;
+	mso-list:l1 level1 lfo7;
+	tab-stops:list 1.45in;
+	font-size:10.0pt;
+	font-family:Georgia;
+	mso-fareast-font-family:"Times New Roman";
+	mso-bidi-font-family:"Times New Roman";
+	font-weight:bold;}
+p.Issue, li.Issue, div.Issue
+	{mso-style-name:Issue;
+	margin-top:0in;
+	margin-right:0in;
+	margin-bottom:6.0pt;
+	margin-left:0in;
+	mso-pagination:widow-orphan lines-together;
+	border:none;
+	mso-border-alt:solid navy 1.5pt;
+	padding:0in;
+	mso-padding-alt:1.0pt 1.0pt 1.0pt 1.0pt;
+	mso-border-shadow:yes;
+	font-size:10.0pt;
+	font-family:Georgia;
+	mso-fareast-font-family:"Times New Roman";
+	mso-bidi-font-family:"Times New Roman";
+	color:red;
+	font-style:italic;
+	mso-bidi-font-style:normal;}
+p.NoSpacing, li.NoSpacing, div.NoSpacing
+	{mso-style-name:"No Spacing";
+	mso-style-parent:"";
+	margin:0in;
+	margin-bottom:.0001pt;
+	mso-pagination:widow-orphan;
+	font-size:10.0pt;
+	font-family:Georgia;
+	mso-fareast-font-family:"Times New Roman";
+	mso-bidi-font-family:"Times New Roman";}
+ /* Page Definitions */
+ @page
+	{mso-footnote-separator:url("hosting-spec_files/header.htm") fs;
+	mso-footnote-continuation-separator:url("hosting-spec_files/header.htm") f=
+cs;
+	mso-endnote-separator:url("hosting-spec_files/header.htm") es;
+	mso-endnote-continuation-separator:url("hosting-spec_files/header.htm") ec=
+s;}
+@page Section1
+	{size:8.5in 11.0in;
+	margin:1.0in 1.25in 1.0in 1.25in;
+	mso-header-margin:.5in;
+	mso-footer-margin:.5in;
+	mso-footer:url("hosting-spec_files/header.htm") f1;
+	mso-paper-source:0;}
+div.Section1
+	{page:Section1;}
+ /* List Definitions */
+ @list l0
+	{mso-list-id:-119;
+	mso-list-type:simple;
+	mso-list-template-ids:1925995098;}
+@list l0:level1
+	{mso-level-number-format:bullet;
+	mso-level-style-link:"List Bullet";
+	mso-level-text:\F0B7;
+	mso-level-tab-stop:.25in;
+	mso-level-number-position:left;
+	margin-left:.25in;
+	text-indent:-.25in;
+	font-family:Symbol;}
+@list l1
+	{mso-list-id:1619752901;
+	mso-list-type:hybrid;
+	mso-list-template-ids:-852858718 -1780084416 67698691 67698693 67698689 67=
+698691 67698693 67698689 67698691 67698693;}
+@list l1:level1
+	{mso-level-number-format:bullet;
+	mso-level-style-link:Requirements;
+	mso-level-text:\F0B7;
+	mso-level-tab-stop:1.45in;
+	mso-level-number-position:left;
+	margin-left:1.45in;
+	text-indent:-.25in;
+	font-family:Symbol;}
+@list l1:level2
+	{mso-level-tab-stop:1.0in;
+	mso-level-number-position:left;
+	text-indent:-.25in;}
+@list l1:level3
+	{mso-level-tab-stop:1.5in;
+	mso-level-number-position:left;
+	text-indent:-.25in;}
+@list l1:level4
+	{mso-level-tab-stop:2.0in;
+	mso-level-number-position:left;
+	text-indent:-.25in;}
+@list l1:level5
+	{mso-level-tab-stop:2.5in;
+	mso-level-number-position:left;
+	text-indent:-.25in;}
+@list l1:level6
+	{mso-level-tab-stop:3.0in;
+	mso-level-number-position:left;
+	text-indent:-.25in;}
+@list l1:level7
+	{mso-level-tab-stop:3.5in;
+	mso-level-number-position:left;
+	text-indent:-.25in;}
+@list l1:level8
+	{mso-level-tab-stop:4.0in;
+	mso-level-number-position:left;
+	text-indent:-.25in;}
+@list l1:level9
+	{mso-level-tab-stop:4.5in;
+	mso-level-number-position:left;
+	text-indent:-.25in;}
+@list l2
+	{mso-list-id:1809473988;
+	mso-list-template-ids:-1962623272;}
+@list l2:level1
+	{mso-level-style-link:"Heading 1";
+	mso-level-text:%1;
+	mso-level-tab-stop:.3in;
+	mso-level-number-position:left;
+	margin-left:.3in;
+	text-indent:-.3in;}
+@list l2:level2
+	{mso-level-style-link:"Heading 2";
+	mso-level-text:"%1\.%2";
+	mso-level-tab-stop:.4in;
+	mso-level-number-position:left;
+	margin-left:.4in;
+	text-indent:-.4in;
+	mso-ansi-font-size:12.0pt;
+	mso-bidi-font-size:12.0pt;
+	mso-ansi-font-weight:bold;}
+@list l2:level3
+	{mso-level-style-link:"Heading 3";
+	mso-level-text:"%1\.%2\.%3";
+	mso-level-tab-stop:.5in;
+	mso-level-number-position:left;
+	margin-left:.5in;
+	text-indent:-.5in;}
+@list l2:level4
+	{mso-level-style-link:"Heading 4";
+	mso-level-text:"%1\.%2\.%3\.%4";
+	mso-level-tab-stop:.6in;
+	mso-level-number-position:left;
+	margin-left:.6in;
+	text-indent:-.6in;}
+@list l2:level5
+	{mso-level-style-link:"Heading 5";
+	mso-level-text:"%1\.%2\.%3\.%4\.%5";
+	mso-level-tab-stop:.7in;
+	mso-level-number-position:left;
+	margin-left:.7in;
+	text-indent:-.7in;}
+@list l2:level6
+	{mso-level-style-link:"Heading 6";
+	mso-level-text:"%1\.%2\.%3\.%4\.%5\.%6";
+	mso-level-tab-stop:.8in;
+	mso-level-number-position:left;
+	margin-left:.8in;
+	text-indent:-.8in;}
+@list l2:level7
+	{mso-level-style-link:"Heading 7";
+	mso-level-text:"%1\.%2\.%3\.%4\.%5\.%6\.%7";
+	mso-level-tab-stop:.9in;
+	mso-level-number-position:left;
+	margin-left:.9in;
+	text-indent:-.9in;}
+@list l2:level8
+	{mso-level-style-link:"Heading 8";
+	mso-level-text:"%1\.%2\.%3\.%4\.%5\.%6\.%7\.%8";
+	mso-level-tab-stop:1.0in;
+	mso-level-number-position:left;
+	margin-left:1.0in;
+	text-indent:-1.0in;}
+@list l2:level9
+	{mso-level-style-link:"Heading 9";
+	mso-level-text:"%1\.%2\.%3\.%4\.%5\.%6\.%7\.%8\.%9";
+	mso-level-tab-stop:1.1in;
+	mso-level-number-position:left;
+	margin-left:1.1in;
+	text-indent:-1.1in;}
+ol
+	{margin-bottom:0in;}
+ul
+	{margin-bottom:0in;}
+-->
+</style>
+<!--[if gte mso 10]>
+<style>
+ /* Style Definitions */
+ table.MsoNormalTable
+	{mso-style-name:"Table Normal";
+	mso-tstyle-rowband-size:0;
+	mso-tstyle-colband-size:0;
+	mso-style-noshow:yes;
+	mso-style-parent:"";
+	mso-padding-alt:0in 5.4pt 0in 5.4pt;
+	mso-para-margin:0in;
+	mso-para-margin-bottom:.0001pt;
+	mso-pagination:widow-orphan;
+	font-size:10.0pt;
+	font-family:"Times New Roman";
+	mso-ansi-language:#0400;
+	mso-fareast-language:#0400;
+	mso-bidi-language:#0400;}
+table.MsoTableGrid
+	{mso-style-name:"Table Grid";
+	mso-tstyle-rowband-size:0;
+	mso-tstyle-colband-size:0;
+	border:solid windowtext 1.0pt;
+	mso-border-alt:solid windowtext .5pt;
+	mso-padding-alt:0in 5.4pt 0in 5.4pt;
+	mso-border-insideh:.5pt solid windowtext;
+	mso-border-insidev:.5pt solid windowtext;
+	mso-para-margin:0in;
+	mso-para-margin-bottom:.0001pt;
+	mso-pagination:widow-orphan;
+	font-size:10.0pt;
+	font-family:"Times New Roman";
+	mso-ansi-language:#0400;
+	mso-fareast-language:#0400;
+	mso-bidi-language:#0400;}
+table.SpecHeader
+	{mso-style-name:"Spec Header";
+	mso-tstyle-rowband-size:1;
+	mso-tstyle-colband-size:0;
+	mso-padding-alt:0in 5.4pt 0in 5.4pt;
+	mso-para-margin:0in;
+	mso-para-margin-bottom:.0001pt;
+	mso-pagination:widow-orphan;
+	font-size:10.0pt;
+	font-family:"Times New Roman";
+	mso-ansi-language:#0400;
+	mso-fareast-language:#0400;
+	mso-bidi-language:#0400;}
+table.SpecHeaderFirstRow
+	{mso-style-name:"Spec Header";
+	mso-table-condition:first-row;
+	mso-tstyle-shading:#E2E2C1;
+	mso-tstyle-vert-align:middle;
+	text-align:center;
+	font-size:22.0pt;
+	mso-ansi-font-size:22.0pt;
+	mso-bidi-font-size:22.0pt;
+	font-family:Arial;
+	mso-ascii-font-family:Arial;
+	mso-hansi-font-family:Arial;
+	mso-bidi-font-family:Arial;
+	mso-ansi-font-weight:bold;}
+table.SpecHeaderFirstCol
+	{mso-style-name:"Spec Header";
+	mso-table-condition:first-column;
+	mso-tstyle-vert-align:middle;
+	text-align:right;
+	font-size:9.0pt;
+	mso-ansi-font-size:9.0pt;
+	mso-bidi-font-size:9.0pt;
+	font-family:"Century Gothic";
+	mso-ascii-font-family:"Century Gothic";
+	mso-hansi-font-family:"Century Gothic";
+	mso-ansi-font-weight:bold;}
+table.SpecHeaderEvenRow
+	{mso-style-name:"Spec Header";
+	mso-table-condition:even-row;
+	mso-tstyle-shading:#E2E2C1;}
+table.SpecHeaderNWCell
+	{mso-style-name:"Spec Header";
+	mso-table-condition:nw-cell;
+	text-align:left;}
+</style>
+<![endif]--><!--[if gte mso 9]><xml>
+ <o:shapedefaults v:ext=3D"edit" spidmax=3D"3074"/>
+</xml><![endif]--><!--[if gte mso 9]><xml>
+ <o:shapelayout v:ext=3D"edit">
+  <o:idmap v:ext=3D"edit" data=3D"1"/>
+ </o:shapelayout></xml><![endif]-->
+</head>
+
+<body lang=3DEN-US link=3Dblue vlink=3Dpurple style=3D'tab-interval:.5in'>
+
+<div class=3DSection1>
+
+<div style=3D'mso-element:para-border-div;border:none;border-bottom:solid #=
+4F81BD 1.0pt;
+padding:0in 0in 4.0pt 0in'>
+
+<p class=3DMsoTitle>Dynamic Language Runtime<br>
+Hosting Spec</p>
+
+</div>
+
+<p class=3DMsoNormal><b style=3D'mso-bidi-font-weight:normal'><span
+style=3D'font-size:12.0pt;color:red'>Alpha documentation - the information in here is subject to change.<o:p></o:p></span></b><=
+/p>
+
+<div style=3D'mso-element:para-border-div;border:none;border-bottom:solid #=
+4F81BD 1.0pt;
+padding:0in 0in 4.0pt 0in'>
+
+<p class=3DMsoTitle><span style=3D'font-size:10.0pt'><o:p>&nbsp;</o:p></spa=
+n></p>
+
+</div>
+
+<p class=3DMsoNormal><o:p>&nbsp;</o:p></p>
+
+<p class=3DMsoToc1 style=3D'tab-stops:20.0pt right dotted 431.5pt'><!--[if =
+supportFields]><span
+style=3D'mso-element:field-begin'></span><span
+style=3D'mso-spacerun:yes'>&nbsp;</span>TOC \o &quot;1-3&quot; <span
+style=3D'mso-element:field-separator'></span><![endif]--><span style=3D'mso=
+-no-proof:
+yes'>1</span><span style=3D'font-size:12.0pt;font-family:"Times New Roman";
+mso-no-proof:yes'><span style=3D'mso-tab-count:1'>&nbsp;&nbsp;&nbsp;&nbsp; =
+</span></span><span
+style=3D'mso-no-proof:yes'>Introduction<span style=3D'mso-tab-count:1 dotte=
+d'>........................................................................=
+............................................ </span></span><!--[if supportF=
+ields]><span
+style=3D'mso-no-proof:yes'><span style=3D'mso-element:field-begin'></span> =
+PAGEREF
+_Toc149097416 \h <span style=3D'mso-element:field-separator'></span></span>=
+<![endif]--><span
+style=3D'mso-no-proof:yes'>1<!--[if gte mso 9]><xml>
+ <w:data>08D0C9EA79F9BACE118C8200AA004BA90B02000000080000000E0000005F005400=
+6F0063003100340039003000390037003400310036000000</w:data>
+</xml><![endif]--></span><!--[if supportFields]><span style=3D'mso-no-proof=
+:yes'><span
+style=3D'mso-element:field-end'></span></span><![endif]--><span style=3D'fo=
+nt-size:
+12.0pt;font-family:"Times New Roman";mso-no-proof:yes'><o:p></o:p></span></=
+p>
+
+<p class=3DMsoNormal><!--[if supportFields]><span style=3D'mso-element:fiel=
+d-end'></span><![endif]--><o:p>&nbsp;</o:p></p>
+
+<h1><a name=3D"_Toc149097416"><![if !supportLists]><span style=3D'mso-farea=
+st-font-family:
+Verdana;mso-bidi-font-family:Verdana'><span style=3D'mso-list:Ignore'>1<span
+style=3D'font:7.0pt "Times New Roman"'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;=
+&nbsp;
+</span></span></span><![endif]>Introduction</a></h1>
+
+<p class=3DMsoNormal>Our mission is to provide a simple and productive dyna=
+mic
+development experience .. bring the fun back into programming.<span
+style=3D'mso-spacerun:yes'>&nbsp; </span>As the tech du jour cycles move th=
+rough
+the years, we're once again at a point where there's a lot of excitement ar=
+ound
+dynamic languages.<span style=3D'mso-spacerun:yes'>&nbsp; </span>People are
+talking a lot about how productive and enjoyable it is to code in these
+languages, how powerful the iterative design process is when you interact w=
+ith
+live objects and programs as you build your code, and so on.<span
+style=3D'mso-spacerun:yes'>&nbsp; </span>These languages are seeing a lot o=
+f use
+today, mostly in the web dev realm, but also a lot in system management, se=
+rver
+farm infrastructure, testing systems, games, etc.<span
+style=3D'mso-spacerun:yes'>&nbsp; </span>We have a business case to play in=
+ this
+space and have offerings that both make .NET more cool and attractive to
+programmers as well as making sure we don't lose developer mindshare just
+because it is easier to go to Flash, Ruby on Rails, LAMP (linux, apache, my=
+sql,
+php/python).</p>
+
+<p class=3DMsoNormal><span style=3D'mso-spacerun:yes'>&nbsp;</span></p>
+
+<p class=3DMsoNormal>Merlin is building a Dynamic Language Runtime over the=
+ CLR
+(and Silverlight) so that it is very easy to port dynamic languages to .NET and=
+ get
+a pretty good implementation.<span style=3D'mso-spacerun:yes'>&nbsp; </span=
+>You
+could do a lot of work yourself and probably do better with a hand tuned
+implementation of a given language, but we think we can make a great propos=
+ition
+to move to .NET easily via DLR.<span style=3D'mso-spacerun:yes'>&nbsp;
+</span>We've had a great success with IronPython and engaging the community=
+ for
+MS doing a shared source project, doing a great thing for Python, making .N=
+ET
+more attractive to folks, and releasing regularly (every 3-6 weeks) to supp=
+ort
+people using IronPython in production.<span style=3D'mso-spacerun:yes'>&nbs=
+p;
+</span>IronPython runs 1.8X faster than the standard implementation.<span
+style=3D'mso-spacerun:yes'>&nbsp; </span>We're leveraging the learning we d=
+id on
+IronPython to extract elements that could be common amongst languages (dyna=
+mic
+type system, hosting APIs, cached method dispatch, symbol tables, ASTs,
+codegen, etc.), and we currently are working on IronPython 2.0, JScript, VB=
+X,
+and Ruby to vet the common designs.<span style=3D'mso-spacerun:yes'>&nbsp;
+</span>We'll eventually do (or recruit people to do) PHP, scheme, and maybe=
+ one
+more to believe we really can move language+1 with ease to the DLR.</p>
+
+<p class=3DMsoNormal><span style=3D'mso-spacerun:yes'>&nbsp;</span></p>
+
+<p class=3DMsoNormal>We're also tying into the Silverlight mission for a small,
+downloadable, xcopy deploy CLR that works for IE and Firefox on the PC, Mac,
+and linux.<span style=3D'mso-spacerun:yes'>&nbsp; </span>That runtime needs=
+ a
+great scripting story and UIFx story to compete with the virtuous cycle
+Flash/EcmaScript enjoy.<span style=3D'mso-spacerun:yes'>&nbsp; </span>We al=
+so
+watn to work with a partner on an IDE to eventually make a play for the MS =
+app
+programmability story so that you can have your choice of dynamic language =
+on a
+little runtime for scripting, say, Office or VS.<span
+style=3D'mso-spacerun:yes'>&nbsp; </span>You have to have a horizon our the=
+re
+somewhere :-).</p>
+
+</div>
+
+</body>
+
+</html>
+
+------=_NextPart_01C6F751.907E8460
+Content-Location: file:///C:/510B4D03/hosting-spec_files/header.htm
+Content-Transfer-Encoding: quoted-printable
+Content-Type: text/html; charset="us-ascii"
+
+<html xmlns:v=3D"urn:schemas-microsoft-com:vml"
+xmlns:o=3D"urn:schemas-microsoft-com:office:office"
+xmlns:w=3D"urn:schemas-microsoft-com:office:word"
+xmlns:dt=3D"uuid:C2F41010-65B3-11d1-A29F-00AA00C14882"
+xmlns=3D"http://www.w3.org/TR/REC-html40">
+
+<head>
+<meta http-equiv=3DContent-Type content=3D"text/html; charset=3Dus-ascii">
+<meta name=3DProgId content=3DWord.Document>
+<meta name=3DGenerator content=3D"Microsoft Word 11">
+<meta name=3DOriginator content=3D"Microsoft Word 11">
+<link id=3DMain-File rel=3DMain-File href=3D"../hosting-spec.htm">
+<![if IE]>
+<base href=3D"file:///C:\510B4D03\hosting-spec_files\header.htm"
+id=3D"webarch_temp_base_tag">
+<![endif]>
+</head>
+
+<body lang=3DEN-US link=3Dblue vlink=3Dpurple>
+
+<div style=3D'mso-element:footnote-separator' id=3Dfs>
+
+<p class=3DMsoNormal><span style=3D'mso-special-character:footnote-separato=
+r'><![if !supportFootnotes]>
+
+<hr align=3Dleft size=3D1 width=3D"33%">
+
+<![endif]></span></p>
+
+</div>
+
+<div style=3D'mso-element:footnote-continuation-separator' id=3Dfcs>
+
+<p class=3DMsoNormal><span style=3D'mso-special-character:footnote-continua=
+tion-separator'><![if !supportFootnotes]>
+
+<hr align=3Dleft size=3D1>
+
+<![endif]></span></p>
+
+</div>
+
+<div style=3D'mso-element:endnote-separator' id=3Des>
+
+<p class=3DMsoNormal><span style=3D'mso-special-character:footnote-separato=
+r'><![if !supportFootnotes]>
+
+<hr align=3Dleft size=3D1 width=3D"33%">
+
+<![endif]></span></p>
+
+</div>
+
+<div style=3D'mso-element:endnote-continuation-separator' id=3Decs>
+
+<p class=3DMsoNormal><span style=3D'mso-special-character:footnote-continua=
+tion-separator'><![if !supportFootnotes]>
+
+<hr align=3Dleft size=3D1>
+
+<![endif]></span></p>
+
+</div>
+
+<div style=3D'mso-element:footer' id=3Df1>
+
+<p class=3DMsoFooter style=3D'tab-stops:center 3.0in right 423.0pt 6.0in'><i
+style=3D'mso-bidi-font-style:normal'>Microsoft Confidential</i><span
+style=3D'mso-tab-count:1'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&=
+nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbs=
+p;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&=
+nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; </span>Page
+<span style=3D'mso-field-code:" PAGE "'><span style=3D'mso-no-proof:yes'>1<=
+/span></span>
+of <span style=3D'mso-field-code:" NUMPAGES "'><span style=3D'mso-no-proof:=
+yes'>8</span></span><span
+style=3D'mso-tab-count:1'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&=
+nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbs=
+p;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&=
+nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbs=
+p;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; </span=
+><span
+style=3D'mso-field-code:" DATE \\\@ \0022M\/d\/yyyy\0022 "'><span
+style=3D'mso-no-proof:yes'>10/24/2006</span></span></p>
+
+</div>
+
+</body>
+
+</html>
+
+------=_NextPart_01C6F751.907E8460
+Content-Location: file:///C:/510B4D03/hosting-spec_files/filelist.xml
+Content-Transfer-Encoding: quoted-printable
+Content-Type: text/xml; charset="utf-8"
+
+<xml xmlns:o=3D"urn:schemas-microsoft-com:office:office">
+ <o:MainFile HRef=3D"../hosting-spec.htm"/>
+ <o:File HRef=3D"header.htm"/>
+ <o:File HRef=3D"filelist.xml"/>
+</xml>
+------=_NextPart_01C6F751.907E8460--

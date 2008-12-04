@@ -1,0 +1,20 @@
+[OPTIONS]
+Auto Index=Yes
+Compatibility=1.1 or later
+Compiled file=project.chm
+Contents file=project.hhc
+Display compile progress=No
+Default Topic=system-scripting-spec.mht
+Index file=project.hhk
+Language=0x409 English (United States)
+Title=Microsoft.Scripting Reference
+Full-text search=Yes
+
+
+[FILES]
+icons\*.gif
+html\*.htm
+scripts\*.js
+styles\*.css
+
+[INFOTYPES]

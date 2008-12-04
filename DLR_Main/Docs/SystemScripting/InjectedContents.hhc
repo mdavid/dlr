@@ -1,0 +1,19 @@
+    <LI> <OBJECT type="text/sitemap">
+      <!-- This item sets the default document to show in the right pane of the CHM viewer. -->
+      <param name="Name" value="Microsoft.Scripting">
+      <param name="Local" value="system-scripting-spec.mht">
+    </OBJECT>
+    <UL>
+      <LI> <OBJECT type="text/sitemap">
+        <param name="Name" value="Overview">
+        <param name="Local" value="system-scripting-spec.mht">
+        <param name="ImageNumber" value="11">
+      </OBJECT>
+      <!-- This item is just for example right now. -->
+      <LI> <OBJECT type="text/sitemap">
+        <param name="Name" value="Hosting">
+        <param name="Local" value="hosting-spec.mht">
+        <param name="ImageNumber" value="11">
+      </OBJECT>
+    </UL> 
+ 
