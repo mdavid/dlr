@@ -35,7 +35,7 @@ namespace IronRuby.Tests {
             _log = output;
         }
 
-        public void BeforeReduction(int ruleId) {
+        public void BeforeReduction(int ruleId, int rhsLength) {
             LogRule("Reducing by rule", ruleId);
         }
 
@@ -76,7 +76,7 @@ namespace IronRuby.Tests {
         private void DumpStack() {
             if (_logVerbosity > 1) {
                 _log.WriteLine("State stack:");
-                foreach (State state in _parser.StateStack.GetEnumerator()) {
+                foreach (State state in _parser.Stack.GetStates()) {
                     _log.WriteLine(state.Id);
                 }
                 _log.WriteLine();

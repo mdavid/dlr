@@ -411,6 +411,7 @@ namespace Microsoft.Linq.Expressions {
                 case ExpressionType.Unbox:
                 case ExpressionType.Negate:
                 case ExpressionType.Not:
+                case ExpressionType.OnesComplement:
                 case ExpressionType.Conditional:
                 case ExpressionType.NewArrayInit:
                 case ExpressionType.NewArrayBounds:
@@ -419,15 +420,15 @@ namespace Microsoft.Linq.Expressions {
                     // define the node
                     break;
                 case ExpressionType.Label:
-                // TODO: cache and compare labels
                 case ExpressionType.Switch:
-                // TODO: compare case values
+                    // we could improve the compare to compare labels & switch,
+                    // but these are rarely used in rules.
+                    return false;
                 case ExpressionType.Extension:
-
                     // we should have been reduced, but error on the side of being different.
                     return false;
                 default:
-                    throw Assert.Unreachable;
+                    throw ContractUtils.Unreachable;
             }
             return true;
         }

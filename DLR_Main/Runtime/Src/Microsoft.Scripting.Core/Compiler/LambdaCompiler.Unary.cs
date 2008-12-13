@@ -36,13 +36,12 @@ namespace Microsoft.Linq.Expressions.Compiler {
             EmitConstant(quote.Operand, quote.Type);
 
             // Heuristic: only emit the tree rewrite logic if we have hoisted
-            // locals. TODO: we could use an even smarter logic here by
-            // detecting if any nodes actually need to be rewritten
+            // locals.
             if (_scope.NearestHoistedLocals != null) {
                 // HoistedLocals is internal so emit as System.Object
                 EmitConstant(_scope.NearestHoistedLocals, typeof(object));
                 _scope.EmitGet(_scope.NearestHoistedLocals.SelfVariable);
-                _ilg.EmitCall(typeof(RuntimeOps).GetMethod("Quote"));
+                _ilg.Emit(OpCodes.Call, typeof(RuntimeOps).GetMethod("Quote"));
 
                 if (quote.Type != typeof(Expression)) {
                     _ilg.Emit(OpCodes.Castclass, quote.Type);
@@ -105,7 +104,7 @@ namespace Microsoft.Linq.Expressions.Compiler {
 
                             Label labIfNull = _ilg.DefineLabel();
                             Label labEnd = _ilg.DefineLabel();
-                            LocalBuilder loc = _ilg.GetLocal(operandType);
+                            LocalBuilder loc = GetLocal(operandType);
 
                             // store values (reverse order since they are already on the stack)
                             _ilg.Emit(OpCodes.Stloc, loc);
@@ -128,7 +127,7 @@ namespace Microsoft.Linq.Expressions.Compiler {
 
                             _ilg.MarkLabel(labEnd);
                             _ilg.Emit(OpCodes.Ldloc, loc);
-                            _ilg.FreeLocal(loc);
+                            FreeLocal(loc);
                             return;
                         }
                     case ExpressionType.UnaryPlus:
@@ -136,11 +135,12 @@ namespace Microsoft.Linq.Expressions.Compiler {
                     case ExpressionType.Negate:
                     case ExpressionType.Increment:
                     case ExpressionType.Decrement:
+                    case ExpressionType.OnesComplement: 
                         {
                             Debug.Assert(operandType == resultType);
                             Label labIfNull = _ilg.DefineLabel();
                             Label labEnd = _ilg.DefineLabel();
-                            LocalBuilder loc = _ilg.GetLocal(operandType);
+                            LocalBuilder loc = GetLocal(operandType);
 
                             // check for null
                             _ilg.Emit(OpCodes.Stloc, loc);
@@ -167,7 +167,7 @@ namespace Microsoft.Linq.Expressions.Compiler {
 
                             _ilg.MarkLabel(labEnd);
                             _ilg.Emit(OpCodes.Ldloc, loc);
-                            _ilg.FreeLocal(loc);
+                            FreeLocal(loc);
                             return;
                         }
                     case ExpressionType.TypeAs:
@@ -189,6 +189,9 @@ namespace Microsoft.Linq.Expressions.Compiler {
                         } else {
                             _ilg.Emit(OpCodes.Not);
                         }
+                        break;
+                    case ExpressionType.OnesComplement:
+                        _ilg.Emit(OpCodes.Not);
                         break;
                     case ExpressionType.UnaryPlus:
                         _ilg.Emit(OpCodes.Nop);
@@ -243,7 +246,7 @@ namespace Microsoft.Linq.Expressions.Compiler {
                 default:
                     // we only have to worry about aritmetic types, see
                     // TypeUtils.IsArithmetic
-                    throw Assert.Unreachable;
+                    throw ContractUtils.Unreachable;
             }
         }
 

@@ -37,7 +37,7 @@ namespace IronRuby.Runtime.Calls {
             get { return this; }
         }
 
-        public override MetaObject/*!*/ FallbackInvoke(MetaObject/*!*/ self, MetaObject/*!*/[]/*!*/ args, MetaObject/*!*/ onBindingError) {
+        public override DynamicMetaObject/*!*/ FallbackInvoke(DynamicMetaObject/*!*/ self, DynamicMetaObject/*!*/[]/*!*/ args, DynamicMetaObject/*!*/ onBindingError) {
             var result = TryBind(_context, this, self, args);
             if (result != null) {
                 return result;
@@ -47,7 +47,7 @@ namespace IronRuby.Runtime.Calls {
             throw new NotImplementedException();
         }
 
-        public override MetaObject/*!*/ FallbackInvokeMember(MetaObject/*!*/ self, MetaObject/*!*/[]/*!*/ args, MetaObject/*!*/ onBindingError) {
+        public override DynamicMetaObject/*!*/ FallbackInvokeMember(DynamicMetaObject/*!*/ self, DynamicMetaObject/*!*/[]/*!*/ args, DynamicMetaObject/*!*/ onBindingError) {
             var result = TryBind(_context, this, self, args);
             if (result != null) {
                 return result;
@@ -57,14 +57,14 @@ namespace IronRuby.Runtime.Calls {
             throw new NotImplementedException();
         }
 
-        public static MetaObject TryBind(RubyContext/*!*/ context, InvokeMemberBinder/*!*/ binder, MetaObject/*!*/ target, MetaObject/*!*/[]/*!*/ args) {
+        public static DynamicMetaObject TryBind(RubyContext/*!*/ context, InvokeMemberBinder/*!*/ binder, DynamicMetaObject/*!*/ target, DynamicMetaObject/*!*/[]/*!*/ args) {
             Assert.NotNull(context, target);
 
             var metaBuilder = new MetaObjectBuilder();
             
             RubyCallAction.Bind(metaBuilder, binder.Name,
                 new CallArguments(
-                    new MetaObject(Ast.Constant(context), Restrictions.Empty, context),
+                    new DynamicMetaObject(Ast.Constant(context), BindingRestrictions.Empty, context),
                     target, 
                     args, 
                     RubyCallSignature.Simple(binder.Arguments.Count)
@@ -72,7 +72,7 @@ namespace IronRuby.Runtime.Calls {
             );
 
             // TODO: we should return null if we fail, we need to throw exception for now:
-            return metaBuilder.CreateMetaObject(binder, MetaObject.EmptyMetaObjects);
+            return metaBuilder.CreateMetaObject(binder, DynamicMetaObject.EmptyMetaObjects);
         }
     }
 }

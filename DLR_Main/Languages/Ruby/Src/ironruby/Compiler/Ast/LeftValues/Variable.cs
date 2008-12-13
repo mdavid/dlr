@@ -33,7 +33,7 @@ namespace IronRuby.Compiler.Ast {
 
         public Variable(string/*!*/ name, SourceSpan location)
             : base(location) {
-            ContractUtils.RequiresNotNull(name, "name");
+            Assert.NotNull(name);
 
             _name = name;
         }

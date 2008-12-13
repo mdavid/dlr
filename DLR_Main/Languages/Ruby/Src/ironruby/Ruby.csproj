@@ -126,12 +126,15 @@
     <Compile Include="Compiler\Ast\Identifier.cs" />
     <Compile Include="Compiler\Ast\LeftValues\Placeholder.cs" />
     <Compile Include="Compiler\Ast\ScopeBuilder.cs" />
+    <Compile Include="Compiler\Ast\Statements.cs" />
     <Compile Include="Compiler\Ast\Statements\ConditionalStatement.cs" />
     <Compile Include="Compiler\Ast\CallBuilder.cs" />
     <Compile Include="Compiler\Ast\Walkers\Walker.Generated.cs" />
     <Compile Include="Compiler\Ast\Walkers\NodeTypes.cs" />
     <Compile Include="Compiler\Ast\Walkers\Walker.cs" />
     <Compile Include="Compiler\Errors.cs" />
+    <Compile Include="Compiler\Parser\ParserStack.cs" />
+    <Compile Include="Runtime\Calls\ConvertToSAction.cs" />
     <Compile Include="Runtime\CustomTypeDescHelpers.cs" />
     <Compile Include="Compiler\Generation\OverriddenMembers.cs" />
     <Compile Include="Compiler\Generation\RubyTypeDispenser.cs" />
@@ -338,6 +341,4 @@
   </Target>
   <Target Name="AfterBuild">
   </Target>
-  <PropertyGroup>
-  </PropertyGroup>
 </Project>

@@ -503,6 +503,7 @@ namespace IronPython.Runtime.Types {
                 new OneOffResolver("__exit__", ExitResolver),  
                 new OneOffResolver("__len__", LengthResolver),        
                 new OneOffResolver("__ne__", InequalityResolver),
+                new OneOffResolver("__format__", FormatResolver),
                 new OneOffResolver("next", NextResolver),
 
                 // non standard operators which are Python specific
@@ -861,6 +862,14 @@ namespace IronPython.Runtime.Types {
         private static MemberGroup/*!*/ ExitResolver(MemberBinder/*!*/ binder, Type/*!*/ type) {
             if (typeof(IDisposable).IsAssignableFrom(type)) {
                 return GetInstanceOpsMethod(type, "ExitMethod");
+            }
+
+            return MemberGroup.EmptyGroup;
+        }
+
+        private static MemberGroup/*!*/ FormatResolver(MemberBinder/*!*/ binder, Type/*!*/ type) {
+            if (typeof(IFormattable).IsAssignableFrom(type)) {
+                return GetInstanceOpsMethod(type, "Format");
             }
 
             return MemberGroup.EmptyGroup;

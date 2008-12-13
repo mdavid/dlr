@@ -19,17 +19,17 @@ using System.Collections.Generic;
 
 namespace IronRuby.Compiler.Ast {
     public partial class Walker {
-        public void VisitOptionalList<T>(IList<T> list) where T : Node {
+        public void VisitOptionalList<T>(IEnumerable<T> list) where T : Node {
             if (list != null) {
-                for (int i = 0; i < list.Count; i++) {
-                    list[i].Walk(this);
+                foreach (var item in list) {
+                    item.Walk(this);
                 }
             }
         }
 
-        public void VisitList<T>(List<T> list) where T : Node {
-            for (int i = 0; i < list.Count; i++) {
-                list[i].Walk(this);
+        public void VisitList<T>(IEnumerable<T>/*!*/ list) where T : Node {
+            foreach (var item in list) {
+                item.Walk(this);
             }
         }
 

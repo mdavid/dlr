@@ -90,7 +90,7 @@ B.new.foo
 ").ExecuteProgram();
             }, @"foo");
         }
-
+        
         public void Send1() {
             AssertOutput(delegate {
                 CompilerTest(@"
@@ -123,7 +123,7 @@ x.send :foo, 1, *[2,3], &q
 x[:foo,*[1,2]] = 3
 x[*:foo] = 1
 x[] = :foo
-");
+", 1, 0);
             }, @"
 C::foo *[], &false
 C::foo *[], &true
@@ -215,7 +215,7 @@ end
 method_added
 ");
         }
-
+        
         public void VisibilityCaching1() {
             AssertOutput(delegate {
                 CompilerTest(@"

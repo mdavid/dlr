@@ -57,8 +57,26 @@ namespace Microsoft.Linq.Expressions.Compiler {
         }
 
         private void EnterScope(BlockExpression node) {
-            if (node.Variables.Count > 0 && (_scope.MergedScopes == null || !_scope.MergedScopes.Contains(node))) {
-                _scope = _tree.Scopes[node].Enter(this, _scope);
+            if (node.Variables.Count > 0 &&
+                (_scope.MergedScopes == null || !_scope.MergedScopes.Contains(node))) {
+
+                CompilerScope scope;
+                if (!_tree.Scopes.TryGetValue(node, out scope)) {
+                    //
+                    // Very often, we want to compile nodes as reductions
+                    // rather than as IL, but usually they need to allocate
+                    // some IL locals. To support this, we allow emitting a
+                    // BlockExpression that was not bound by VariableBinder.
+                    // This works as long as the variables are only used
+                    // locally -- i.e. not closed over.
+                    //
+                    // User-created blocks will never hit this case; only our
+                    // internally reduced nodes will.
+                    //
+                    scope = new CompilerScope(node) { NeedsClosure = _scope.NeedsClosure };
+                }
+
+                _scope = scope.Enter(this, _scope);
                 Debug.Assert(_scope.Node == node);
             }
         }
@@ -145,7 +163,7 @@ namespace Microsoft.Linq.Expressions.Compiler {
 
         // Emits the switch as if stmts
         private void EmitConditionalBranches(SwitchExpression node, Label[] labels) {
-            LocalBuilder testValueSlot = _ilg.GetLocal(typeof(int));
+            LocalBuilder testValueSlot = GetLocal(typeof(int));
             _ilg.Emit(OpCodes.Stloc, testValueSlot);
 
             // For all the "cases" create their conditional branches
@@ -159,7 +177,7 @@ namespace Microsoft.Linq.Expressions.Compiler {
                 }
             }
 
-            _ilg.FreeLocal(testValueSlot);
+            FreeLocal(testValueSlot);
         }
 
         // Tries to emit switch as a jmp table
@@ -231,7 +249,17 @@ namespace Microsoft.Linq.Expressions.Compiler {
             }
             throw Error.RethrowRequiresCatch();
         }
+
         #region TryStatement
+
+        private void CheckTry() {
+            // Try inside a filter is not verifiable
+            for (LabelBlockInfo j = _labelBlock; j != null; j = j.Parent) {
+                if (j.Kind == LabelBlockKind.Filter) {
+                    throw Error.TryNotAllowedInFilter();
+                }
+            }
+        }
 
         private void EmitSaveExceptionOrPop(CatchBlock cb) {
             if (cb.Variable != null) {
@@ -246,6 +274,8 @@ namespace Microsoft.Linq.Expressions.Compiler {
 
         private void EmitTryExpression(Expression expr) {
             var node = (TryExpression)expr;
+
+            CheckTry();
 
             //******************************************************************
             // 1. ENTERING TRY
@@ -264,7 +294,7 @@ namespace Microsoft.Linq.Expressions.Compiler {
             LocalBuilder value = null;
             if (tryType != typeof(void)) {
                 //store the value of the try body
-                value = _ilg.GetLocal(tryType);
+                value = GetLocal(tryType);
                 _ilg.Emit(OpCodes.Stloc, value);
             }
             //******************************************************************
@@ -298,22 +328,12 @@ namespace Microsoft.Linq.Expressions.Compiler {
 
                 if (node.Finally != null) {
                     _ilg.BeginFinallyBlock();
-                } else if (IsDynamicMethod) {
-                    // dynamic methods don't support fault blocks so we
-                    // generate a catch/rethrow.
-                    _ilg.BeginCatchBlock(typeof(Exception));
                 } else {
                     _ilg.BeginFaultBlock();
                 }
 
                 // Emit the body
                 EmitExpressionAsVoid(node.Finally ?? node.Fault);
-
-                // rethrow the exception if we have a catch in a dynamic method.
-                if (node.Fault != null && IsDynamicMethod) {
-                    // rethrow when we generated a catch
-                    _ilg.Emit(OpCodes.Rethrow);
-                }
 
                 _ilg.EndExceptionBlock();
                 PopLabelBlock(LabelBlockKind.Finally);
@@ -323,7 +343,7 @@ namespace Microsoft.Linq.Expressions.Compiler {
 
             if (tryType != typeof(void)) {
                 _ilg.Emit(OpCodes.Ldloc, value);
-                _ilg.FreeLocal(value);
+                FreeLocal(value);
             }
             PopLabelBlock(LabelBlockKind.Try);
         }
@@ -334,56 +354,41 @@ namespace Microsoft.Linq.Expressions.Compiler {
         /// variable is provided.
         /// </summary>
         private void EmitCatchStart(CatchBlock cb) {
-            if (cb.Filter != null && !IsDynamicMethod) {
-                // emit filter block as filter.  Filter blocks are 
-                // untyped so we need to do the type check ourselves.  
-                _ilg.BeginExceptFilterBlock();
-
-                Label endFilter = _ilg.DefineLabel();
-                Label rightType = _ilg.DefineLabel();
-
-                // skip if it's not our exception type, but save
-                // the exception if it is so it's available to the
-                // filter
-                _ilg.Emit(OpCodes.Isinst, cb.Test);
-                _ilg.Emit(OpCodes.Dup);
-                _ilg.Emit(OpCodes.Brtrue, rightType);
-                _ilg.Emit(OpCodes.Pop);
-                _ilg.Emit(OpCodes.Ldc_I4_0);
-                _ilg.Emit(OpCodes.Br, endFilter);
-
-                // it's our type, save it and emit the filter.
-                _ilg.MarkLabel(rightType);
-                EmitSaveExceptionOrPop(cb);
-                PushLabelBlock(LabelBlockKind.Filter);
-                EmitExpression(cb.Filter);
-                PopLabelBlock(LabelBlockKind.Filter);
-
-                // begin the catch, clear the exception, we've 
-                // already saved it
-                _ilg.MarkLabel(endFilter);
-                _ilg.BeginCatchBlock(null);
-                _ilg.Emit(OpCodes.Pop);
-            } else {
+            if (cb.Filter == null) {
                 _ilg.BeginCatchBlock(cb.Test);
-
                 EmitSaveExceptionOrPop(cb);
-
-                if (cb.Filter != null) {
-                    Label catchBlock = _ilg.DefineLabel();
-
-                    // filters aren't supported in dynamic methods so instead
-                    // emit the filter as if check, if (!expr) rethrow
-                    PushLabelBlock(LabelBlockKind.Filter);
-                    EmitExpressionAndBranch(true, cb.Filter, catchBlock);
-                    PopLabelBlock(LabelBlockKind.Filter);
-
-                    _ilg.Emit(OpCodes.Rethrow);
-                    _ilg.MarkLabel(catchBlock);
-
-                    // catch body continues
-                }
+                return;
             }
+
+            // emit filter block. Filter blocks are untyped so we need to do
+            // the type check ourselves.  
+            _ilg.BeginExceptFilterBlock();
+
+            Label endFilter = _ilg.DefineLabel();
+            Label rightType = _ilg.DefineLabel();
+
+            // skip if it's not our exception type, but save
+            // the exception if it is so it's available to the
+            // filter
+            _ilg.Emit(OpCodes.Isinst, cb.Test);
+            _ilg.Emit(OpCodes.Dup);
+            _ilg.Emit(OpCodes.Brtrue, rightType);
+            _ilg.Emit(OpCodes.Pop);
+            _ilg.Emit(OpCodes.Ldc_I4_0);
+            _ilg.Emit(OpCodes.Br, endFilter);
+
+            // it's our type, save it and emit the filter.
+            _ilg.MarkLabel(rightType);
+            EmitSaveExceptionOrPop(cb);
+            PushLabelBlock(LabelBlockKind.Filter);
+            EmitExpression(cb.Filter);
+            PopLabelBlock(LabelBlockKind.Filter);
+
+            // begin the catch, clear the exception, we've 
+            // already saved it
+            _ilg.MarkLabel(endFilter);
+            _ilg.BeginCatchBlock(null);
+            _ilg.Emit(OpCodes.Pop);
         }
 
         #endregion

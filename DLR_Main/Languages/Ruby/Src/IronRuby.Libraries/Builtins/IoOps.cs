@@ -13,9 +13,6 @@
  *
  * ***************************************************************************/
 
-using RespondToSite = Microsoft.Runtime.CompilerServices.CallSite<Microsoft.Func<Microsoft.Runtime.CompilerServices.CallSite,
-    IronRuby.Runtime.RubyContext, object, Microsoft.Scripting.SymbolId, object>>;
-
 using System; using Microsoft;
 using System.Collections.Generic;
 using System.IO;
@@ -584,10 +581,10 @@ namespace IronRuby.Builtins {
         }
 
         [RubyMethod("print")]
-        public static void Print(RubyContext/*!*/ context, object self, [NotNull]params object[]/*!*/ args) {
+        public static void Print(UnaryOpStorage/*!*/ tosStorage, RubyContext/*!*/ context, object self, [NotNull]params object[]/*!*/ args) {
             MutableString delimiter = context.OutputSeparator;
             for (int i = 0; i < args.Length; i++) {
-                MutableString str = ToPrintedString(context, args[i]);
+                MutableString str = ToPrintedString(tosStorage, context, args[i]);
                 if (delimiter != null) {
                     str.Append(delimiter);
                 }
@@ -617,15 +614,15 @@ namespace IronRuby.Builtins {
 
         private static readonly MutableString NewLine = MutableString.CreateMutable("\n").Freeze();
 
-        public static MutableString/*!*/ ToPrintedString(RubyContext/*!*/ context, object obj) {
+        public static MutableString/*!*/ ToPrintedString(UnaryOpStorage/*!*/ tosStorage, RubyContext/*!*/ context, object obj) {
             IDictionary<object, object> hash;
             List<object> list;
             MutableString str;
 
             if ((list = obj as List<object>) != null) {
-                return IListOps.Join(context, list, NewLine);
+                return IListOps.Join(tosStorage, context, list, NewLine);
             } else if ((hash = obj as IDictionary<object, object>) != null) {
-                return IDictionaryOps.ToString(context, hash);
+                return IDictionaryOps.ToString(tosStorage, context, hash);
             } else if (obj == null) {
                 return MutableString.Create("nil");
             } else if (obj is bool) {
@@ -639,7 +636,7 @@ namespace IronRuby.Builtins {
             } else if ((str = obj as MutableString) != null) {
                 return str;
             } else {
-                return RubySites.ToS(context, obj);
+                return RubyUtils.ObjectToMutableString(tosStorage, context, obj);
             }
         }
 
@@ -658,22 +655,23 @@ namespace IronRuby.Builtins {
         }
 
         [RubyMethod("puts")]
-        public static void Puts(RubyContext/*!*/ context, object self, [NotNull]object/*!*/ val) {
-            Puts(context, self, ToPrintedString(context, val));
+        public static void Puts(UnaryOpStorage/*!*/ tosStorage, RubyContext/*!*/ context, object self, [NotNull]object/*!*/ val) {
+            Puts(context, self, ToPrintedString(tosStorage, context, val));
         }
 
         [RubyMethod("puts")]
-        public static void Puts(RubyContext/*!*/ context, object self, [NotNull]params object[]/*!*/ vals) {
-            for (int i = 0; i < vals.Length; ++i) {
-                Puts(context, self, vals[i]);
+        public static void Puts(UnaryOpStorage/*!*/ tosStorage, RubyContext/*!*/ context, object self, [NotNull]params object[]/*!*/ vals) {
+            for (int i = 0; i < vals.Length; i++) {
+                Puts(tosStorage, context, self, vals[i]);
             }
         }
 
         [RubyMethod("printf")]
-        public static void PrintFormatted(SiteLocalStorage<CallSite<Func<CallSite, RubyContext, object, object, object>>>/*!*/ writeSiteStorage,
+        public static void PrintFormatted(ConversionStorage<int>/*!*/ fixnumCast, ConversionStorage<MutableString>/*!*/ tosConversion, 
+            BinaryOpStorage/*!*/ writeStorage,
             RubyContext/*!*/ context, RubyIO/*!*/ self, [DefaultProtocol, NotNull]MutableString/*!*/ format, [NotNull]params object[]/*!*/ args) {
 
-            KernelOps.PrintFormatted(writeSiteStorage, context, null, self, format, args);
+            KernelOps.PrintFormatted(fixnumCast, tosConversion, writeStorage, context, null, self, format, args);
         }
 
         #endregion
@@ -691,8 +689,8 @@ namespace IronRuby.Builtins {
         }
 
         [RubyMethod("write")]
-        public static int Write(RubyContext/*!*/ context, RubyIO/*!*/ self, object obj) {
-            return Write(self, Protocols.ConvertToString(context, obj));
+        public static int Write(ConversionStorage<MutableString>/*!*/ tosStorage, RubyContext/*!*/ context, RubyIO/*!*/ self, object obj) {
+            return Write(self, Protocols.ConvertToString(tosStorage, context, obj));
         }
 
         //write_nonblock
@@ -965,7 +963,7 @@ namespace IronRuby.Builtins {
 
         #endregion
 
-        internal static IOWrapper/*!*/ CreateIOWrapper(SiteLocalStorage<RespondToSite>/*!*/ respondToStorage, 
+        internal static IOWrapper/*!*/ CreateIOWrapper(RespondToStorage/*!*/ respondToStorage, 
             RubyContext/*!*/ context, object io, FileAccess access) {
 
             bool canRead, canWrite, canSeek;

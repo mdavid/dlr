@@ -113,11 +113,14 @@ expressions = [
     Expression("AddAssignChecked",      "BinaryExpression",                reducible = True),
     Expression("MultiplyAssignChecked", "BinaryExpression",                reducible = True),
     Expression("SubtractAssignChecked", "BinaryExpression",                reducible = True),
-    Expression("PreIncrementAssign",    "UnaryExpression",                 reducible = True),
-    Expression("PreDecrementAssign",    "UnaryExpression",                 reducible = True),
-    Expression("PostIncrementAssign",   "UnaryExpression",                 reducible = True),
-    Expression("PostDecrementAssign",   "UnaryExpression",                 reducible = True),
-    Expression("TypeEqual",             "TypeBinaryExpression",            reducible = True),
+    Expression("PreIncrementAssign",    "UnaryExpression",                 interop = True, reducible = True),
+    Expression("PreDecrementAssign",    "UnaryExpression",                 interop = True, reducible = True),
+    Expression("PostIncrementAssign",   "UnaryExpression",                 interop = True, reducible = True),
+    Expression("PostDecrementAssign",   "UnaryExpression",                 interop = True, reducible = True),
+    Expression("TypeEqual",             "TypeBinaryExpression"),
+    Expression("OnesComplement",        "UnaryExpression",                 interop = True),
+    Expression("IsTrue",                "UnaryExpression",                 interop = True),
+    Expression("IsFalse",               "UnaryExpression",                 interop = True),
 ]
 
 def get_unique_types():
@@ -197,7 +200,7 @@ def gen_interpreter(cw):
 
         method += node.type           
 			
-        cw.write(" case ExpressionType.%s: return %s(state, expr);" % (node.kind, method))
+        cw.write("case ExpressionType.%s: return %s(state, expr);" % (node.kind, method))
     
     # core reducible nodes
     for node in expressions:

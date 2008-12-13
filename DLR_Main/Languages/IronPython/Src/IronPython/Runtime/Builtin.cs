@@ -542,6 +542,29 @@ namespace IronPython.Runtime {
             }
         }
 
+        public static string format(CodeContext/*!*/ context, object argValue, [DefaultParameterValue("")]string formatSpec) {
+            object res, formatMethod;
+            OldInstance oi = argValue as OldInstance;
+            if (oi != null && oi.TryGetBoundCustomMember(context, SymbolTable.StringToId("__format__"), out formatMethod)) {
+                res = PythonOps.CallWithContext(context, formatMethod, formatSpec);
+            } else {
+                // call __format__ with the format spec (__format__ is defined on object, so this always succeeds)
+                PythonTypeOps.TryInvokeBinaryOperator(
+                    context,
+                    argValue,
+                    formatSpec,
+                    SymbolTable.StringToId("__format__"),
+                    out res);
+            }
+
+            string strRes = res as string;
+            if (strRes == null) {
+                throw PythonOps.TypeError("{0}.__format__ must return string or unicode, not {1}", PythonTypeOps.GetName(argValue), PythonTypeOps.GetName(res));
+            }
+
+            return strRes;
+        }
+
         public static object getattr(CodeContext/*!*/ context, object o, string name) {
             return PythonOps.GetBoundAttr(context, o, SymbolTable.StringToId(name));
         }

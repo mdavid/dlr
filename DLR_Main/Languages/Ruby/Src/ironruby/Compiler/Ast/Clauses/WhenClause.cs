@@ -25,15 +25,15 @@ namespace IronRuby.Compiler.Ast {
     //	when <expressions>, *<array>: <body>
     public partial class WhenClause : Node {
         
-        private readonly List<Expression> _comparisons; // optional
+        private readonly Expression[] _comparisons; // optional
         private readonly Expression _comparisonArray;
-        private readonly List<Expression> _statements;  // optional
+        private readonly Statements _statements;  // optional
 
-        public List<Expression> Statements {
+        public Statements Statements {
             get { return _statements; }
         }
 
-        public List<Expression> Comparisons {
+        public Expression[] Comparisons {
             get { return _comparisons; }
         }
 
@@ -41,7 +41,7 @@ namespace IronRuby.Compiler.Ast {
             get { return _comparisonArray; }
         }
 
-        public WhenClause(List<Expression> comparisons, Expression comparisonArray, List<Expression> statements, SourceSpan location)
+        public WhenClause(Expression[] comparisons, Expression comparisonArray, Statements statements, SourceSpan location)
             : base(location) {
             _comparisons = comparisons;
             _comparisonArray = comparisonArray;

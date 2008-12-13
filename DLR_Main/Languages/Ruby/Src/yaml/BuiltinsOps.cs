@@ -25,9 +25,6 @@ using Microsoft.Scripting.Runtime;
 using System.Runtime.InteropServices;
 using Microsoft.Scripting.Generation;
 
-using BinaryOpSite = Microsoft.Runtime.CompilerServices.CallSite<Microsoft.Func<Microsoft.Runtime.CompilerServices.CallSite,
-    IronRuby.Runtime.RubyContext, object, object, object>>;
-
 namespace IronRuby.StandardLibrary.Yaml {
 
     [RubyClass(Extends = typeof(object))]
@@ -35,9 +32,9 @@ namespace IronRuby.StandardLibrary.Yaml {
 
         [RubyMethod("to_yaml_properties")]
         public static RubyArray/*!*/ ToYamlProperties(
-            SiteLocalStorage<BinaryOpSite>/*!*/ comparisonStorage,
-            SiteLocalStorage<BinaryOpSite>/*!*/ lessThanStorage,
-            SiteLocalStorage<BinaryOpSite>/*!*/ greaterThanStorage,
+            BinaryOpStorage/*!*/ comparisonStorage,
+            BinaryOpStorage/*!*/ lessThanStorage,
+            BinaryOpStorage/*!*/ greaterThanStorage,
             RubyContext/*!*/ context, object self) {
             return ArrayOps.SortInPlace(comparisonStorage, lessThanStorage, greaterThanStorage, context, 
                 null, KernelOps.InstanceVariables(context, self)
@@ -367,7 +364,7 @@ namespace IronRuby.StandardLibrary.Yaml {
         }
     }
 
-    [RubyModule(Extends = typeof(Null))]
+    [RubyModule(Extends = typeof(DynamicNull))]
     public static class YamlNilOps {
         [RubyMethod("to_yaml_node")]
         public static Node ToYaml(object self, [NotNull]RubyRepresenter/*!*/ rep) {

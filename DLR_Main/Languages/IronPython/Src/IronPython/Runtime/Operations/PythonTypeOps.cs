@@ -176,7 +176,7 @@ namespace IronPython.Runtime.Operations {
             if (assembly == typeof(PythonOps).Assembly || // IronPython.dll
                 assembly == typeof(Microsoft.Scripting.Math.BigInteger).Assembly || // Microsoft.Scripting.dll
 #if !SILVERLIGHT
-                assembly == typeof(Microsoft.Scripting.ComInterop.ComBinder).Assembly || // Microsoft.Dynamic.ComInterop.dll
+                assembly == typeof(Microsoft.Scripting.ComBinder).Assembly || // Microsoft.Dynamic.ComInterop.dll
 #endif                
                 assembly == typeof(Microsoft.Linq.Expressions.Expression).Assembly) {  // Microsoft.Scripting.Core.dll
                 return true;
@@ -221,7 +221,7 @@ namespace IronPython.Runtime.Operations {
 
         private static Type ConvertToType(PythonType pythonType) {
             if (pythonType.IsNull) {
-                return Null.Type;
+                return DynamicNull.Type;
             } else {
                 return pythonType.UnderlyingSystemType;
             }
@@ -654,7 +654,7 @@ namespace IronPython.Runtime.Operations {
                 return ((DocumentationAttribute)docAttr[0]).Documentation;
             }
 
-            if (type == typeof(Null)) return null;
+            if (type == typeof(DynamicNull)) return null;
 
             // Auto Doc (XML or otherwise)
             string autoDoc = DocBuilder.CreateAutoDoc(type);

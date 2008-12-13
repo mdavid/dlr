@@ -63,6 +63,7 @@ EXCLUDE_LIST.append("test_methoddispatch.py")
 # doesn't run on CPy 2.5
 EXCLUDE_LIST.append("test_python26.py")
 EXCLUDE_LIST.append("test_bytes.py")
+EXCLUDE_LIST.append("test_strformat.py")
 
 #List of extra tests in "Tests" which do not follow the "test_*.py" pattern.
 #These WILL be run.

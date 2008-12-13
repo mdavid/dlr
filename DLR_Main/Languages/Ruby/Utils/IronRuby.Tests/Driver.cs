@@ -123,6 +123,7 @@ namespace IronRuby.Tests {
                 Console.WriteLine("List Tests         : /list");
                 Console.WriteLine("Tokenizer baseline : /tokenizer <target-dir> <sources-file>");
                 Console.WriteLine("Productions dump   : /tokenizer /prod <target-dir> <sources-file>");
+                Console.WriteLine("Benchmark          : /tokenizer /bm <target-dir> <sources-file>");
             }
 
             if (args.Contains("/list")) {
@@ -266,7 +267,7 @@ namespace IronRuby.Tests {
                     
                 Console.WriteLine("Generating binaries to {0}", _dumpDir);
 
-                Snippets.SetSaveAssemblies(_dumpDir);
+                Snippets.SetSaveAssemblies(true, _dumpDir);
             }
         }
         

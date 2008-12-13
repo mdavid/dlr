@@ -27,6 +27,8 @@ using Ast = Microsoft.Linq.Expressions.Expression;
 using IronRuby.Compiler;
 using System.Collections.ObjectModel;
 using IronRuby.Compiler.Generation;
+using System.Runtime.Serialization;
+using System.Security.Permissions;
 
 namespace IronRuby.Builtins {
 
@@ -65,6 +67,19 @@ namespace IronRuby.Builtins {
         private readonly object[]/*!*/ _data;
 
         #region Construction
+
+#if !SILVERLIGHT
+        public RubyStruct(SerializationInfo/*!*/ info, StreamingContext context) 
+            : base(info, context) {
+            // TODO: deserialize _data
+        }
+
+        [SecurityPermission(SecurityAction.LinkDemand, Flags = SecurityPermissionFlag.SerializationFormatter)]
+        public override void GetObjectData(SerializationInfo/*!*/ info, StreamingContext context) {
+            base.GetObjectData(info, context);
+            // TODO: serialize _data
+        }
+#endif
 
         // This class should not have a default constructor (or one that takes RubyClass or RubyContext)!
         // Struct class provides its own allocator (Struct#new), 

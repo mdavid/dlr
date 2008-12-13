@@ -27,9 +27,6 @@ using Microsoft.Scripting;
 using Microsoft.Scripting.Runtime;
 using Microsoft.Scripting.Generation;
 
-using BinaryOpSite = Microsoft.Runtime.CompilerServices.CallSite<Microsoft.Func<Microsoft.Runtime.CompilerServices.CallSite,
-    IronRuby.Runtime.RubyContext, object, object, object>>;
-
 namespace IronRuby.StandardLibrary.Yaml {
 
     public class RubyConstructor : Constructor {
@@ -182,7 +179,7 @@ namespace IronRuby.StandardLibrary.Yaml {
                 }                
             }
 
-            var comparisonStorage = new SiteLocalStorage<BinaryOpSite>();
+            var comparisonStorage = new BinaryOpStorage();
             return new Range(comparisonStorage, ctor.Scope.RubyContext, begin, end, excludeEnd);            
         }
 

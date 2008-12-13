@@ -38,27 +38,27 @@ namespace IronRuby.Builtins {
             LoadModules();
         }
 
-        protected RubyClass/*!*/ DefineGlobalClass(string/*!*/ name, Type/*!*/ type, RubyClass/*!*/ super, 
+        protected RubyClass/*!*/ DefineGlobalClass(string/*!*/ name, Type/*!*/ type, bool isSelfContained, RubyClass/*!*/ super, 
             Action<RubyModule> instanceTrait, Action<RubyModule> classTrait, RubyModule[]/*!*/ mixins, Delegate[] factories) {
 
-            RubyClass result = _context.DefineLibraryClass(name, type, instanceTrait, classTrait, super, mixins, factories, _builtin);
+            RubyClass result = _context.DefineLibraryClass(name, type, instanceTrait, classTrait, super, mixins, factories, isSelfContained, _builtin);
             _context.ObjectClass.SetConstant(result.Name, result);
             return result;
         }
 
-        protected RubyClass/*!*/ DefineClass(string/*!*/ name, Type/*!*/ type, RubyClass/*!*/ super, 
+        protected RubyClass/*!*/ DefineClass(string/*!*/ name, Type/*!*/ type, bool isSelfContained, RubyClass/*!*/ super, 
             Action<RubyModule> instanceTrait, Action<RubyModule> classTrait, RubyModule[]/*!*/ mixins, Delegate[] factories) {
-            return _context.DefineLibraryClass(name, type, instanceTrait, classTrait, super, mixins, factories, _builtin);
+            return _context.DefineLibraryClass(name, type, instanceTrait, classTrait, super, mixins, factories, isSelfContained, _builtin);
         }
 
         protected RubyClass/*!*/ ExtendClass(Type/*!*/ type, Action<RubyModule> instanceTrait, Action<RubyModule> classTrait,
             RubyModule[]/*!*/ mixins, Delegate[] factories) {
-            return _context.DefineLibraryClass(null, type, instanceTrait, classTrait, null, mixins, factories, _builtin);
+            return _context.DefineLibraryClass(null, type, instanceTrait, classTrait, null, mixins, factories, false, _builtin);
         }
 
-        protected RubyModule/*!*/ DefineGlobalModule(string/*!*/ name, Type/*!*/ type, Action<RubyModule> instanceTrait,
+        protected RubyModule/*!*/ DefineGlobalModule(string/*!*/ name, Type/*!*/ type, bool isSelfContained, Action<RubyModule> instanceTrait,
             Action<RubyModule> classTrait, RubyModule[]/*!*/ mixins) {
-            RubyModule module = _context.DefineLibraryModule(name, type, instanceTrait, classTrait, mixins);
+            RubyModule module = _context.DefineLibraryModule(name, type, instanceTrait, classTrait, mixins, isSelfContained);
             _context.ObjectClass.SetConstant(module.Name, module);
             return module;
         }
@@ -72,14 +72,14 @@ namespace IronRuby.Builtins {
         // - Interface modules:
         //    "type" parameter specifies the CLR interface being extended.
         // 
-        protected RubyModule/*!*/ DefineModule(string/*!*/ name, Type/*!*/ type, Action<RubyModule> instanceTrait,
+        protected RubyModule/*!*/ DefineModule(string/*!*/ name, Type/*!*/ type, bool isSelfContained, Action<RubyModule> instanceTrait,
             Action<RubyModule> classTrait, RubyModule[]/*!*/ mixins) {
-            return _context.DefineLibraryModule(name, type, instanceTrait, classTrait, mixins);
+            return _context.DefineLibraryModule(name, type, instanceTrait, classTrait, mixins, isSelfContained);
         }
 
         protected RubyModule/*!*/ ExtendModule(Type/*!*/ type, Action<RubyModule> instanceTrait, Action<RubyModule> classTrait,
             RubyModule[]/*!*/ mixins) {
-            return _context.DefineLibraryModule(null, type, instanceTrait, classTrait, mixins);
+            return _context.DefineLibraryModule(null, type, instanceTrait, classTrait, mixins, false);
         }
 
         protected object/*!*/ DefineSingleton(Action<RubyModule> instanceTrait, Action<RubyModule> classTrait, RubyModule[]/*!*/ mixins) {

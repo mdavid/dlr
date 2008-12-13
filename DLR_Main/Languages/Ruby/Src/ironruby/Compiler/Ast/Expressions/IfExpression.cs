@@ -25,14 +25,14 @@ namespace IronRuby.Compiler.Ast {
 
     public partial class IfExpression : Expression {
         private Expression/*!*/ _condition;
-        private List<Expression> _body;
+        private Statements _body;
         private List<ElseIfClause> _elseIfClauses;
 
         public Expression/*!*/ Condition {
             get { return _condition; }
         }
 
-        public List<Expression> Body {
+        public Statements Body {
             get { return _body; }
         }
 
@@ -40,7 +40,7 @@ namespace IronRuby.Compiler.Ast {
             get { return _elseIfClauses; }
         }
 
-        public IfExpression(Expression/*!*/ condition, List<Expression>/*!*/ body, List<ElseIfClause>/*!*/ elseIfClauses, SourceSpan location)
+        public IfExpression(Expression/*!*/ condition, Statements/*!*/ body, List<ElseIfClause>/*!*/ elseIfClauses, SourceSpan location)
             : base(location) {
             ContractUtils.RequiresNotNull(body, "body");
             ContractUtils.RequiresNotNull(condition, "condition");

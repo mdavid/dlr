@@ -22,124 +22,97 @@ using IronRuby.Runtime;
 using IronRuby.Compiler.Ast;
 using System.Diagnostics;
 using Microsoft.Scripting.Utils;
+using System.Runtime.InteropServices;
 
 namespace IronRuby.Compiler {
+    [StructLayout(LayoutKind.Explicit)]
+    internal struct NumericUnion {
+        [FieldOffset(0)]
+        public int Integer1;
 
-    public enum TokenValueType {
-        None = 0,
-        String, 
-        Integer,
-        BigInteger,
-        Double,
-        RegexOptions,
-        StringTokenizer,
+        [FieldOffset(4)]
+        public int Integer2;
+
+        [FieldOffset(0)]
+        public double Double;
     }
 
-    // TODO: 
-    // [StructLayout(LayoutKind.Explicit)]
     public partial struct TokenValue {
-        // TODO: debug only
-        public TokenValueType Type { get { return _type; } }
-        private TokenValueType _type;
+        // VariableFactory + String (variable)
+        // ArgumentCount + Expression (when clause)
+        // Arguments + Block (arguments)
+        
+        private NumericUnion _numeric;
+        private object _obj1;
+        private object _obj2;
 
-        // [FieldOffset(0)]
-        private int _integer1;
-
-        // [FieldOffset(0)]
-        private double _double;
-
-        // [FieldOffset(8)]
-        public object obj;
-
-        // [FieldOffset(12)]
-        public Node node;
-
-        public TokenValue(Arguments arguments, Block block) {
-            _integer1 = 0;
-            _double = 0.0;
-            node = arguments;
-            obj = block;
-            _type = TokenValueType.None;
-        }
-
-        public TokenValue(List<Expression> comparisons, Expression comparisonArray) {
-            _integer1 = 0;
-            _double = 0.0;
-            node = comparisonArray;
-            obj = comparisons;
-            _type = TokenValueType.None;
-        }
-
-        public int Integer { get { return _integer1; } set { _integer1 = value; } }
-        public double Double { get { return _double; } set { _double = value; } }
+        public int Integer1 { get { return _numeric.Integer1; } set { _numeric.Integer1 = value; } }
+        public int Integer2 { get { return _numeric.Integer2; } set { _numeric.Integer2 = value; } }
+        public double Double { get { return _numeric.Double; } set { _numeric.Double = value; } }
 
         // Tokens: StringContent
-        internal StringLiteralEncoding/*!*/ StringLiteralEncoding { get { return (StringLiteralEncoding)_integer1; } }
+        internal StringLiteralEncoding/*!*/ StringLiteralEncoding { get { return (StringLiteralEncoding)Integer1; } }
         
         // Tokens: StringBegin, SymbolBegin, RegexBegin, ShellStringBegin
-        internal StringTokenizer/*!*/ StringTokenizer { get { return (StringTokenizer)obj; } set { obj = value; } }
+        internal StringTokenizer/*!*/ StringTokenizer { get { return (StringTokenizer)_obj1; } set { _obj1 = value; } }
 
-        internal int VariableFactory { get { return _integer1; } set { _integer1 = value; } }
+        internal int VariableFactory { get { return Integer1; } set { Integer1 = value; } }
 
-        public RubyRegexOptions RegExOptions { get { return (RubyRegexOptions)Integer; } set { Integer = (int)value; } }
-        public CallExpression CallExpression { get { return (CallExpression)node; } set { node = value; } }
-        public ElseIfClause ElseIfClause { get { return (ElseIfClause)node; } set { node = value; } }
-        public RescueClause RescueClause { get { return (RescueClause)node; } set { node = value; } }
-        public WhenClause WhenClause { get { return (WhenClause)node; } set { node = value; } }
+        public int ArgumentCount { get { return _numeric.Integer1; } set { _numeric.Integer1 = value; } }
         
-        public Arguments Arguments { get { return (Arguments)node; } set { node = value; } }
-        public Block Block { get { return (Block)obj; } set { obj = value; } }
+        public Arguments Arguments { get { return (Arguments)_obj2; } set { _obj2 = value; } }
+        public Block Block { get { return (Block)_obj1; } set { _obj1 = value; } }
 
-        public Expression Expression { get { return (Expression)node; } set { node = value; } }
-        public List<Expression>/*!*/ Expressions { get { return (List<Expression>)obj; } set { obj = value; } }
+        public Expression Expression { get { return (Expression)_obj1; } set { _obj1 = value; } }
+        public List<Expression>/*!*/ Expressions { get { return (List<Expression>)_obj2; } set { _obj2 = value; } }
 
-        public BlockReference BlockReference { get { return (BlockReference)node; } set { node = value; } }
-        public BlockDefinition BlockDefinition { get { return (BlockDefinition)node; } set { node = value; } }
-        public ConstantVariable ConstantVariable { get { return (ConstantVariable)node; } set { node = value; } }
-        public Maplet Maplet { get { return (Maplet)node; } set { node = value; } }
-        public BigInteger/*!*/ BigInteger { get { return (BigInteger)obj; } set { obj = value; } }
-        public String/*!*/ String { get { return (String)obj; } set { obj = value; } }
-        public Parameters Parameters { get { return (Parameters)node; } set { node = value; } }
-        public LocalVariable LocalVariable { get { return (LocalVariable)node; } set { node = value; } }
-        public SimpleAssignmentExpression SimpleAssignmentExpression { get { return (SimpleAssignmentExpression)node; } set { node = value; } }
-        public LeftValue LeftValue { get { return (LeftValue)node; } set { node = value; } }
-        public CompoundLeftValue CompoundLeftValue { get { return (CompoundLeftValue)node; } set { node = value; } }
-        public Body Body { get { return (Body)node; } set { node = value; } }
-        public CompoundRightValue CompoundRightValue { get { return (CompoundRightValue)obj; } set { obj = value; } }
-        public JumpStatement JumpStatement { get { return (JumpStatement)obj; } set { obj = value; } }
-        public RegexMatchReference RegexMatchReference { get { return (RegexMatchReference)obj; } set { obj = value; } }
+        public RubyRegexOptions RegExOptions { get { return (RubyRegexOptions)Integer1; } set { Integer1 = (int)value; } }
+        public CallExpression CallExpression { get { return (CallExpression)_obj1; } set { _obj1 = value; } }
+        public ElseIfClause ElseIfClause { get { return (ElseIfClause)_obj1; } set { _obj1 = value; } }
+        public RescueClause RescueClause { get { return (RescueClause)_obj1; } set { _obj1 = value; } }
+        public WhenClause WhenClause { get { return (WhenClause)_obj1; } set { _obj1 = value; } }
+        public Statements/*!*/ Statements { get { return (Statements)_obj1; } set { _obj1 = value; } }
+        public BlockReference BlockReference { get { return (BlockReference)_obj1; } set { _obj1 = value; } }
+        public BlockDefinition BlockDefinition { get { return (BlockDefinition)_obj1; } set { _obj1 = value; } }
+        public ConstantVariable ConstantVariable { get { return (ConstantVariable)_obj1; } set { _obj1 = value; } }
+        public Maplet Maplet { get { return (Maplet)_obj1; } set { _obj1 = value; } }
+        public BigInteger/*!*/ BigInteger { get { return (BigInteger)_obj1; } set { _obj1 = value; } }
+        public String/*!*/ String { get { return (String)_obj1; } set { _obj1 = value; } }
+        public Parameters Parameters { get { return (Parameters)_obj1; } set { _obj1 = value; } }
+        public LocalVariable LocalVariable { get { return (LocalVariable)_obj1; } set { _obj1 = value; } }
+        public SimpleAssignmentExpression SimpleAssignmentExpression { get { return (SimpleAssignmentExpression)_obj1; } set { _obj1 = value; } }
+        public LeftValue LeftValue { get { return (LeftValue)_obj1; } set { _obj1 = value; } }
+        public CompoundLeftValue CompoundLeftValue { get { return (CompoundLeftValue)_obj1; } set { _obj1 = value; } }
+        public Body Body { get { return (Body)_obj1; } set { _obj1 = value; } }
+        public CompoundRightValue CompoundRightValue { get { return (CompoundRightValue)_obj1; } set { _obj1 = value; } }
+        public JumpStatement JumpStatement { get { return (JumpStatement)_obj1; } set { _obj1 = value; } }
+        public RegexMatchReference RegexMatchReference { get { return (RegexMatchReference)_obj1; } set { _obj1 = value; } }
 
-        public List<LeftValue> LeftValues { get { return (List<LeftValue>)obj; } set { obj = value; } }
-        public List<Identifier>/*!*/ Identifiers { get { return (List<Identifier>)obj; } set { obj = value; } }
-        public List<ElseIfClause>/*!*/ ElseIfClauses { get { return (List<ElseIfClause>)obj; } set { obj = value; } }
-        public List<WhenClause>/*!*/ WhenClauses { get { return (List<WhenClause>)obj; } set { obj = value; } }
-        public List<LeftValue>/*!*/ LeftValueList { get { return (List<LeftValue>)obj; } set { obj = value; } }
-        public List<Expression>/*!*/ Statements { get { return (List<Expression>)obj; } set { obj = value; } }
-        public List<RescueClause> RescueClauses { get { return (List<RescueClause>)obj; } set { obj = value; } }
-        public List<Maplet> Maplets { get { return (List<Maplet>)obj; } set { obj = value; } }
-        public List<LocalVariable>/*!*/ LocalVariables { get { return (List<LocalVariable>)obj; } set { obj = value; } }
-        public List<SimpleAssignmentExpression>/*!*/ SimpleAssignmentExpressions { get { return (List<SimpleAssignmentExpression>)obj; } set { obj = value; } }
+        public List<LeftValue> LeftValues { get { return (List<LeftValue>)_obj1; } set { _obj1 = value; } }
+        public List<Identifier>/*!*/ Identifiers { get { return (List<Identifier>)_obj1; } set { _obj1 = value; } }
+        public List<ElseIfClause>/*!*/ ElseIfClauses { get { return (List<ElseIfClause>)_obj1; } set { _obj1 = value; } }
+        public List<WhenClause>/*!*/ WhenClauses { get { return (List<WhenClause>)_obj1; } set { _obj1 = value; } }
+        public List<RescueClause> RescueClauses { get { return (List<RescueClause>)_obj1; } set { _obj1 = value; } }
+        public List<Maplet> Maplets { get { return (List<Maplet>)_obj1; } set { _obj1 = value; } }
+        public List<LocalVariable>/*!*/ LocalVariables { get { return (List<LocalVariable>)_obj1; } set { _obj1 = value; } }
+        public List<SimpleAssignmentExpression>/*!*/ SimpleAssignmentExpressions { get { return (List<SimpleAssignmentExpression>)_obj1; } set { _obj1 = value; } }
         
         internal void SetInteger(int value) {
-            Integer = value;
-            _type = TokenValueType.Integer;
+            Integer1 = value;
         }
 
         internal void SetBigInteger(BigInteger value) {
             BigInteger = value;
-            _type = TokenValueType.BigInteger;
         }
 
         internal void SetDouble(double value) {
             Double = value;
-            _type = TokenValueType.Double;
         }
 
         internal void SetString(string/*!*/ value, StringLiteralEncoding encoding) {
             Assert.NotNull(value);
             String = value;
-            _integer1 = (int)encoding;
-            _type = TokenValueType.String;
+            Integer1 = (int)encoding;
         }
 
         internal void SetString(string/*!*/ value, bool hasUnicodeEscape) {
@@ -156,48 +129,16 @@ namespace IronRuby.Compiler {
 
         internal void SetStringTokenizer(StringTokenizer value) {
             StringTokenizer = value;
-            _type = TokenValueType.StringTokenizer;
         }
 
         internal void SetRegexOptions(RubyRegexOptions value) {
-            Integer = (int)value;
-            _type = TokenValueType.RegexOptions;
+            Integer1 = (int)value;
         }
 
-#if DEBUG
-        public override string ToString() {
-            string str;
-            switch (_type) {
-                case TokenValueType.Double:
-                    str = Double.ToString();
-                    break;
-
-                case TokenValueType.Integer:
-                    str = Integer.ToString();
-                    break;
-
-                case TokenValueType.BigInteger:
-                    str = BigInteger.ToString();
-                    break;
-
-                case TokenValueType.RegexOptions:
-                    str = ((RubyRegexOptions)Integer).ToString();
-                    break;
-
-                case TokenValueType.String:
-                    str = "\"" + Parser.EscapeString(String) + "\"";
-                    break;
-
-                case TokenValueType.StringTokenizer:
-                    str = (StringTokenizer != null) ? StringTokenizer.ToString() : "";
-                    break;
-
-                default:
-                    str = "";
-                    break;
-            }
-            return String.Format("{0}: {1}", _type, str);
+        public override string/*!*/ ToString() {
+            return String.Format("O1: {0}, O2: {1}, I1: {2}, I2: {3}, D: {4}",
+                _obj1, _obj2, _numeric.Integer1, _numeric.Integer2, _numeric.Double
+            );
         }
-#endif
     }
 }

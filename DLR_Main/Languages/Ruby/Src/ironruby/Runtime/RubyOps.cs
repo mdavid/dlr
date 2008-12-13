@@ -38,9 +38,6 @@ using System.IO;
 using System.Runtime.InteropServices;
 using Microsoft.Scripting.Generation;
 
-using BinaryOpSite = Microsoft.Runtime.CompilerServices.CallSite<Microsoft.Func<Microsoft.Runtime.CompilerServices.CallSite,
-    IronRuby.Runtime.RubyContext, object, object, object>>;
-
 namespace IronRuby.Runtime {
     public static partial class RubyOps {
 
@@ -57,7 +54,7 @@ namespace IronRuby.Runtime {
             out object self, out RuntimeFlowControl/*!*/ rfc, string dataPath, int dataOffset) {
             Assert.NotNull(locals, globalScope, language);
 
-            GlobalScopeExtension rubyGlobalScope = (GlobalScopeExtension)language.EnsureScopeExtension(globalScope);
+            GlobalScopeExtension rubyGlobalScope = ((RubyContext)language).InitializeGlobalScope(globalScope);
 
             RubyTopLevelScope scope = new RubyTopLevelScope(rubyGlobalScope, null, locals);
             scope.Initialize(new RuntimeFlowControl(), RubyMethodAttributes.PrivateInstance, rubyGlobalScope.MainObject);
@@ -91,7 +88,7 @@ namespace IronRuby.Runtime {
         public static RubyTopLevelScope/*!*/ CreateTopLevelScope(LocalsDictionary/*!*/ locals, Scope/*!*/ globalScope, LanguageContext/*!*/ language,
             out object self, out RuntimeFlowControl/*!*/ rfc) {
 
-            RubyTopLevelScope scope = CreateTopLevelScopeInternal(locals, globalScope, language);
+            RubyTopLevelScope scope = CreateTopLevelScopeInternal(locals, globalScope, (RubyContext)language);
             self = scope.SelfObject;
             rfc = scope.RuntimeFlowControl;
             return scope;
@@ -101,7 +98,7 @@ namespace IronRuby.Runtime {
         public static RubyTopLevelScope/*!*/ CreateWrappedTopLevelScope(LocalsDictionary/*!*/ locals, Scope/*!*/ globalScope, LanguageContext/*!*/ language,
             out object self, out RuntimeFlowControl/*!*/ rfc) {
 
-            RubyTopLevelScope scope = CreateTopLevelScopeInternal(locals, globalScope, language);
+            RubyTopLevelScope scope = CreateTopLevelScopeInternal(locals, globalScope, (RubyContext)language);
 
             RubyModule module = scope.RubyGlobalScope.Context.CreateModule(null, null, null, null, null);
 
@@ -117,8 +114,8 @@ namespace IronRuby.Runtime {
             return scope;
         }
 
-        private static RubyTopLevelScope/*!*/ CreateTopLevelScopeInternal(LocalsDictionary/*!*/ locals, Scope/*!*/ globalScope, LanguageContext/*!*/ language) {
-            GlobalScopeExtension rubyGlobalScope = (GlobalScopeExtension)language.EnsureScopeExtension(globalScope);
+        private static RubyTopLevelScope/*!*/ CreateTopLevelScopeInternal(LocalsDictionary/*!*/ locals, Scope/*!*/ globalScope, RubyContext/*!*/ context) {
+            GlobalScopeExtension rubyGlobalScope = context.InitializeGlobalScope(globalScope);
             RubyTopLevelScope result = new RubyTopLevelScope(rubyGlobalScope, null, locals);
             result.Initialize(new RuntimeFlowControl(), RubyMethodAttributes.PrivateInstance, rubyGlobalScope.MainObject);
             result.SetDebugName("top-level");
@@ -531,13 +528,13 @@ namespace IronRuby.Runtime {
             RubyMethodInfo instanceMethod = null, singletonMethod = null;
 
             if (instanceOwner != null) {
-                SetMethod(instanceMethod = 
+                SetMethod(scope.RubyContext, instanceMethod = 
                     new RubyMethodInfo(ast, clrMethod, instanceOwner, name, mandatory, optional, hasUnsplatParameter, instanceFlags)
                 );
             }
 
             if (singletonOwner != null) {
-                SetMethod(singletonMethod =
+                SetMethod(scope.RubyContext, singletonMethod =
                     new RubyMethodInfo(ast, clrMethod, singletonOwner, name, mandatory, optional, hasUnsplatParameter, singletonFlags)
                 );
             }
@@ -546,12 +543,12 @@ namespace IronRuby.Runtime {
             return instanceMethod ?? singletonMethod;
         }
 
-        private static void SetMethod(RubyMethodInfo/*!*/ method) {
+        private static void SetMethod(RubyContext/*!*/ callerContext, RubyMethodInfo/*!*/ method) {
             var owner = method.DeclaringModule;
 
             // Do not trigger the add-method event just yet, we need to assign the result into closure before executing any user code.
             // If the method being defined is "method_added" itself, we would call that method before the info gets assigned to the closure.
-            owner.SetMethodNoEvent(method.DefinitionName, method);
+            owner.SetMethodNoEvent(callerContext, method.DefinitionName, method);
 
             // expose RubyMethod in the scope (the method is bound to the main singleton instance):
             if (owner.GlobalScope != null) {
@@ -583,7 +580,7 @@ namespace IronRuby.Runtime {
             RubyModule owner = scope.GetMethodDefinitionOwner();
             RubyMemberInfo method = owner.ResolveMethodFallbackToObject(oldName, true);
             if (method != null) {
-                owner.AddMethodAlias(newName, method);
+                owner.AddMethodAlias(scope.RubyContext, newName, method);
                 return;
             }
 
@@ -1313,6 +1310,12 @@ namespace IronRuby.Runtime {
             return new ArgumentException(String.Format("wrong number or type of arguments for `{0}'", methodName));
         }
 
+        [Emitted]
+        public static Exception/*!*/ MakeAmbiguousMatchError(string/*!*/ methodName) {
+            // TODO:
+            return new AmbiguousMatchException(String.Format("Found multiple methods for `{0}'", methodName));
+        }
+
         #endregion
 
         [Emitted] //RubyBinder
@@ -1324,12 +1327,12 @@ namespace IronRuby.Runtime {
         }
 
         [Emitted]
-        public static Range/*!*/ CreateInclusiveRange(object begin, object end, RubyScope/*!*/ scope, SiteLocalStorage<BinaryOpSite>/*!*/ comparisonStorage) {
+        public static Range/*!*/ CreateInclusiveRange(object begin, object end, RubyScope/*!*/ scope, BinaryOpStorage/*!*/ comparisonStorage) {
             return new Range(comparisonStorage, scope.RubyContext, begin, end, false);
         }
 
         [Emitted]
-        public static Range/*!*/ CreateExclusiveRange(object begin, object end, RubyScope/*!*/ scope, SiteLocalStorage<BinaryOpSite>/*!*/ comparisonStorage) {
+        public static Range/*!*/ CreateExclusiveRange(object begin, object end, RubyScope/*!*/ scope, BinaryOpStorage/*!*/ comparisonStorage) {
             return new Range(comparisonStorage, scope.RubyContext, begin, end, true);
         }
 
@@ -1358,13 +1361,13 @@ namespace IronRuby.Runtime {
         }
 
         [Emitted]
-        public static MetaObject/*!*/ GetMetaObject(IRubyObject/*!*/ obj, Expression/*!*/ parameter) {
-            return new RubyObject.Meta(parameter, Restrictions.Empty, obj);
+        public static DynamicMetaObject/*!*/ GetMetaObject(IRubyObject/*!*/ obj, Expression/*!*/ parameter) {
+            return new RubyObject.Meta(parameter, BindingRestrictions.Empty, obj);
         }
 
         #region Dynamic Actions
 
-        [Emitted] //ProtocolConversionAction
+        [Emitted] // ProtocolConversionAction
         public static Proc/*!*/ ToProcValidator(string/*!*/ className, object obj) {
             Proc result = obj as Proc;
             if (result == null) {
@@ -1373,7 +1376,7 @@ namespace IronRuby.Runtime {
             return result;
         }
 
-        [Emitted] //ProtocolConversionAction
+        [Emitted] // ProtocolConversionAction
         public static MutableString/*!*/ ToStringValidator(string/*!*/ className, object obj) {
             MutableString result = obj as MutableString;
             if (result == null) {
@@ -1382,16 +1385,7 @@ namespace IronRuby.Runtime {
             return result;
         }
 
-        [Emitted] //ProtocolConversionAction
-        public static MutableString/*!*/ ToSValidator(string/*!*/ className, object obj) {
-            MutableString result = obj as MutableString;
-            if (result == null) {
-                throw new InvalidOperationException(String.Format("{0}#to_s should return String", className));
-            }
-            return result;
-        }
-
-        [Emitted] //ProtocolConversionAction
+        [Emitted] // ProtocolConversionAction
         public static string/*!*/ ToSymbolValidator(string/*!*/ className, object obj) {
             var str = obj as MutableString;
             if (str == null) {
@@ -1400,12 +1394,12 @@ namespace IronRuby.Runtime {
             return str.ConvertToString();
         }
 
-        [Emitted] //ProtocolConversionAction
+        [Emitted] // ProtocolConversionAction
         public static string/*!*/ ConvertSymbolIdToSymbol(SymbolId value) {
             return SymbolTable.IdToString(value);
         }
 
-        [Emitted] //ProtocolConversionAction
+        [Emitted] // ProtocolConversionAction
         public static string/*!*/ ConvertFixnumToSymbol(RubyContext/*!*/ context, int value) {
             context.ReportWarning("do not use Fixnums as Symbols");
 
@@ -1422,26 +1416,35 @@ namespace IronRuby.Runtime {
             return !symbol.IsEmpty && SymbolTable.ContainsId(symbol);
         }
 
-        [Emitted] //ProtocolConversionAction
+        [Emitted] // ProtocolConversionAction
         public static string/*!*/ ConvertMutableStringToSymbol(MutableString/*!*/ value) {
             return value.ConvertToString();
         }
         
-        [Emitted] //ProtocolConversionAction
+        [Emitted] // ProtocolConversionAction
         public static RubyRegex/*!*/ ToRegexValidator(string/*!*/ className, object obj) {
             return new RubyRegex(RubyRegex.Escape(ToStringValidator(className, obj)), RubyRegexOptions.NONE);
         }
 
-        [Emitted] //ProtocolConversionAction
+        [Emitted] // ProtocolConversionAction
         public static IList/*!*/ ToArrayValidator(string/*!*/ className, object obj) {
-            IList result = obj as IList;
+            var result = obj as IList;
             if (result == null) {
                 throw new InvalidOperationException(String.Format("{0}#to_ary should return Array", className));
             }
             return result;
         }
 
-        [Emitted] //ProtocolConversionAction
+        [Emitted] // ProtocolConversionAction
+        public static IDictionary<object, object>/*!*/ ToHashValidator(string/*!*/ className, object obj) {
+            var result = obj as IDictionary<object, object>;
+            if (result == null) {
+                throw new InvalidOperationException(String.Format("{0}#to_hash should return Hash", className));
+            }
+            return result;
+        }
+
+        [Emitted] // ProtocolConversionAction
         public static int ToFixnumValidator(string/*!*/ className, object obj) {
             if (obj is int) {
                 return (int)obj;
@@ -1459,18 +1462,23 @@ namespace IronRuby.Runtime {
             throw new InvalidOperationException(String.Format("{0}#to_int should return Integer", className));
         }
 
-        [Emitted] //ProtocolConversionAction
+        [Emitted] // ProtocolConversionAction
         public static Exception/*!*/ CreateTypeConversionError(string/*!*/ fromType, string/*!*/ toType) {
             return RubyExceptions.CreateTypeConversionError(fromType, toType);
         }
 
-        [Emitted] //ConvertToFixnumAction
+        [Emitted] // ConvertToFixnumAction
         public static int ConvertBignumToFixnum(BigInteger/*!*/ bignum) {
             int fixnum;
             if (bignum.AsInt32(out fixnum)) {
                 return fixnum;
             }
             throw RubyExceptions.CreateRangeError("bignum too big to convert into `long'");
+        }
+
+        [Emitted] // ConvertToSAction
+        public static MutableString/*!*/ ToSDefaultConversion(RubyContext/*!*/ context, object obj) {
+            return obj as MutableString ?? RubyUtils.ObjectToMutableString(context, obj);
         }
 
         #endregion

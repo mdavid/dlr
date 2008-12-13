@@ -44,11 +44,11 @@ namespace IronRuby.Tests {
             _rules = new Stack<int>();
         }
 
-        public void BeforeReduction(int ruleId) {
+        public void BeforeReduction(int ruleId, int rhsLength) {
             _output.Write(ruleId);
             _output.Write(" [");
             
-            for (int i = 0; i < _parser.RuleRhsLengths[ruleId]; i++) {
+            for (int i = 0; i < rhsLength; i++) {
                 if (i > 0) _output.Write(' ');
                 _output.Write(_rules.Pop());
             }

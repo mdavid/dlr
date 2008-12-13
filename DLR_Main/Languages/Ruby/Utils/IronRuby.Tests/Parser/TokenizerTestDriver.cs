@@ -37,6 +37,7 @@ namespace IronRuby.Tests {
         private TextWriter _parserLog;
         private string _currentSourceFile;
         private bool _logProductions;
+        private bool _benchmark;
 
         public TokenizerTestDriver(RubyContext/*!*/ context) {                 
             _context = context;
@@ -51,6 +52,13 @@ namespace IronRuby.Tests {
                 args.RemoveAt(argIndex);
             } else {
                 _logProductions = false;
+            }
+
+            if ((argIndex = args.IndexOf("/bm")) != -1) {
+                _benchmark = true;
+                args.RemoveAt(argIndex);
+            } else {
+                _benchmark = false;
             }
 
             _targetDir = (args.Count > 0) ? args[0] : @"C:\RubyTokens";
@@ -108,18 +116,26 @@ namespace IronRuby.Tests {
 
             _log.WriteLine("Scanning files ...");
 
-            List<string> files = new List<string>();
+            var files = new List<string>();
+            var exclude = new Dictionary<string, bool>(StringComparer.OrdinalIgnoreCase);
+            var envVars = Environment.GetEnvironmentVariables();
 
             for (int i = 0; i < lines.Length; i++) {
                 string path = lines[i];
 
+                bool excluding = false;
+                if (path.StartsWith("!")) {
+                    path = path.Substring(1);
+                    excluding = true;
+                }
+                
                 int comment = path.IndexOf('#');
                 if (comment >= 0) {
                     path = path.Substring(0, comment);
                 }
 
                 StringBuilder sb = new StringBuilder(path);
-                foreach (DictionaryEntry envVar in Environment.GetEnvironmentVariables()) {
+                foreach (DictionaryEntry envVar in envVars) {
                     sb.Replace("%" + (string)envVar.Key + "%", (string)envVar.Value);
                 }
 
@@ -127,7 +143,12 @@ namespace IronRuby.Tests {
 
                 if (path.Length > 0) {
                     if (File.Exists(path)) {
-                        files.Add(Path.GetFullPath(path));
+                        path = Path.GetFullPath(path);
+                        if (excluding) {
+                            exclude[path] = true;
+                        } else {
+                            files.Add(path);
+                        }
                     } else if (Directory.Exists(path)) {
                         ScanDirs(files, path);
                     } else {
@@ -139,29 +160,40 @@ namespace IronRuby.Tests {
             _log.WriteLine();
             _log.WriteLine();
 
-            files.Sort();
-            foreach (string file in files) {
-                TokenizeFile(file);
+            var filteredFiles = new List<string>();
+            foreach (var file in files) {
+                if (!exclude.ContainsKey(file)) {
+                    filteredFiles.Add(file);
+                }
             }
 
+            filteredFiles.Sort();
+            if (_benchmark) {
+                Benchmark(filteredFiles);
+            } else {
+                Dump(filteredFiles);
+            }
+            
             return 0;
         }
 
         private void ScanDirs(List<string>/*!*/ files, string/*!*/ dir) {
-            _log.Write(dir);
-            _log.Write(' ');
+            //_log.Write(dir);
+            //_log.Write(' ');
 
             foreach (string file in Directory.GetFiles(dir, "*.rb")) {
                 files.Add(Path.GetFullPath(Path.Combine(dir, file)));
-                _log.Write('.');
+                //_log.Write('.');
             }
 
-            _log.WriteLine();
+            //_log.WriteLine();
 
             foreach (string subdir in Directory.GetDirectories(dir)) {
                 ScanDirs(files, Path.Combine(dir, subdir));
             }
         }
+
+        #region Dump
 
         internal class ErrorLog : ErrorCounter {
             private List<string>/*!*/ _errors = new List<string>();
@@ -174,7 +206,13 @@ namespace IronRuby.Tests {
             }
         }
 
-        public void TokenizeFile(string/*!*/ path) {
+        private void Dump(List<string>/*!*/ files) {
+            foreach (string file in files) {
+                DumpFile(file);
+            }
+        }
+
+        private void DumpFile(string/*!*/ path) {
             _log.WriteLine(path);
 
             try {
@@ -242,31 +280,34 @@ namespace IronRuby.Tests {
 
             output.Write("{0}: ", Parser.TerminalToString((int)token));
 
-            switch (value.Type) {
-                case TokenValueType.None:
+            switch (token) {
+                default:
                     break;
 
-                case TokenValueType.Double:
+                case Tokens.Float:
                     output.Write("{0}D", value.Double);
                     break;
 
-                case TokenValueType.Integer:
-                    output.Write(value.Integer);
+                case Tokens.Integer:
+                    output.Write(value.Integer1);
                     break;
 
-                case TokenValueType.BigInteger:
+                case Tokens.BigInteger:
                     output.Write("{0}BI", value.BigInteger.ToString(10));
                     break;
 
-                case TokenValueType.RegexOptions:
-                    output.Write("RegexOptions({0})", (RubyRegexOptions)value.Integer);
+                case Tokens.RegexpEnd:
+                    output.Write("RegexOptions({0})", (RubyRegexOptions)value.Integer1);
                     break;
 
-                case TokenValueType.String:
+                case Tokens.StringContent:
                     output.Write("String(\"{0}\")", Parser.EscapeString(value.String));
                     break;
 
-                case TokenValueType.StringTokenizer:
+                case Tokens.StringBeg:
+                case Tokens.RegexpBeg:
+                case Tokens.ShellStringBegin:
+                case Tokens.Symbeg:
                     output.Write(value.StringTokenizer);
                     break;
             }
@@ -306,5 +347,86 @@ namespace IronRuby.Tests {
                 return true;
             }
         }
+
+        #endregion
+
+        #region Benchmarks
+
+        private void Benchmark(List<string>/*!*/ files) {
+            
+            var sources = new List<SourceUnit>();
+            Stopwatch readTime = new Stopwatch();
+            long totalSize = 0;
+            readTime.Start();
+            foreach (string path in files) {
+                try {
+                    byte[] data = File.ReadAllBytes(path);
+                    sources.Add(_context.CreateSourceUnit(new BinaryContentProvider(data), path, Encoding.Default, SourceCodeKind.File));
+                    totalSize += data.Length;
+                } catch (Exception) {
+                    Console.WriteLine("Error: {0}", path);
+                }
+            }
+            readTime.Stop();
+
+            Console.WriteLine("Read: {0} kB in {1}", totalSize / 1024, readTime.Elapsed);
+            
+#if F
+            Stopwatch tokenizeTime = new Stopwatch();
+            tokenizeTime.Start();
+            foreach (var source in sources) {
+                try {
+                    var tokenizer = new Tokenizer();
+                    tokenizer.Initialize(source);
+
+                    Tokens token;
+                    do {
+                        token = tokenizer.GetNextToken();
+                    } while (token != Tokens.EndOfFile);
+                } catch (Exception) {
+                    Console.WriteLine("Tokenization error: {0}", source.Path);
+                    break;
+                }
+            }
+            tokenizeTime.Stop();
+#endif
+            //var stackSizes = new Dictionary<int, int>();
+
+            var options = new RubyCompilerOptions();
+            Stopwatch parseTime = new Stopwatch();
+            Stopwatch transformTime = new Stopwatch();
+            foreach (var source in sources) {
+                try {
+                    parseTime.Start();
+                    var parser = new Parser();
+                    var rubyTree = parser.Parse(source, options, ErrorSink.Null);
+                    //int mt;
+                    //stackSizes[parser.StackMaxTop] = stackSizes.TryGetValue(parser.StackMaxTop, out mt) ? mt + 1 : 1;
+                    parseTime.Stop();
+#if F
+                    if (rubyTree != null) {
+                        transformTime.Start();
+                        var lambda = _context.TransformTree<DlrMainCallTarget>(rubyTree, source, options);
+                        transformTime.Stop();
+                    } else {
+                        Console.WriteLine("SyntaxError: {0}", source.Path);
+                    }
+#endif
+                } catch (Exception e) {
+                    Console.WriteLine("{0}: {1}: {2}", e.GetType().Name, source.Path, e.Message);
+                    break;
+                }
+            }
+
+          //  Console.WriteLine("Tokenize:        {0}", tokenizeTime.Elapsed);
+            Console.WriteLine("Parse:           {0}", parseTime.Elapsed);
+            //Console.WriteLine("Idf/Kwd/Loc: {0}/{1}/{2}", Tokenizer.IdfLength, Tokenizer.KwdLength, Tokenizer.LocLength);
+           // Console.WriteLine("Transform:       {0}", transformTime.Elapsed);
+
+            //PerfTrack.DumpHistogram(Parser.Reductions);
+            //PerfTrack.DumpHistogram(stackSizes);
+        }
+
+        #endregion
     }
 }

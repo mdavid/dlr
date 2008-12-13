@@ -22,14 +22,14 @@ using Microsoft.Scripting.Utils;
 namespace IronRuby.Compiler.Ast {
 
     public partial class ElseIfClause : Node {
-        private readonly List<Expression>/*!*/ _statements;
+        private readonly Statements/*!*/ _statements;
 
         /// <summary>
         /// Null means a simple else.
         /// </summary>
         private readonly Expression _condition;
 
-        public List<Expression>/*!*/ Statements {
+        public Statements/*!*/ Statements {
             get { return _statements; }
         }
 
@@ -37,10 +37,9 @@ namespace IronRuby.Compiler.Ast {
             get { return _condition; }
         }
 
-        public ElseIfClause(Expression condition, List<Expression>/*!*/ statements, SourceSpan location)
+        public ElseIfClause(Expression condition, Statements/*!*/ statements, SourceSpan location)
             : base(location) {
-            Assert.NotNullItems(statements);
-
+            Assert.NotNull(statements);
             _statements = statements;
             _condition = condition;
         }

@@ -78,14 +78,14 @@ namespace IronRuby.Tests {
             }
 
             using (TextWriter writer = File.CreateText(Path.Combine(temp, "productions.txt"))) {
-                for (int i = 0; i < parser.RuleLhsNonTerminals.Length; i++) {
+                for (int i = 0; i < parser.Rules.Length; i++) {
                     writer.WriteLine("{0}\t{1}", i, parser.RuleToString(i));
                 }
             }
 
             parser = new Parser();
             using (TextWriter writer = File.CreateText(Path.Combine(temp, "productions.txt"))) {
-                for (int i = 0; i < parser.RuleLhsNonTerminals.Length; i++) {
+                for (int i = 0; i < parser.Rules.Length; i++) {
                     writer.WriteLine("{0}\t{1}", i, parser.RuleToString(i));
                 }
             }
@@ -349,7 +349,7 @@ namespace IronRuby.Tests {
             t.Load("0x").Read(0).Expect(Errors.NumericLiteralWithoutDigits);
             t.Load("0x_1").Read(0).Expect(Errors.NumericLiteralWithoutDigits);
 
-            t.Load(".20").Read((Tokens)'.', TokenValueType.None).Expect(Errors.NoFloatingLiteral);
+            t.Load(".20").Read((Tokens)'.').Expect(Errors.NoFloatingLiteral);
             t.Load("1.e").Read(1);
             t.Load("1.2e").Read(1.2D).Expect(Errors.TrailingEInNumber);
             t.Load("1e").Read(1).Expect(Errors.TrailingEInNumber);
@@ -378,6 +378,102 @@ namespace IronRuby.Tests {
             t.Load("@aA1_").ReadSymbol(Tokens.InstanceVariable, "@aA1_");
             t.Load("@@aA1_").ReadSymbol(Tokens.ClassVariable, "@@aA1_");
             
+            t.Expect();
+        }
+
+        private void ParseGlobalVariables1() {
+            AssertTokenizer t = AssertTokens();
+
+            t.Load("$")[(Tokens)'$'].EOF();
+            t.Load("$_")[Tokens.GlobalVariable, "_"].EOF();
+            t.Load("$_1")[Tokens.GlobalVariable, "_1"].EOF();
+            t.Load("$_-1")[Tokens.GlobalVariable, "_"][(Tokens)'-'][1].EOF();
+            t.Load("$!")[Tokens.GlobalVariable, "!"].EOF();
+            t.Load("$@")[Tokens.GlobalVariable, "@"].EOF();
+            t.Load("$-")[Tokens.GlobalVariable, "-"].EOF();
+            t.Load("$--1")[Tokens.GlobalVariable, "-"][(Tokens)'-'][1].EOF();
+            t.Load("$-x")[Tokens.GlobalVariable, "-x"].EOF();
+            
+            t.Expect();
+        }
+
+        private void ParseEolns1() {
+            AssertTokenizer t = AssertTokens();
+
+            // empty source:
+            t.Load("").EOF();
+
+            // escaped eoln:
+            t.Load("[\\\r\n]")[Tokens.Lbrack][(Tokens)']'].EOF();
+            t.Load("[\\\n]")[Tokens.Lbrack][(Tokens)']'].EOF();
+            t.Load("[\\\r]")[Tokens.Lbrack][(Tokens)'\\'][(Tokens)']'].EOF();
+
+            // eoln used to quote a string:
+            t.Load("x = %\r\nhello\r\n")[Tokens.Identifier][(Tokens)'='][Tokens.StringBeg][Tokens.StringContent, "hello"][Tokens.StringEnd].EOF();
+            t.Load("x = %\nhello\r\n")[Tokens.Identifier][(Tokens)'='][Tokens.StringBeg][Tokens.StringContent, "hello"][Tokens.StringEnd].EOF();
+            t.Load("x = %\rhello\r\n\r")[Tokens.Identifier][(Tokens)'='][Tokens.StringBeg][Tokens.StringContent, "hello\n"][Tokens.StringEnd].EOF();
+
+            t.Load("%Q\r\nhello\n")[Tokens.StringBeg][Tokens.StringContent, "hello"][Tokens.StringEnd].EOF();
+            t.Load("%Q\nhello\n")[Tokens.StringBeg][Tokens.StringContent, "hello"][Tokens.StringEnd].EOF();
+            t.Load("%Q\rhello\r\n\r")[Tokens.StringBeg][Tokens.StringContent, "hello\n"][Tokens.StringEnd].EOF();
+
+            t.Load("%w[  foo]")[Tokens.VerbatimWordsBegin][Tokens.StringContent, "foo"][Tokens.WordSeparator][Tokens.StringEnd].EOF();
+            t.Load("%w[\n   foo]")[Tokens.VerbatimWordsBegin][Tokens.StringContent, "foo"][Tokens.WordSeparator][Tokens.StringEnd].EOF();
+            t.Load("%w(\rx\n \r\n  \nz\n)")[Tokens.VerbatimWordsBegin][Tokens.StringContent, "x"][Tokens.WordSeparator]
+                [Tokens.StringContent, "z"][Tokens.WordSeparator][Tokens.StringEnd].EOF();
+                    
+            t.Load("%1")[(Tokens)'%'].Expect(Errors.UnknownQuotedStringType)[1].EOF();
+
+            // heredoc:
+            t.Load("p <<E\n\n1\n2\r3\r\nE\n")[Tokens.Identifier][Tokens.StringBeg]["\n1\n2\r3\n"][Tokens.StringEnd][(Tokens)'\n'].EOF();
+            t.Load("p <<E\nE\r\n")[Tokens.Identifier][Tokens.StringBeg][Tokens.StringEnd][(Tokens)'\n'].EOF();
+            t.Expect();
+        }
+
+        private void ParseEscapes1() {
+            AssertTokenizer t = AssertTokens();
+
+            const string CR = "\r";
+            const string LF = "\n";
+            const string Q = "\"";
+            const string BS = "\\";
+
+            // string:
+
+            t.Load(Q + BS + CR + LF + Q)[Tokens.StringBeg][Tokens.StringContent, ""][Tokens.StringEnd].EOF();
+            t.Load(Q + BS + LF + Q)[Tokens.StringBeg][Tokens.StringContent, ""][Tokens.StringEnd].EOF();
+            t.Load(Q + BS + CR + Q)[Tokens.StringBeg][Tokens.StringContent, "\r"][Tokens.StringEnd].EOF();
+
+            t.Load(Q + BS + "M-" + CR + LF + Q)[Tokens.StringBeg][Tokens.StringContent, "\u008A"][Tokens.StringEnd].EOF();
+            t.Load(Q + BS + "M-" + LF + Q)[Tokens.StringBeg][Tokens.StringContent, "\u008A"][Tokens.StringEnd].EOF();
+            t.Load(Q + BS + "M-" + CR + Q)[Tokens.StringBeg][Tokens.StringContent, "\u008D"][Tokens.StringEnd].EOF();
+
+            t.Load(Q + BS + "C-" + CR + LF + Q)[Tokens.StringBeg][Tokens.StringContent, "\n"][Tokens.StringEnd].EOF();
+            t.Load(Q + BS + "C-" + LF + Q)[Tokens.StringBeg][Tokens.StringContent, "\n"][Tokens.StringEnd].EOF();
+            t.Load(Q + BS + "C-" + CR + Q)[Tokens.StringBeg][Tokens.StringContent, "\r"][Tokens.StringEnd].EOF();
+
+            t.Load(Q + BS + "c" + CR + LF + Q)[Tokens.StringBeg][Tokens.StringContent, "\n"][Tokens.StringEnd].EOF();
+            t.Load(Q + BS + "c" + LF + Q)[Tokens.StringBeg][Tokens.StringContent, "\n"][Tokens.StringEnd].EOF();
+            t.Load(Q + BS + "c" + CR + Q)[Tokens.StringBeg][Tokens.StringContent, "\r"][Tokens.StringEnd].EOF();
+
+            // regex:
+
+            t.Load("/" + BS + CR + LF + "/")[Tokens.RegexpBeg][Tokens.StringContent, ""][Tokens.RegexpEnd].EOF();
+            t.Load("/" + BS + LF + "/")[Tokens.RegexpBeg][Tokens.StringContent, ""][Tokens.RegexpEnd].EOF();
+            t.Load("/" + BS + CR + "/")[Tokens.RegexpBeg][Tokens.StringContent, BS + CR][Tokens.RegexpEnd].EOF();
+
+            t.Load("/" + BS + "M-" + CR + LF + "/")[Tokens.RegexpBeg][Tokens.StringContent, BS + "M-\n"][Tokens.RegexpEnd].EOF();
+            t.Load("/" + BS + "M-" + LF + "/")[Tokens.RegexpBeg][Tokens.StringContent, BS + "M-\n"][Tokens.RegexpEnd].EOF();
+            t.Load("/" + BS + "M-" + CR + "/")[Tokens.RegexpBeg][Tokens.StringContent, BS + "M-\r"][Tokens.RegexpEnd].EOF();
+
+            t.Load("/" + BS + "C-" + CR + LF + "/")[Tokens.RegexpBeg][Tokens.StringContent, BS + "C-\n"][Tokens.RegexpEnd].EOF();
+            t.Load("/" + BS + "C-" + LF + "/")[Tokens.RegexpBeg][Tokens.StringContent, BS + "C-\n"][Tokens.RegexpEnd].EOF();
+            t.Load("/" + BS + "C-" + CR + "/")[Tokens.RegexpBeg][Tokens.StringContent, BS + "C-\r"][Tokens.RegexpEnd].EOF();
+
+            t.Load("/" + BS + "c" + CR + LF + "/")[Tokens.RegexpBeg][Tokens.StringContent, BS + "c\n"][Tokens.RegexpEnd].EOF();
+            t.Load("/" + BS + "c" + LF + "/")[Tokens.RegexpBeg][Tokens.StringContent, BS + "c\n"][Tokens.RegexpEnd].EOF();
+            t.Load("/" + BS + "c" + CR + "/")[Tokens.RegexpBeg][Tokens.StringContent, BS + "c\r"][Tokens.RegexpEnd].EOF();
+
             t.Expect();
         }
 
@@ -511,7 +607,10 @@ namespace IronRuby.Tests {
 
             t.Load("<<`LABEL`\nhello\nLABEL")
                 [Tokens.ShellStringBegin]["hello\n"][Tokens.StringEnd][(Tokens)'\n'].EOF();
-            
+
+            t.Load("<<LABEL\nLABEL123\nLABEL")
+                [Tokens.StringBeg]["LABEL123\n"][Tokens.StringEnd][(Tokens)'\n'].EOF();
+
             t.Expect();
         }
 

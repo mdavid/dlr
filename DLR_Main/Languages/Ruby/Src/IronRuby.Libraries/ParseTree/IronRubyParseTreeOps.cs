@@ -27,7 +27,7 @@ using Microsoft.Scripting.Runtime;
 using Microsoft.Scripting.Utils;
 
 namespace IronRuby.StandardLibrary.ParseTree {
-    [RubyModule("IronRuby")]
+    [RubyModule("IronRuby", Extends = typeof(Ruby))]
     public static class IronRubyOps {
 
         [RubyModule("ParseTree")]
@@ -207,7 +207,7 @@ namespace IronRuby.StandardLibrary.ParseTree {
                     }
                 }
 
-                private RubyArray/*!*/ AddRange<T>(RubyArray/*!*/ list, IList<T> nodes) where T : Node {
+                private RubyArray/*!*/ AddRange<T>(RubyArray/*!*/ list, IEnumerable<T> nodes) where T : Node {
                     if (nodes != null) {
                         foreach (T node in nodes) {
                             Walk(node);
@@ -244,7 +244,7 @@ namespace IronRuby.StandardLibrary.ParseTree {
                     if (node.Statements == null || node.Statements.Count == 0) {
                         _result = new RubyArray();
                     } else if (node.Statements.Count == 1) {
-                        Walk(node.Statements[0]);
+                        Walk(node.Statements.First);
                         _result = RubyArray.Create(_result);
                     } else {
                         _result = RubyArray.Create(AddRange(MakeNode(NodeKind.block, node.Statements.Count), node.Statements));
@@ -390,7 +390,7 @@ namespace IronRuby.StandardLibrary.ParseTree {
 
                 public override bool Enter(HashConstructor/*!*/ node) {
                     if (node.Expressions != null) {
-                        _result = AddRange(MakeNode(NodeKind.hash, node.Expressions.Count), node.Expressions);
+                        _result = AddRange(MakeNode(NodeKind.hash, node.Expressions.Length), node.Expressions);
                     } else if (node.Maplets != null) {
                         _result = MakeHash(node.Maplets);
                     } else {
@@ -530,7 +530,7 @@ namespace IronRuby.StandardLibrary.ParseTree {
                 private RubyArray VisitExpressionsAndMaplets(Arguments/*!*/ node) {
                     if (node.Expressions != null || node.Maplets != null) {
                         var array = MakeNode(NodeKind.array,
-                            (node.Expressions != null ? node.Expressions.Count : 0) + 
+                            (node.Expressions != null ? node.Expressions.Length : 0) + 
                             (node.Maplets != null ? 1 : 0)
                         );
 
@@ -727,10 +727,10 @@ namespace IronRuby.StandardLibrary.ParseTree {
                     var oldRhs = _rhs;
                     _rhs = null;
 
-                    if (node.Right.SplattedValue == null && node.Right.RightValues.Count == 1 && node.Left.LeftValues.Count > 0) {
+                    if (node.Right.SplattedValue == null && node.Right.RightValues.Length == 1 && node.Left.LeftValues.Count > 0) {
                         Walk(node.Right.RightValues[0]);
                         _rhs = new Rhs { InCompoundLhs = true, InTopCompoundLhs = true, Value = MakeNode(NodeKind.to_ary, _result) };
-                    } else if (node.Right.SplattedValue != null && node.Right.RightValues.Count == 0) {
+                    } else if (node.Right.SplattedValue != null && node.Right.RightValues.Length == 0) {
                         Walk(node.Right.SplattedValue);
 
                         var rvalue = MakeNode(NodeKind.splat, _result);
@@ -741,7 +741,7 @@ namespace IronRuby.StandardLibrary.ParseTree {
                         }
 
                     } else {
-                        var exprs = AddRange(MakeNode(NodeKind.array, node.Right.RightValues.Count), node.Right.RightValues);
+                        var exprs = AddRange(MakeNode(NodeKind.array, node.Right.RightValues.Length), node.Right.RightValues);
 
                         if (node.Right.SplattedValue != null) {
                             exprs = MakeSplatArguments(exprs, node.Right.SplattedValue);
@@ -1093,7 +1093,7 @@ namespace IronRuby.StandardLibrary.ParseTree {
                         var resbody = MakeNode(NodeKind.resbody, 3);
 
                         if (clause.Types != null) {
-                            resbody.Add(AddRange(MakeNode(NodeKind.array, clause.Types.Count), clause.Types));
+                            resbody.Add(AddRange(MakeNode(NodeKind.array, clause.Types.Length), clause.Types));
                         } else {
                             resbody.Add(null);
                         }
@@ -1145,12 +1145,12 @@ namespace IronRuby.StandardLibrary.ParseTree {
 
                 #region Flow
 
-                private object MakeBlock(List<Expression> statements) {
+                private object MakeBlock(Statements statements) {
                     var block = MakeBlockOpt(statements);
                     return (block != Skip) ? block : MakeNode(NodeKind.nil);
                 }
 
-                private RubyArray/*!*/ AddBlock(RubyArray/*!*/ list, List<Expression> statements) {
+                private RubyArray/*!*/ AddBlock(RubyArray/*!*/ list, Statements statements) {
                     var block = MakeBlockOpt(statements);
                     if (block != Skip) {
                         list.Add(block);
@@ -1158,11 +1158,11 @@ namespace IronRuby.StandardLibrary.ParseTree {
                     return list;
                 }
 
-                private object MakeBlockOpt(List<Expression> statements) {
+                private object MakeBlockOpt(Statements statements) {
                     if (statements == null || statements.Count == 0) {
                         return Skip;
                     } else if (statements.Count == 1) {
-                        Walk(statements[0]);
+                        Walk(statements.First);
                         return _result;
                     } else {
                         return AddRange(MakeNode(NodeKind.block, statements.Count), statements);
@@ -1339,8 +1339,8 @@ namespace IronRuby.StandardLibrary.ParseTree {
                     foreach (var whenClause in node.WhenClauses) {
                         var when = MakeNode(NodeKind.when, 2);
 
-                        var array = MakeNode(NodeKind.array, 
-                            (whenClause.Comparisons != null ? whenClause.Comparisons.Count : 0) + 
+                        var array = MakeNode(NodeKind.array,
+                            (whenClause.Comparisons != null ? whenClause.Comparisons.Length : 0) + 
                             (whenClause.ComparisonArray != null ? 1 :0)
                         );
 

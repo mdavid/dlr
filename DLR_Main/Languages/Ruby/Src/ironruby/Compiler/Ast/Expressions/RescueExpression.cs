@@ -48,8 +48,8 @@ namespace IronRuby.Compiler.Ast {
 
         private Body/*!*/ ToBody(AstGenerator/*!*/ gen) {
             return new Body(
-                CollectionUtils.MakeList(_guardedExpression),
-                CollectionUtils.MakeList(new RescueClause(null, CollectionUtils.MakeList(_rescueClauseStatement), _rescueSpan)),
+                new Statements(_guardedExpression),
+                CollectionUtils.MakeList(new RescueClause(null, new Statements(_rescueClauseStatement), _rescueSpan)),
             null, null, Location);
         }
 

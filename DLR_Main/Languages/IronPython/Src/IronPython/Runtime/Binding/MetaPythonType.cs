@@ -14,31 +14,54 @@
  * ***************************************************************************/
 
 using System; using Microsoft;
+using System.Collections.Generic;
 using Microsoft.Linq.Expressions;
 using Microsoft.Scripting;
-using IronPython.Runtime.Types;
+
 using Microsoft.Scripting.Utils;
 
+using IronPython.Runtime.Types;
+    
 namespace IronPython.Runtime.Binding {
     using Ast = Microsoft.Linq.Expressions.Expression;
 
     partial class MetaPythonType : MetaPythonObject {
-        public MetaPythonType(Expression/*!*/ expression, Restrictions/*!*/ restrictions, PythonType/*!*/ value)
-            : base(expression, Restrictions.Empty, value) {
+        public MetaPythonType(Expression/*!*/ expression, BindingRestrictions/*!*/ restrictions, PythonType/*!*/ value)
+            : base(expression, BindingRestrictions.Empty, value) {
             Assert.NotNull(value);
         }
 
-        public override MetaObject BindCreateInstance(CreateInstanceBinder create, params MetaObject[] args) {
+        public override DynamicMetaObject BindCreateInstance(CreateInstanceBinder create, params DynamicMetaObject[] args) {
             return InvokeWorker(create, args, Ast.Constant(BinderState.GetBinderState(create).Context));
         }
 
-        public override MetaObject BindConvert(ConvertBinder/*!*/ conversion) {
+        public override DynamicMetaObject BindConvert(ConvertBinder/*!*/ conversion) {
             if (conversion.Type.IsSubclassOf(typeof(Delegate))) {
                 return MakeDelegateTarget(conversion, conversion.Type, Restrict(Value.GetType()));
             }
             return conversion.FallbackConvert(this);
         }
 
+        public override System.Collections.Generic.IEnumerable<System.Collections.Generic.KeyValuePair<string, object>> GetDynamicDataMembers() {
+            PythonContext pc = Value.PythonContext ?? DefaultContext.DefaultPythonContext;
+
+            IAttributesCollection dict = Value.GetMemberDictionary(pc.DefaultBinderState.Context);
+
+            foreach (KeyValuePair<SymbolId, object> members in dict.SymbolAttributes) {
+                // all members are data members in a type.
+                yield return new KeyValuePair<string, object>(SymbolTable.IdToString(members.Key), members.Value);
+            }
+        }
+
+        public override System.Collections.Generic.IEnumerable<string> GetDynamicMemberNames() {
+            PythonContext pc = Value.PythonContext ?? DefaultContext.DefaultPythonContext;
+
+            foreach (object o in Value.GetMemberNames(pc.DefaultBinderState.Context)) {
+                if (o is string) {
+                    yield return (string)o;
+                }
+            }
+        }
 
         public new PythonType/*!*/ Value {
             get {

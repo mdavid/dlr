@@ -84,9 +84,10 @@ namespace IronRuby.Compiler.Ast {
             );
         }
 
-        internal override MSA.Expression TransformDefinedCondition(AstGenerator/*!*/ gen) {
+        internal override MSA.Expression/*!*/ TransformDefinedCondition(AstGenerator/*!*/ gen) {
             // TODO:
-            throw new NotImplementedError();
+            //throw new NotImplementedError();
+            return Ast.Constant(false);
         }
 
         internal override string/*!*/ GetNodeName(AstGenerator/*!*/ gen) {

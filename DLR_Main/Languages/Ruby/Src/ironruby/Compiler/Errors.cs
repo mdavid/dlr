@@ -100,6 +100,7 @@ namespace IronRuby.Compiler {
         // TODO: level 1?
         public static readonly ErrorInfo AmpersandInterpretedAsProcArgument = new ErrorInfo(WarningLevel2 + 3, "`&' interpreted as argument prefix");
         public static readonly ErrorInfo AmpersandInVoidContext = new ErrorInfo(WarningLevel2 + 4, "Useless use of & in void context");
+        public static readonly ErrorInfo StarInterpretedAsSplatArgument = new ErrorInfo(WarningLevel2 + 5, "`*' interpreted as argument prefix");
     
         internal static bool IsVerboseWarning(int errorCode) {
             return errorCode >= WarningLevel2;

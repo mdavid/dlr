@@ -27,21 +27,21 @@ using IronRuby.Compiler.Ast;
 using System.Text.RegularExpressions;
 
 namespace IronRuby.Compiler {
-    public enum LexicalState {
-        EXPR_BEG,			/* ignore newline, +/- is a sign. */
-        EXPR_END,			/* newline significant, +/- is a operator. */
-        EXPR_ARG,			/* newline significant, +/- is a operator. */
-        EXPR_CMDARG,		/* newline significant, +/- is a operator. */
-        EXPR_ENDARG,		/* newline significant, +/- is a operator. */
-        EXPR_MID,			/* newline significant, +/- is a operator. */
-        EXPR_FNAME,			/* ignore newline, no reserved words. */
-        EXPR_DOT,			/* right after `.' or `::', no reserved words. */
-        EXPR_CLASS,			/* immediate after `class', no here document. */
+    internal enum LexicalState {
+        EXPR_BEG,			// ignore newline, +/- is a sign.
+        EXPR_END,			// newline significant, +/- is a operator.
+        EXPR_ARG,			// newline significant, +/- is a operator.
+        EXPR_CMDARG,		// newline significant, +/- is a operator.
+        EXPR_ENDARG,		// newline significant, +/- is a operator.
+        EXPR_MID,			// newline significant, +/- is a operator.
+        EXPR_FNAME,			// ignore newline, no reserved words.
+        EXPR_DOT,			// right after `.' or `::', no reserved words.
+        EXPR_CLASS,			// immediate after `class', no here document.
     };
 
     public class Tokenizer : TokenizerService {
         public sealed class BignumParser : UnsignedBigIntegerParser {
-            private char[] _buffer; // TODO: TokenizerBuffer
+            private char[] _buffer;
             private int _position;
 
             public int Position { get { return _position; } set { _position = value; } }
@@ -70,211 +70,112 @@ namespace IronRuby.Compiler {
             }
         }
 
-        #region DLR
-
-        private const int DefaultBufferCapacity = 1024;
-
-        // tokenizer properties:
-        private SourceUnit _sourceUnit;
-
-        //private TokenizerBuffer _buffer;
-        private ErrorSink/*!*/ _errorSink;
-        private TokenValue _tokenValue;
-        private bool _verbatim;
-        private bool _eofReached;
-
-        // __END__
-        private int _dataOffset;
-
-        private RubyCompatibility _compatibility;
-
-        /// <summary>
-        /// Can be <c>null</c> - unbound tokenizer.
-        /// </summary>
-        private Parser _parser;
-
-        public override object CurrentState {
-            get { return null; }
-        }
-
-        public SourceUnit SourceUnit {
-            get { return _sourceUnit; }
-        }
-
-        public int DataOffset {
-            get { return _dataOffset; } 
-        }
-
-        public override ErrorSink/*!*/ ErrorSink {
-            get { return _errorSink; }
-            set {
-                ContractUtils.RequiresNotNull(value, "value");
-                _errorSink = value;
-            }
-        }
-
-        public RubyCompatibility Compatibility {
-            get { return _compatibility; }
-            set { _compatibility = value; }
-        }
-
-        public override bool IsRestartable {
-            get { return false; }
-        }
-
-        internal bool IsEndOfFile {
-            get { 
-                return _eofReached; // TODO: _buffer.Peek() == TokenizerBuffer.EOF;
-            }
-        }
-
-        public override SourceLocation CurrentPosition {
-            get { return _tokenSpan.End; } // TODO: ???
-        }
-
-        public SourceSpan TokenSpan {
-            get {
-                return _tokenSpan;
-            }
-        }
-
-        // TODO: internal (tests)
-        public TokenValue TokenValue {
-            get {
-                return _tokenValue;
-            }
-        }
-
-        // TODO: internal (tests)
-        public LexicalState LexicalState {
-            get {
-                return _lexicalState;
-            }
-        }
+        private const int InitialBufferSize = 80;
         
+        private TextReader _input;
+        private SourceLocation _initialLocation;
+        private RubyCompatibility _compatibility;
+        private bool _verbatim;
+        
+        private SourceUnit _sourceUnit;
+        private ErrorSink/*!*/ _errorSink;
+        private BignumParser _bigIntParser;
+        private ILexicalVariableResolver/*!*/ _localVariableResolver;
+        
+        #region State
+
+        private LexicalState _lexicalState;
+        private bool _commaStart = true;
+        private StringTokenizer _currentString = null;
+        private int _cmdArgStack = 0;
+        private int _condStack = 0;
+
+        // Non-zero => End of the last heredoc that finished reading content.
+        // While non-zero the current stream position doesn't correspond the current line and line index 
+        // (the stream is ahead, we are reading from a buffer restored by the last heredoc).
+        private int _heredocEndLine;
+        private int _heredocEndLineIndex = -1;
+
+        #endregion
+
+        // Entire line that is currently being tokenized.
+        // Includes \r, \n, \r\n if there was eoln in input.
+        private char[] _lineBuffer;
+
+        // Portion of _lineBuffer that contains valid data. 
+        private int _lineLength;
+
+        // index in the current buffer/line:
+        private int _bufferPos;
+
+        // current line no:
+        private int _currentLine;
+        private int _currentLineIndex;
+        
+        // out: whether the last token terminated
+        private bool _unterminatedToken;
+        private bool _eofReached;
+        // out: offset data following __END__ token
+        private int _dataOffset;
+        // out: token value:
+        private TokenValue _tokenValue;
+        
+        // token positions set during tokenization (TODO: to be replaced by tokenizer buffer):
+        private SourceLocation _currentTokenStart;
+        private SourceLocation _currentTokenEnd;
+        private int _currentTokenStartIndex;
+
+        // last token span:
+        private SourceSpan _tokenSpan;
+        
+        #region Initialization
+
         public Tokenizer() 
             : this(true) {
         }
 
-        public Tokenizer(bool verbatim) 
-            : this(verbatim, ErrorSink.Null) {
+        public Tokenizer(bool verbatim)
+            : this(verbatim, DummyVariableResolver.AllMethodNames) {
         }
 
-        public Tokenizer(bool verbatim, ErrorSink/*!*/ errorSink) {
-            ContractUtils.RequiresNotNull(errorSink, "errorSink");
-
-            _bigIntParser = new BignumParser();
-            _errorSink = errorSink;
-            _sourceUnit = null;
-            _parser = null;
-            _verbatim = verbatim;
-            _compatibility = RubyCompatibility.Default;
-//            _buffer = null;
-            _initialLocation = SourceLocation.Invalid;
-            _tokenSpan = SourceSpan.Invalid;
-            _tokenValue = new TokenValue();
-            _bufferPos = 0;
+        public Tokenizer(bool verbatim, ILexicalVariableResolver/*!*/ localVariableResolver) {
+            ContractUtils.RequiresNotNull(localVariableResolver, "localVariableResolver");
             
-            // TODO:
-            _input = null;
+            _errorSink = ErrorSink.Null;
+            _localVariableResolver = localVariableResolver;
+            _verbatim = verbatim;
         }
 
-        internal Tokenizer(Parser/*!*/ parser)
-            : this(false) {
-            _parser = parser;
-        }
-
-        public void Initialize(SourceUnit sourceUnit) {
+        public void Initialize(SourceUnit/*!*/ sourceUnit) {
             ContractUtils.RequiresNotNull(sourceUnit, "sourceUnit");
-
-            Initialize(null, sourceUnit.GetReader(), sourceUnit, SourceLocation.MinValue, DefaultBufferCapacity);
+            Initialize(null, sourceUnit.GetReader(), sourceUnit, SourceLocation.MinValue);
         }
 
-        public override void Initialize(object state, TextReader/*!*/ reader, SourceUnit/*!*/ sourceUnit, SourceLocation initialLocation) {
-            Initialize(state, reader, sourceUnit, initialLocation, DefaultBufferCapacity);
+        public void Initialize(TextReader/*!*/ reader) {
+            Initialize(null, reader, null, SourceLocation.MinValue);
         }
 
-        public void Initialize(object state, TextReader/*!*/ reader, SourceUnit sourceUnit, SourceLocation initialLocation, int bufferCapacity) {
+        public override void Initialize(object state, TextReader/*!*/ reader, SourceUnit sourceUnit, SourceLocation initialLocation) {
             ContractUtils.RequiresNotNull(reader, "reader");
-
-            //if (state != null) {
-            //    if (!(state is State)) throw new ArgumentException();
-            //    _state = new State((State)state);
-            //} else {
-            //    _state = new State(null);
-            //}
 
             _sourceUnit = sourceUnit;
 
-            //_buffer = new TokenizerBuffer(sourceReader, initialLocation, bufferCapacity, true);
             _input = reader;
             _initialLocation = initialLocation;
+            _currentLine = _initialLocation.Line;
+            _currentLineIndex = _initialLocation.Index;
             _tokenSpan = new SourceSpan(initialLocation, initialLocation);
-            _tokenValue = new TokenValue();
-            
-            _eofReached = false;
 
-            UnterminatedToken = false;
+            SetState(LexicalState.EXPR_BEG);
+
+            _tokenValue = new TokenValue();
+            _eofReached = false;
+            _unterminatedToken = false;
 
             DumpBeginningOfUnit();
         }
 
-        /// <summary>
-        /// Asks parser whether a given identifier is a local variable. 
-        /// Unbound tokenizer considers any identifier a local variable.
-        /// </summary>
-        private bool IsLocalVariable(string/*!*/ identifier) {
-            return _parser == null || _parser.CurrentScope.ResolveVariable(identifier) != null;
-        }
-
-        private string GetTokenString() {
-            return _tokenString != null ? _tokenString.ToString() : "";
-        }
-
         #endregion
-
-        private readonly BignumParser/*!*/ _bigIntParser;
-        private LexicalState _lexicalState;
-
-        private bool _commaStart = true;
-
-
-        private StringTokenizer _currentString = null;
-
-        private TextReader _input;
-
-        private StringBuilder yytext;
-
-        // Entire line that is currently being tokenized.
-        // Ends with \r, \n, or \r\n.
-        private char[] _lineBuffer;
-
-        // characters belonging to the token currently being read:
-        private StringBuilder _tokenString = null;
-        
-        // index in the current buffer/line:
-        private int _bufferPos = 0;
-        
-        // current line no:
-        private int _currentLine;
-        private int _currentLineIndex;
-
-        // non-zero => end line of the current heredoc
-        private int _heredocEndLine;
-        private int _heredocEndLineIndex = -1;
-        private SourceLocation _initialLocation;
-        
-        private int _cmdArgStack = 0;
-        private int _condStack = 0;
-
-        internal bool UnterminatedToken;
-
-        // token positions set during tokenization (TODO: to be replaced by tokenizer buffer):
-        private SourceLocation _currentTokenStart;
-        private SourceLocation _currentTokenEnd;
-
-        // last token span:
-        private SourceSpan _tokenSpan;
 
         #region Debug Logging
 
@@ -317,24 +218,26 @@ namespace IronRuby.Compiler {
         [Conditional("DEBUG")]
         private void DumpToken(Tokens token) {
 #if DEBUG
-            Log("{0,-25} {1,-25} {2,-25} {3,-20} {4}",
+            Log("{0,-25} {1,-25} {2}",
                 Parser.TerminalToString((int)token),
-                "\"" + Parser.EscapeString(GetTokenString()) + "\"",
                 _tokenValue.ToString(),
-                "",                 // TODO: FIX RUBY
                 _lexicalState);
 #endif
         }
 
         #endregion
 
-        #region Parser Callbacks, State Operations
+        #region Parser API, State Operations
 
+        internal LexicalState LexicalState {
+            get { return _lexicalState; }
+        }
+        
         private bool IS_ARG() {
             return _lexicalState == LexicalState.EXPR_ARG || _lexicalState == LexicalState.EXPR_CMDARG;
         }
 
-        public void SetState(LexicalState state) {
+        internal void SetState(LexicalState state) {
             _lexicalState = state;
         }
 
@@ -400,6 +303,8 @@ namespace IronRuby.Compiler {
             return BITSTACK_SET_P(_condStack);
         }
 
+        // Stores the current string tokenizer into the StringEmbeddedVariableBegin token.
+        // It is restored later via call to StringEmbeddedVariableEnd. 
         private Tokens StringEmbeddedVariableBegin() {
             _tokenValue.SetStringTokenizer(_currentString);
             _currentString = null;
@@ -407,6 +312,8 @@ namespace IronRuby.Compiler {
             return Tokens.StringEmbeddedVariableBegin;
         }
 
+        // Stores the current string tokenizer into the StringEmbeddedCodeBegin token.
+        // It is restored later via call to StringEmbeddedCodeEnd. 
         private Tokens StringEmbeddedCodeBegin() {
             _tokenValue.SetStringTokenizer(_currentString);
             _currentString = null;
@@ -457,105 +364,112 @@ namespace IronRuby.Compiler {
 
         #region Buffer Operations
 
-        // reads a line including eoln (any of \r, \n, \r\n)
-        // returns null if no characters read (end of sream)
-        // doesn't return an empty string
-        private char[] lex_getline() {
-            var result = new char[80];
+        // Populates the line buffer by the next line. 
+        // Returns false if no characters were read.
+        private bool LoadLine() {
             int size = 0;
 
-            int c;
-            for (; ; ) {
-                c = _input.Read();
+            if (_lineBuffer == null) {
+                _lineBuffer = new char[InitialBufferSize];
+            }
+
+            while (true) {
+                int c = _input.Read();
                 if (c == -1) {
                     if (size > 0) {
-                        // append eoln at the end of each file
-                        //sb.Append('\n');
-                        //_currentLineLength++;
+                        if (size < _lineBuffer.Length) {
+                            _lineBuffer[size] = '\0';
+                        }
                         break;
+                    } else {
+                        return false;
                     }
-                    return null;
                 }
 
-                if (size == result.Length) {
-                    Array.Resize(ref result, result.Length * 2);
+                if (size == _lineBuffer.Length) {
+                    Array.Resize(ref _lineBuffer, size * 2);
                 }
-                result[size++] = (char)c;
+                _lineBuffer[size++] = (char)c;
 
                 if (c == '\n') break;
                 if (c == '\r' && _input.Peek() != '\n') break;
             }
 
-            Debug.Assert(size > 0);
-            Array.Resize(ref result, size);
-            return result;
+            _lineLength = size;
+            _bufferPos = 0;
+            return true;
         }
 
-        // reads next character from the current line, if no characters available, reads a new line to the buffer
-        // skips \r if followed by \n
-        // appends read character to the token value
-        private int nextc() {
+        private int Read() {
             if (!RefillBuffer()) {
                 return -1;
             }
 
-            Debug.Assert(0 <= _bufferPos && _bufferPos < _lineBuffer.Length);
+            Debug.Assert(0 <= _bufferPos && _bufferPos < _lineLength);
 
-            int c = _lineBuffer[_bufferPos];
-            _bufferPos++;
-
-            // skip \r if followed by \n
-            if (c == '\r' && _bufferPos < _lineBuffer.Length && _lineBuffer[_bufferPos] == '\n') {
-                _bufferPos++;
-                yytext.Append((char)c); // remembers skipped \r in yytext
-                c = '\n';
-            }
-
-            yytext.Append((char)c);
-
-            return c;
+            return _lineBuffer[_bufferPos++];
         }
 
-        private int peekc() {
-            if (!RefillBuffer()) {
-                return -1;
+        private bool Read(int c) {
+            if (Peek() == c) {
+                Skip();
+                return true;
+            } else {
+                return false;
             }
-
-            Debug.Assert(0 <= _bufferPos && _bufferPos < _lineBuffer.Length);
-
-            int c = _lineBuffer[_bufferPos];
-
-            // skip \r if followed by \n
-            if (c == '\r' && _bufferPos < _lineBuffer.Length && _lineBuffer[_bufferPos] == '\n') {
-                _bufferPos++;
-                c = '\n';
-            }
-
-            return c;
         }
 
-        private int lookahead(int i) {
+        private void Skip(int c) {
+            Debug.Assert(c != -1 && _lineBuffer[_bufferPos] == c);
+            _bufferPos += 1;
+        }
+
+        private void Skip() {
+            _bufferPos += 1;
+        }
+
+        private void SeekRelative(int disp) {
+            Debug.Assert(_bufferPos + disp >= 0);
+            Debug.Assert(_bufferPos + disp <= _lineLength);
+            _bufferPos += disp;
+        }
+
+        private void Back(int c) {
+            if (c != -1) {
+                Debug.Assert(_lineBuffer[_bufferPos - 1] == c);
+                _bufferPos--;
+            } else {
+                Debug.Assert(_bufferPos == _lineLength);
+            }
+        }
+
+        private int Peek() {
+            return Peek(0);
+        }
+
+        private int Peek(int disp) {
             if (_lineBuffer == null) {
                 if (!RefillBuffer()) {
                     return -1;
                 }
             }
 
-            if (_bufferPos + i < _lineBuffer.Length) {
-                return _lineBuffer[_bufferPos + i];
+            if (_bufferPos + disp < _lineLength) {
+                return _lineBuffer[_bufferPos + disp];
             }
 
-            return '\n';
+            return -1;
         }
 
         private bool RefillBuffer() {
-            Debug.Assert(_lineBuffer == null || 0 <= _bufferPos && _bufferPos <= _lineBuffer.Length);
+            Debug.Assert(_lineBuffer == null || 0 <= _bufferPos && _bufferPos <= _lineLength);
 
-            if (_lineBuffer == null || _bufferPos == _lineBuffer.Length) {
-                var lineContent = lex_getline();
+            if (_lineBuffer == null || _bufferPos == _lineLength) {
+                bool wasBufferNull = _lineBuffer == null;
+                int oldLineLength = _lineLength;
 
                 // end of stream:
-                if (lineContent == null) {
+                if (!LoadLine()) {
                     return false;
                 }
 
@@ -568,39 +482,17 @@ namespace IronRuby.Compiler {
                 } else {
 
                     // TODO: initial column
-                    if (_lineBuffer == null) {
+                    if (wasBufferNull) {
                         _currentLine = _initialLocation.Line;
                         _currentLineIndex = _initialLocation.Index;
                     } else {
                         _currentLine++;
-                        _currentLineIndex += _lineBuffer.Length;
+                        _currentLineIndex += oldLineLength;
                     }
                 }
-                _lineBuffer = lineContent;
-                _bufferPos = 0;
             }
 
             return true;
-        }
-
-        private void pushback(int c) {
-            int remove = 0;
-            if (yytext.Length > 0) {
-                if (yytext.Length > 1 && yytext[yytext.Length - 1] == '\n' && yytext[yytext.Length - 2] == '\r') {
-                    remove = 2;
-                } else {
-                    remove = 1;
-                }
-                yytext.Remove(yytext.Length - remove, remove);
-            }
-
-            if (c == -1) {
-                return;
-            }
-
-            if (_bufferPos > 0) {
-                _bufferPos -= remove;
-            }
         }
 
         private bool is_bol() {
@@ -611,58 +503,51 @@ namespace IronRuby.Compiler {
             return _bufferPos == 1;
         }
 
-        private bool peek(char c) {
-            return _bufferPos < _lineBuffer.Length && c == _lineBuffer[_bufferPos];
-        }
-
-        private string tok() {
-            return _tokenString.ToString();
-        }
-
-        private int toklen() {
-            return _tokenString.Length;
-        }
-
-        private int toklast() {
-            return (_tokenString.Length > 0 ? _tokenString[_tokenString.Length - 1] : 0);
-        }
-
-        private void newtok() {
-            if (_tokenString == null) {
-                _tokenString = new StringBuilder();
-            } else {
-                _tokenString.Length = 0;
-            }
-        }
-
-        private void tokadd(char c) {
-            _tokenString.Append(c);
-        }
-
         private bool LineContentEquals(string str, bool skipWhitespace) {
             int p = 0;
             int n;
 
             if (skipWhitespace) {
-                while (p < _lineBuffer.Length && IsWhiteSpace(_lineBuffer[p])) {
+                while (p < _lineLength && IsWhiteSpace(_lineBuffer[p])) {
                     p++;
                 }
             }
 
-            n = _lineBuffer.Length - (p + str.Length);
+            n = _lineLength - (p + str.Length);
             if (n < 0 || (n > 0 && _lineBuffer[p + str.Length] != '\n' && _lineBuffer[p + str.Length] != '\r')) {
                 return false;
             }
 
-            if (str == new String(_lineBuffer, p, str.Length)) {
-                return true;
+            return StringEquals(str, _lineBuffer, p, _lineLength);
+        }
+
+        private static bool StringEquals(string/*!*/ str, char[]/*!*/ chars, int offset, int count) {
+            if (str.Length > count - offset) {
+                return false;
             }
-            return false;
+            for (int i = 0; i < str.Length; i++) {
+                if (str[i] != chars[offset + i]) {
+                    return false;
+                }
+            }
+
+            return true;
         }
 
         #endregion
 
+        #region Token Spans
+
+        private void MarkTokenEnd(bool isMultiLine) {
+            if (isMultiLine) {
+                MarkMultiLineTokenEnd();
+            } else {
+                MarkSingleLineTokenEnd();
+            }
+        }
+        
         private void MarkSingleLineTokenEnd() {
+            Debug.Assert(_lineBuffer == null || Array.IndexOf(_lineBuffer, '\n', _currentTokenStartIndex, _bufferPos - _currentTokenStartIndex) == -1);
             _currentTokenEnd = GetCurrentLocation();
         }
 
@@ -675,8 +560,14 @@ namespace IronRuby.Compiler {
             return token;
         }
 
+        private Tokens MarkMultiLineTokenEnd(Tokens token) {
+            MarkMultiLineTokenEnd();
+            return token;
+        }
+        
         private void MarkTokenStart() {
             _currentTokenStart = GetCurrentLocation();
+            _currentTokenStartIndex = _bufferPos;
         }
 
         private SourceLocation GetCurrentLocation() {
@@ -692,28 +583,19 @@ namespace IronRuby.Compiler {
             return new SourceSpan(loc, loc);
         }
 
+        #endregion
+
+        #region Main Tokenization
+
         public Tokens GetNextToken() {
-            //if (_buffer == null) throw new InvalidOperationException("Uninitialized");
-            if (_input == null) throw new InvalidOperationException("Uninitialized");
-
-#if DEBUG
-            _tokenValue = new TokenValue();
-#endif
-
-            Tokens result = Tokenize();
-
-            if (result == Tokens.EndOfFile) {
-                _eofReached = true;
+            if (_input == null) {
+                throw new InvalidOperationException("Uninitialized");
             }
 
-            return result;
-        }
-
-        private Tokens Tokenize() {
-            yytext = new StringBuilder();
-            bool whitespaceSeen = false;
-            
             if (_currentString != null) {
+                // TODO:
+                RefillBuffer();
+
                 Tokens token = _currentString.Tokenize(this);
                 if (token == Tokens.StringEnd || token == Tokens.RegexpEnd) {
                     _currentString = null;
@@ -724,10 +606,14 @@ namespace IronRuby.Compiler {
                 return token;
             }
 
+            bool whitespaceSeen = false;
             bool cmdState = _commaStart;
             _commaStart = false;
 
             while (true) {
+                // TODO:
+                RefillBuffer();
+
                 Tokens token = Tokenize(whitespaceSeen, cmdState);
             
                 _tokenSpan = new SourceSpan(_currentTokenStart, _currentTokenEnd);
@@ -749,6 +635,10 @@ namespace IronRuby.Compiler {
                     case Tokens.EndOfLine: // not considered whitespace
                     case Tokens.InvalidCharacter:
                         continue;
+
+                    case Tokens.EndOfFile:
+                        _eofReached = true;
+                        break;
                 }
 
                 return token;
@@ -756,88 +646,46 @@ namespace IronRuby.Compiler {
         }
 
         private Tokens Tokenize(bool whitespaceSeen, bool cmdState) {
-            peekc();
             MarkTokenStart();
-            int c = nextc();
+            int c = Read();
 
             switch (c) {
                 case '\0':		// null terminates the input
                     // if tokenizer is asked for the next token it returns EOF again:
-                    pushback(c);
+                    Back('\0');
                     MarkSingleLineTokenEnd();
                     return Tokens.EndOfFile;
 
-                //case '\004':		/* ^D */ fixme
-                //case '\032':		/* ^Z */ fixme
                 case -1:		// end of stream
                     MarkSingleLineTokenEnd();
                     return Tokens.EndOfFile;
 
-                //case '\13': /* '\v' */ fixme
-                
                 // whitespace
                 case ' ':
                 case '\t':
                 case '\f':
-                case '\r':
-                    do {
-                        c = nextc();
-                    } while (c == ' ' || c == '\t' || c == '\f' || c == '\r');
-
-                    if (c != -1) {
-                        pushback(c);
-                    }
-
-                    MarkSingleLineTokenEnd();
-                    return Tokens.Whitespace;
-
-                case '\\':
-                    c = nextc();
-
-                    // escaped eoln is considered whitespace:
-                    if (c == '\n') {
-                        MarkMultiLineTokenEnd();
-                        return Tokens.Whitespace;
-                    }
-
-                    pushback(c);
-                    MarkSingleLineTokenEnd();
-                    return (Tokens)'\\';
-
-                // single-line comment
-                case '#':
-                    while (true) {
-                        c = nextc();
-
-                        if (c == -1 || c == '\n') {
-                            if (c != -1) {
-                                pushback(c);
-                            }
-
-                            MarkSingleLineTokenEnd();
-                            return Tokens.SingleLineComment;
-                        }
-                    }
+                    return MarkSingleLineTokenEnd(ReadNonEolnWhiteSpace());
 
                 case '\n':
-                    if (_lexicalState == LexicalState.EXPR_BEG || 
-                        _lexicalState == LexicalState.EXPR_FNAME ||
-                        _lexicalState == LexicalState.EXPR_DOT || 
-                        _lexicalState == LexicalState.EXPR_CLASS) {
+                    return MarkMultiLineTokenEnd(GetEndOfLineToken());
 
-                        MarkMultiLineTokenEnd();
-                        return Tokens.EndOfLine;
+                case '\r':
+                    if (Read('\n')) {
+                        return MarkMultiLineTokenEnd(GetEndOfLineToken());
+                    } else {
+                        return MarkSingleLineTokenEnd(ReadNonEolnWhiteSpace());
                     }
 
-                    _commaStart = true;
-                    _lexicalState = LexicalState.EXPR_BEG;
-                    MarkSingleLineTokenEnd();
-                    return (Tokens)'\n';
+                case '\\':
+                    return TokenizeBackslash();
+
+                case '#':
+                    return MarkSingleLineTokenEnd(ReadSingleLineComment());
 
                 case '*':
                     return MarkSingleLineTokenEnd(ReadStar(whitespaceSeen));
 
-                case '!': 
+                case '!':
                     return MarkSingleLineTokenEnd(ReadBang());
 
                 case '=': 
@@ -864,7 +712,7 @@ namespace IronRuby.Compiler {
                     return MarkSingleLineTokenEnd(ReadBacktick(cmdState));
 
                 case '?':
-                    return MarkSingleLineTokenEnd(ReadQuestionmark());
+                    return TokenizeQuestionmark();
 
                 case '&':
                     return MarkSingleLineTokenEnd(ReadAmpersand(whitespaceSeen));
@@ -936,7 +784,7 @@ namespace IronRuby.Compiler {
                     return (Tokens)c;
 
                 case '%':
-                    return MarkSingleLineTokenEnd(ReadPercent(whitespaceSeen));
+                    return TokenizePercent(whitespaceSeen);
 
                 case '$': 
                     return MarkSingleLineTokenEnd(ReadGlobalVariable());
@@ -947,9 +795,9 @@ namespace IronRuby.Compiler {
                 case '_':
                     if (was_bol() && LineContentEquals("__END__", false)) {
                         // if tokenizer is asked for the next token it returns EOF again:
-                        pushback(c);
+                        Back('_');
                         MarkSingleLineTokenEnd();
-                        _dataOffset = _currentLineIndex + _lineBuffer.Length;
+                        _dataOffset = _currentLineIndex + _lineLength;
                         return Tokens.EndOfFile;
                     }
                     return MarkSingleLineTokenEnd(ReadIdentifier(c, cmdState));
@@ -964,6 +812,105 @@ namespace IronRuby.Compiler {
                     return MarkSingleLineTokenEnd(ReadIdentifier(c, cmdState));
             }
         }
+
+        #endregion
+
+        #region End-Of-Line
+
+        private Tokens ReadNonEolnWhiteSpace() {
+            while (true) {
+                int c = Peek();
+                if (c == ' ' || c == '\t' || c == '\f') {
+                    Skip(c);
+                    continue;
+                }
+                if (c == '\r' && Peek(1) != '\n') {
+                    Skip(c);
+                    continue;
+                }
+                break;
+            }
+
+            return Tokens.Whitespace;
+        }
+
+        private Tokens GetEndOfLineToken() {
+            if (_lexicalState == LexicalState.EXPR_BEG ||
+                _lexicalState == LexicalState.EXPR_FNAME ||
+                _lexicalState == LexicalState.EXPR_DOT ||
+                _lexicalState == LexicalState.EXPR_CLASS) {
+
+                return Tokens.EndOfLine;
+            }
+
+            _commaStart = true;
+            _lexicalState = LexicalState.EXPR_BEG;
+            return (Tokens)'\n';
+        }
+
+        private Tokens TokenizeBackslash() {
+            // escaped eoln is considered whitespace:
+            if (TryReadEndOfLine()) {
+                MarkMultiLineTokenEnd();
+                return Tokens.Whitespace;
+            }
+
+            MarkSingleLineTokenEnd();
+            return (Tokens)'\\';
+        }
+
+        private Tokens ReadSingleLineComment() {
+            while (true) {
+                int c = Peek();
+
+                if (c == -1 || c == '\n') {
+                    return Tokens.SingleLineComment;
+                }
+
+                Skip(c);
+            }
+        }
+
+        private bool TryReadEndOfLine() {
+            int c = Peek();
+            if (c == '\n') {
+                Skip(c);
+                return true;
+            }
+
+            if (c == '\r' && Peek(1) == '\n') {
+                SeekRelative(2);
+                return true;
+            }
+
+            return false;
+        }
+
+        private int ReadNormalizeEndOfLine() {
+            int c = Read();
+            
+            if (c == '\r' && Peek() == '\n') {
+                Skip('\n');
+                return '\n';
+            }
+
+            return c;
+        }
+
+        private int ReadNormalizeEndOfLine(out int eolnWidth) {
+            int c = Read();
+
+            if (c == '\r' && Peek() == '\n') {
+                Skip('\n');
+                eolnWidth = 2;
+                return '\n';
+            }
+
+            eolnWidth = 1;
+            return c;
+        }
+
+        #endregion
 
         #region Identifiers and Keywords
 
@@ -983,6 +930,7 @@ namespace IronRuby.Compiler {
             // reads token suffix (!, ?, =) and returns the the token kind based upon the suffix:
             Tokens result = ReadIdentifierSuffix(firstCharacter);
 
+            // TODO: possible optimization: ~15% are keywords, ~15% are existing local variables -> we can save allocations
             string identifier = new String(_lineBuffer, start, _bufferPos - start);
             
             if (_lexicalState != LexicalState.EXPR_DOT) {
@@ -1002,7 +950,7 @@ namespace IronRuby.Compiler {
                 _lexicalState == LexicalState.EXPR_ARG ||
                 _lexicalState == LexicalState.EXPR_CMDARG) {
 
-                if (IsLocalVariable(identifier)) {
+                if (_localVariableResolver.IsLocalVariable(identifier)) {
                     _lexicalState = LexicalState.EXPR_END;
                 } else if (cmdState) {
                     _lexicalState = LexicalState.EXPR_CMDARG;
@@ -1018,17 +966,17 @@ namespace IronRuby.Compiler {
         }
 
         private Tokens ReadIdentifierSuffix(int firstCharacter) {
-            int suffix = lookahead(+0);
-            int c = lookahead(+1);
+            int suffix = Peek(0);
+            int c = Peek(1);
             if ((suffix == '!' || suffix == '?') && c != '=') {
-                nextc();
+                Skip(suffix);
                 return Tokens.FunctionIdentifier;
             }
 
             if (_lexicalState == LexicalState.EXPR_FNAME &&
-                suffix == '=' && c != '~' && c != '>' && (c != '=' || lookahead(+2) == '>')) {
+                suffix == '=' && c != '~' && c != '>' && (c != '=' || Peek(2) == '>')) {
                 // include '=' into the token:
-                nextc();
+                Skip(suffix);
                 // TODO: FunctionIdentifier might be better, seems to not matter because the rules that use it accept FtnIdf as well
                 return Tokens.Identifier;  
             }
@@ -1143,11 +1091,11 @@ namespace IronRuby.Compiler {
             if (was_bol() && PeekMultiLineCommentBegin()) {
 
                 while (true) {
-                    _bufferPos = _lineBuffer.Length;
+                    _bufferPos = _lineLength;
 
-                    int c = nextc();
+                    int c = Read();
                     if (c == -1) {
-                        UnterminatedToken = true;
+                        _unterminatedToken = true;
                         ReportError(Errors.UnterminatedEmbeddedDocument);
                         return true;
                     }
@@ -1161,7 +1109,7 @@ namespace IronRuby.Compiler {
                     }
                 }
 
-                _bufferPos = _lineBuffer.Length;
+                _bufferPos = _lineLength;
                 return true;
             }
 
@@ -1170,26 +1118,28 @@ namespace IronRuby.Compiler {
 
         private bool PeekMultiLineCommentBegin() {
             int minLength = _bufferPos + 5;
-            return minLength <= _lineBuffer.Length && 
+            return minLength <= _lineLength && 
                 _lineBuffer[_bufferPos + 0] == 'b' &&
                 _lineBuffer[_bufferPos + 1] == 'e' &&
                 _lineBuffer[_bufferPos + 2] == 'g' &&
                 _lineBuffer[_bufferPos + 3] == 'i' &&
                 _lineBuffer[_bufferPos + 4] == 'n' &&
-                (minLength == _lineBuffer.Length || IsWhiteSpace(_lineBuffer[minLength]));
+                (minLength == _lineLength || IsWhiteSpace(_lineBuffer[minLength]));
         }
 
         private bool PeekMultiLineCommentEnd() {
             int minLength = _bufferPos + 3;
-            return minLength <= _lineBuffer.Length && 
+            return minLength <= _lineLength && 
                 _lineBuffer[_bufferPos + 0] == 'e' &&
                 _lineBuffer[_bufferPos + 1] == 'n' &&
                 _lineBuffer[_bufferPos + 2] == 'd' &&
-                (minLength == _lineBuffer.Length || IsWhiteSpace(_lineBuffer[minLength]));
+                (minLength == _lineLength || IsWhiteSpace(_lineBuffer[minLength]));
         }
 
         #endregion
-        
+
+        #region Tokens
+
         // Assignment: =
         // Operators: == === =~ =>
         private Tokens ReadEquals() {
@@ -1204,45 +1154,42 @@ namespace IronRuby.Compiler {
                     break;
             }
 
-            int c = nextc();
-            if (c == '=') {
+            switch (Peek()) {
+                case '=':
+                    Skip('=');
+                    return Read('=') ? Tokens.Eqq : Tokens.Eq;
 
-                c = nextc();
-                if (c == '=') {
-                    return Tokens.Eqq;
-                }
+                case '~':
+                    Skip('~');
+                    return Tokens.Match;
 
-                pushback(c);
-                return Tokens.Eq;
+                case '>':
+                    Skip('>');
+                    return Tokens.Assoc;
+
+                default:
+                    return (Tokens)'=';
             }
-
-            if (c == '~') {
-                return Tokens.Match;
-            } else if (c == '>') {
-                return Tokens.Assoc;
-            }
-
-            pushback(c);
-            return (Tokens)'=';
         }
 
         // Operators: + +@
         // Assignments: +=
         // Literals: +[:number:]
         private Tokens ReadPlus(bool whitespaceSeen) {
-            int c = nextc();
+            int c = Peek();
             if (_lexicalState == LexicalState.EXPR_FNAME || _lexicalState == LexicalState.EXPR_DOT) {
                 
                 _lexicalState = LexicalState.EXPR_ARG;
                 if (c == '@') {
+                    Skip('@');
                     return Tokens.Uplus;
                 }
 
-                pushback(c);
                 return (Tokens)'+';
             }
 
             if (c == '=') {
+                Skip('=');
                 _tokenValue.SetSymbol(Symbols.Plus);
                 _lexicalState = LexicalState.EXPR_BEG;
                 return Tokens.Assignment;
@@ -1257,16 +1204,14 @@ namespace IronRuby.Compiler {
 
                 _lexicalState = LexicalState.EXPR_BEG;
                 if (IsDecimalDigit(c)) {
+                    Skip(c);
                     return ReadUnsignedNumber(c);
-                } else {
-                    pushback(c);
                 }
 
                 return Tokens.Uplus;
             }
 
             _lexicalState = LexicalState.EXPR_BEG;
-            pushback(c);
             return (Tokens)'+';
         }
 
@@ -1302,26 +1247,27 @@ namespace IronRuby.Compiler {
             // start right before @/@@, the resulting symbol starts with @/@@
             int start = _bufferPos - 1;
 
-            int c = nextc();
+            int c = Peek(0);
             if (c == '@') {
-                c = nextc();
+                c = Peek(1);
                 result = Tokens.ClassVariable;
             } else {
                 result = Tokens.InstanceVariable;
             }
 
+            // c follows @ or @@
             if (IsDecimalDigit(c)) {
                 ReportError(result == Tokens.InstanceVariable ? Errors.InvalidInstanceVariableName : Errors.InvalidClassVariableName, (char)c);
             } else if (IsIdentifierInitial(c)) {
+                if (result == Tokens.ClassVariable) {
+                    Skip('@');
+                }
+                Skip(c);
+
                 SkipVariableName();
                 _tokenValue.SetSymbol(GetSymbol(start, _bufferPos - start));
                 _lexicalState = LexicalState.EXPR_END;
                 return result;
-            }
-
-            pushback(c);
-            if (result == Tokens.ClassVariable) {
-                pushback('@');
             }
 
             return (Tokens)'@';
@@ -1342,16 +1288,14 @@ namespace IronRuby.Compiler {
             // start right after $, the resulting symbol doesn't contain $
             int start = _bufferPos;
             
-            int c = nextc();
+            int c = Read();
             switch (c) {
                 case '_':
-                    c = nextc();
-                    if (IsIdentifier(c)) {
+                    if (IsIdentifier(Peek())) {
                         SkipVariableName();
                         _tokenValue.SetSymbol(GetSymbol(start, _bufferPos - start));
                         return Tokens.GlobalVariable;
                     }
-                    pushback(c);
                     return GlobalVariableToken(Symbols.LastInputLine);
 
                 // exceptions:
@@ -1360,8 +1304,12 @@ namespace IronRuby.Compiler {
 
                 // options:
                 case '-':
-                    int length = IsIdentifier(nextc()) ? 2 : 1;
-                    _tokenValue.SetSymbol(GetSymbol(start, length));
+                    if (IsIdentifier(Peek())) {
+                        Read();
+                        _tokenValue.SetSymbol(GetSymbol(start, 2));
+                    } else {
+                        _tokenValue.SetSymbol("-");
+                    }
                     return Tokens.GlobalVariable;
 
                 // others:
@@ -1400,15 +1348,13 @@ namespace IronRuby.Compiler {
                     return Tokens.MatchReference;
 
                 case '0':
-                    c = nextc();
-                    if (IsIdentifier(c)) {
+                    if (IsIdentifier(Peek())) {
                         // $0[A-Za-z0-9_] are invalid:
                         SkipVariableName();
                         ReportError(Errors.InvalidGlobalVariableName, new String(_lineBuffer, start - 1, _bufferPos - start));
                         _tokenValue.SetSymbol(Symbols.ErrorVariable);
                         return Tokens.GlobalVariable;
                     }
-                    pushback(c);
 
                     return GlobalVariableToken(Symbols.CommandLineProgramPath);
 
@@ -1423,7 +1369,7 @@ namespace IronRuby.Compiler {
                         return Tokens.GlobalVariable;
                     }
 
-                    pushback(c);
+                    Back(c);
                     return (Tokens)'$';
             }
         }
@@ -1438,13 +1384,13 @@ namespace IronRuby.Compiler {
             bool overflow = false;
 
             while (true) {
-                c = nextc();
+                c = Peek();
 
                 if (!IsDecimalDigit(c)) {
-                    pushback(c);
                     break;
                 }
 
+                Skip(c);
                 value = unchecked(value * 10 + (c - '0'));
                 overflow |= (value < 0);
             }
@@ -1465,21 +1411,22 @@ namespace IronRuby.Compiler {
         // Assignments: %=
         // Operators: % 
         // Literals: %{... (quotation start)
-        private Tokens ReadPercent(bool whitespaceSeen) {
-            int c = nextc();
-
+        private Tokens TokenizePercent(bool whitespaceSeen) {
             if (_lexicalState == LexicalState.EXPR_BEG || _lexicalState == LexicalState.EXPR_MID) {
-                return ReadQuotationStart(c);
+                return TokenizeQuotationStart();
             }
 
+            int c = Peek();
             if (c == '=') {
+                Skip(c);
                 _tokenValue.SetSymbol(Symbols.Mod);
                 _lexicalState = LexicalState.EXPR_BEG;
+                MarkSingleLineTokenEnd();
                 return Tokens.Assignment;
             }
 
             if (IS_ARG() && whitespaceSeen && !IsWhiteSpace(c)) {
-                return ReadQuotationStart(c);
+                return TokenizeQuotationStart();
             }
 
             switch (_lexicalState) {
@@ -1493,7 +1440,7 @@ namespace IronRuby.Compiler {
                     break;
             }
 
-            pushback(c);
+            MarkSingleLineTokenEnd();
             return (Tokens)'%';
         }
 
@@ -1521,18 +1468,7 @@ namespace IronRuby.Compiler {
             if (_lexicalState == LexicalState.EXPR_FNAME || _lexicalState == LexicalState.EXPR_DOT) {
                 _lexicalState = LexicalState.EXPR_ARG;
                 
-                int c = nextc();
-                if (c == ']') {
-                    c = nextc();
-                    if (c == '=') {
-                        return Tokens.Aset;
-                    }
-                    pushback(c);
-                    return Tokens.Aref;
-                }
-
-                pushback(c);
-                return (Tokens)'[';
+                return Read(']') ? (Read('=') ? Tokens.Aset : Tokens.Aref) : (Tokens)'[';
             }
 
             Tokens result;
@@ -1553,12 +1489,8 @@ namespace IronRuby.Compiler {
         // Operators: ~ ~@
         private Tokens ReadTilde() {
             if (_lexicalState == LexicalState.EXPR_FNAME || _lexicalState == LexicalState.EXPR_DOT) {
-                int c = nextc();
-                
-                // @~ is treated as ~
-                if (c != '@') {
-                    pushback(c);
-                }
+                // ~@
+                Read('@');
             }
 
             switch (_lexicalState) {
@@ -1578,8 +1510,7 @@ namespace IronRuby.Compiler {
         // Assignments: ^=
         // Operators: ^
         private Tokens ReadCaret() {
-            int c = nextc();
-            if (c == '=') {
+            if (Read('=')) {
                 _tokenValue.SetSymbol(Symbols.Xor);
                 _lexicalState = LexicalState.EXPR_BEG;
                 return Tokens.Assignment;
@@ -1596,7 +1527,6 @@ namespace IronRuby.Compiler {
                     break;
             }
 
-            pushback(c);
             return (Tokens)'^';
         }
 
@@ -1610,14 +1540,14 @@ namespace IronRuby.Compiler {
                 return Tokens.RegexpBeg;
             }
 
-            int c = nextc();
+            int c = Peek();
             if (c == '=') {
+                Skip(c);
                 _tokenValue.SetSymbol(Symbols.Divide);
                 _lexicalState = LexicalState.EXPR_BEG;
                 return Tokens.Assignment;
             }
 
-            pushback(c);
             if (IS_ARG() && whitespaceSeen) {
                 if (!IsWhiteSpace(c)) {
                     ReportWarning(Errors.AmbiguousFirstArgument);
@@ -1644,8 +1574,9 @@ namespace IronRuby.Compiler {
         // Operators: :: : 
         // Literals: :... (symbol start)
         private Tokens ReadColon(bool whitespaceSeen) {
-            int c = nextc();
+            int c = Peek();
             if (c == ':') {
+                Skip(c);
                 if (_lexicalState == LexicalState.EXPR_BEG || _lexicalState == LexicalState.EXPR_MID ||
                     _lexicalState == LexicalState.EXPR_CLASS || (IS_ARG() && whitespaceSeen)) {
                     
@@ -1658,23 +1589,23 @@ namespace IronRuby.Compiler {
             }
 
             if (_lexicalState == LexicalState.EXPR_END || _lexicalState == LexicalState.EXPR_ENDARG || IsWhiteSpace(c)) {
-                pushback(c);
                 _lexicalState = LexicalState.EXPR_BEG;
                 return (Tokens)':';
             }
 
             switch (c) {
                 case '\'':
+                    Skip(c);
                     _currentString = new StringContentTokenizer(StringType.Symbol, '\'');
                     break;
 
                 case '"':
+                    Skip(c);
                     _currentString = new StringContentTokenizer(StringType.Symbol | StringType.ExpandsEmbedded, '"');
                     break;
 
                 default:
                     Debug.Assert(_currentString == null);
-                    pushback(c);
                     break;
             }
 
@@ -1687,37 +1618,31 @@ namespace IronRuby.Compiler {
         // Operators: ** * splat
         private Tokens ReadStar(bool whitespaceSeen) {
             Tokens result;
-            int c = nextc();
 
+            int c = Peek();
             if (c == '*') {
-                c = nextc();
-                if (c == '=') {
+                Skip(c);
+                if (Read('=')) {
                     _tokenValue.SetSymbol(Symbols.Power);
                     _lexicalState = LexicalState.EXPR_BEG;
                     
                     return Tokens.Assignment;
                 }
 
-                pushback(c);
                 result = Tokens.Pow;
-            } else {
-                if (c == '=') {
-                    _tokenValue.SetSymbol(Symbols.Multiply);
-                    _lexicalState = LexicalState.EXPR_BEG;
+            } else if (c == '=') {
+                Skip(c);
 
-                    return Tokens.Assignment;
-                }
-                
-                pushback(c);
-                
-                if (IS_ARG() && whitespaceSeen && !IsWhiteSpace(c)) {
-                    //yywarn("`*' interpreted as argument prefix");
-                    result = Tokens.Star;
-                } else if (_lexicalState == LexicalState.EXPR_BEG || _lexicalState == LexicalState.EXPR_MID) {
-                    result = Tokens.Star;
-                } else {
-                    result = (Tokens)'*';
-                }
+                _tokenValue.SetSymbol(Symbols.Multiply);
+                _lexicalState = LexicalState.EXPR_BEG;
+                return Tokens.Assignment;
+            } else if (IS_ARG() && whitespaceSeen && !IsWhiteSpace(c)) {
+                ReportWarning(Errors.StarInterpretedAsSplatArgument);
+                result = Tokens.Star;
+            } else if (_lexicalState == LexicalState.EXPR_BEG || _lexicalState == LexicalState.EXPR_MID) {
+                result = Tokens.Star;
+            } else {
+                result = (Tokens)'*';
             }
 
             switch (_lexicalState) {
@@ -1738,14 +1663,15 @@ namespace IronRuby.Compiler {
         private Tokens ReadBang() {
             _lexicalState = LexicalState.EXPR_BEG;
             
-            int c = nextc();
+            int c = Peek();
             if (c == '=') {
+                Skip(c);
                 return Tokens.Neq;
             } else if (c == '~') {
+                Skip(c);
                 return Tokens.Nmatch;
             }
 
-            pushback(c);
             return (Tokens)'!';
         }
 
@@ -1753,7 +1679,7 @@ namespace IronRuby.Compiler {
         // Assignment: <<=
         // Operators: << <= <=> <
         private Tokens TokenizeLessThan(bool whitespaceSeen) {
-            int c = nextc();
+            int c = Read();
 
             if (c == '<' &&
                 _lexicalState != LexicalState.EXPR_END &&
@@ -1780,30 +1706,26 @@ namespace IronRuby.Compiler {
             }
 
             if (c == '=') {
-                c = nextc();
-                if (c == '>') {
+                if (Read('>')) {
                     MarkSingleLineTokenEnd();
                     return Tokens.Cmp;
                 }
-                pushback(c);
                 MarkSingleLineTokenEnd();
                 return Tokens.Leq;
             }
 
             if (c == '<') {
-                c = nextc();
-                if (c == '=') {
+                if (Read('=')) {
                     _tokenValue.SetSymbol(Symbols.LeftShift);
                     _lexicalState = LexicalState.EXPR_BEG;
                     MarkSingleLineTokenEnd();
                     return Tokens.Assignment;
                 }
-                pushback(c);
                 MarkSingleLineTokenEnd();
                 return Tokens.Lshft;
             }
 
-            pushback(c);
+            Back(c);
             MarkSingleLineTokenEnd();
             return (Tokens)'<';
         }
@@ -1822,23 +1744,22 @@ namespace IronRuby.Compiler {
                     break;
             }
 
-            int c = nextc();
+            int c = Peek();
             if (c == '=') {
+                Skip(c);
                 return Tokens.Geq;
             }
 
             if (c == '>') {
-                c = nextc();
-                if (c == '=') {
+                Skip(c);
+                if (Read('=')) {
                     _tokenValue.SetSymbol(Symbols.RightShift);
                     _lexicalState = LexicalState.EXPR_BEG;
                     return Tokens.Assignment;
                 }
-                pushback(c);
                 return Tokens.Rshft;
             }
 
-            pushback(c);
             return (Tokens)'>';
         }
 
@@ -1861,18 +1782,20 @@ namespace IronRuby.Compiler {
         }
 
         // Operators: ? (conditional)
-        // Literals: ?[:char:] ?\[:escape:]
+        // Literals: ?[:char:] ?{escape}
         // Errors: ?[:EOF:]
-        private Tokens ReadQuestionmark() {
+        private Tokens TokenizeQuestionmark() {
             if (_lexicalState == LexicalState.EXPR_END || _lexicalState == LexicalState.EXPR_ENDARG) {
                 _lexicalState = LexicalState.EXPR_BEG;
+                MarkSingleLineTokenEnd();
                 return (Tokens)'?';
             }
 
             // ?[:EOF:]
-            int c = nextc();
+            int c = Peek();
             if (c == -1) {
-                UnterminatedToken = true;
+                _unterminatedToken = true;
+                MarkSingleLineTokenEnd();
                 ReportError(Errors.IncompleteCharacter);
                 return Tokens.EndOfFile;
             }
@@ -1887,7 +1810,7 @@ namespace IronRuby.Compiler {
                         case '\n': c2 = 'n'; break;
                         case '\t': c2 = 't'; break;
                         case '\v': c2 = 'v'; break;
-                        case '\r': c2 = 'r'; break;
+                        case '\r': c2 = (Peek(1) == '\n') ? 'n' : 'r'; break;
                         case '\f': c2 = 'f'; break;
                     }
 
@@ -1895,25 +1818,32 @@ namespace IronRuby.Compiler {
                         ReportWarning(Errors.InvalidCharacterSyntax, (char)c2);
                     }
                 }
-                pushback(c);
                 _lexicalState = LexicalState.EXPR_BEG;
+                MarkSingleLineTokenEnd();
                 return (Tokens)'?';
             } 
             
-            // ?[:identifier:]
-            if ((IsLetterOrDigit(c) || c == '_') && _bufferPos < _lineBuffer.Length && IsIdentifier(_lineBuffer[_bufferPos])) {
-                pushback(c);
+            // ?{identifier}
+            if ((IsLetterOrDigit(c) || c == '_') && IsIdentifier(Peek(1))) {
                 _lexicalState = LexicalState.EXPR_BEG;
+                MarkSingleLineTokenEnd();
                 return (Tokens)'?';
-            } 
-            
-            // ?\[:escape:]
-            if (c == '\\') {
-                // TODO: ?x, ?\u1234, ?\u{123456} -> string in 1.9
-                c = ReadEscape();
             }
 
-            // TODO: ?x, ?\u1234, ?\u{123456} -> string in 1.9
+            Skip(c);
+            
+            // ?\{escape}
+            if (c == '\\') {
+                // TODO: ?\xx, ?\u1234, ?\u{123456} -> string in 1.9
+                c = ReadEscape();
+
+                // \M-{eoln} eats the eoln:
+                MarkMultiLineTokenEnd();
+            } else {
+                MarkSingleLineTokenEnd();
+            }
+
+            // TODO: ?x -> string in 1.9
             c &= 0xff;
             _lexicalState = LexicalState.EXPR_END;
             _tokenValue.SetInteger(c);
@@ -1924,28 +1854,26 @@ namespace IronRuby.Compiler {
         // Operators: & &&
         // Assignments: &=
         private Tokens ReadAmpersand(bool whitespaceSeen) {
-            int c = nextc();
+            int c = Peek();
             
             if (c == '&') {
+                Skip(c);
                 _lexicalState = LexicalState.EXPR_BEG;
                 
-                c = nextc();
-                if (c == '=') {
+                if (Read('=')) {
                     _tokenValue.SetSymbol(Symbols.And);
                     return Tokens.Assignment;
                 }
 
-                pushback(c);
                 return Tokens.BitwiseAnd;
             } 
             
             if (c == '=') {
+                Skip(c);
                 _lexicalState = LexicalState.EXPR_BEG;
                 _tokenValue.SetSymbol(Symbols.BitwiseAnd);
                 return Tokens.Assignment;
             }
-
-            pushback(c);
 
             Tokens result;
             if (IS_ARG() && whitespaceSeen && !IsWhiteSpace(c)) {
@@ -1975,23 +1903,22 @@ namespace IronRuby.Compiler {
         // Operators: | ||
         // Assignments: |= ||=
         private Tokens ReadPipe() {
-            int c = nextc();
+            int c = Peek();
 
             if (c == '|') {
+                Skip(c);
                 _lexicalState = LexicalState.EXPR_BEG;
 
-                c = nextc();
-                if (c == '=') {
+                if (Read('=')) {
                     _tokenValue.SetSymbol(Symbols.Or);
                     _lexicalState = LexicalState.EXPR_BEG;
                     return Tokens.Assignment;
                 }
-
-                pushback(c);
                 return Tokens.BitwiseOr;
             }
 
             if (c == '=') {
+                Skip(c);
                 _tokenValue.SetSymbol(Symbols.BitwiseOr);
                 _lexicalState = LexicalState.EXPR_BEG;
                 return Tokens.Assignment;
@@ -2003,7 +1930,6 @@ namespace IronRuby.Compiler {
                 _lexicalState = LexicalState.EXPR_BEG;
             }
 
-            pushback(c);
             return (Tokens)'|';
         }
 
@@ -2012,17 +1938,12 @@ namespace IronRuby.Compiler {
         private Tokens ReadDot() {
             _lexicalState = LexicalState.EXPR_BEG;
             
-            int c = nextc();
+            int c = Peek();
             if (c == '.') {
-                c = nextc();
-                if (c == '.') {
-                    return Tokens.Dot3;
-                }
-                pushback(c);
-                return Tokens.Dot2;
+                Skip(c);
+                return Read('.') ? Tokens.Dot3 : Tokens.Dot2;
             }
 
-            pushback(c);
             if (IsDecimalDigit(c)) {
                 ReportError(Errors.NoFloatingLiteral);
             }
@@ -2031,23 +1952,18 @@ namespace IronRuby.Compiler {
             return (Tokens)'.';
         }
 
-        // Operators: - @-
+        // Operators: - -@
         // Assignments: -=
         // Literals: -... (negative number sign)
         private Tokens ReadMinus(bool whitespaceSeen) {
-            int c = nextc();
             if (_lexicalState == LexicalState.EXPR_FNAME || _lexicalState == LexicalState.EXPR_DOT) {
-                
                 _lexicalState = LexicalState.EXPR_ARG;
-                if (c == '@') {
-                    return Tokens.Uminus;
-                }
-
-                pushback(c);
-                return (Tokens)'-';
+                return Read('@') ? Tokens.Uminus : (Tokens)'-';
             }
 
+            int c = Peek();
             if (c == '=') {
+                Skip(c);
                 _tokenValue.SetSymbol(Symbols.Minus);
                 _lexicalState = LexicalState.EXPR_BEG;
                 return Tokens.Assignment;
@@ -2061,16 +1977,10 @@ namespace IronRuby.Compiler {
                 }
 
                 _lexicalState = LexicalState.EXPR_BEG;
-                pushback(c);
-                if (IsDecimalDigit(c)) {
-                    return Tokens.UminusNum;
-                }
-
-                return Tokens.Uminus;
+                return IsDecimalDigit(c) ? Tokens.UminusNum : Tokens.Uminus;
             }
 
             _lexicalState = LexicalState.EXPR_BEG;
-            pushback(c);
             return (Tokens)'-';
         }
 
@@ -2081,8 +1991,13 @@ namespace IronRuby.Compiler {
             RubyRegexOptions encoding = 0;
             RubyRegexOptions options = 0;
 
-            int c;
-            while (IsLetter(c = nextc())) {
+            while (true) {
+                int c = Peek();
+                if (!IsLetter(c)) {
+                    break;
+                }
+
+                Skip(c);
                 switch (c) {
                     case 'i': options |= RubyRegexOptions.IgnoreCase; break;
                     case 'x': options |= RubyRegexOptions.Extended; break;
@@ -2101,17 +2016,18 @@ namespace IronRuby.Compiler {
                         break;
                 }
             }
-            pushback(c);
 
             return options | encoding;
         }
+
+        #endregion
 
         #region Character Escapes
 
         // \\ \n \t \r \f \v \a \b \s 
         // \[:octal:] \x[:hexa:] \M-\[:escape:] \M-[:char:] \C-[:escape:] \C-[:char:] \c[:escape:] \c[:char:] \[:char:]
         private int ReadEscape() {
-            int c = nextc();
+            int c = Read();
             switch (c) {
                 case '\\': return '\\';
                 case 'n': return '\n';
@@ -2127,13 +2043,11 @@ namespace IronRuby.Compiler {
                 case 'x': return ReadHexEscape();
 
                 case 'M':
-                    c = nextc();
-                    if (c != '-') {
-                        pushback(c);
+                    if (!Read('-')) {
                         return InvalidEscapeCharacter();
                     }
-                    
-                    c = nextc();
+
+                    c = ReadNormalizeEndOfLine();
                     if (c == '\\') {
                         return ReadEscape() | 0x80;
                     }
@@ -2145,15 +2059,13 @@ namespace IronRuby.Compiler {
                     return (c & 0xff) | 0x80;
 
                 case 'C':
-                    c = nextc();
-                    if (c != '-') {
-                        pushback(c);
+                    if (!Read('-')) {
                         return InvalidEscapeCharacter();                        
                     }
                     goto case 'c';
 
                 case 'c':
-                    c = nextc();
+                    c = ReadNormalizeEndOfLine();
 
                     if (c == '?') {
                         return 0177;
@@ -2176,6 +2088,9 @@ namespace IronRuby.Compiler {
                     if (IsOctalDigit(c)) {
                         return ReadOctalEscape(c - '0');
                     }
+
+                    // ReadEscape is not called if the backslash is followed by an eoln:
+                    Debug.Assert(c != '\n' && (c != '\r' || Peek() != '\n'));
                     return c;
             }
         }
@@ -2187,53 +2102,42 @@ namespace IronRuby.Compiler {
         }
         
         // Appends escaped regex escape sequence.
-        private void AppendEscapedRegexEscape(int term) {
-            int c = nextc();
+        private void AppendEscapedRegexEscape(StringBuilder/*!*/ content, int term) {
+            int c = Read();
 
             switch (c) {
-                case '\n': 
-                    break;
-
                 case 'x':
-                    tokadd('\\');
-                    AppendEscapedHexEscape();
+                    content.Append('\\');
+                    AppendEscapedHexEscape(content);
                     break;
 
                 case 'M':
-                    c = nextc();
-                    if (c != '-') {
-                        pushback(c);
+                    if (!Read('-')) {
                         InvalidEscapeCharacter();
                         break;
                     }
 
-                    tokadd('\\'); 
-                    tokadd('M'); 
-                    tokadd('-');
+                    content.Append("\\M-");
 
                     // escaped:
-                    AppendRegularExpressionCompositeEscape(term);
+                    AppendRegularExpressionCompositeEscape(content, term);
                     break;                    
 
                 case 'C':
-                    c = nextc();
-                    if (c != '-') {
-                        pushback(c);
+                    if (!Read('-')) {
                         InvalidEscapeCharacter();
                         break;
                     }
 
-                    tokadd('\\'); 
-                    tokadd('C'); 
-                    tokadd('-');
+                    content.Append("\\C-");
 
-                    AppendRegularExpressionCompositeEscape(term);
+                    AppendRegularExpressionCompositeEscape(content, term);
                     break;
 
                 case 'c':
-                    tokadd('\\'); 
-                    tokadd('c');
-                    AppendRegularExpressionCompositeEscape(term);
+                    content.Append('\\');
+                    content.Append('c');
+                    AppendRegularExpressionCompositeEscape(content, term);
                     break;
                     
                 case -1:
@@ -2242,67 +2146,73 @@ namespace IronRuby.Compiler {
 
                 default:
                     if (IsOctalDigit(c)) {
-                        tokadd('\\');
-                        AppendEscapedOctalEscape();
+                        content.Append('\\');
+                        AppendEscapedOctalEscape(content);
                         break;
                     }
 
                     if (c != '\\' || c != term) {
-                        tokadd('\\');
+                        content.Append('\\');
                     }
-                    tokadd((char)c);
+
+                    // ReadEscape is not called if the backslash is followed by an eoln:
+                    Debug.Assert(c != '\n' && (c != '\r' || Peek() != '\n'));
+                    content.Append((char)c);
                     break;
             }
         }
 
-        private void AppendRegularExpressionCompositeEscape(int term) {
-            int c = nextc();
+        private void AppendRegularExpressionCompositeEscape(StringBuilder/*!*/ content, int term) {
+            int c = ReadNormalizeEndOfLine();
             if (c == '\\') {
-                AppendEscapedRegexEscape(term);
+                AppendEscapedRegexEscape(content, term);
             } else if (c == -1) {
                 InvalidEscapeCharacter();
             } else {
-                tokadd((char)c);
+                content.Append((char)c);
             }
         }
 
-        private void AppendEscapedOctalEscape() {
+        private void AppendEscapedOctalEscape(StringBuilder/*!*/ content) {
             int start = _bufferPos - 1;
             ReadOctalEscape(0);
 
             Debug.Assert(IsOctalDigit(_lineBuffer[start])); // first digit
-            _tokenString.Append(_lineBuffer, start, _bufferPos - start);
+            content.Append(_lineBuffer, start, _bufferPos - start);
         }
 
-        private void AppendEscapedHexEscape() {
+        private void AppendEscapedHexEscape(StringBuilder/*!*/ content) {
             int start = _bufferPos - 1;
             ReadHexEscape();
 
             Debug.Assert(_lineBuffer[start] == 'x');
-            _tokenString.Append(_lineBuffer, start, _bufferPos - start);
+            content.Append(_lineBuffer, start, _bufferPos - start);
         }
 
-        private void AppendEscapedUnicode() {
+        private void AppendEscapedUnicode(StringBuilder/*!*/ content) {
             int start = _bufferPos - 1;
 
-            if (peekc() == '{') {
+            if (Peek() == '{') {
                 ReadUnicodeCodePoint();
             } else {
                 ReadUnicodeEscape();
             }
 
             Debug.Assert(_lineBuffer[start] == 'u');
-            _tokenString.Append(_lineBuffer, start, _bufferPos - start);
+            content.Append(_lineBuffer, start, _bufferPos - start);
         }
 
         // Reads octal number of at most 3 digits.
         // Reads at most 2 octal digits as the value of the first digit is in "value".
         private int ReadOctalEscape(int value) {
-            if (IsOctalDigit(peekc())) {
-                value = (value << 3) | (nextc() - '0');
+            int c;
+            if (IsOctalDigit(c = Peek())) {
+                Skip(c);
+                value = (value << 3) | (c - '0');
 
-                if (IsOctalDigit(peekc())) {
-                    value = (value << 3) | (nextc() - '0');
+                if (IsOctalDigit(c = Peek())) {
+                    Skip(c);
+                    value = (value << 3) | (c - '0');
                 }
             }
             return value;
@@ -2310,13 +2220,14 @@ namespace IronRuby.Compiler {
 
         // Reads hexadecimal number of at most 2 digits. 
         private int ReadHexEscape() {
-            int value = ToDigit(peekc());
+            int c;
+            int value = ToDigit(c = Peek());
             if (value < 16) {
-                nextc();
-                int digit = ToDigit(peekc());
+                Skip(c);
+                int digit = ToDigit(c = Peek());
                 if (digit < 16) {
+                    Skip(c);
                     value = (value << 4) | digit;
-                    nextc();
                 }
 
                 return value;
@@ -2327,31 +2238,28 @@ namespace IronRuby.Compiler {
 
         // Peeks exactly 4 hexadecimal characters (\uFFFF).
         private int ReadUnicodeEscape() {
-            int d4 = ToDigit(lookahead(0));
-            int d3 = ToDigit(lookahead(1));
-            int d2 = ToDigit(lookahead(2));
-            int d1 = ToDigit(lookahead(3));
+            int d4 = ToDigit(Peek(0));
+            int d3 = ToDigit(Peek(1));
+            int d2 = ToDigit(Peek(2));
+            int d1 = ToDigit(Peek(3));
 
             if (d1 >= 16 || d2 >= 16 || d3 >= 16 || d4 >= 16) {
                 return InvalidEscapeCharacter();                
             }
 
-            nextc();
-            nextc();
-            nextc();
-            nextc();
+            SeekRelative(4);
             return (d4 << 12) | (d3 << 8) | (d2 << 4) | d1;
         }
 
         // Reads {at-most-six-hexa-digits}
         private int ReadUnicodeCodePoint() {
-            int c = nextc();
+            int c = Read();
             Debug.Assert(c == '{');
 
             int codepoint = 0;
             int i = 0;
             while (true) {
-                c = nextc();
+                c = Peek();
                 if (i == 6) {
                     break;
                 }
@@ -2363,11 +2271,13 @@ namespace IronRuby.Compiler {
 
                 codepoint = (codepoint << 4) | digit;
                 i++;
+                Skip(c);
             }
 
-            if (c != '}') {
-                pushback(c);
-                InvalidEscapeCharacter();                
+            if (c == '}') {
+                Skip(c);
+            } else {
+                InvalidEscapeCharacter();
             }
             
             if (codepoint > 0x10ffff) {
@@ -2378,16 +2288,16 @@ namespace IronRuby.Compiler {
         }
 
         // Reads up to 6 hex characters, treats them as a exadecimal code-point value and appends the result to the buffer.
-        private void AppendUnicodeCodePoint(StringType stringType) {
+        private void AppendUnicodeCodePoint(StringBuilder/*!*/ content, StringType stringType) {
             int codepoint = ReadUnicodeCodePoint();
 
             if (codepoint < 0x10000) {
                 // code-points [0xd800 .. 0xdffff] are not treated as invalid
-                AppendCharacter(codepoint, stringType);
+                AppendCharacter(content, codepoint, stringType);
             } else {
                 codepoint -= 0x10000;
-                _tokenString.Append((char)((codepoint / 0x400) + 0xd800));
-                _tokenString.Append((char)((codepoint % 0x400) + 0xdc00));
+                content.Append((char)((codepoint / 0x400) + 0xd800));
+                content.Append((char)((codepoint % 0x400) + 0xdc00));
             }
         }
 
@@ -2410,11 +2320,12 @@ namespace IronRuby.Compiler {
         }
 
         // returns last character read
-        private int ReadStringContent(StringType stringType, int terminator, int openingParenthesis, 
+        private int ReadStringContent(StringBuilder/*!*/ content, StringType stringType, int terminator, int openingParenthesis, 
             ref int nestingLevel, ref bool hasUnicodeEscape) {
 
             while (true) {
-                int c = nextc();
+                int eolnWidth;
+                int c = ReadNormalizeEndOfLine(out eolnWidth);
                 if (c == -1) {
                     return -1;
                 }
@@ -2423,74 +2334,74 @@ namespace IronRuby.Compiler {
                     nestingLevel++;
                 } else if (c == terminator) {
                     if (nestingLevel == 0) {
-                        pushback(c);
+                        SeekRelative(-eolnWidth);
                         return c;
                     }
                     nestingLevel--;
-                } else if (((stringType & StringType.ExpandsEmbedded) != 0) && c == '#' && _bufferPos < _lineBuffer.Length) {
+                } else if (((stringType & StringType.ExpandsEmbedded) != 0) && c == '#' && _bufferPos < _lineLength) {
                     int c2 = _lineBuffer[_bufferPos];
                     if (c2 == '$' || c2 == '@' || c2 == '{') {
-                        pushback(c);
+                        SeekRelative(-eolnWidth);
                         return c;
                     }
                 } else if ((stringType & StringType.Words) != 0 && IsWhiteSpace(c)) {
-                    pushback(c);
+                    SeekRelative(-eolnWidth);
                     return c;
                 } else if (c == '\\') {
-                    c = nextc();
+                    c = ReadNormalizeEndOfLine(out eolnWidth);
 
                     if (c == '\n') {
                         if ((stringType & StringType.Words) == 0) {
                             if ((stringType & StringType.ExpandsEmbedded) != 0) {
                                 continue;
                             }
-                            tokadd('\\');
+                            content.Append('\\');
                         }
                     } else if (c == '\\') {
                         if ((stringType & StringType.RegularExpression) != 0) {
-                            tokadd('\\');
+                            content.Append('\\');
                         }
                     } else if ((stringType & StringType.RegularExpression) != 0) {
                         // \uFFFF, \u{codepoint}
                         if (c == 'u' && _compatibility >= RubyCompatibility.Ruby19) {
                             hasUnicodeEscape = true;
-                            tokadd('\\');
-                            AppendEscapedUnicode();
+                            content.Append('\\');
+                            AppendEscapedUnicode(content);
                         } else {
-                            pushback(c);
-                            AppendEscapedRegexEscape(terminator);
+                            SeekRelative(-eolnWidth);
+                            AppendEscapedRegexEscape(content, terminator);
                         }
                         continue;
                     } else if ((stringType & StringType.ExpandsEmbedded) != 0) {
                         // \uFFFF, \u{codepoint}
                         if (c == 'u' && _compatibility >= RubyCompatibility.Ruby19) {
                             hasUnicodeEscape = true;
-                            if (peekc() == '{') {
-                                AppendUnicodeCodePoint(stringType);
+                            if (Peek() == '{') {
+                                AppendUnicodeCodePoint(content, stringType);
                                 continue;
                             } else {
                                 c = ReadUnicodeEscape();
                             }
                         } else {
-                            pushback(c);
+                            SeekRelative(-eolnWidth);
                             c = ReadEscape();
                         }
                     } else if ((stringType & StringType.Words) != 0 && IsWhiteSpace(c)) {
                         /* ignore backslashed spaces in %w */
                     } else if (c != terminator && !(openingParenthesis != 0 && c == openingParenthesis)) {
-                        tokadd('\\');
+                        content.Append('\\');
                     }
                 }
 
-                AppendCharacter(c, stringType);
+                AppendCharacter(content, c, stringType);
             }
         }
 
-        private void AppendCharacter(int c, StringType stringType) {
+        private void AppendCharacter(StringBuilder/*!*/ content, int c, StringType stringType) {
             if (c == 0 && (stringType & StringType.Symbol) != 0) {
                 ReportError(Errors.NullCharacterInSymbol);
             } else {
-                _tokenString.Append((char)c);
+                content.Append((char)c);
             }
         }
 
@@ -2513,25 +2424,25 @@ namespace IronRuby.Compiler {
                 return Tokens.StringEnd;
             }
 
-            int c = peekc();
             MarkTokenStart();
+
+            int eolnWidth;
+            int c = ReadNormalizeEndOfLine(out eolnWidth);
 
             // unterminated string (error recovery is slightly different from MRI):
             if (c == -1) {
                 ReportError(Errors.UnterminatedString);
-                UnterminatedToken = true;
+                _unterminatedToken = true;
                 MarkSingleLineTokenEnd();
                 return Tokens.StringEnd;
             }
 
-            c = nextc();
-            
+            bool isMultiline = c == '\n';
+
             // skip whitespace in word list:
             if ((stringKind & StringType.Words) != 0 && IsWhiteSpace(c)) {
-                do { 
-                    c = nextc(); 
-                } while (IsWhiteSpace(c));
-
+                isMultiline |= SkipWhitespace();
+                c = Read(); 
                 whitespaceSeen = true;
             }
 
@@ -2542,56 +2453,59 @@ namespace IronRuby.Compiler {
                 if ((stringKind & StringType.Words) != 0) {
                     // final separator in the list of words (see grammar):
                     info.Properties = StringType.FinalWordSeparator;
-                    MarkMultiLineTokenEnd();
+                    MarkTokenEnd(isMultiline);
                     return Tokens.WordSeparator;
                 }
 
                 // end of regex:
                 if ((stringKind & StringType.RegularExpression) != 0) {
                     _tokenValue.SetRegexOptions(ReadRegexOptions());
-                    MarkSingleLineTokenEnd();
+                    MarkTokenEnd(isMultiline);
                     return Tokens.RegexpEnd;
                 }
                 
                 // end of string/symbol:
-                MarkSingleLineTokenEnd();
+                MarkTokenEnd(isMultiline);
                 return Tokens.StringEnd;
             }
 
             // word separator:
             if (whitespaceSeen) {
-                pushback(c);
-                MarkMultiLineTokenEnd();
+                Debug.Assert(!IsWhiteSpace(c));
+                Back(c);
+                MarkTokenEnd(isMultiline);
                 return Tokens.WordSeparator;
             }
 
-            newtok();
+            StringBuilder content;
 
             // start of #$variable, #@variable, #{expression} in a string:
             if ((stringKind & StringType.ExpandsEmbedded) != 0 && c == '#') {
-                c = nextc();
-                switch (c) {
+                switch (Peek()) {
                     case '$':
                     case '@':
-                        pushback(c);
                         MarkSingleLineTokenEnd();
                         return StringEmbeddedVariableBegin();
 
                     case '{':
+                        Skip('{');
                         MarkSingleLineTokenEnd();
                         return StringEmbeddedCodeBegin();
                 }
-                tokadd('#');
+                content = new StringBuilder();
+                content.Append('#');
+            } else {
+                content = new StringBuilder();
+                SeekRelative(-eolnWidth);
             }
 
-            pushback(c);
             bool hasUnicodeEscape = false;
 
             int nestingLevel = info.NestingLevel;
-            ReadStringContent(stringKind, info.TerminatingCharacter, info.OpeningParenthesis, ref nestingLevel, ref hasUnicodeEscape);
+            ReadStringContent(content, stringKind, info.TerminatingCharacter, info.OpeningParenthesis, ref nestingLevel, ref hasUnicodeEscape);
             info.NestingLevel = nestingLevel;
 
-            _tokenValue.SetString(tok(), hasUnicodeEscape);
+            _tokenValue.SetString(content.ToString(), hasUnicodeEscape);
             MarkMultiLineTokenEnd();
             return Tokens.StringContent;
         }
@@ -2604,9 +2518,11 @@ namespace IronRuby.Compiler {
             int term;
             StringType stringType = StringType.Default;
 
-            int c = nextc();
+            int prefixWidth;
+            int c = ReadNormalizeEndOfLine(out prefixWidth);
             if (c == '-') {
-                c = nextc();
+                c = ReadNormalizeEndOfLine(out prefixWidth);
+                prefixWidth++;
                 stringType = StringType.IndentedHeredoc;
             }
 
@@ -2621,9 +2537,9 @@ namespace IronRuby.Compiler {
                 term = c;
 
                 while (true) {
-                    c = nextc();
+                    c = Read(); 
                     if (c == -1) {
-                        UnterminatedToken = true;
+                        _unterminatedToken = true;
                         ReportError(Errors.UnterminatedHereDocIdentifier);
                         c = term;
                         break;
@@ -2636,8 +2552,9 @@ namespace IronRuby.Compiler {
                     // MRI doesn't do this, it continues reading the label and includes \n into it.
                     // The label cannot be matched with the end label (only single-line comparison is done), so it's better to report error here
                     // Allowing \n in label requires the token to be multi-line.
+                    // Note we can ignore \r followed by \n here since it will fail in the next iteration.
                     if (c == '\n') {
-                        pushback(c);
+                        Back('\n');
                         ReportError(Errors.UnterminatedHereDocIdentifier);
                         c = term;
                         break;
@@ -2653,10 +2570,7 @@ namespace IronRuby.Compiler {
                 SkipVariableName();
                 label = new String(_lineBuffer, start, _bufferPos - start);
             } else {
-                pushback(c);
-                if ((stringType & StringType.IndentedHeredoc) != 0) {
-                    pushback('-');
-                }
+                SeekRelative(-prefixWidth);
                 return Tokens.None;
             }
 
@@ -2665,8 +2579,9 @@ namespace IronRuby.Compiler {
             
             // skip the rest of the line (the content is stored in heredoc string terminal and tokenized upon restore)
             int resume = _bufferPos;
-            _bufferPos = _lineBuffer.Length;
-            _currentString = new HeredocTokenizer(stringType, label, resume, _lineBuffer, _currentLine, _currentLineIndex);
+            _bufferPos = _lineLength;
+            _currentString = new HeredocTokenizer(stringType, label, resume, _lineBuffer, _lineLength, _currentLine, _currentLineIndex);
+            _lineBuffer = new char[InitialBufferSize];
             _tokenValue.SetStringTokenizer(_currentString);
 
             return term == '`' ? Tokens.ShellStringBegin : Tokens.StringBeg;
@@ -2674,6 +2589,7 @@ namespace IronRuby.Compiler {
 
         private void HeredocRestore(HeredocTokenizer/*!*/ here) {
             _lineBuffer = here.ResumeLine;
+            _lineLength = here.ResumeLineLength;
             _bufferPos = here.ResumePosition;
             _heredocEndLine = _currentLine;
             _heredocEndLineIndex = _currentLineIndex;
@@ -2685,26 +2601,21 @@ namespace IronRuby.Compiler {
             StringType stringKind = heredoc.Properties;
             bool isIndented = (stringKind & StringType.IndentedHeredoc) != 0;
 
-            int c = peekc();
             MarkTokenStart();
 
-            if (c == -1) {
+            if (Peek() == -1) {
                 ReportError(Errors.UnterminatedHereDoc, heredoc.Label);
                 MarkSingleLineTokenEnd();
                 HeredocRestore(heredoc);
-                UnterminatedToken = true;
+                _unterminatedToken = true;
                 return Tokens.StringEnd;
             }
 
             // label reached - it becomes a string-end token:
             // (note that label is single line, MRI allows multiline, but such label is never matched)
             if (is_bol() && LineContentEquals(heredoc.Label, isIndented)) {
-                
-                // TODO: reads the entire label:
-                do {
-                    c = nextc();
-                } while (c != '\n' && c != -1);
-                pushback(c);
+                // seek to the end of the line:
+                SeekRelative(heredoc.Label.Length);
 
                 MarkSingleLineTokenEnd();
                 HeredocRestore(heredoc);
@@ -2732,13 +2643,6 @@ namespace IronRuby.Compiler {
             }
 
             return TokenizeExpandingHeredocContent(heredoc);
-            
-            // obsolete:
-            //MarkMultiLineTokenEnd();
-            //HeredocRestore(heredoc);
-            //_currentString = new StringTerminator(StringType.FinalWordSeparator, 0, 0);
-            //_tokenValue.SetString(str);
-            //return Tokens.StringContent;
         }
 
         private StringBuilder/*!*/ ReadNonexpandingHeredocContent(HeredocTokenizer/*!*/ heredoc) {
@@ -2747,7 +2651,7 @@ namespace IronRuby.Compiler {
 
             // reads lines until the line contains heredoc label
             do {
-                int end = _lineBuffer.Length;
+                int end = _lineLength;
                 if (end > 0) {
                     switch (_lineBuffer[end - 1]) {
                         case '\n':
@@ -2766,14 +2670,16 @@ namespace IronRuby.Compiler {
 
                 result.Append(_lineBuffer, 0, end);
 
-                if (end < _lineBuffer.Length) {
+                if (end < _lineLength) {
                     result.Append('\n');
                 }
 
-                _bufferPos = _lineBuffer.Length;
+                _bufferPos = _lineLength;
 
-                // peekc forces a new line load:
-                if (peekc() == -1) {
+                // force new line load:
+                RefillBuffer();
+
+                if (Peek() == -1) {
                     // eof reached before end of heredoc:
                     return result;
                 }
@@ -2786,36 +2692,37 @@ namespace IronRuby.Compiler {
         }
 
         private Tokens TokenizeExpandingHeredocContent(HeredocTokenizer/*!*/ heredoc) {
-            newtok();
-            int c = nextc();
+            StringBuilder content;
 
+            int c = Peek();
             if (c == '#') {
-                c = nextc();
-
-                switch (c) {
+                Skip(c);
+                
+                switch (Peek()) {
                     case '$':
                     case '@':
-                        pushback(c);
                         MarkSingleLineTokenEnd();
                         return StringEmbeddedVariableBegin();
 
                     case '{':
+                        Skip('{');
                         MarkSingleLineTokenEnd();
                         return StringEmbeddedCodeBegin();
                 }
 
-                tokadd('#');
+                content = new StringBuilder();
+                content.Append('#');
+            } else {
+                content = new StringBuilder();
             }
 
             bool isIndented = (heredoc.Properties & StringType.IndentedHeredoc) != 0;
-
-            pushback(c);
             bool hasUnicodeEscape = false;
             
             do {
                 // read string content upto the end of the line:
                 int tmp = 0;
-                c = ReadStringContent(heredoc.Properties, '\n', 0, ref tmp, ref hasUnicodeEscape);
+                c = ReadStringContent(content, heredoc.Properties, '\n', 0, ref tmp, ref hasUnicodeEscape);
                 
                 // stop reading on end-of-file or just before an embedded expression: #$, #$, #{
                 if (c != '\n') {
@@ -2823,73 +2730,80 @@ namespace IronRuby.Compiler {
                 }
 
                 // adds \n
-                tokadd((char)nextc());
+                content.Append((char)ReadNormalizeEndOfLine());
+
+                // TODO:
+                RefillBuffer();
 
                 // first char on the next line:
-                if (peekc() == -1) {
+                if (Peek() == -1) {
                     break;
                 }
 
             } while (!LineContentEquals(heredoc.Label, isIndented));
 
-            _tokenValue.SetString(tok(), hasUnicodeEscape);
+            _tokenValue.SetString(content.ToString(), hasUnicodeEscape);
             MarkMultiLineTokenEnd();
             return Tokens.StringContent;
         }
 
         #endregion
 
+        #region String Quotations
+
         // Quotation start: 
         //   %[QqWwxrs]?[^:alpha-numeric:]
-        private Tokens ReadQuotationStart(int c) {
+        private Tokens TokenizeQuotationStart() {
             StringType type;
             Tokens token;
             int terminator;
 
             // c is the character following %
+            // note that it could be eoln in which case it needs to be normalized:
+            int c = ReadNormalizeEndOfLine();
             switch (c) {
                 case 'Q':
                     type = StringType.ExpandsEmbedded;
                     token = Tokens.StringBeg;
-                    terminator = nextc();
+                    terminator = ReadNormalizeEndOfLine();
                     break;
 
                 case 'q':
                     type = StringType.Default;
                     token = Tokens.StringBeg;
-                    terminator = nextc();
+                    terminator = ReadNormalizeEndOfLine();
                     break;
 
                 case 'W':
                     type = StringType.Words | StringType.ExpandsEmbedded;
                     token = Tokens.WordsBeg;
-                    terminator = nextc();
-                    SkipWhitespace();
+                    // if the terminator is a whitespace the end will never be matched and syntax error will be reported
+                    terminator = ReadNormalizeEndOfLine();
                     break;
 
                 case 'w':
                     type = StringType.Words;
                     token = Tokens.VerbatimWordsBegin;
-                    terminator = nextc();
-                    SkipWhitespace();
+                    // if the terminator is a whitespace the end will never be matched and syntax error will be reported
+                    terminator = ReadNormalizeEndOfLine();
                     break;
 
                 case 'x':
                     type = StringType.ExpandsEmbedded;
                     token = Tokens.ShellStringBegin;
-                    terminator = nextc();
+                    terminator = ReadNormalizeEndOfLine();
                     break;
 
                 case 'r':
                     type = StringType.RegularExpression | StringType.ExpandsEmbedded;
                     token = Tokens.RegexpBeg;
-                    terminator = nextc();
+                    terminator = ReadNormalizeEndOfLine();
                     break;
 
                 case 's':
                     type = StringType.Symbol;
                     token = Tokens.Symbeg;
-                    terminator = nextc();
+                    terminator = ReadNormalizeEndOfLine();
                     _lexicalState = LexicalState.EXPR_FNAME;
                     break;
 
@@ -2903,7 +2817,8 @@ namespace IronRuby.Compiler {
             int parenthesis = terminator;
             switch (terminator) {
                 case -1:
-                    UnterminatedToken = true;
+                    _unterminatedToken = true;
+                    MarkSingleLineTokenEnd();
                     ReportError(Errors.UnterminatedQuotedString);
                     return Tokens.EndOfFile;
 
@@ -2914,18 +2829,34 @@ namespace IronRuby.Compiler {
 
                 default:
                     if (IsLetterOrDigit(terminator)) {
-                        pushback(c);
+                        Back(terminator);
+                        MarkSingleLineTokenEnd();
                         ReportError(Errors.UnknownQuotedStringType);
                         return (Tokens)'%';
                     }
-                    parenthesis = 0; 
+
+                    parenthesis = 0;
                     break;
             }
 
+            bool isMultiline = terminator == '\n';
+
+            if ((type & StringType.Words) != 0) {
+                isMultiline |= SkipWhitespace();
+            }
+
+            if (isMultiline) {
+                MarkMultiLineTokenEnd();
+            } else {
+                MarkSingleLineTokenEnd();
+            }
+            
             _currentString = new StringContentTokenizer(type, (char)terminator, (char)parenthesis);
             _tokenValue.SetStringTokenizer(_currentString);
             return token;
         }
+
+        #endregion
 
         #region Numbers
 
@@ -2952,25 +2883,25 @@ namespace IronRuby.Compiler {
             _lexicalState = LexicalState.EXPR_END;
            
             if (c == '0') {
-                switch (peekc()) {
+                switch (Peek()) {
                     case 'x':
                     case 'X':
-                        nextc();
+                        Skip();
                         return ReadInteger(16, NumericCharKind.None);
 
                     case 'b':
                     case 'B':
-                        nextc();
+                        Skip();
                         return ReadInteger(2, NumericCharKind.None);
 
                     case 'o':
                     case 'O':
-                        nextc();
+                        Skip();
                         return ReadInteger(8, NumericCharKind.None);
 
                     case 'd':
                     case 'D':
-                        nextc();
+                        Skip();
                         return ReadInteger(10, NumericCharKind.None);
 
                     case 'e':
@@ -2979,23 +2910,20 @@ namespace IronRuby.Compiler {
                             int sign;
                             int start = _bufferPos - 1;
 
-                            nextc();
-                            if (TryReadExponentSign(out sign)) {
+                            if (TryReadExponentSign(1, out sign)) {
                                 return ReadDoubleExponent(start, sign);
                             }
 
-                            pushback('e');
                             _tokenValue.SetInteger(0);
                             return Tokens.Integer;
                         }
 
                     case '.':
                         // 0.
-                        nextc();
-                        if (IsDecimalDigit(peekc())) {
+                        if (IsDecimalDigit(Peek(1))) {
+                            Skip('.');
                             return ReadDouble(_bufferPos - 2);
                         }
-                        pushback('.');
 
                         _tokenValue.SetInteger(0);
                         return Tokens.Integer;
@@ -3041,10 +2969,12 @@ namespace IronRuby.Compiler {
             int underscoreCount = 0;
 
             while (true) {
-                int c = nextc();
+                int c = Peek();
                 int digit = ToDigit(c);
 
                 if (digit < @base) {
+                    Skip(c);
+
                     integer = integer * @base + digit;
                     prev = NumericCharKind.Digit;
                     
@@ -3060,16 +2990,16 @@ namespace IronRuby.Compiler {
                             ReportError(Errors.NumericLiteralWithoutDigits);
                         }
                     } else if (c == '_') {
+                        Skip(c);
                         prev = NumericCharKind.Underscore;
                         underscoreCount++;
                         continue;
                     } 
                     
-                    if (c == '.' && IsDecimalDigit(peekc())) {
+                    if (c == '.' && IsDecimalDigit(Peek(1))) {
                         ReportWarning(Errors.NoFloatingLiteral);
                     }
 
-                    pushback(c);
                     _tokenValue.SetInteger((int)integer);
                     return Tokens.Integer;
                 }
@@ -3088,13 +3018,15 @@ namespace IronRuby.Compiler {
             int numberStartIndex = _bufferPos - 1;
 
             int underscoreCount = 0;
-            long integer = 0;
-            NumericCharKind prev = NumericCharKind.None;
+            NumericCharKind prev = NumericCharKind.Digit;
+            long integer = c - '0';
 
             while (true) {
                 int sign;
+                c = Peek();
 
                 if (IsDecimalDigit(c)) {
+                    Skip(c);
                     prev = NumericCharKind.Digit;
                     integer = integer * 10 + (c - '0');
                     if (integer > Int32.MaxValue) {
@@ -3104,55 +3036,53 @@ namespace IronRuby.Compiler {
                 } else if (prev == NumericCharKind.Underscore) {
 
                     ReportError(Errors.TrailingUnderscoreInNumber);
-                    pushback(c);
                     _tokenValue.SetInteger((int)integer);
                     return Tokens.Integer;
 
-                } else if ((c == 'e' || c == 'E') && TryReadExponentSign(out sign)) {
+                } else if ((c == 'e' || c == 'E') && TryReadExponentSign(1, out sign)) {
 
                     return ReadDoubleExponent(numberStartIndex, sign);
 
                 } else if (c == '_') {
 
+                    Skip(c);
                     underscoreCount++;
                     prev = NumericCharKind.Underscore;
 
                 } else {
 
-                    if (c == '.' && IsDecimalDigit(peekc())) {
+                    if (c == '.' && IsDecimalDigit(Peek(1))) {
+                        Skip('.');
                         return ReadDouble(numberStartIndex);
                     }
 
-                    pushback(c);
                     _tokenValue.SetInteger((int)integer);
                     return Tokens.Integer;
                 }
-
-                c = nextc();
             }
         }
-        private bool TryReadExponentSign(out int sign) {
-            int s = peekc();
+
+        private bool TryReadExponentSign(int offset, out int sign) {
+            int s = Peek(offset);
             if (s == '-') {
-                nextc();
+                offset++;
                 sign = -1;
             } else if (s == '+') {
-                nextc();
+                offset++;
                 sign = +1;
             } else {
                 sign = +1;
             }
 
-            if (IsDecimalDigit(peekc())) {
+            if (IsDecimalDigit(Peek(offset))) {
+                SeekRelative(offset);
                 return true;
             }
 
             if (s == '-') {
                 ReportError(Errors.TrailingMinusInNumber);
-                pushback('-');
             } else if (s == '+') {
                 ReportError(Errors.TrailingPlusInNumber);
-                pushback('+');
             } else {
                 ReportError(Errors.TrailingEInNumber);
             }
@@ -3177,34 +3107,39 @@ namespace IronRuby.Compiler {
             NumericCharKind prev = NumericCharKind.Digit; 
 
             while (true) {
-                int c = nextc();
+                int c = Peek();
                 int digit = ToDigit(c);
 
                 if (digit < @base) {
                     prev = NumericCharKind.Digit;
+                    Skip(c);
                 } else {
 
                     if (prev == NumericCharKind.Underscore) {
                         ReportError(Errors.TrailingUnderscoreInNumber);                        
                     } else if (c == '_') {
+                        Skip(c);
                         prev = NumericCharKind.Underscore;
                         underscoreCount++;
                         continue;
                     } else if (allowDouble) {
                         int sign;
-                        if ((c == 'e' || c == 'E') && TryReadExponentSign(out sign)) {
+                        if ((c == 'e' || c == 'E') && TryReadExponentSign(1, out sign)) {
                             return ReadDoubleExponent(numberStartIndex, sign);
                         } else if (c == '.') {
-                            if (IsDecimalDigit(peekc())) {
+                            if (IsDecimalDigit(Peek(1))) {
+                                Skip('.');
                                 return ReadDouble(numberStartIndex);
                             }
                         }
                     }
 
-                    pushback(c);
-
                     // TODO: store only the digit count, the actual value will be parsed later:
                     // TODO: skip initial zeros
+                    if (_bigIntParser == null) {
+                        _bigIntParser = new BignumParser();
+                    }
+
                     _bigIntParser.Position = numberStartIndex;
                     _bigIntParser.Buffer = _lineBuffer;
 
@@ -3221,26 +3156,27 @@ namespace IronRuby.Compiler {
         // FLOAT - decimal and exponent
         // {value.}[0-9_]*[0-9])([eE][+-]?[0-9]([0-9_]*[0-9])?)
         private Tokens ReadDouble(int numberStartIndex) {
-            Debug.Assert(IsDecimalDigit(peekc()));
+            Debug.Assert(IsDecimalDigit(Peek()));
 
             NumericCharKind prev = NumericCharKind.None;
             while (true) {
                 int sign;
-                int c = nextc();
+                int c = Peek();
 
                 if (IsDecimalDigit(c)) {
                     prev = NumericCharKind.Digit;
-                } else if ((c == 'e' || c == 'E') && TryReadExponentSign(out sign)) {
+                    Skip(c);
+                } else if ((c == 'e' || c == 'E') && TryReadExponentSign(1, out sign)) {
                     return ReadDoubleExponent(numberStartIndex, sign);
                 } else {
                     if (prev == NumericCharKind.Underscore) {
                         ReportError(Errors.TrailingUnderscoreInNumber);                        
                     } else if (c == '_') {
+                        Skip(c);
                         prev = NumericCharKind.Underscore;
                         continue;
                     }
 
-                    pushback(c);
                     return DecodeDouble(numberStartIndex, _bufferPos);
                 }
             }
@@ -3252,11 +3188,12 @@ namespace IronRuby.Compiler {
             int exponent = 0;
             NumericCharKind prev = NumericCharKind.None;
             while (true) {
-                int c = nextc();
+                int c = Peek();
 
                 if (IsDecimalDigit(c)) {
+                    Skip(c);
                     prev = NumericCharKind.Digit;
-
+                    
                     // greater exponents evaluate to infinity/zero, we need to keep parsing though:
                     if (exponent < 10000) {
                         exponent = exponent * 10 + (c - '0');
@@ -3266,11 +3203,10 @@ namespace IronRuby.Compiler {
                         Debug.Assert(prev == NumericCharKind.Underscore);
                         ReportError(Errors.TrailingUnderscoreInNumber);                            
                     } else if (c == '_') {
+                        Skip(c);
                         prev = NumericCharKind.Underscore;
                         continue;
                     }
-
-                    pushback(c);
 
                     exponent *= sign;
 
@@ -3301,6 +3237,21 @@ namespace IronRuby.Compiler {
             return Double.TryParse(sb.ToString(), NumberStyles.Float, CultureInfo.InvariantCulture, out result);
         }
 
+        private static bool TryDecodeDouble(string/*!*/ str, int first, int end, out double result) {
+            StringBuilder sb = new StringBuilder(end - first);
+            sb.Length = end - first;
+
+            int j = 0;
+            for (int i = first; i < end; i++) {
+                if (str[i] != '_') {
+                    sb[j++] = str[i];
+                }
+            }
+
+            sb.Length = j;
+            return Double.TryParse(sb.ToString(), NumberStyles.Float, CultureInfo.InvariantCulture, out result);
+        }
+
         private Tokens DecodeDouble(int first, int end) {
             double result;
             if (!TryDecodeDouble(_lineBuffer, first, end, out result)) {
@@ -3313,7 +3264,7 @@ namespace IronRuby.Compiler {
 
         #endregion
 
-        #region Characters
+        #region Character Categories
 
         public static bool IsDecimalDigit(int c) {
             return unchecked((uint)c - '0' <= (uint)'9' - '0');
@@ -3383,43 +3334,95 @@ namespace IronRuby.Compiler {
             return IsIdentifier(c) || c == '!' || c == '?' || c == '=';
         }
 
-        // Reads [A-Za-z0-9_]*
         private void SkipVariableName() {
-            int c;
-            do { c = nextc(); } while (IsIdentifier(c));
-            pushback(c);
+            while (true) {
+                int c = Peek();
+                if (IsIdentifier(c)) {
+                    Skip();
+                } else {
+                    break;
+                }
+            }
         }
 
-        private void SkipWhitespace() {
-            int c;
-            do { c = nextc(); } while (IsWhiteSpace(c));
-            pushback(c);
+        // returns true if an end of line has been skipped:
+        private bool SkipWhitespace() {
+            bool eolnSkipped = false;
+            while (true) {
+                RefillBuffer();
+                int c = Peek();
+                if (c == '\n') {
+                    eolnSkipped = true;
+                    Skip();
+                } else if (IsWhiteSpace(c)) {
+                    Skip();
+                } else {
+                    return eolnSkipped;
+                }
+            }
         }
 
         #endregion
 
         #region Public API
 
-        private static int nextc(char[]/*!*/ str, ref int i) {
+        public SourceUnit SourceUnit {
+            get { return _sourceUnit; }
+        }
+
+        public int DataOffset {
+            get { return _dataOffset; }
+        }
+
+        public RubyCompatibility Compatibility {
+            get { return _compatibility; }
+            set { _compatibility = value; }
+        }
+
+        public SourceSpan TokenSpan {
+            get { return _tokenSpan; }
+        }
+
+        public TokenValue TokenValue {
+            get { return _tokenValue; }
+        }
+
+        public bool EndOfFileReached {
+            get { return _eofReached; }
+        }
+
+        public bool UnterminatedToken {
+            get { return _unterminatedToken; }
+        }
+
+        private static int Read(string/*!*/ str, ref int i) {
             i++;
             return (i < str.Length) ? str[i] : -1;
         }
 
         // subsequent _ are not considered error
-        public static double ParseDouble(char[]/*!*/ str) {
+        public static bool TryParseDouble(string/*!*/ str, out double result, out bool complete) {
             double sign;
             int i = -1;
 
             int c;
-            do { c = nextc(str, ref i); } while (IsWhiteSpace(c));
+            do { c = Read(str, ref i); } while (IsWhiteSpace(c));
             
             if (c == '-') {
-                c = nextc(str, ref i);
-                if (c == '_') return 0.0;
+                c = Read(str, ref i);
+                if (c == '_') {
+                    result = 0.0;
+                    complete = false;
+                    return false;
+                }
                 sign = -1;
             } else if (c == '+') {
-                c = nextc(str, ref i);
-                if (c == '_') return 0.0;
+                c = Read(str, ref i);
+                if (c == '_') {
+                    result = 0.0;
+                    complete = false;
+                    return false;
+                }
                 sign = +1;
             } else {
                 sign = +1;
@@ -3428,13 +3431,13 @@ namespace IronRuby.Compiler {
             int start = i;
 
             while (c == '_' || IsDecimalDigit(c)) {
-                c = nextc(str, ref i);
+                c = Read(str, ref i);
             }
 
             if (c == '.') {
-                c = nextc(str, ref i);
+                c = Read(str, ref i);
                 while (c == '_' || IsDecimalDigit(c)) {
-                    c = nextc(str, ref i);
+                    c = Read(str, ref i);
                 }
             }
 
@@ -3442,9 +3445,9 @@ namespace IronRuby.Compiler {
             int end = i;
 
             if (c == 'e' || c == 'E') {
-                c = nextc(str, ref i);
+                c = Read(str, ref i);
                 if (c == '+' || c == '-') {
-                    c = nextc(str, ref i);
+                    c = Read(str, ref i);
                 }
 
                 int expEnd = end;
@@ -3455,14 +3458,16 @@ namespace IronRuby.Compiler {
                     } else if (c != '_') {
                         break;
                     }
-                    c = nextc(str, ref i);
+                    c = Read(str, ref i);
                 }
 
                 end = expEnd;
             }
 
-            double result;
-            return TryDecodeDouble(str, start, end, out result) ? result * sign : 0.0;
+            bool success = TryDecodeDouble(str, start, end, out result);
+            result *= sign;
+            complete = end == str.Length;
+            return success;
         }
 
         private const string EncodingHeaderPattern = @"^[#].*?coding\s*[:=]\s*(?<encoding>[a-z0-9_-]+)";
@@ -3545,6 +3550,26 @@ namespace IronRuby.Compiler {
         #endregion
 
         #region Tokenizer Service
+
+        public override object CurrentState {
+            get { return null; }
+        }
+
+        public override ErrorSink/*!*/ ErrorSink {
+            get { return _errorSink; }
+            set {
+                ContractUtils.RequiresNotNull(value, "value");
+                _errorSink = value;
+            }
+        }
+
+        public override bool IsRestartable {
+            get { return false; }
+        }
+
+        public override SourceLocation CurrentPosition {
+            get { return _tokenSpan.End; } // TODO: ???
+        }
 
         public override bool SkipToken() {
             return GetNextToken() != Tokens.EndOfFile;

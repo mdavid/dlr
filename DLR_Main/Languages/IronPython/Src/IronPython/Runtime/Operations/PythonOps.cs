@@ -252,14 +252,11 @@ namespace IronPython.Runtime.Operations {
         public static bool IsSubClass(PythonType/*!*/ c, PythonType/*!*/ typeinfo) {
             Assert.NotNull(c, typeinfo);
 
-            if (typeinfo.UnderlyingSystemType.IsInterface) {
-                // interfaces aren't in bases, and therefore IsSubclassOf doesn't do this check.
-                if (typeinfo.UnderlyingSystemType.IsAssignableFrom(c.UnderlyingSystemType)) {
-                    return true;
-                }
+            if (c.OldClass != null) {
+                return typeinfo.__subclasscheck__(c.OldClass);
             }
 
-            return c.IsSubclassOf(typeinfo);
+            return typeinfo.__subclasscheck__(c);
         }
 
         public static bool IsSubClass(PythonType c, object typeinfo) {
@@ -320,12 +317,11 @@ namespace IronPython.Runtime.Operations {
         }
 
         public static bool IsInstance(object o, PythonType typeinfo) {
-            PythonType odt = DynamicHelpers.GetPythonType(o);
-            if (IsSubClass(odt, typeinfo)) {
+            if (typeinfo.__instancecheck__(o)) {
                 return true;
             }
 
-            return IsInstanceDynamic(o, typeinfo, odt);
+            return IsInstanceDynamic(o, typeinfo, DynamicHelpers.GetPythonType(o));
         }
 
         public static bool IsInstance(object o, PythonTuple typeinfo) {
@@ -943,6 +939,12 @@ namespace IronPython.Runtime.Operations {
             object dummy;
             try {
                 return TryGetBoundAttr(context, o, name, out dummy);
+            } catch (SystemExitException) {
+                throw;
+            } catch (KeyboardInterruptException) {
+                // we don't catch ThreadAbortException because it will
+                // automatically re-throw on it's own.
+                throw;
             } catch {
                 return false;
             }
@@ -998,7 +1000,7 @@ namespace IronPython.Runtime.Operations {
 
 #if !SILVERLIGHT
                 if (o != null && ComOps.IsComObject(o)) {
-                    foreach (string name in Microsoft.Scripting.ComInterop.ComBinder.GetDynamicMemberNames(o)) {
+                    foreach (string name in Microsoft.Scripting.ComBinder.GetDynamicMemberNames(o)) {
                         if (!res.Contains(name)) {
                             res.AddNoLock(name);
                         }
@@ -2087,13 +2089,50 @@ namespace IronPython.Runtime.Operations {
             return new string[] { function.GetSignatureString() };
         }
 
-        public static PythonDictionary CopyAndVerifyDictionary(PythonFunction function, IDictionary dict) {
+        public static PythonDictionary CopyAndVerifyDictionary(PythonFunction function, IDictionary dict) {            
             foreach (object o in dict.Keys) {
                 if (!(o is string)) {
                     throw TypeError("{0}() keywords most be strings", function.__name__);
                 }
             }
             return new PythonDictionary(dict);
+        }
+
+        public static PythonDictionary/*!*/ CopyAndVerifyUserMapping(PythonFunction/*!*/ function, object dict) {
+            return UserMappingToPythonDictionary(function.Context, dict, function.func_name);
+        }
+
+        public static PythonDictionary UserMappingToPythonDictionary(CodeContext context, object dict, string funcName) {
+            // call dict.keys()
+            object keys;
+            if (!PythonTypeOps.TryInvokeUnaryOperator(context, dict, Symbols.Keys, out keys)) {
+                throw PythonOps.TypeError("{0}() argument after ** must be a mapping, not {1}",
+                    funcName,
+                    DynamicHelpers.GetPythonType(dict).Name);
+            }
+
+            PythonDictionary res = new PythonDictionary();
+
+            // enumerate the keys getting their values
+            IEnumerator enumerator = GetEnumerator(keys);
+            while (enumerator.MoveNext()) {
+                object o = enumerator.Current;
+                string s = o as string;
+                if (s == null) {
+                    Extensible<string> es = o as Extensible<string>;
+                    if (es == null) {
+                        throw PythonOps.TypeError("{0}() keywords most be strings, not {0}",
+                            funcName,
+                            DynamicHelpers.GetPythonType(dict).Name);
+                    }
+
+                    s = es.Value;
+                }
+
+                res[o] = PythonOps.GetIndex(context, dict, o);
+            }
+
+            return res;
         }
 
         public static PythonDictionary CopyAndVerifyPythonDictionary(PythonFunction function, PythonDictionary dict) {
@@ -2797,7 +2836,7 @@ namespace IronPython.Runtime.Operations {
             return NotImplementedType.Value;
         }
 
-        public static MetaObjectBinder MakeListCallAction(int count) {
+        public static DynamicMetaObjectBinder MakeListCallAction(int count) {
             Argument[] infos = CompilerHelpers.MakeRepeatedArray(Argument.Simple, count);
             infos[count - 1] = new Argument(ArgumentType.List);
 
@@ -2807,7 +2846,7 @@ namespace IronPython.Runtime.Operations {
             );
         }
 
-        public static MetaObjectBinder MakeSimpleCallAction(int count) {
+        public static DynamicMetaObjectBinder MakeSimpleCallAction(int count) {
             return new PythonInvokeBinder(
                 DefaultContext.DefaultPythonContext.DefaultBinderState,
                 new CallSignature(CompilerHelpers.MakeRepeatedArray(Argument.Simple, count))
@@ -3119,27 +3158,27 @@ namespace IronPython.Runtime.Operations {
             return pm.BinderState;
         }
 
-        public static MetaObjectBinder MakeInvokeAction(CodeContext/*!*/ context, CallSignature signature) {
+        public static DynamicMetaObjectBinder MakeInvokeAction(CodeContext/*!*/ context, CallSignature signature) {
             return new PythonInvokeBinder(GetBinderState(context), signature);
         }
 
-        public static MetaObjectBinder MakeGetAction(CodeContext/*!*/ context, string name, bool isNoThrow) {
+        public static DynamicMetaObjectBinder MakeGetAction(CodeContext/*!*/ context, string name, bool isNoThrow) {
             return new PythonGetMemberBinder(GetBinderState(context), name, isNoThrow);
         }
 
-        public static MetaObjectBinder MakeSetAction(CodeContext/*!*/ context, string name) {
+        public static DynamicMetaObjectBinder MakeSetAction(CodeContext/*!*/ context, string name) {
             return new PythonSetMemberBinder(GetBinderState(context), name);
         }
 
-        public static MetaObjectBinder MakeDeleteAction(CodeContext/*!*/ context, string name) {
+        public static DynamicMetaObjectBinder MakeDeleteAction(CodeContext/*!*/ context, string name) {
             return new PythonDeleteMemberBinder(GetBinderState(context), name);
         }
 
-        public static MetaObjectBinder MakeConversionAction(CodeContext/*!*/ context, Type type, ConversionResultKind kind) {
+        public static DynamicMetaObjectBinder MakeConversionAction(CodeContext/*!*/ context, Type type, ConversionResultKind kind) {
             return new ConversionBinder(GetBinderState(context), type, kind);
         }
 
-        public static MetaObjectBinder MakeOperationAction(CodeContext/*!*/ context, string operationName) {
+        public static DynamicMetaObjectBinder MakeOperationAction(CodeContext/*!*/ context, string operationName) {
             return new PythonOperationBinder(GetBinderState(context), operationName);
         }
 
@@ -3509,6 +3548,7 @@ namespace IronPython.Runtime.Operations {
             return TypeError("object cannot be interpreted as an index");
         }
 
+        [Obsolete("no longer used anywhere")]
         public static Exception/*!*/ TypeErrorForBadDictionaryArgument(PythonFunction/*!*/ f) {
             return PythonOps.TypeError("{0}() argument after ** must be a dictionary", f.__name__);
         }

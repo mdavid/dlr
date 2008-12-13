@@ -21,7 +21,7 @@ using Microsoft.Scripting.Utils;
 
 namespace ToyScript.Binders {
     public class ErrorMetaObject : OperationMetaObject {
-        public ErrorMetaObject(Type exception, string message, Restrictions restrictions)
+        public ErrorMetaObject(Type exception, string message, BindingRestrictions restrictions)
             : base(CreateThrow(exception, message), restrictions) {
         }
 
@@ -36,32 +36,32 @@ namespace ToyScript.Binders {
             );
         }
 
-        public override MetaObject BindInvokeMember(InvokeMemberBinder action, MetaObject[] args) {
+        public override DynamicMetaObject BindInvokeMember(InvokeMemberBinder action, DynamicMetaObject[] args) {
             return this;
         }
 
-        public override MetaObject BindConvert(ConvertBinder action) {
+        public override DynamicMetaObject BindConvert(ConvertBinder action) {
             return this;
         }
 
-        public override MetaObject BindCreateInstance(CreateInstanceBinder signature, MetaObject[] args) {
+        public override DynamicMetaObject BindCreateInstance(CreateInstanceBinder signature, DynamicMetaObject[] args) {
             return this;
         }
 
-        public override MetaObject BindDeleteMember(DeleteMemberBinder action) {
+        public override DynamicMetaObject BindDeleteMember(DeleteMemberBinder action) {
             return this;
         }
 
         [Obsolete]
-        public override MetaObject BindOperation(OperationBinder action, MetaObject[] args) {
+        public override DynamicMetaObject BindOperation(OperationBinder action, DynamicMetaObject[] args) {
             return this;
         }
 
-        public override MetaObject BindGetMember(GetMemberBinder action) {
+        public override DynamicMetaObject BindGetMember(GetMemberBinder action) {
             return this;
         }
 
-        public override MetaObject BindSetMember(SetMemberBinder action, MetaObject value) {
+        public override DynamicMetaObject BindSetMember(SetMemberBinder action, DynamicMetaObject value) {
             return this;
         }
     }

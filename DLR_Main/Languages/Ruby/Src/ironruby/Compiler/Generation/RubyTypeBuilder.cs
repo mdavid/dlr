@@ -105,8 +105,10 @@ namespace IronRuby.Compiler.Generation {
 
         private void DefineConstructors() {
             BindingFlags bindingFlags = BindingFlags.NonPublic | BindingFlags.Public | BindingFlags.Instance;
-            ConstructorInfo emptyCtor = _tb.BaseType.GetConstructor(bindingFlags, null, Type.EmptyTypes, null);
-            ConstructorInfo classArgCtor = null;
+            ConstructorInfo defaultCtor = _tb.BaseType.GetConstructor(bindingFlags, null, Type.EmptyTypes, null);
+
+            // constructor with a single parameter of type RubyClass:
+            ConstructorInfo defaultRubyCtor = null;
 
             bool deserializerFound = false;
             foreach (var baseCtor in _tb.BaseType.GetConstructors(bindingFlags)) {
@@ -114,55 +116,72 @@ namespace IronRuby.Compiler.Generation {
                     continue;
                 }
 
-                int oldLength = baseCtor.GetParameters().Length;
-                List<Type> newParams = new List<Type>(oldLength + 1);
-                foreach (var param in baseCtor.GetParameters()) {
-                    newParams.Add(param.ParameterType);
-                }
+                Type[] paramTypes;
+                ParameterInfo[] baseParams = baseCtor.GetParameters();
 
-                int offset = 1;
+                int additionalParamCount;
                 bool isDeserializer = false;
-                if (oldLength > 0 && newParams[0] == typeof(RubyClass)) {
+                bool isDefaultRubyCtor = false;
+                if (baseParams.Length > 0 && baseParams[0].ParameterType == typeof(RubyClass)) {
                     // Build a simple pass-through constructor
-                    offset = 0;
+                    paramTypes = ReflectionUtils.GetParameterTypes(baseParams);
+                    additionalParamCount = 0;
+                    isDefaultRubyCtor = true;
 #if !SILVERLIGHT
-                } else if (oldLength == 2 && newParams[0] == typeof(SerializationInfo) && newParams[1] == typeof(StreamingContext)) {
+                } else if (baseParams.Length == 2 && 
+                    baseParams[0].ParameterType == typeof(SerializationInfo) && baseParams[1].ParameterType == typeof(StreamingContext)) {
+
                     // Build a deserializer
                     deserializerFound = true;
                     isDeserializer = true;
-                    offset = 0;
+                    paramTypes = ReflectionUtils.GetParameterTypes(baseParams);
+                    additionalParamCount = 0;
 #endif
                 } else {
                     // Special-case for Exception
-                    if (_tb.IsSubclassOf(typeof(Exception)) && IsAvailable(emptyCtor)) {
-                        if (oldLength == 0) {
+                    if (_tb.IsSubclassOf(typeof(Exception)) && IsAvailable(defaultCtor)) {
+                        if (baseParams.Length == 0) {
                             // Skip this constructor; it would conflict with the one we're going to build next
                             continue;
-                        } else if (oldLength == 1 && newParams[0] == typeof(string)) {
+                        } else if (baseParams.Length == 1 && baseParams[0].ParameterType == typeof(string)) {
                             // Special case exceptions to improve interop. Ruby's default message for an exception is the name of the exception class.
                             BuildExceptionConstructor(baseCtor);
                         }
                     }
 
                     // Add RubyClass to the head of the parameter list
-                    newParams.Insert(0, typeof(RubyClass));
+                    paramTypes = new Type[baseParams.Length + 1];
+                    paramTypes[0] = typeof(RubyClass);
+                    for (int i = 0; i < baseParams.Length; i++) {
+                        paramTypes[i + 1] = baseParams[i].ParameterType;
+                    }
+
+                    additionalParamCount = 1;
+                    if (baseParams.Length == 0) {
+                        isDefaultRubyCtor = true;
+                    }
                 }
 
                 // Build a new constructor based on this base class ctor
-                ConstructorBuilder cb = _tb.DefineConstructor(MethodAttributes.Public, CallingConventions.Standard, newParams.ToArray());
+                ConstructorBuilder cb = _tb.DefineConstructor(MethodAttributes.Public, CallingConventions.Standard, paramTypes);
                 ILGen il = new ILGen(cb.GetILGenerator());
                 il.EmitLoadArg(0);
-                for (int i = 1; i < newParams.Count; i++) {
-                    il.EmitLoadArg(i + offset);
+                for (int i = 1; i < baseParams.Length + 1; i++) {
+                    il.EmitLoadArg(i + additionalParamCount);
                 }
                 il.Emit(OpCodes.Call, baseCtor);
+
                 if (!isDeserializer) {
-                    // ctor(RubyClass! class, ...) : ... { this._class = class; } 
+                    // ctor(RubyClass! class, {params}) : base({params}) { this._class = class; } 
                     il.EmitLoadArg(0);
                     il.EmitLoadArg(1);
                     il.EmitFieldSet(_classField);
+
+                    if (isDefaultRubyCtor) {
+                        defaultRubyCtor = cb;
+                    }
                 } else {
-                    // ctor(SerializationInfo! info, StreamingContext! context) : base {
+                    // ctor(SerializationInfo! info, StreamingContext! context) : base(info, context) {
                     //   RubyOps.DeserializeObject(out this._instanceData, out this._class, info);
                     // }
                     il.EmitLoadArg(0);
@@ -173,15 +192,11 @@ namespace IronRuby.Compiler.Generation {
                     il.EmitCall(typeof(RubyOps).GetMethod("DeserializeObject"));
                 }
                 il.Emit(OpCodes.Ret);
-
-                if (oldLength == 0) {
-                    classArgCtor = cb;
-                }
             }
 #if !SILVERLIGHT
-            if (classArgCtor != null && !deserializerFound) {
+            if (defaultRubyCtor != null && !deserializerFound) {
                 // We didn't previously find a deserialization constructor.  If we can, build one now.
-                BuildDeserializationConstructor(classArgCtor);
+                BuildDeserializationConstructor(defaultRubyCtor);
             }
 #endif
         }

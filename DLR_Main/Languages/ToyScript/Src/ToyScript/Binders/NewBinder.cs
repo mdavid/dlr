@@ -33,7 +33,7 @@ namespace ToyScript.Binders {
             return base.Equals(obj as NewBinder);
         }
 
-        public override MetaObject FallbackCreateInstance(MetaObject target, MetaObject[] args, MetaObject onBindingError) {
+        public override DynamicMetaObject FallbackCreateInstance(DynamicMetaObject target, DynamicMetaObject[] args, DynamicMetaObject onBindingError) {
             throw new NotImplementedException();
         }
     }

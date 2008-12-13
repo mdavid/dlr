@@ -21,12 +21,14 @@ using Microsoft.Scripting.Utils;
 using System.Text;
 using System.Threading;
 
+using TValue = IronRuby.Compiler.TokenValue;
+using TLocation = Microsoft.Scripting.SourceSpan;
+
 namespace IronRuby.Compiler {
 
     #region State
 
-    [Serializable]
-    public sealed class State {
+    internal sealed class State {
 #if DEBUG
         private int _id;
         public int Id { get { return _id; } set { _id = value; } }
@@ -63,54 +65,23 @@ namespace IronRuby.Compiler {
             _gotos = gotos;
             _defaultAction = defaultAction;
         }
-    }
 
-    #endregion
-
-    #region Stack
-
-    public class ParserStack<T> {
-        private T[]/*!*/ _array = new T[1];
-        private int _top = 0;
-
-        public void Push(T value) {
-            if (_top >= _array.Length) {
-                T[] newarray = new T[_array.Length * 2];
-                System.Array.Copy(_array, newarray, _top);
-                _array = newarray;
-            }
-            _array[_top++] = value;
+#if DEBUG
+        public override string/*!*/ ToString() {
+            return _id.ToString();
         }
-
-        public T Pop() {
-            return _array[--_top];
-        }
-
-        public void Pop(int depth) {
-            _top -= depth;
-        }
-        
-        public T Peek(int depth) {
-            return _array[_top - depth];
-        }
-
-        public bool IsEmpty() {
-            return _top == 0;
-        }
-
-        public IEnumerable<T>/*!*/ GetEnumerator() {
-            return _array;
-        }
+#endif
     }
 
     #endregion
 
     #region ParserTables
 
-    public sealed class ParserTables {
+    internal sealed class ParserTables {
         public State[] States;
-        public byte[] RuleLhsNonTerminals;
-        public byte[] RuleRhsLengths;
+        // upper word: LhsNonTerminal
+        // lower word: RhsLength
+        public int[] Rules;
         public int ErrorToken;
         public int EofToken;
 
@@ -132,7 +103,7 @@ namespace IronRuby.Compiler {
     #region IParserLogger
 
     internal interface IParserLogger {
-        void BeforeReduction(int ruleId);
+        void BeforeReduction(int ruleId, int rhsLength);
         void BeforeShift(int stateId, int tokenId, bool isErrorShift);
         void BeforeGoto(int stateId, int ruleId);
         void StateEntered();
@@ -143,14 +114,12 @@ namespace IronRuby.Compiler {
 
     #region ShiftReduceParser
 
-    public abstract class ShiftReduceParser<TValue, TLocation>
-        where TValue : struct {
-
+    public partial class Parser {
         private static ParserTables _tables;
         private static readonly object _tablesLock = new object();
 
-        protected TValue yyval;
-        protected TLocation yyloc;
+        private TValue yyval;
+        private TLocation yyloc;
 
         // Experimental : last yylloc prior to call of yylex()
         private TLocation _lastTokenSpan;
@@ -161,38 +130,47 @@ namespace IronRuby.Compiler {
         private bool _recovering;
         private int _tokensSinceLastError;
 
-        private ParserStack<State>/*!*/ _stateStack;
-        private ParserStack<TValue>/*!*/ _valueStack;
-        private ParserStack<TLocation>/*!*/ _locationStack;
+        private ParserStack<State, TValue, TLocation>/*!*/ _stack;
         private int _errorToken;
         private int _eofToken;
 
         private State[] _states;
-        private byte[] _ruleLhsNonTerminals;
-        private byte[] _ruleRhsLengths;
+        private int[] _rules;
 
 #if DEBUG
         // test hooks:
-        internal State CurrentState { get { return _currentState; } } 
-        internal ParserStack<State>/*!*/ StateStack { get { return _stateStack; } }
-        internal ParserStack<TValue>/*!*/ ValueStack { get { return _valueStack; } }
-        internal ParserStack<TLocation>/*!*/ LocationStack { get { return _locationStack; } }
+        internal State CurrentState { get { return _currentState; } }
+        internal ParserStack<State, TValue, TLocation>/*!*/ Stack { get { return _stack; } }
         internal State[] States { get { return _states; } }
-        internal byte[] RuleLhsNonTerminals { get { return _ruleLhsNonTerminals; } }
-        internal byte[] RuleRhsLengths { get { return _ruleRhsLengths; } }
+        internal int[] Rules { get { return _rules; } }
         internal ParserTables Tables { get { return _tables; } } 
 #endif
+        // methods that must be implemented by the parser
+        //private void InitializeGenerated(ParserTables/*!*/ tables);
+        //private TLocation MergeLocations(TLocation start, TLocation end);
+        //private TValue GetTokenValue();     // lexical value: set by scanner
+        //private TLocation GetTokenSpan();   // location value: set by scanner
+        //private int GetNextToken();
+        //private void ReportSyntaxError(string message);
 
-        public ShiftReduceParser() {
-            _stateStack = new ParserStack<State>();
-            _valueStack = new ParserStack<TValue>();
-            _locationStack = new ParserStack<TLocation>();
+        internal static int GetRuleRhsLength(int ruleDef) {
+            return ruleDef & 0xffff;
+        }
+
+        internal static int GetRuleLhsNonterminal(int ruleDef) {
+            return ruleDef >> 16;
+        }
+
+        private void InitializeTables() {
+            _stack = new ParserStack<State, TValue, TLocation>();
 
             if (_tables == null) {
                 lock (_tablesLock) {
                     if (_tables == null) {
+                        Debug.Assert(typeof(TLocation).IsValueType);
+
                         ParserTables tables = new ParserTables();
-                        Initialize(tables);
+                        InitializeGeneratedTables(tables);
 #if DEBUG
                         InitializeMetadata(tables);
                         InitializeRulesMetadata(tables);
@@ -204,23 +182,15 @@ namespace IronRuby.Compiler {
             }
 
             _states = _tables.States;
-            _ruleLhsNonTerminals = _tables.RuleLhsNonTerminals;
-            _ruleRhsLengths = _tables.RuleRhsLengths;
+            _rules = _tables.Rules;
             _errorToken = _tables.ErrorToken;
             _eofToken = _tables.EofToken;
         }
 
-        protected abstract void Initialize(ParserTables/*!*/ tables);
-        protected abstract TLocation MergeLocations(TLocation start, TLocation end);
-
-        protected abstract TValue TokenValue { get; }     // lexical value: set by scanner
-        protected abstract TLocation TokenSpan { get; }   // location value: set by scanner
-        protected abstract TLocation DefaultTokenSpan { get; }
-
-        protected abstract int GetNextToken();
-        protected abstract void ReportSyntaxError(string message);
-        
-        protected State[]/*!*/ BuildStates(short[]/*!*/ data) {
+        // TODO: possible optimization: build a single dictionary mapping all goto and actions for all states.
+        // This (custom) dict might be precomputed by generator and allocated in a single array.
+        // This would safe rellocation of ~650kB of Dictionary.Entry[] since the array would be considered a large object.
+        private State[]/*!*/ BuildStates(short[]/*!*/ data) {
             Debug.Assert(data != null && data.Length > 0);
 
             // 
@@ -284,15 +254,13 @@ namespace IronRuby.Compiler {
             return states;
         }
 
-        public bool Parse() {
+        private bool Parse() {
 
             _nextToken = 0;
             _currentState = _states[0];
-            _lastTokenSpan = TokenSpan;
+            _lastTokenSpan = GetTokenSpan();
 
-            _stateStack.Push(_currentState);
-            _valueStack.Push(yyval);
-            _locationStack.Push(yyloc);
+            _stack.Push(_currentState, yyval, yyloc);
 
             while (true) {
 
@@ -306,7 +274,7 @@ namespace IronRuby.Compiler {
                         // We save the last token span, so that the location span
                         // of production right hand sides that begin or end with a
                         // nullable production will be correct.
-                        _lastTokenSpan = TokenSpan;
+                        _lastTokenSpan = GetTokenSpan();
                         _nextToken = GetNextToken();
                     }
 
@@ -321,22 +289,23 @@ namespace IronRuby.Compiler {
                 } else if (action < 0) {
                     Reduce(-action - 1);
 
-                    if (action == -1)	// accept
+                    // accept
+                    if (action == -1) {
                         return true;
+                    }
                 } else if (action == 0) {
                     // error
-                    if (!ErrorRecovery())
+                    if (!ErrorRecovery()) {
                         return false;
+                    }
                 }
             }
         }
 
-        protected void Shift(int stateId) {
+        private void Shift(int stateId) {
             _currentState = _states[stateId];
 
-            _valueStack.Push(TokenValue);
-            _stateStack.Push(_currentState);
-            _locationStack.Push(TokenSpan);
+            _stack.Push(_currentState, GetTokenValue(), GetTokenSpan());
 
             if (_recovering) {
                 if (_nextToken != _errorToken) {
@@ -353,57 +322,47 @@ namespace IronRuby.Compiler {
             }
         }
 
+        private void Reduce(int ruleId) {
+            int ruleDef = _rules[ruleId];
+            int rhsLength = GetRuleRhsLength(ruleDef);
 
-        protected void Reduce(int ruleId) {
-            LogBeforeReduction(ruleId);
+            LogBeforeReduction(ruleId, rhsLength);
 
-            int rhsLength = _ruleRhsLengths[ruleId];
-
-            //
-            //  Default action "$$ = $1" for unit productions.
-            //  Default action "@$ = @1.Merge(@N)" for location info.
-            //
-            if (rhsLength == 1) {
-                yyval = _valueStack.Peek(1); // default action: $$ = $1;
-                yyloc = _locationStack.Peek(1);
+            if (rhsLength == 0) {
+                // The location span for an empty production will start with the
+                // beginning of the next lexeme, and end with the finish of the
+                // previous lexeme.  This gives the correct behaviour when this
+                // nonsense value is used in later Merge operations.
+                yyloc = MergeLocations(_lastTokenSpan, GetTokenSpan());
+            } else if (rhsLength == 1) {
+                yyloc = _stack.PeekLocation(1);
             } else {
-                yyval = new TValue();
-                if (rhsLength == 0) {
-                    // The location span for an empty production will start with the
-                    // beginning of the next lexeme, and end with the finish of the
-                    // previous lexeme.  This gives the correct behaviour when this
-                    // nonsense value is used in later Merge operations.
-                    yyloc = MergeLocations(_lastTokenSpan, TokenSpan);
-                } else {
-                    TLocation at1 = GetLocation(rhsLength);
-                    TLocation atN = GetLocation(1);
-                    if (at1 != null && atN != null) {
-                        yyloc = MergeLocations(at1, atN);
-                    }
-                }
+                TLocation at1 = GetLocation(rhsLength);
+                TLocation atN = GetLocation(1);
+                yyloc = MergeLocations(at1, atN);
             }
 
             DoAction(ruleId);
 
-            _stateStack.Pop(rhsLength);
-            _valueStack.Pop(rhsLength);
-            _locationStack.Pop(rhsLength);
+            _stack.Pop(rhsLength);
 
-            _currentState = _stateStack.Peek(1);
+            var currentState = _stack.PeekState(1);
 
             int gotoState;
-            if (_currentState.GotoStates.TryGetValue(_ruleLhsNonTerminals[ruleId], out gotoState)) {
+            if (currentState.GotoStates.TryGetValue(GetRuleLhsNonterminal(ruleDef), out gotoState)) {
                 LogBeforeGoto(gotoState, ruleId);
-                _currentState = _states[gotoState];
+                currentState = _states[gotoState];
             }
-            
-            _stateStack.Push(_currentState);
-            _valueStack.Push(yyval);
-            _locationStack.Push(yyloc);
+
+            _stack.Push(currentState, yyval, yyloc);
+
+            _currentState = currentState;
         }
 
-
-        protected abstract void DoAction(int action_nr);
+        // Default semantic action used when no action is specified in the rule.
+        private void DoDefaultAction() {
+            yyval = _stack.PeekValue(1);
+        }
 
         public bool ErrorRecovery() {
             bool discard;
@@ -471,19 +430,16 @@ namespace IronRuby.Compiler {
 
                 // LogState("Error, popping state", _stateStack.Peek(1));
 
-                _stateStack.Pop();
-                _valueStack.Pop();
-                _locationStack.Pop();
+                _stack.Pop();
 
-                if (_stateStack.IsEmpty()) {
+                if (_stack.IsEmpty) {
                     // Log("Aborting: didn't find a state that accepts error token");
                     return false;
                 } else {
-                    _currentState = _stateStack.Peek(1);
+                    _currentState = _stack.PeekState(1);
                 }
             }
         }
-
 
         public bool DiscardInvalidTokens() {
 
@@ -535,20 +491,20 @@ namespace IronRuby.Compiler {
             }
         }
 
-        protected TValue GetValue(int depth) {
-            return _valueStack.Peek(depth);
+        private TValue GetValue(int depth) {
+            return _stack.PeekValue(depth);
         }
 
-        protected TLocation GetLocation(int depth) {
-            return _locationStack.Peek(depth);
+        private TLocation GetLocation(int depth) {
+            return _stack.PeekLocation(depth);
         }
 
-        protected void ClearInput() {
+        private void ClearInput() {
             // experimental in this version.
             _nextToken = 0;
         }
 
-        protected void StopErrorRecovery() {
+        private void StopErrorRecovery() {
             _recovering = false;
         }
 
@@ -588,9 +544,9 @@ namespace IronRuby.Compiler {
         }
 
         [Conditional("DEBUG")]
-        private void LogBeforeReduction(int ruleId) {
+        private void LogBeforeReduction(int ruleId, int rhsLength) {
 #if DEBUG
-            if (_logger != null) _logger.BeforeReduction(ruleId);
+            if (_logger != null) _logger.BeforeReduction(ruleId, rhsLength);
 #endif
         }
 
@@ -613,14 +569,13 @@ namespace IronRuby.Compiler {
         #region Parser Reflection
         
 #if DEBUG
-        protected abstract void InitializeMetadata(ParserTables/*!*/ tables);
-
+        
         private static void InitializeRulesMetadata(ParserTables/*!*/ tables) {
-            ushort[] indexes = new ushort[tables.RuleRhsLengths.Length];
+            ushort[] indexes = new ushort[tables.Rules.Length];
             ushort index = 0;
             for (int i = 0; i < indexes.Length; i++) {
                 indexes[i] = index;
-                index += tables.RuleRhsLengths[i];
+                index += (ushort)(tables.Rules[i] & 0xffff);
             }
             tables.RuleRhsSymbolIndexes = indexes;
         }
@@ -650,11 +605,11 @@ namespace IronRuby.Compiler {
         internal string RuleToString(int ruleIndex) {
             Debug.Assert(ruleIndex >= 0);
             StringBuilder sb = new StringBuilder();
-            sb.Append(NonTerminalToString(_tables.RuleLhsNonTerminals[ruleIndex]));
+            sb.Append(NonTerminalToString(GetRuleLhsNonterminal(_tables.Rules[ruleIndex])));
             sb.Append(" -> ");
 
             // index of the first RHS symbol:
-            int rhsLength = _tables.RuleRhsLengths[ruleIndex];
+            int rhsLength = GetRuleRhsLength(_tables.Rules[ruleIndex]);
             if (rhsLength > 0) {
                 int first = _tables.RuleRhsSymbolIndexes[ruleIndex];
                 for (int i = 0; i < rhsLength; i++) {

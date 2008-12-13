@@ -80,11 +80,10 @@ namespace Microsoft.Linq.Expressions {
                 return dict.ContainsKey(key);
             }
     
-            [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Design", "CA1065:DoNotRaiseExceptionsInUnexpectedLocations")] // TODO: fix
+            [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Design", "CA1065:DoNotRaiseExceptionsInUnexpectedLocations")]
             public ICollection<TKey> Keys {
                 get {
-                    // TODO:
-                    throw new NotImplementedException();
+                    throw ContractUtils.Unreachable;
                 }
             }
     
@@ -96,11 +95,10 @@ namespace Microsoft.Linq.Expressions {
                 return dict.TryGetValue(key, out value);
             }
     
-            [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Design", "CA1065:DoNotRaiseExceptionsInUnexpectedLocations")] // TODO: fix
+            [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Design", "CA1065:DoNotRaiseExceptionsInUnexpectedLocations")]
             public ICollection<TValue> Values {
                 get {
-                    // TODO:
-                    throw new NotImplementedException();
+                    throw ContractUtils.Unreachable;
                 }
             }
     
@@ -136,14 +134,14 @@ namespace Microsoft.Linq.Expressions {
                     // WeakReferences can become zero only during the GC.
     
                     bool garbage_collected;
-    #if SILVERLIGHT // GC.CollectionCount
+#if SILVERLIGHT // GC.CollectionCount
                     garbage_collected = !cleanupGC.IsAlive;
                     if (garbage_collected) cleanupGC = new WeakReference(new object());
-    #else
+#else
                     int currentGC = GC.CollectionCount(0);
                     garbage_collected = currentGC != cleanupGC;
                     if (garbage_collected) cleanupGC = currentGC;
-    #endif
+#endif
                     if (garbage_collected) {
                         Cleanup();
                         cleanupVersion = version;
@@ -183,68 +181,59 @@ namespace Microsoft.Linq.Expressions {
             }
             #endregion
     
-            #region ICollection<KeyValuePair<TKey,TValue>> Members
+        #region ICollection<KeyValuePair<TKey,TValue>> Members
     
             public void Add(KeyValuePair<TKey, TValue> item) {
-                // TODO:
-                throw new NotImplementedException();
+                throw ContractUtils.Unreachable;
             }
     
             public void Clear() {
-                // TODO:
-                throw new NotImplementedException();
+                throw ContractUtils.Unreachable;
             }
     
             public bool Contains(KeyValuePair<TKey, TValue> item) {
-                // TODO:
-                throw new NotImplementedException();
+                throw ContractUtils.Unreachable;
             }
     
             public void CopyTo(KeyValuePair<TKey, TValue>[] array, int arrayIndex) {
-                // TODO:
-                throw new NotImplementedException();
+                throw ContractUtils.Unreachable;
             }
     
-            [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Design", "CA1065:DoNotRaiseExceptionsInUnexpectedLocations")] // TODO: fix
+            [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Design", "CA1065:DoNotRaiseExceptionsInUnexpectedLocations")]
             public int Count {
                 get {
-                    // TODO:
-                    throw new NotImplementedException();
+                    throw ContractUtils.Unreachable;
                 }
             }
     
-            [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Design", "CA1065:DoNotRaiseExceptionsInUnexpectedLocations")] // TODO: fix
+            [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Design", "CA1065:DoNotRaiseExceptionsInUnexpectedLocations")]
             public bool IsReadOnly {
                 get {
-                    // TODO:
-                    throw new NotImplementedException();
+                    throw ContractUtils.Unreachable;
                 }
             }
     
             public bool Remove(KeyValuePair<TKey, TValue> item) {
-                // TODO:
-                throw new NotImplementedException();
+                throw ContractUtils.Unreachable;
             }
     
-            #endregion
+        #endregion
     
-            #region IEnumerable<KeyValuePair<TKey,TValue>> Members
+        #region IEnumerable<KeyValuePair<TKey,TValue>> Members
     
             public IEnumerator<KeyValuePair<TKey, TValue>> GetEnumerator() {
-                // TODO:
-                throw new NotImplementedException();
+                throw ContractUtils.Unreachable;
             }
     
-            #endregion
+        #endregion
     
-            #region IEnumerable Members
+        #region IEnumerable Members
     
             System.Collections.IEnumerator System.Collections.IEnumerable.GetEnumerator() {
-                // TODO:
-                throw new NotImplementedException();
+                throw ContractUtils.Unreachable;
             }
     
-            #endregion
+        #endregion
             
             // WeakComparer treats WeakObject as transparent envelope
             sealed class WeakComparer<T> : IEqualityComparer<T> {
@@ -341,6 +330,10 @@ namespace Microsoft.Linq.Expressions {
             get { return false; }
         }
 
+        /// <summary>
+        /// Returns the node type of this Expression. Extension nodes should return
+        /// ExpressionType.Extension when overriding this method.
+        /// </summary>
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Design", "CA1024:UsePropertiesWhereAppropriate")]
         protected virtual ExpressionType GetNodeKind() {
 #if !MICROSOFT_SCRIPTING_CORE
@@ -350,8 +343,8 @@ namespace Microsoft.Linq.Expressions {
             }
 #endif
 
-            // the base type failed to overload GetNodeKind
-            throw new InvalidOperationException();
+            // the extension expression failed to override GetNodeKind
+            throw Error.ExtensionNodeMustOverrideMethod("Expression.GetNodeKind()");
         }
 
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Design", "CA1024:UsePropertiesWhereAppropriate")]
@@ -363,8 +356,8 @@ namespace Microsoft.Linq.Expressions {
             }
 #endif
 
-            // the base type failed to overload GetExpressionType
-            throw new InvalidOperationException();
+            // the extension expression failed to override GetExpressionType
+            throw Error.ExtensionNodeMustOverrideMethod("Expression.GetExpressionType()");
         }
 
         /// <summary>

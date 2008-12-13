@@ -463,7 +463,7 @@ d { |x| puts x.inspect }
 e { |x| puts x.inspect }
 f { |x| puts x.inspect }
 g { |(x,)| puts x.inspect }
-", 0, 2); // 2 runtime warnings
+", 1, 2); // 2 runtime warnings
             }, @"
 nil
 1
@@ -488,7 +488,7 @@ lambda { |x| puts x.inspect }.call *[1]
 lambda { |(x,)| puts x.inspect }.call
 lambda { |(x,)| puts x.inspect }.call 1,2,3,4 
 lambda { |(x,y)| puts x.inspect }.call rescue puts 'error'
-", 0, 2); // 2 runtime warnings
+", 1, 2); // 1 syntax warning, 2 runtime warnings
             }, @"
 nil
 1
@@ -514,7 +514,7 @@ Proc.new { |x| puts x.inspect }.call [1]
 Proc.new { |x| puts x.inspect }.call [1,2]
 Proc.new { |x| puts x.inspect }.call *[1]
 Proc.new { |(x,)| puts x.inspect }.call *[]
-", 0, 2); // 2 runtime warnings
+", 2, 2); // 2 syntax warning, 2 runtime warnings
             }, @"
 nil
 1
@@ -567,7 +567,7 @@ lambda { |x,y| p [x, y] }.call *[1,2]
 lambda { |x,y| p [x, y] }.call *[[1]] rescue puts 'error'
 lambda { |x,y| p [x, y] }.call *[[1,2]] rescue puts 'error'
 lambda { |x,y| p [x, y] }.call *[[1,2,3]] rescue puts 'error'
-");
+", 4, 0);
             }, @"
 error
 error
@@ -595,7 +595,7 @@ Proc.new { |x,y| p [x, y] }.call *[1,2]
 Proc.new { |x,y| p [x, y] }.call *[[1]]
 Proc.new { |x,y| p [x, y] }.call *[[1,2]]
 Proc.new { |x,y| p [x, y] }.call *[[1,2,3]]
-");
+", 4, 0);
             }, @"
 [nil, nil]
 [1, nil]
@@ -683,7 +683,7 @@ y(1,2,3) { |x,y,z| p [x,y,z] }
 y(1,2,3) { |x,y,z,w| p [x,y,z,w] }
 y(1,2,3) { |x,y,z,w,u| p [x,y,z,w,u] }
 y(1,2,3) { |x,y,z,w,u,v| p [x,y,z,w,u,v] }
-", 0, 2);
+", 1, 2);
             }, @"
 []
 [1]
@@ -736,7 +736,7 @@ def y
 end
 
 y { |*a| puts a.inspect }
-");
+", 1, 0);
             }, @"[]");
         }
 

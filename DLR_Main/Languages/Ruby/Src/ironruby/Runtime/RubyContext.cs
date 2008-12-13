@@ -42,7 +42,8 @@ namespace IronRuby.Runtime {
     /// </summary>
     public sealed class RubyContext : LanguageContext {
         internal static readonly Guid RubyLanguageGuid = new Guid("F03C4640-DABA-473f-96F1-391400714DAB");
-        
+        private static int _RuntimeIdGenerator = 0;
+
         // MRI compliance:
         public static readonly string/*!*/ MriVersion = "1.8.6";
         public static readonly string/*!*/ MriReleaseDate = "2008-05-28";
@@ -57,6 +58,7 @@ namespace IronRuby.Runtime {
         // TODO: remove
         internal static RubyContext _Default;
 
+        private readonly int _runtimeId;
         private readonly RubyScope/*!*/ _emptyScope;
 
         private RubyOptions/*!*/ _options;
@@ -343,6 +345,10 @@ namespace IronRuby.Runtime {
             get { return RubyLanguageGuid; }
         }
 
+        public int RuntimeId {
+            get { return _runtimeId; }
+        }
+
         #region Initialization
 
         public RubyContext(ScriptDomainManager/*!*/ manager, IDictionary<string, object> options)
@@ -350,6 +356,7 @@ namespace IronRuby.Runtime {
             ContractUtils.RequiresNotNull(manager, "manager");
             _options = new RubyOptions(options);
 
+            _runtimeId = Interlocked.Increment(ref _RuntimeIdGenerator);
             _upTime = new Stopwatch();
             _upTime.Start();
 
@@ -716,7 +723,8 @@ namespace IronRuby.Runtime {
 
         #region Class and Module Factories
 
-        internal RubyClass/*!*/ CreateClass(string name, Type type, object classSingletonOf, Action<RubyModule> instanceTrait, Action<RubyModule> classTrait, RubyClass/*!*/ superClass, TypeTracker tracker, bool isRubyClass, bool isSingletonClass) {
+        internal RubyClass/*!*/ CreateClass(string name, Type type, object classSingletonOf, Action<RubyModule> instanceTrait, Action<RubyModule> classTrait,
+            RubyClass/*!*/ superClass, TypeTracker tracker, bool isRubyClass, bool isSingletonClass) {
             Debug.Assert(superClass != null);
 
             RubyClass result = new RubyClass(this, name, type, classSingletonOf, instanceTrait, superClass, tracker, isRubyClass, isSingletonClass);
@@ -842,7 +850,7 @@ namespace IronRuby.Runtime {
         #region Libraries
 
         internal RubyModule/*!*/ DefineLibraryModule(string name, Type/*!*/ type, Action<RubyModule> instanceTrait,
-            Action<RubyModule> classTrait, RubyModule[]/*!*/ mixins) {
+            Action<RubyModule> classTrait, RubyModule[]/*!*/ mixins, bool isSelfContained) {
             Assert.NotNull(type);
             Assert.NotNullItems(mixins);
 
@@ -858,8 +866,9 @@ namespace IronRuby.Runtime {
                     name = RubyUtils.GetQualifiedName(type);
                 }
 
-                // setting tracker for interfaces:
-                TypeTracker tracker = type.IsInterface ? ReflectionCache.GetTypeTracker(type) : null;
+                // Setting tracker on the module makes CLR methods visible.
+                // Hide CLR methods if the type itself defines RubyMethods and is not an extension of another type.
+                TypeTracker tracker = isSelfContained ? null : ReflectionCache.GetTypeTracker(type);
 
                 module = CreateModule(name, instanceTrait, classTrait, null, tracker);
                 module.SetMixins(mixins);
@@ -869,8 +878,9 @@ namespace IronRuby.Runtime {
             }
         }
 
+        // isSelfContained: The traits are defined on type (public static methods marked by RubyMethod attribute).
         internal RubyClass/*!*/ DefineLibraryClass(string name, Type/*!*/ type, Action<RubyModule> instanceTrait, Action<RubyModule> classTrait,
-            RubyClass super, RubyModule[]/*!*/ mixins, Delegate[] factories, bool builtin) {
+            RubyClass super, RubyModule[]/*!*/ mixins, Delegate[] factories, bool isSelfContained, bool builtin) {
 
             Assert.NotNull(type);
 
@@ -898,8 +908,9 @@ namespace IronRuby.Runtime {
                     super = GetOrCreateClassNoLock(type.BaseType);
                 }
 
-                // setting tracker on the class makes CLR methods visible:
-                TypeTracker tracker = ReflectionCache.GetTypeTracker(type);
+                // Setting tracker on the class makes CLR methods visible.
+                // Hide CLR methods if the type itself defines RubyMethods and is not an extension of another type.
+                TypeTracker tracker = isSelfContained ? null : ReflectionCache.GetTypeTracker(type);
 
                 result = CreateClass(name, type, null, instanceTrait, classTrait, super, tracker, false, false);
                 result.SetMixins(mixins);
@@ -952,7 +963,9 @@ namespace IronRuby.Runtime {
 
             IRubyObject rubyObj = obj as IRubyObject;
             if (rubyObj != null) {
-                return rubyObj.Class;
+                var result = rubyObj.Class;
+                Debug.Assert(result != null, "Invalid IRubyObject implementation: Class should not be null");
+                return result;
             }
 
             return GetOrCreateClass(obj.GetType());
@@ -1013,6 +1026,7 @@ namespace IronRuby.Runtime {
             } else {
                 result = this.GetClassOf(obj);
             }
+
             return result;
         }
 
@@ -1110,6 +1124,10 @@ namespace IronRuby.Runtime {
             }
 
             return _referenceTypeInstanceData.GetValue(obj);
+        }
+
+        public bool HasInstanceVariables(object obj) {
+            return TryGetInstanceData(obj) != null;
         }
 
         public string[]/*!*/ GetInstanceVariableNames(object obj) {
@@ -1683,14 +1701,19 @@ namespace IronRuby.Runtime {
         /// Creates a scope extension for DLR scopes that haven't been created by Ruby.
         /// These scopes adds method_missing and const_missing methods to handle lookups to the DLR scope.
         /// </summary>
-        public override ScopeExtension/*!*/ CreateScopeExtension(Scope/*!*/ globalScope) {
+        internal GlobalScopeExtension/*!*/ InitializeGlobalScope(Scope/*!*/ globalScope) {
             Assert.NotNull(globalScope);
+
+            var scopeExtension = globalScope.GetExtension(ContextId);
+            if (scopeExtension != null) {
+                return (GlobalScopeExtension)scopeExtension;
+            }
 
             object mainObject = new Object();
             RubyClass singletonClass = CreateMainSingleton(mainObject);
 
             // method_missing:
-            singletonClass.SetMethodNoEvent(Symbols.MethodMissing, new RubyMethodGroupInfo(new Delegate[] {
+            singletonClass.SetMethodNoEvent(this, Symbols.MethodMissing, new RubyMethodGroupInfo(new Delegate[] {
                 new Func<RubyScope, BlockParam, object, SymbolId, object[], object>(RubyTopLevelScope.TopMethodMissing)
             }, RubyMemberFlags.Private, singletonClass));
 
@@ -1703,6 +1726,7 @@ namespace IronRuby.Runtime {
             GlobalScopeExtension result = new GlobalScopeExtension(this, globalScope, mainObject, true);
             singletonClass.SetGlobalScope(result);
 
+            globalScope.SetExtension(ContextId, result);
             return result;
         }
 
@@ -1932,16 +1956,6 @@ namespace IronRuby.Runtime {
         #endregion
 
         #region Language Context Overrides
-
-        public override void SetName(CodeContext context, SymbolId name, object value) {
-            RubyScope scope = (RubyScope)context;
-            RubyOps.SetLocalVariable(value, scope, SymbolTable.IdToString(name));
-        }
-
-        public override bool TryLookupName(CodeContext context, SymbolId name, out object value) {
-            value = RubyOps.GetLocalVariable((RubyScope)context, SymbolTable.IdToString(name));
-            return true;
-        }
 
         public override TService GetService<TService>(params object[] args) {
             if (typeof(TService) == typeof(TokenizerService)) {

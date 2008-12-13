@@ -39,14 +39,14 @@ namespace IronRuby.Compiler.Ast {
         internal const int MaxBlockArity = BlockDispatcher.MaxBlockArity;
 
         private readonly CompoundLeftValue/*!*/ _parameters;
-        private readonly List<Expression>/*!*/ _body;
+        private readonly Statements/*!*/ _body;
         private readonly LexicalScope _definedScope;
 
         public CompoundLeftValue/*!*/ Parameters {
             get { return _parameters; }
         }
 
-        public List<Expression>/*!*/ Body {
+        public Statements/*!*/ Body {
             get { return _body; }
         }
 
@@ -64,7 +64,7 @@ namespace IronRuby.Compiler.Ast {
             get { return _parameters != CompoundLeftValue.UnspecifiedBlockSignature; }
         }
 
-        public BlockDefinition(LexicalScope definedScope, CompoundLeftValue/*!*/ parameters, List<Expression>/*!*/ body, SourceSpan location)
+        public BlockDefinition(LexicalScope definedScope, CompoundLeftValue/*!*/ parameters, Statements/*!*/ body, SourceSpan location)
             : base(location) {
             Assert.NotNull(parameters, body);
 
@@ -140,8 +140,8 @@ namespace IronRuby.Compiler.Ast {
             );
                 
 			if (gen.TraceEnabled) {
-                int firstStatementLine = _body.Count > 0 ? _body[0].Location.Start.Line : Location.End.Line;
-                int lastStatementLine = _body.Count > 0 ? _body[_body.Count - 1].Location.End.Line : Location.End.Line;
+                int firstStatementLine = _body.Count > 0 ? _body.First.Location.Start.Line : Location.End.Line;
+                int lastStatementLine = _body.Count > 0 ? _body.Last.Location.End.Line : Location.End.Line;
 
                 loop = Ast.TryFinally(
                     Ast.Block(

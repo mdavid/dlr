@@ -35,7 +35,7 @@ namespace IronRuby.Compiler.Ast {
     //   <block-expression> until <expression>
     public partial class WhileLoopExpression : Expression {
         private readonly Expression _condition;
-        private readonly List<Expression> _statements;		// optional
+        private readonly Statements _statements;		// optional
         private readonly bool _isWhileLoop; // while or until
         private readonly bool _isPostTest;  // do-while or while-do 
 
@@ -43,7 +43,7 @@ namespace IronRuby.Compiler.Ast {
             get { return _condition; }
         }
 
-        public List<Expression> Statements {
+        public Statements Statements {
             get { return _statements; }
         }
 
@@ -55,11 +55,11 @@ namespace IronRuby.Compiler.Ast {
             get { return _isPostTest; }
         }
 
-        public WhileLoopExpression(Expression/*!*/ condition, bool isWhileLoop, bool isPostTest, List<Expression>/*!*/ statements, SourceSpan location)
+        public WhileLoopExpression(Expression/*!*/ condition, bool isWhileLoop, bool isPostTest, Statements/*!*/ statements, SourceSpan location)
             : base(location) {
 
             ContractUtils.RequiresNotNull(condition, "condition");
-            ContractUtils.RequiresNotNullItems(statements, "statements");
+            ContractUtils.RequiresNotNull(statements, "statements");
 
             _condition = condition;
             _isWhileLoop = isWhileLoop;

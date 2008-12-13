@@ -42,7 +42,7 @@ namespace IronRuby.Builtins {
         }
 
         [SecurityPermission(SecurityAction.LinkDemand, Flags = SecurityPermissionFlag.SerializationFormatter)]
-        public void GetObjectData(SerializationInfo/*!*/ info, StreamingContext context) {
+        public virtual void GetObjectData(SerializationInfo/*!*/ info, StreamingContext context) {
             RubyOps.SerializeObject(_instanceData, _class, info);
         }
 #endif

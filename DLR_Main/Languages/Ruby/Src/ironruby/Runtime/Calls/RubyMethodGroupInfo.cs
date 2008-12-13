@@ -267,6 +267,10 @@ namespace IronRuby.Runtime.Calls {
                 var targetExpression = bindingTarget.MakeExpression(parameterBinder, actualArgs);
 
                 metaBuilder.Result = targetExpression;
+            } else if (bindingTarget.Result == BindingResult.AmbiguousMatch) {
+                metaBuilder.SetError(
+                    Methods.MakeAmbiguousMatchError.OpCall(Ast.Constant(name))
+                );
             } else {
                 metaBuilder.SetError(
                     Methods.MakeInvalidArgumentTypesError.OpCall(Ast.Constant(name))
@@ -462,7 +466,7 @@ namespace IronRuby.Runtime.Calls {
             // block:
             if (args.Signature.HasBlock) {
                 // use None to let binder know that [NotNull]BlockParam is not applicable
-                result.Add(args.GetBlock() != null ? typeof(BlockParam) : typeof(Null));
+                result.Add(args.GetBlock() != null ? typeof(BlockParam) : typeof(DynamicNull));
             } else {
                 result.Add(typeof(MissingBlockParam));
             }

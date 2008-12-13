@@ -216,6 +216,18 @@ namespace Microsoft.Linq.Expressions.Compiler {
                 case ExpressionType.Unbox:
                     result = RewriteUnaryExpression(node, stack);
                     break;
+                case ExpressionType.TypeEqual:
+                    result = RewriteTypeBinaryExpression(node, stack);
+                    break;
+                case ExpressionType.OnesComplement:
+                    result = RewriteUnaryExpression(node, stack);
+                    break;
+                case ExpressionType.IsTrue:
+                    result = RewriteUnaryExpression(node, stack);
+                    break;
+                case ExpressionType.IsFalse:
+                    result = RewriteUnaryExpression(node, stack);
+                    break;
                 case ExpressionType.AddAssign:
                 case ExpressionType.AndAssign:
                 case ExpressionType.DivideAssign:
@@ -234,7 +246,6 @@ namespace Microsoft.Linq.Expressions.Compiler {
                 case ExpressionType.PreDecrementAssign:
                 case ExpressionType.PostIncrementAssign:
                 case ExpressionType.PostDecrementAssign:
-                case ExpressionType.TypeEqual:
                     result = RewriteReducibleExpression(node, stack);
                     break;
                 case ExpressionType.Quote:
@@ -249,7 +260,7 @@ namespace Microsoft.Linq.Expressions.Compiler {
                 #endregion
 
                 default:
-                    throw Assert.Unreachable;
+                    throw ContractUtils.Unreachable;
             }
 
             VerifyRewrite(result, node);

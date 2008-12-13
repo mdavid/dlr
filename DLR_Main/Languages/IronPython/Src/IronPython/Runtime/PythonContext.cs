@@ -39,6 +39,7 @@ using Microsoft.Scripting.Math;
 using Microsoft.Scripting.Runtime;
 using Microsoft.Scripting.Utils;
 using PyAst = IronPython.Compiler.Ast;
+using System.Globalization;
 
 namespace IronPython.Runtime {
     public delegate void CommandDispatcher(Delegate command);
@@ -126,6 +127,7 @@ namespace IronPython.Runtime {
         private CommandDispatcher _commandDispatcher; // can be null
         private ClrModule.ReferencesList _referencesList;
         private string _floatFormat, _doubleFormat;
+        private CultureInfo _collateCulture, _ctypeCulture, _timeCulture, _monetaryCulture, _numericCulture;
 
         /// <summary>
         /// Creates a new PythonContext not bound to Engine.
@@ -212,6 +214,8 @@ namespace IronPython.Runtime {
                 // If so, we will not look up sys.path for module loads
             }
 #endif
+
+            _collateCulture = _ctypeCulture = _timeCulture = _monetaryCulture = _numericCulture = CultureInfo.InvariantCulture;
         }
 
         public override LanguageOptions/*!*/ Options {
@@ -715,7 +719,7 @@ namespace IronPython.Runtime {
         }
 
         internal PythonModule GetPythonModule(Scope scope) {
-            return (PythonModule)GetScopeExtension(scope);
+            return (PythonModule)scope.GetExtension(ContextId);
         }
 
         internal PythonModule EnsurePythonModule(Scope scope) {
@@ -876,7 +880,7 @@ namespace IronPython.Runtime {
         internal PythonModule GetReloadableModule(Scope/*!*/ scope) {
             Assert.NotNull(scope);
 
-            PythonModule module = (PythonModule)GetScopeExtension(scope);
+            PythonModule module = (PythonModule)scope.GetExtension(ContextId);
 
             if (module == null || !module.IsPythonCreatedModule) {
                 throw PythonOps.TypeError("can only reload Python modules");
@@ -900,20 +904,20 @@ namespace IronPython.Runtime {
         /// Python's global scope includes looking at built-ins.  First check built-ins, and if
         /// not there then fallback to any DLR globals.
         /// </summary>
-        public override bool TryLookupGlobal(CodeContext context, SymbolId name, out object value) {
+        public override bool TryLookupGlobal(Scope scope, SymbolId name, out object value) {
             object builtins;
-            if (!context.GlobalScope.TryGetName(Symbols.Builtins, out builtins)) {
+            if (!scope.ModuleScope.TryGetName(Symbols.Builtins, out builtins)) {
                 value = null;
                 return false;
             }
 
-            Scope scope = builtins as Scope;
-            if (scope != null && scope.TryGetName(name, out value)) return true;
+            Scope builtinsScope = builtins as Scope;
+            if (builtinsScope != null && builtinsScope.TryGetName(name, out value)) return true;
 
             IAttributesCollection dict = builtins as IAttributesCollection;
             if (dict != null && dict.TryGetValue(name, out value)) return true;
 
-            return base.TryLookupGlobal(context, name, out value);
+            return base.TryLookupGlobal(scope, name, out value);
         }
 
         protected override Exception MissingName(SymbolId name) {
@@ -927,14 +931,6 @@ namespace IronPython.Runtime {
             }
 
             return res;
-        }
-
-        public override object Call(CodeContext context, object function, object[] args) {
-            return Call(function, args);
-        }
-
-        public override bool EqualReturnBool(CodeContext context, object x, object y) {
-            return PythonOps.EqualRetBool(context, x, y);
         }
 
         #region Assembly Loading
@@ -1439,7 +1435,7 @@ namespace IronPython.Runtime {
         public static string GetIronPythonAssembly(string baseName) {
 #if SIGNED
 
-#if DEBUG
+#if DEBUG && !SILVERLIGHT
             try {
                 Debug.Assert(Assembly.GetExecutingAssembly().GetName().Version.ToString() == "2.0.0.5000");
             } catch (SecurityException) {
@@ -2593,6 +2589,31 @@ namespace IronPython.Runtime {
 
                 return _referencesList;
             }
+        }
+
+        internal CultureInfo CollateCulture {
+            get { return _collateCulture; }
+            set { _collateCulture = value; }
+        }
+
+        internal CultureInfo CTypeCulture {
+            get { return _ctypeCulture; }
+            set { _ctypeCulture = value; }
+        }
+
+        internal CultureInfo TimeCulture {
+            get { return _timeCulture; }
+            set { _timeCulture = value; }
+        }
+
+        internal CultureInfo MonetaryCulture {
+            get { return _monetaryCulture; }
+            set { _monetaryCulture = value; }
+        }
+
+        internal CultureInfo NumericCulture {
+            get { return _numericCulture; }
+            set { _numericCulture = value; }
         }
 
         #region Command Dispatching

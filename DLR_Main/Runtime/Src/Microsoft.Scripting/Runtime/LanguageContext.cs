@@ -82,11 +82,7 @@ namespace Microsoft.Scripting.Runtime {
             return null;
         }
 
-        public ScopeExtension GetScopeExtension(Scope scope) {
-            ContractUtils.RequiresNotNull(scope, "scope");
-            return scope.GetExtension(ContextId);
-        }
-
+        // TODO: remove
         public ScopeExtension EnsureScopeExtension(Scope scope) {
             ContractUtils.RequiresNotNull(scope, "scope");
             ScopeExtension extension = scope.GetExtension(ContextId);
@@ -102,10 +98,7 @@ namespace Microsoft.Scripting.Runtime {
             return extension;
         }
 
-        /// <summary>
-        /// Factory for ModuleContext creation. 
-        /// It is guaranteed that this method is called once per each ScriptScope the language code is executed within.
-        /// </summary>
+        // TODO: remove
         public virtual ScopeExtension CreateScopeExtension(Scope scope) {
             return new ScopeExtension(scope);
         }
@@ -166,12 +159,12 @@ namespace Microsoft.Scripting.Runtime {
         /// <summary>
         /// Looks up the name in the provided Scope using the current language's semantics.
         /// </summary>
-        public virtual bool TryLookupName(CodeContext context, SymbolId name, out object value) {
-            if (context.Scope.TryLookupName(this, name, out value) && value != Uninitialized.Instance) {
+        public virtual bool TryLookupName(Scope scope, SymbolId name, out object value) {
+            if (scope.TryLookupName(this, name, out value) && value != Uninitialized.Instance) {
                 return true;
             }
 
-            return TryLookupGlobal(context, name, out value);
+            return TryLookupGlobal(scope, name, out value);
         }
 
         /// <summary>
@@ -180,9 +173,9 @@ namespace Microsoft.Scripting.Runtime {
         /// If the name cannot be found throws the language appropriate exception or returns
         /// the language's appropriate default value.
         /// </summary>
-        public virtual object LookupName(CodeContext context, SymbolId name) {
+        public virtual object LookupName(Scope scope, SymbolId name) {
             object value;
-            if (!TryLookupName(context, name, out value) || value == Uninitialized.Instance) {
+            if (!TryLookupName(scope, name, out value) || value == Uninitialized.Instance) {
                 throw MissingName(name);
             }
 
@@ -192,15 +185,15 @@ namespace Microsoft.Scripting.Runtime {
         /// <summary>
         /// Attempts to set the name in the provided scope using the current language's semantics.
         /// </summary>
-        public virtual void SetName(CodeContext context, SymbolId name, object value) {
-            context.Scope.SetName(name, value);
+        public virtual void SetName(Scope scope, SymbolId name, object value) {
+            scope.SetName(name, value);
         }
 
         /// <summary>
         /// Attempts to remove the name from the provided scope using the current language's semantics.
         /// </summary>
-        public virtual bool RemoveName(CodeContext context, SymbolId name) {
-            return context.Scope.RemoveName(this, name);
+        public virtual bool RemoveName(Scope scope, SymbolId name) {
+            return scope.RemoveName(this, name);
         }
 
         /// <summary>
@@ -208,7 +201,7 @@ namespace Microsoft.Scripting.Runtime {
         /// the provided Scope.  The default implementation will attempt to lookup the variable
         /// at the host level.
         /// </summary>
-        public virtual bool TryLookupGlobal(CodeContext context, SymbolId name, out object value) {
+        public virtual bool TryLookupGlobal(Scope scope, SymbolId name, out object value) {
             value = null;
             return false;
         }
@@ -236,75 +229,6 @@ namespace Microsoft.Scripting.Runtime {
         /// </summary>
         protected internal virtual ModuleGlobalCache GetModuleCache(SymbolId name) {
             return _noCache;
-        }
-
-        /// <summary>
-        /// Calls the function with given arguments
-        /// </summary>
-        /// <param name="context"></param>
-        /// <param name="function">The function to call</param>
-        /// <param name="args">The argumetns with which to call the function.</param>
-        /// <returns></returns>
-        [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Naming", "CA1716:IdentifiersShouldNotMatchKeywords", MessageId = "Call")] // TODO: fix
-        [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Naming", "CA1716:IdentifiersShouldNotMatchKeywords", MessageId = "Function")] // TODO: fix
-        public virtual object Call(CodeContext context, object function, object[] args) {
-            return null;
-        }
-
-        /// <summary>
-        /// Calls the function with instance as the "this" value.
-        /// </summary>
-        /// <param name="context"></param>
-        /// <param name="function">The function to call</param>
-        /// <param name="instance">The instance to pass as "this".</param>
-        /// <param name="args">The rest of the arguments.</param>
-        /// <returns></returns>
-        [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Naming", "CA1716:IdentifiersShouldNotMatchKeywords", MessageId = "Function")] // TODO: fix
-        public virtual object CallWithThis(CodeContext context, object function, object instance, object[] args) {
-            return null;
-        }
-
-        /// <summary>
-        /// Calls the function with arguments, extra arguments in tuple and dictionary of keyword arguments
-        /// </summary>
-        /// <param name="context"></param>
-        /// <param name="func">The function to call</param>
-        /// <param name="args">The arguments</param>
-        /// <param name="names">Argument names</param>
-        /// <param name="argsTuple">tuple of extra arguments</param>
-        /// <param name="kwDict">keyword dictionary</param>
-        /// <returns>The result of the function call.</returns>
-        public virtual object CallWithArgsKeywordsTupleDict(CodeContext context, object func, object[] args, string[] names, object argsTuple, object kwDict) {
-            return null;
-        }
-
-        /// <summary>
-        /// Calls function with arguments and additional arguments in the tuple
-        /// </summary>
-        /// <param name="context"></param>
-        /// <param name="func">The function to call</param>
-        /// <param name="args">Argument array</param>
-        /// <param name="argsTuple">Tuple with extra arguments</param>
-        /// <returns>The result of calling the function "func"</returns>
-        public virtual object CallWithArgsTuple(CodeContext context, object func, object[] args, object argsTuple) {
-            return null;
-        }
-
-        /// <summary>
-        /// Calls the function with arguments, some of which are keyword arguments.
-        /// </summary>
-        /// <param name="context"></param>
-        /// <param name="func">Function to call</param>
-        /// <param name="args">Argument array</param>
-        /// <param name="names">Names for some of the arguments</param>
-        /// <returns>The result of calling the function "func"</returns>
-        public virtual object CallWithKeywordArgs(CodeContext context, object func, object[] args, string[] names) {
-            return null;
-        }
-
-        // used only by ReflectedEvent.HandlerList
-        public virtual bool EqualReturnBool(CodeContext context, object x, object y) {
-            return false;
         }
 
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Reliability", "CA2001:AvoidCallingProblematicMethods", MessageId = "System.Reflection.Assembly.LoadFile")]
@@ -467,8 +391,8 @@ namespace Microsoft.Scripting.Runtime {
 
         #region Object Operations Support
 
-        internal static MetaObject ErrorMetaObject(MetaObject target, MetaObject[] args, MetaObject onBindingError) {
-            return onBindingError ?? MetaObject.CreateThrow(target, args, typeof(NotImplementedException), ArrayUtils.EmptyObjects);
+        internal static DynamicMetaObject ErrorMetaObject(DynamicMetaObject target, DynamicMetaObject[] args, DynamicMetaObject onBindingError) {
+            return onBindingError ?? DynamicMetaObject.CreateThrow(target, args, typeof(NotImplementedException), ArrayUtils.EmptyObjects);
         }
 
         public virtual UnaryOperationBinder CreateUnaryOperationBinder(ExpressionType operation) {
@@ -480,7 +404,7 @@ namespace Microsoft.Scripting.Runtime {
                 : base(operation) {
             }
 
-            public override MetaObject FallbackUnaryOperation(MetaObject target, MetaObject errorSuggestion) {
+            public override DynamicMetaObject FallbackUnaryOperation(DynamicMetaObject target, DynamicMetaObject errorSuggestion) {
                 return ErrorMetaObject(target, new[] { target }, errorSuggestion);
             }
             
@@ -498,7 +422,7 @@ namespace Microsoft.Scripting.Runtime {
                 : base(operation) {
             }
 
-            public override MetaObject FallbackBinaryOperation(MetaObject target, MetaObject arg, MetaObject errorSuggestion) {
+            public override DynamicMetaObject FallbackBinaryOperation(DynamicMetaObject target, DynamicMetaObject arg, DynamicMetaObject errorSuggestion) {
                 return ErrorMetaObject(target, new[] { target, arg }, errorSuggestion);
             }
 
@@ -513,7 +437,7 @@ namespace Microsoft.Scripting.Runtime {
                 : base(operation) {
             }
 
-            public override MetaObject FallbackOperation(MetaObject target, MetaObject[] args, MetaObject onBindingError) {
+            public override DynamicMetaObject FallbackOperation(DynamicMetaObject target, DynamicMetaObject[] args, DynamicMetaObject onBindingError) {
                 return ErrorMetaObject(target, args, onBindingError);
             }
 
@@ -532,18 +456,18 @@ namespace Microsoft.Scripting.Runtime {
                 : base(type, @explicit) {
             }
 
-            public override MetaObject FallbackConvert(MetaObject self, MetaObject onBindingError) {
+            public override DynamicMetaObject FallbackConvert(DynamicMetaObject self, DynamicMetaObject onBindingError) {
                 if (Type.IsAssignableFrom(self.LimitType)) {
-                    return new MetaObject(
+                    return new DynamicMetaObject(
                         self.Expression,
-                        Restrictions.GetTypeRestriction(self.Expression, self.LimitType)
+                        BindingRestrictions.GetTypeRestriction(self.Expression, self.LimitType)
                     );
                 }
 
                 return onBindingError ??
-                    MetaObject.CreateThrow(
+                    DynamicMetaObject.CreateThrow(
                         self,
-                        MetaObject.EmptyMetaObjects,
+                        DynamicMetaObject.EmptyMetaObjects,
                         typeof(ArgumentTypeException),
                         String.Format("Expected {0}, got {1}", Type.FullName, self.LimitType.FullName)
                     );
@@ -563,8 +487,8 @@ namespace Microsoft.Scripting.Runtime {
                 : base(name, ignoreCase) {
             }
 
-            public override MetaObject FallbackGetMember(MetaObject self, MetaObject onBindingError) {
-                return ErrorMetaObject(self, MetaObject.EmptyMetaObjects, onBindingError);
+            public override DynamicMetaObject FallbackGetMember(DynamicMetaObject self, DynamicMetaObject onBindingError) {
+                return ErrorMetaObject(self, DynamicMetaObject.EmptyMetaObjects, onBindingError);
             }
 
             public override object CacheIdentity {
@@ -581,8 +505,8 @@ namespace Microsoft.Scripting.Runtime {
                 : base(name, ignoreCase) {
             }
 
-            public override MetaObject FallbackSetMember(MetaObject self, MetaObject value, MetaObject onBindingError) {
-                return ErrorMetaObject(self, new MetaObject[] { value }, onBindingError);
+            public override DynamicMetaObject FallbackSetMember(DynamicMetaObject self, DynamicMetaObject value, DynamicMetaObject onBindingError) {
+                return ErrorMetaObject(self, new DynamicMetaObject[] { value }, onBindingError);
             }
 
             public override object CacheIdentity {
@@ -599,8 +523,8 @@ namespace Microsoft.Scripting.Runtime {
                 : base(name, ignoreCase) {
             }
 
-            public override MetaObject FallbackDeleteMember(MetaObject self, MetaObject onBindingError) {
-                return ErrorMetaObject(self, MetaObject.EmptyMetaObjects, onBindingError);
+            public override DynamicMetaObject FallbackDeleteMember(DynamicMetaObject self, DynamicMetaObject onBindingError) {
+                return ErrorMetaObject(self, DynamicMetaObject.EmptyMetaObjects, onBindingError);
             }
 
             public override object CacheIdentity {
@@ -613,16 +537,37 @@ namespace Microsoft.Scripting.Runtime {
         }
 
         private class DefaultCallAction : InvokeMemberBinder {
-            internal DefaultCallAction(string name, bool ignoreCase, params ArgumentInfo[] arguments)
+            private LanguageContext _context;
+
+            internal DefaultCallAction(LanguageContext context, string name, bool ignoreCase, params ArgumentInfo[] arguments)
                 : base(name, ignoreCase, arguments) {
+                _context = context;
             }
 
-            public override MetaObject FallbackInvokeMember(MetaObject target, MetaObject[] args, MetaObject onBindingError) {
+            public override DynamicMetaObject FallbackInvokeMember(DynamicMetaObject target, DynamicMetaObject[] args, DynamicMetaObject onBindingError) {
                 return ErrorMetaObject(target, args.AddFirst(target), onBindingError);
             }
 
-            public override MetaObject FallbackInvoke(MetaObject target, MetaObject[] args, MetaObject onBindingError) {
-                return ErrorMetaObject(target, args.AddFirst(target), onBindingError);
+            private static Expression[] GetArgs(DynamicMetaObject target, DynamicMetaObject[] args) {
+                Expression[] res = new Expression[args.Length + 1];
+                res[0] = target.Expression;
+                for (int i = 0; i < args.Length; i++) {
+                    res[1 + i] = args[i].Expression;
+                }
+
+                return res;
+            }
+
+            public override DynamicMetaObject FallbackInvoke(DynamicMetaObject target, DynamicMetaObject[] args, DynamicMetaObject onBindingError) {
+                target.Restrictions.Merge(BindingRestrictions.Combine(args));
+                return new DynamicMetaObject(
+                    Expression.Dynamic(
+                        _context.CreateInvokeBinder(Arguments.ToArray()),
+                        typeof(object),
+                        GetArgs(target, args)
+                    ),
+                    target.Restrictions
+                );
             }
 
             public override object CacheIdentity {
@@ -631,7 +576,7 @@ namespace Microsoft.Scripting.Runtime {
         }
 
         public virtual InvokeMemberBinder CreateCallBinder(string name, bool ignoreCase, params ArgumentInfo[] arguments) {
-            return new DefaultCallAction(name, ignoreCase, arguments);
+            return new DefaultCallAction(this, name, ignoreCase, arguments);
         }
 
         private class DefaultInvokeAction : InvokeBinder {
@@ -639,7 +584,7 @@ namespace Microsoft.Scripting.Runtime {
                 : base(arguments) {
             }
 
-            public override MetaObject FallbackInvoke(MetaObject target, MetaObject[] args, MetaObject onBindingError) {
+            public override DynamicMetaObject FallbackInvoke(DynamicMetaObject target, DynamicMetaObject[] args, DynamicMetaObject onBindingError) {
                 return ErrorMetaObject(target, args, onBindingError);
             }
 
@@ -657,7 +602,7 @@ namespace Microsoft.Scripting.Runtime {
                 : base(arguments) {
             }
 
-            public override MetaObject FallbackCreateInstance(MetaObject target, MetaObject[] args, MetaObject onBindingError) {
+            public override DynamicMetaObject FallbackCreateInstance(DynamicMetaObject target, DynamicMetaObject[] args, DynamicMetaObject onBindingError) {
                 return ErrorMetaObject(target, args, onBindingError);
             }
 

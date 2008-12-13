@@ -34,7 +34,7 @@ namespace ToyScript.Binders {
             return base.Equals(obj as ToyDeleteMemberBinder);
         }
 
-        public override MetaObject FallbackDeleteMember(MetaObject self, MetaObject onBindingError) {
+        public override DynamicMetaObject FallbackDeleteMember(DynamicMetaObject self, DynamicMetaObject onBindingError) {
             throw new NotImplementedException();
         }
     }

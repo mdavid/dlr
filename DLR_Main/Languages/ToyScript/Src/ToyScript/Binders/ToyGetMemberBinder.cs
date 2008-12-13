@@ -34,7 +34,7 @@ namespace ToyScript.Binders {
             return base.Equals(obj as ToyGetMemberBinder);
         }
 
-        public override MetaObject FallbackGetMember(MetaObject self, MetaObject onBindingError) {
+        public override DynamicMetaObject FallbackGetMember(DynamicMetaObject self, DynamicMetaObject onBindingError) {
             if (self.HasValue) {
                 return ClsBinder.BindObjectGetMember(this, self);
             } else {

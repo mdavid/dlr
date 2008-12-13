@@ -319,7 +319,7 @@ namespace Microsoft.Linq.Expressions {
                 case '{': close = "}"; break;
                 case '[': close = "]"; break;
                 case '<': close = ">"; break;
-                default: throw Assert.Unreachable;
+                default: throw ContractUtils.Unreachable;
             }
             if (multiline) {
                 Out(Flow.NewLine, close, Flow.Break);
@@ -392,7 +392,6 @@ namespace Microsoft.Linq.Expressions {
                     case ExpressionType.ExclusiveOrAssign: op = "^="; break;
                     case ExpressionType.Power: op = "**"; break;
                     case ExpressionType.PowerAssign: op = "**="; break;
-                    //TODO: need to handle conversion lambda
                     case ExpressionType.Coalesce: op = "??"; break;
 
                     default:
@@ -443,7 +442,6 @@ namespace Microsoft.Linq.Expressions {
             return node;
         }
 
-        // TODO: calculate tree depth?
         private static bool IsSimpleExpression(Expression node) {
             var binary = node as BinaryExpression;
             if (binary != null) {
@@ -605,6 +603,7 @@ namespace Microsoft.Linq.Expressions {
                 case ExpressionType.Convert:
                 case ExpressionType.PreIncrementAssign:
                 case ExpressionType.PreDecrementAssign:
+                case ExpressionType.OnesComplement:
                     return 13;
 
                 case ExpressionType.PostIncrementAssign:
@@ -684,6 +683,7 @@ namespace Microsoft.Linq.Expressions {
             return node;
         }
 
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Maintainability", "CA1502:AvoidExcessiveComplexity")]
         protected internal override Expression VisitUnary(UnaryExpression node) {
             switch (node.NodeType) {
                 case ExpressionType.Convert:
@@ -696,6 +696,9 @@ namespace Microsoft.Linq.Expressions {
                     break;
                 case ExpressionType.Not:
                     Out(node.Type == typeof(bool) ? "!" : "~");
+                    break;
+                case ExpressionType.OnesComplement:
+                    Out("~");
                     break;
                 case ExpressionType.Negate:
                     Out("-");

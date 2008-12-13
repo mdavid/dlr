@@ -17,9 +17,10 @@ using System; using Microsoft;
 using System.Collections.Generic;
 using Microsoft.Scripting;
 using Microsoft.Scripting.Utils;
-using MSA = Microsoft.Linq.Expressions;
 
 namespace IronRuby.Compiler.Ast {
+    using MSA = Microsoft.Linq.Expressions;
+    using Ast = Microsoft.Linq.Expressions.Expression;
 
     public partial class Finalizer : Expression {
         //	END { body }
@@ -28,13 +29,13 @@ namespace IronRuby.Compiler.Ast {
         private readonly LexicalScope/*!*/ _definedScope;
 
         // TODO:
-        private readonly List<Expression> _statements;
-        
-        public List<Expression> Statements {
+        private readonly Statements _statements;
+
+        public Statements Statements {
             get { return _statements; }
         }
 
-        public Finalizer(LexicalScope/*!*/ definedScope, List<Expression> statements, SourceSpan location)
+        public Finalizer(LexicalScope/*!*/ definedScope, Statements statements, SourceSpan location)
             : base(location) {
             Assert.NotNull(definedScope);
 
@@ -43,7 +44,8 @@ namespace IronRuby.Compiler.Ast {
         }
 
         internal override MSA.Expression/*!*/ TransformRead(AstGenerator/*!*/ gen) {
-            throw new NotImplementedException();
+            // throw new NotImplementedException();
+            return Ast.Constant(null);
         }
     }
 

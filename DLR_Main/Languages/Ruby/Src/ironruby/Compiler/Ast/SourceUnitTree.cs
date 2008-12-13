@@ -34,7 +34,7 @@ namespace IronRuby.Compiler.Ast {
 
         private readonly LexicalScope/*!*/ _definedScope;
         private readonly List<Initializer> _initializers;
-        private readonly List<Expression> _statements;
+        private readonly Statements/*!*/ _statements;
         private readonly Encoding/*!*/ _encoding;
 
         // An offset of the first byte after __END__ that can be read via DATA constant or -1 if __END__ is not present.
@@ -44,7 +44,7 @@ namespace IronRuby.Compiler.Ast {
             get { return _initializers; }
         }
 
-        public List<Expression> Statements {
+        public Statements/*!*/ Statements {
             get { return _statements; }
         }
 
@@ -52,10 +52,10 @@ namespace IronRuby.Compiler.Ast {
             get { return _encoding; }
         }
 
-        public SourceUnitTree(LexicalScope/*!*/ definedScope, List<Expression> statements, List<Initializer> initializers, 
+        public SourceUnitTree(LexicalScope/*!*/ definedScope, Statements/*!*/ statements, List<Initializer> initializers, 
             Encoding/*!*/ encoding, int dataOffset)
             : base(SourceSpan.None) {
-            Assert.NotNull(definedScope, encoding);
+            Assert.NotNull(definedScope, statements, encoding);
 
             _definedScope = definedScope;
             _statements = statements;
@@ -157,7 +157,7 @@ namespace IronRuby.Compiler.Ast {
                 var resultVariable = scope.DefineHiddenVariable("#result", typeof(object));
 
                 var epilogue = Methods.PrintInteractiveResult.OpCall(runtimeScopeVariable,
-                    Ast.Dynamic(ConvertToSAction.Instance, typeof(MutableString), gen.CurrentScopeVariable, 
+                    Ast.Dynamic(ConvertToSAction.Instance, typeof(MutableString), Methods.GetContextFromScope.OpCall(gen.CurrentScopeVariable), 
                         Ast.Dynamic(RubyCallAction.Make("inspect", RubyCallSignature.WithScope(0)), typeof(object), 
                             gen.CurrentScopeVariable, resultVariable
                         )

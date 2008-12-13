@@ -28,18 +28,18 @@ namespace IronRuby.Compiler.Ast {
     public partial class BlockExpression : Expression {
         internal static readonly BlockExpression Empty = new BlockExpression();
 
-        private readonly List<Expression/*!*/>/*!*/ _statements;
+        private readonly Statements/*!*/ _statements;
 
-        public List<Expression/*!*/>/*!*/ Statements {
+        public Statements/*!*/ Statements {
             get { return _statements; }
         }
 
         private BlockExpression() 
             : base(SourceSpan.None) {
-            _statements = EmptyList;            
+            _statements = EmptyStatements;            
         }
         
-        internal BlockExpression(List<Expression/*!*/>/*!*/ statements, SourceSpan location)
+        internal BlockExpression(Statements/*!*/ statements, SourceSpan location)
             : base(location) {
             Assert.NotNull(statements);
             Debug.Assert(statements.Count > 1);

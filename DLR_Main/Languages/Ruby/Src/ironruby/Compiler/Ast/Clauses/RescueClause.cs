@@ -37,12 +37,12 @@ namespace IronRuby.Compiler.Ast {
     // rescue types,*type-array => target
     //   statements
     public partial class RescueClause : Node {
-        private readonly List<Expression>/*!*/ _types;   // might be empty
+        private readonly Expression[]/*!*/ _types;   // might be empty
         private readonly Expression _splatType;          // optional
         private readonly LeftValue _target;		         // optional
-        private readonly List<Expression> _statements;   // optional
+        private readonly Statements _statements;   // optional
 
-        public List<Expression> Types {
+        public Expression[] Types {
             get { return _types; }
         }
 
@@ -50,18 +50,18 @@ namespace IronRuby.Compiler.Ast {
             get { return _target; }
         }
 
-        public List<Expression> Statements {
+        public Statements Statements {
             get { return _statements; }
         }
 
-        public RescueClause(LeftValue target, List<Expression> statements, SourceSpan location)
+        public RescueClause(LeftValue target, Statements statements, SourceSpan location)
             : base(location) {
             _target = target;
-            _types = Expression.EmptyList;
+            _types = Expression.EmptyArray;
             _statements = statements;
         }
         
-        public RescueClause(CompoundRightValue type, LeftValue target, List<Expression> statements, SourceSpan location)
+        public RescueClause(CompoundRightValue type, LeftValue target, Statements statements, SourceSpan location)
             : base(location) {
             _types = type.RightValues;
             _splatType = type.SplattedValue;
@@ -69,10 +69,10 @@ namespace IronRuby.Compiler.Ast {
             _statements = statements;
         }
 
-        public RescueClause(Expression/*!*/ type, LeftValue target, List<Expression> statements, SourceSpan location)
+        public RescueClause(Expression/*!*/ type, LeftValue target, Statements statements, SourceSpan location)
             : base(location) {
             Assert.NotNull(type);
-            _types = CollectionUtils.MakeList(type);
+            _types = new Expression[] { type };
             _target = target;
             _statements = statements;
         }
@@ -86,20 +86,20 @@ namespace IronRuby.Compiler.Ast {
             Assert.NotNull(gen);
             
             MSA.Expression condition;
-            if (_types.Count != 0 || _splatType != null) {
-                if (_types.Count == 0) {
+            if (_types.Length != 0 || _splatType != null) {
+                if (_types.Length == 0) {
                     // splat only:
                     condition = MakeCompareSplattedExceptions(gen, TransformSplatType(gen));
-                } else if (_types.Count == 1 && _splatType == null) {
+                } else if (_types.Length == 1 && _splatType == null) {
                     condition = MakeCompareException(gen, _types[0].TransformRead(gen));
                 } else {
 
                     // forall{i}: <temps[i]> = evaluate type[i]
-                    var temps = new MSA.Expression[_types.Count + (_splatType != null ? 1 : 0)];
+                    var temps = new MSA.Expression[_types.Length + (_splatType != null ? 1 : 0)];
                     var exprs = new MSA.Expression[temps.Length  + 1];
                     
                     int i = 0;
-                    while (i < _types.Count) {
+                    while (i < _types.Length) {
                         var tmp = gen.CurrentScope.DefineHiddenVariable("#type_" + i, typeof(object));
                         temps[i] = tmp;
                         exprs[i] = Ast.Assign(tmp, _types[i].TransformRead(gen));
@@ -119,7 +119,7 @@ namespace IronRuby.Compiler.Ast {
                     // CompareException(<temps[0]>) || ... CompareException(<temps[n]>) || CompareSplattedExceptions(<splatTypes>)
                     i = 0;
                     condition = MakeCompareException(gen, temps[i++]);
-                    while (i < _types.Count) {
+                    while (i < _types.Length) {
                         condition = Ast.OrElse(condition, MakeCompareException(gen, temps[i++]));
                     }
 
@@ -155,7 +155,7 @@ namespace IronRuby.Compiler.Ast {
             return Ast.Dynamic(
                 TryConvertToArrayAction.Instance,
                 typeof(object),
-                gen.CurrentScopeVariable,
+                Methods.GetContextFromScope.OpCall(gen.CurrentScopeVariable),
                 _splatType.TransformRead(gen)
             );
         }

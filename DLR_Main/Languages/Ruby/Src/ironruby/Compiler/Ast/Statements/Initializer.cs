@@ -28,13 +28,13 @@ namespace IronRuby.Compiler.Ast {
         private readonly LexicalScope/*!*/ _definedScope;
         
         // TODO:
-        private readonly List<Expression> _statements;
+        private readonly Statements _statements;
 
-        public List<Expression> Statements {
+        public Statements Statements {
             get { return _statements; }
         }
-        
-        public Initializer(LexicalScope/*!*/ definedScope, List<Expression> statements, SourceSpan location)
+
+        public Initializer(LexicalScope/*!*/ definedScope, Statements statements, SourceSpan location)
             : base(location) {
             Assert.NotNull(definedScope);
 

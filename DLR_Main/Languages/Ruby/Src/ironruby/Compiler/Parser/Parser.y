@@ -43,11 +43,11 @@ using IronRuby.Compiler.Ast;
 %token LPAREN_ARG LBRACK LBRACE LBRACE_ARG STAR AMPERSAND 
 
 %token<String> IDENTIFIER FUNCTION_IDENTIFIER GLOBAL_VARIABLE INSTANCE_VARIABLE CONSTANT_IDENTIFIER CLASS_VARIABLE ASSIGNMENT 
-%token<Integer> INTEGER 
-%token<BigInteger> BIG_INTEGER 
+%token<Integer1> INTEGER 
+%token<BigInteger> BIG_INTEGER
 %token<Double> FLOAT 
-%token STRING_CONTENT 
-%token<Integer> MATCH_REFERENCE
+%token STRING_CONTENT                              // (String & StringLiteralEncoding)
+%token<Integer1> MATCH_REFERENCE
 %token<RegExOptions>  REGEXP_END 
 %token<StringTokenizer> STRING_EMBEDDED_VARIABLE_BEGIN STRING_EMBEDDED_CODE_BEGIN
 %token<StringTokenizer> STRING_BEG REGEXP_BEG SHELL_STRING_BEGIN WORDS_BEG VERBATIM_WORDS_BEGIN SYMBEG
@@ -55,15 +55,15 @@ using IronRuby.Compiler.Ast;
 %type<AbstractSyntaxTree> program
 
 %type<Expression> stmt
-%type<Expressions> stmts compstmt ensure_opt
+%type<Statements> stmts compstmt ensure_opt
 %type<JumpStatement> jump_statement jump_statement_with_parameters jump_statement_parameterless
 %type<Expression> alias_statement
 %type<Expression> conditional_statement
 
 %type<Expression> primary expr expression_statement superclass var_ref singleton case_expression
 %type<Expression> arg
-%type<Expressions> args
-%type<Expression> block_expression                 // Expression, BlockExpression or Body
+%type<ArgumentCount> args
+%type<Expression> block_expression                 // (Expression | BlockExpression | Body)
 %type<Expression> declaration_expression           // DeclarationExpression
 %type<Body> body
 %type<Expression> 
@@ -77,9 +77,9 @@ using IronRuby.Compiler.Ast;
 %type<BlockDefinition> cmd_brace_block brace_block do_block 
 
 %type<Arguments> array_key 
-%type when_args                                                             // optional Expression; optional Expressions
-%type paren_args open_args closed_args command_args command_args_content    // non-null Arguments; optional Block
-%type opt_paren_args                                                        // optional Arguments; optional Block
+%type when_args                                                             // (ArgumentCount & Expression?)
+%type paren_args open_args closed_args command_args command_args_content    // (Arguments & Block?)
+%type opt_paren_args                                                        // (Arguments? & Block?)
 
 %type<CompoundRightValue> compound_rhs
 %type<ConstantVariable> qualified_module_name 
@@ -157,39 +157,42 @@ using IronRuby.Compiler.Ast;
 %%
 
 
-program : {
-            _tokenizer.SetState(LexicalState.EXPR_BEG);
-          }
-        compstmt
-          {
-            _ast = new SourceUnitTree(CurrentScope, $2, _initializers, _encoding, _tokenizer.DataOffset);
-          }
-        ;
+program:
+      compstmt
+        {
+            _ast = new SourceUnitTree(CurrentScope, $1, _initializers, _encoding, _tokenizer.DataOffset);
+        }
+;
 
-compstmt: stmts opt_terms
-            {
-                 $$ = $1;
-            }
-        ;
+compstmt:
+      opt_terms
+        {
+            $$ = Statements.Empty; 
+        } 
+    | terms stmts opt_terms
+        {
+            $$ = $2; 
+        } 
+    | stmts opt_terms
+        {
+            $$ = $1; 
+        }
+;
 
-stmts    : /* empty */
-            {
-                $$ = new List<Expression>();
-            }
-        | stmt 
-            {
-                $$ = CollectionUtils.MakeList<Expression>($1);
-            }
-        | stmts terms stmt
-            {
-                $1.Add($3);
-                $$ = $1;
-            }
-        | ERROR stmt
-            {
-                $$ = CollectionUtils.MakeList<Expression>($2);
-            }
-        ;
+stmts: 
+      stmt 
+        {
+            $$ = new Statements($1);
+        }
+    | stmts terms stmt
+        {
+            ($$ = $1).Add($3);
+        }
+    | ERROR stmt
+        {
+            $$ = new Statements($2);
+        }
+;
 
 stmt:     alias_statement
         | UNDEF undef_list
@@ -320,7 +323,7 @@ expression_statement:
         }
     | compound_lhs '=' command_call
         {
-            $$ = new ParallelAssignmentExpression($1, new CompoundRightValue(CollectionUtils.MakeList<Expression>($3), null), @$);
+            $$ = new ParallelAssignmentExpression($1, new CompoundRightValue(new Expression[] { $3 }, null), @$);
         }
     | var_lhs ASSIGNMENT command_call
         {
@@ -348,7 +351,7 @@ expression_statement:
         }
     | compound_lhs '=' arg
         {
-            $$ = new ParallelAssignmentExpression($1, new CompoundRightValue(CollectionUtils.MakeList<Expression>($3), null), @$);
+            $$ = new ParallelAssignmentExpression($1, new CompoundRightValue(new Expression[] { $3 }, null), @$);
         }
     | compound_lhs '=' compound_rhs
         {
@@ -394,16 +397,15 @@ conditional_statement:
 compound_rhs: 
       args ',' arg
         {
-            $1.Add($3);
-            $$ = new CompoundRightValue($1, null);
+            $$ = new CompoundRightValue(PopArguments($1, $3), null);
         }
     | args ',' STAR arg
         {
-            $$ = new CompoundRightValue($1, $4);
+            $$ = new CompoundRightValue(PopArguments($1), $4);
         }
     | STAR arg
         {
-            $$ = new CompoundRightValue(Expression.EmptyList, $2);
+            $$ = new CompoundRightValue(Expression.EmptyArray, $2);
         }
 ;
             
@@ -549,8 +551,7 @@ compound_lhs_tail:
 compound_lhs_head:
       compound_lhs_head compound_lhs_item ','
         {
-            $1.Add($2);
-            $$ = $1;
+            ($$ = $1).Add($2);
         }
     | compound_lhs_item ','
         {
@@ -715,8 +716,7 @@ undef_list:
         } 
      method_name_or_symbol
         {
-            $1.Add(new Identifier($4, @4));
-            $$ = $1;
+            ($$ = $1).Add(new Identifier($4, @4));
         }
 ;
 
@@ -758,237 +758,238 @@ reswords: LINE | FILE | ENCODING | UPPERCASE_BEGIN | UPPERCASE_END
         | IF_MOD | UNLESS_MOD | WHILE_MOD | UNTIL_MOD | RESCUE_MOD
         ;
 
-arg: 
-          lhs '=' arg
-            {
-                $$ = new SimpleAssignmentExpression($1, $3, null, @$);
-            }
-        | lhs '=' arg RESCUE_MOD arg
-            {
-                $$ = new SimpleAssignmentExpression($1, new RescueExpression($3, $5, MergeLocations(@4, @5), MergeLocations(@3, @5)), null, @$);
-            }
-        | lhs '=' arg RESCUE_MOD jump_statement_parameterless
-            {
-                $$ = new SimpleAssignmentExpression($1, new RescueExpression($3, $5, MergeLocations(@4, @5), MergeLocations(@3, @5)), null, @$);
-            }
-        | var_lhs ASSIGNMENT arg
-            {
-                $$ = new SimpleAssignmentExpression($1, $3, $2, @$);
-            }
-        | primary '[' array_key ']' ASSIGNMENT arg
-            {
-                $$ = new SimpleAssignmentExpression(new ArrayItemAccess($1, $3, @2), $6, $5, @$);
-            }
-        | primary '.' IDENTIFIER ASSIGNMENT arg
-            {
-                $$ = new MemberAssignmentExpression($1, $3, $4, $5, @$);
-            }
-        | primary '.' CONSTANT_IDENTIFIER ASSIGNMENT arg
-            {
-                $$ = new MemberAssignmentExpression($1, $3, $4, $5, @$);
-            }
-        | primary SEPARATING_DOUBLE_COLON IDENTIFIER ASSIGNMENT arg
-            {
-                $$ = new MemberAssignmentExpression($1, $3, $4, $5, @$);
-            }
-        | primary SEPARATING_DOUBLE_COLON CONSTANT_IDENTIFIER ASSIGNMENT arg
-            {
-                _tokenizer.ReportError(Errors.ConstantReassigned);
-                $$ = new ErrorExpression(@$);
-            }
-        | LEADING_DOUBLE_COLON CONSTANT_IDENTIFIER ASSIGNMENT arg
-            {
-                _tokenizer.ReportError(Errors.ConstantReassigned);
-                $$ = new ErrorExpression(@$);
-            }
-        | match_reference ASSIGNMENT arg
-            {
-                MatchReferenceReadOnlyError($1);
-                $$ = new ErrorExpression(@$);
-            }
-        | arg '+' arg
-            {
-                $$ = new MethodCall($1, Symbols.Plus, new Arguments($3), @2);
-            }
-        | arg '-' arg
-            {
-                $$ = new MethodCall($1, Symbols.Minus, new Arguments($3), @2);
-            }
-        | arg '*' arg
-            {
-                $$ = new MethodCall($1, Symbols.Multiply, new Arguments($3), @2);
-            }
-        | arg '/' arg
-            {
-                $$ = new MethodCall($1, Symbols.Divide, new Arguments($3), @2);
-            }
-        | arg '%' arg
-            {
-                $$ = new MethodCall($1, Symbols.Mod, new Arguments($3), @2);
-            }
-        | arg POW arg
-            {
-                $$ = new MethodCall($1, Symbols.Power, new Arguments($3), @2);
-            }
-        | UMINUS_NUM INTEGER POW arg
-            {
-                // ** has precedence over unary minus, hence -number**arg is equivalent to -(number**arg)
-                $$ = new MethodCall(new MethodCall(Literal.Integer($2, @2), Symbols.Power, new Arguments($4), @3), Symbols.UnaryMinus, Arguments.Empty, @1);
-            }
-        | UMINUS_NUM BIG_INTEGER POW arg
-            {
-                $$ = new MethodCall(new MethodCall(Literal.BigInteger($2, @2), Symbols.Power, new Arguments($4), @3), Symbols.UnaryMinus, Arguments.Empty, @1);
-            }
-        | UMINUS_NUM FLOAT POW arg
-            {
-                $$ = new MethodCall(new MethodCall(Literal.Double($2, @2), Symbols.Power, new Arguments($4), @3), Symbols.UnaryMinus, Arguments.Empty, @1);
-            }
-        | UPLUS arg
-            {
-                $$ = new MethodCall($2, Symbols.UnaryPlus, null, @1);
-            }
-        | UMINUS arg
-            {
-                $$ = new MethodCall($2, Symbols.UnaryMinus, null, @1);
-            }
-        | arg '|' arg
-            {
-                $$ = new MethodCall($1, Symbols.BitwiseOr, new Arguments($3), @2);
-            }
-        | arg '^' arg
-            {
-                $$ = new MethodCall($1, Symbols.Xor, new Arguments($3), @2);
-            }
-        | arg '&' arg
-            {
-                $$ = new MethodCall($1, Symbols.BitwiseAnd, new Arguments($3), @2);
-            }
-        | arg CMP arg
-            {
-                $$ = new MethodCall($1, Symbols.Comparison, new Arguments($3), @2);
-            }
-        | arg '>' arg
-            {
-                $$ = new MethodCall($1, Symbols.GreaterThan, new Arguments($3), @2);
-            }
-        | arg GEQ arg
-            {
-                $$ = new MethodCall($1, Symbols.GreaterEqual, new Arguments($3), @2);
-            }
-        | arg '<' arg
-            {
-                $$ = new MethodCall($1, Symbols.LessThan, new Arguments($3), @2);
-            }
-        | arg LEQ arg
-            {
-                $$ = new MethodCall($1, Symbols.LessEqual, new Arguments($3), @2);
-            }
-        | arg EQ arg
-            {
-                $$ = new MethodCall($1, Symbols.Equal, new Arguments($3), @2);
-            }
-        | arg EQQ arg
-            {
-                $$ = new MethodCall($1, Symbols.StrictEqual, new Arguments($3), @2);
-            }
-        | arg NEQ arg
-            {
-                $$ = new NotExpression(new MethodCall($1, Symbols.Equal, new Arguments($3), @$), @2);
-            }
-        | arg MATCH arg
-            {
-                $$ = MakeMatch($1, $3, @2);
-            }
-        | arg NMATCH arg
-            {
-                $$ = new NotExpression(MakeMatch($1, $3, @2), @$);
-            }
-        | '!' arg
-            {
-                // TODO: warning: string literal in condition
-                $$ = new NotExpression($2, @$);
-            }
-        | '~' arg
-            {
-                $$ = new MethodCall($2, Symbols.BitwiseNot, Arguments.Empty, @1);
-            }
-        | arg LSHFT arg
-            {
-                $$ = new MethodCall($1, Symbols.LeftShift, new Arguments($3), @2);
-            }
-        | arg RSHFT arg
-            {
-                $$ = new MethodCall($1, Symbols.RightShift, new Arguments($3), @2);
-            }
-        | arg BITWISE_AND arg
-            {
-                $$ = new AndExpression($1, $3, @2);
-            }
-        | arg BITWISE_OR arg
-            {
-                $$ = new OrExpression($1, $3, @2);
-            }
-        | arg BITWISE_AND jump_statement_parameterless
-            {
-                $$ = new ConditionalJumpExpression($1, $3, false, null, @2);
-            }
-        | arg BITWISE_OR jump_statement_parameterless
-            {
-                $$ = new ConditionalJumpExpression($1, $3, true, null, @2);
-            }
-        | arg DOT2 arg
-            {
-                $$ = new RangeExpression($1, $3, false, @2);
-            }
-        | arg DOT3 arg
-            {
-                $$ = new RangeExpression($1, $3, true, @2);
-            }
-        | DEFINED opt_nl arg
-            {
-                $$ = new IsDefinedExpression($3, @$);
-            }
-        | arg '?' arg ':' arg
-            {
-                $$ = new ConditionalExpression($1.ToCondition(), $3, $5, @$);
-            }
-        | primary
-            {
-                $$ = $1;
-            }
-        ;
+arg:
+      lhs '=' arg
+        {
+            $$ = new SimpleAssignmentExpression($1, $3, null, @$);
+        }
+    | lhs '=' arg RESCUE_MOD arg
+        {
+            $$ = new SimpleAssignmentExpression($1, new RescueExpression($3, $5, MergeLocations(@4, @5), MergeLocations(@3, @5)), null, @$);
+        }
+    | lhs '=' arg RESCUE_MOD jump_statement_parameterless
+        {
+            $$ = new SimpleAssignmentExpression($1, new RescueExpression($3, $5, MergeLocations(@4, @5), MergeLocations(@3, @5)), null, @$);
+        }
+    | var_lhs ASSIGNMENT arg
+        {
+            $$ = new SimpleAssignmentExpression($1, $3, $2, @$);
+        }
+    | primary '[' array_key ']' ASSIGNMENT arg
+        {
+            $$ = new SimpleAssignmentExpression(new ArrayItemAccess($1, $3, @2), $6, $5, @$);
+        }
+    | primary '.' IDENTIFIER ASSIGNMENT arg
+        {
+            $$ = new MemberAssignmentExpression($1, $3, $4, $5, @$);
+        }
+    | primary '.' CONSTANT_IDENTIFIER ASSIGNMENT arg
+        {
+            $$ = new MemberAssignmentExpression($1, $3, $4, $5, @$);
+        }
+    | primary SEPARATING_DOUBLE_COLON IDENTIFIER ASSIGNMENT arg
+        {
+            $$ = new MemberAssignmentExpression($1, $3, $4, $5, @$);
+        }
+    | primary SEPARATING_DOUBLE_COLON CONSTANT_IDENTIFIER ASSIGNMENT arg
+        {
+            _tokenizer.ReportError(Errors.ConstantReassigned);
+            $$ = new ErrorExpression(@$);
+        }
+    | LEADING_DOUBLE_COLON CONSTANT_IDENTIFIER ASSIGNMENT arg
+        {
+            _tokenizer.ReportError(Errors.ConstantReassigned);
+            $$ = new ErrorExpression(@$);
+        }
+    | match_reference ASSIGNMENT arg
+        {
+            MatchReferenceReadOnlyError($1);
+            $$ = new ErrorExpression(@$);
+        }
+    | arg '+' arg
+        {
+            $$ = new MethodCall($1, Symbols.Plus, new Arguments($3), @2);
+        }
+    | arg '-' arg
+        {
+            $$ = new MethodCall($1, Symbols.Minus, new Arguments($3), @2);
+        }
+    | arg '*' arg
+        {
+            $$ = new MethodCall($1, Symbols.Multiply, new Arguments($3), @2);
+        }
+    | arg '/' arg
+        {
+            $$ = new MethodCall($1, Symbols.Divide, new Arguments($3), @2);
+        }
+    | arg '%' arg
+        {
+            $$ = new MethodCall($1, Symbols.Mod, new Arguments($3), @2);
+        }
+    | arg POW arg
+        {
+            $$ = new MethodCall($1, Symbols.Power, new Arguments($3), @2);
+        }
+    | UMINUS_NUM INTEGER POW arg
+        {
+            // ** has precedence over unary minus, hence -number**arg is equivalent to -(number**arg)
+            $$ = new MethodCall(new MethodCall(Literal.Integer($2, @2), Symbols.Power, new Arguments($4), @3), Symbols.UnaryMinus, Arguments.Empty, @1);
+        }
+    | UMINUS_NUM BIG_INTEGER POW arg
+        {
+            $$ = new MethodCall(new MethodCall(Literal.BigInteger($2, @2), Symbols.Power, new Arguments($4), @3), Symbols.UnaryMinus, Arguments.Empty, @1);
+        }
+    | UMINUS_NUM FLOAT POW arg
+        {
+            $$ = new MethodCall(new MethodCall(Literal.Double($2, @2), Symbols.Power, new Arguments($4), @3), Symbols.UnaryMinus, Arguments.Empty, @1);
+        }
+    | UPLUS arg
+        {
+            $$ = new MethodCall($2, Symbols.UnaryPlus, null, @1);
+        }
+    | UMINUS arg
+        {
+            $$ = new MethodCall($2, Symbols.UnaryMinus, null, @1);
+        }
+    | arg '|' arg
+        {
+            $$ = new MethodCall($1, Symbols.BitwiseOr, new Arguments($3), @2);
+        }
+    | arg '^' arg
+        {
+            $$ = new MethodCall($1, Symbols.Xor, new Arguments($3), @2);
+        }
+    | arg '&' arg
+        {
+            $$ = new MethodCall($1, Symbols.BitwiseAnd, new Arguments($3), @2);
+        }
+    | arg CMP arg
+        {
+            $$ = new MethodCall($1, Symbols.Comparison, new Arguments($3), @2);
+        }
+    | arg '>' arg
+        {
+            $$ = new MethodCall($1, Symbols.GreaterThan, new Arguments($3), @2);
+        }
+    | arg GEQ arg
+        {
+            $$ = new MethodCall($1, Symbols.GreaterEqual, new Arguments($3), @2);
+        }
+    | arg '<' arg
+        {
+            $$ = new MethodCall($1, Symbols.LessThan, new Arguments($3), @2);
+        }
+    | arg LEQ arg
+        {
+            $$ = new MethodCall($1, Symbols.LessEqual, new Arguments($3), @2);
+        }
+    | arg EQ arg
+        {
+            $$ = new MethodCall($1, Symbols.Equal, new Arguments($3), @2);
+        }
+    | arg EQQ arg
+        {
+            $$ = new MethodCall($1, Symbols.StrictEqual, new Arguments($3), @2);
+        }
+    | arg NEQ arg
+        {
+            $$ = new NotExpression(new MethodCall($1, Symbols.Equal, new Arguments($3), @$), @2);
+        }
+    | arg MATCH arg
+        {
+            $$ = MakeMatch($1, $3, @2);
+        }
+    | arg NMATCH arg
+        {
+            $$ = new NotExpression(MakeMatch($1, $3, @2), @$);
+        }
+    | '!' arg
+        {
+            // TODO: warning: string literal in condition
+            $$ = new NotExpression($2, @$);
+        }
+    | '~' arg
+        {
+            $$ = new MethodCall($2, Symbols.BitwiseNot, Arguments.Empty, @1);
+        }
+    | arg LSHFT arg
+        {
+            $$ = new MethodCall($1, Symbols.LeftShift, new Arguments($3), @2);
+        }
+    | arg RSHFT arg
+        {
+            $$ = new MethodCall($1, Symbols.RightShift, new Arguments($3), @2);
+        }
+    | arg BITWISE_AND arg
+        {
+            $$ = new AndExpression($1, $3, @2);
+        }
+    | arg BITWISE_OR arg
+        {
+            $$ = new OrExpression($1, $3, @2);
+        }
+    | arg BITWISE_AND jump_statement_parameterless
+        {
+            $$ = new ConditionalJumpExpression($1, $3, false, null, @2);
+        }
+    | arg BITWISE_OR jump_statement_parameterless
+        {
+            $$ = new ConditionalJumpExpression($1, $3, true, null, @2);
+        }
+    | arg DOT2 arg
+        {
+            $$ = new RangeExpression($1, $3, false, @2);
+        }
+    | arg DOT3 arg
+        {
+            $$ = new RangeExpression($1, $3, true, @2);
+        }
+    | DEFINED opt_nl arg
+        {
+            $$ = new IsDefinedExpression($3, @$);
+        }
+    | arg '?' arg ':' arg
+        {
+            $$ = new ConditionalExpression($1.ToCondition(), $3, $5, @$);
+        }
+    | primary
+        {
+            $$ = $1;
+        }
+;
         
-array_key    : /* empty */
-                {
-                    $$ = Arguments.Empty;
-                }
-            | command opt_nl
-                {
-                    _tokenizer.ReportWarning(Errors.ParenthesizeArguments);
-                    $$ = new Arguments($1);
-                }
-            | args trailer
-                {
-                    $$ = new Arguments($1, null, null, @1);
-                }
-            | args ',' STAR arg opt_nl
-                {
-                    $$ = new Arguments($1, null, $4, MergeLocations(@1, @4));
-                }
-            | maplets trailer
-                {
-                    $$ = new Arguments(null, $1, null, @1);
-                }
-            | STAR arg opt_nl
-                {
-                    $$ = new Arguments(null, null, $2, MergeLocations(@1, @2));
-                }
-            ;
+array_key: 
+      /* empty */
+        {
+            SetArguments();
+        }
+    | command opt_nl
+        {
+            _tokenizer.ReportWarning(Errors.ParenthesizeArguments);
+            SetArguments($1);
+        }
+    | args trailer
+        {
+            PopAndSetArguments($1, null, null, null, @1);
+        }
+    | args ',' STAR arg opt_nl
+        {
+            PopAndSetArguments($1, null, $4, null, MergeLocations(@1, @4));
+        }
+    | maplets trailer
+        {
+            SetArguments(null, $1, null, null, @1);
+        }
+    | STAR arg opt_nl
+        {
+            SetArguments(null, null, $2, null, MergeLocations(@1, @2));
+        }
+;
 
 paren_args:   
       '(' /* empty */ ')'
         {
-            $$ = MakeArguments();
+            SetArguments();
         }
     | '(' open_args opt_nl ')'
         {
@@ -998,130 +999,125 @@ paren_args:
     | '(' block_call opt_nl ')'
         {
             _tokenizer.ReportWarning(Errors.ParenthesizeArguments);
-            $$ = MakeArguments($2);
+            SetArguments($2);
         }
     | '(' args ',' block_call opt_nl ')'
         {
             _tokenizer.ReportWarning(Errors.ParenthesizeArguments);    
-            $2.Add($4);
-            $$ = MakeArguments($2, null, null, null, @$);
+            SetArguments(PopArguments($2, $4), null, null, null, @$);
         }
 ;
 
 opt_paren_args: 
       /* empty */
-      {
-        $$ = NoArguments(null);
-      }
+        {
+            SetNoArguments(null);
+        }
     | paren_args
-      {
-        $$ = $1;
-      }
+        {
+            $$ = $1;
+        }
 ;
 
 open_args: 
       args opt_block_reference
         {
-            $$ = MakeArguments($1, null, null, $2, @$);
+            PopAndSetArguments($1, null, null, $2, @$);
         }
     | args ',' STAR arg opt_block_reference
         {
-            $$ = MakeArguments($1, null, $4, $5, @$);
+            PopAndSetArguments($1, null, $4, $5, @$);
         }
     | maplets opt_block_reference
         {
-            $$ = MakeArguments(null, $1, null, $2, @$);
+            SetArguments(null, $1, null, $2, @$);
         }
     | maplets ',' STAR arg opt_block_reference
         {
-            $$ = MakeArguments(null, $1, $4, $5, @$);
+            SetArguments(null, $1, $4, $5, @$);
         }
     | args ',' maplets opt_block_reference
         {
-            $$ = MakeArguments($1, $3, null, $4, @$);
+            PopAndSetArguments($1, $3, null, $4, @$);
         }
     | args ',' maplets ',' STAR arg opt_block_reference
         {
-            $$ = MakeArguments($1, $3, $6, $7, @$);
+            PopAndSetArguments($1, $3, $6, $7, @$);
         }
     | STAR arg opt_block_reference
         {
-            $$ = MakeArguments(null, null, $2, $3, @$);
+            SetArguments(null, null, $2, $3, @$);
         }
     | block_reference
         {
-            $$ = MakeArguments($1);
+            SetArguments($1);
         }
     | command
         {
             _tokenizer.ReportWarning(Errors.ParenthesizeArguments);                
-            $$ = MakeArguments($1);
+            SetArguments($1);
         }
 ;
 
 closed_args:
       arg ',' args opt_block_reference
         {
-            $3.Insert(0, $1);
-            $$ = MakeArguments($3, null, null, $4, @$);
+            SetArguments(PopArguments($1, $3), null, null, $4, @$);
         }
     | arg ',' block_reference
         {
-            $$ = MakeArguments($1, $3);
+            SetArguments($1, $3);
         }
     | arg ',' STAR arg opt_block_reference
         {
-            $$ = MakeArguments(CollectionUtils.MakeList<Expression>($1), null, $4, $5, @$);
+            SetArguments(new Expression[] { $1 }, null, $4, $5, @$);
         }
     | arg ',' args ',' STAR arg opt_block_reference
         {
-            $3.Insert(0, $1);
-            $$ = MakeArguments($3, null, $6, $7, @$);
+            SetArguments(PopArguments($1, $3), null, $6, $7, @$);
         }
     | maplets opt_block_reference
         {
-            $$ = MakeArguments(null, $1, null, $2, @$);
+            SetArguments(null, $1, null, $2, @$);
         }
     | maplets ',' STAR arg opt_block_reference
         {
-            $$ = MakeArguments(null, $1, $4, $5, @$);
+            SetArguments(null, $1, $4, $5, @$);
         }
     | arg ',' maplets opt_block_reference
         {
-            $$ = MakeArguments(CollectionUtils.MakeList<Expression>($1), $3, null, $4, @$);
+            SetArguments(new Expression[] { $1 }, $3, null, $4, @$);
         }
     | arg ',' args ',' maplets opt_block_reference
         {
-            $3.Insert(0, $1);
-            $$ = MakeArguments($3, $5, null, $6, @$);
+            SetArguments(PopArguments($1, $3), $5, null, $6, @$);
         }
     | arg ',' maplets ',' STAR arg opt_block_reference
         {
-            $$ = MakeArguments(CollectionUtils.MakeList<Expression>($1), $3, $6, $7, @$);
+            SetArguments(new Expression[] { $1 }, $3, $6, $7, @$);
         }
     | arg ',' args ',' maplets ',' STAR arg opt_block_reference
         {
-            $3.Insert(0, $1);
-            $$ = MakeArguments($3, $5, $8, $9, @$);
+            SetArguments(PopArguments($1, $3), $5, $8, $9, @$);
         }
     | STAR arg opt_block_reference
         {
-            $$ = MakeArguments(null, null, $2, $3, @$);
+            SetArguments(Expression.EmptyArray, null, $2, $3, @$);
         }
     | block_reference
         {
-            $$ = MakeArguments($1);
+            SetArguments($1);
         }
 ;
 
 command_args:
         {
-            $<Integer>$ = _tokenizer.CMDARG;
+            $<Integer1>$ = _tokenizer.CMDARG;
             _tokenizer.CMDARG_PUSH(1);
         }
       command_args_content
         {
-            _tokenizer.CMDARG = $<Integer>1;
+            _tokenizer.CMDARG = $<Integer1>1;
             $$ = $2;
         }
 ;
@@ -1139,7 +1135,7 @@ command_args_content:
       ')'
         {
             _tokenizer.ReportWarning(Errors.WhitespaceBeforeArgumentParentheses);    
-            $$ = MakeArguments();
+            SetArguments();
         }
     | LPAREN_ARG closed_args
         {
@@ -1155,163 +1151,163 @@ command_args_content:
 block_reference:
       AMPERSAND arg
         {
-          $$ = new BlockReference($2, @$);
+            $$ = new BlockReference($2, @$);
         }
 ;
 
 opt_block_reference:
       ',' block_reference
         {
-          $$ = $2;
+            $$ = $2;
         }
     | /* empty */
         {
-          $$ = null;
+            $$ = null;
         }
 ;
 
 args: 
       arg
         {
-            $$ = CollectionUtils.MakeList<Expression>($1);
+            PushArgument(0, $1);
         }
     | args ',' arg
         {
-            $1.Add($3);
-            $$ = $1;
+            PushArgument($1, $3);
         }
 ;
 
-primary: numeric_literal
-        | symbol
-            {
-                $$ = new SymbolLiteral($1, @$);
-            }
-        | immutable_string
-        | string_concatenation
-            {
-                $$ = new StringConstructor($1, StringKind.Mutable, @1);
-            }
-        | shell_string
-        | regexp
-        | words
-        | verbatim_words
-        | var_ref
-        | match_reference
-            {
-                $$ = $1;
-            }
-        | FUNCTION_IDENTIFIER
-            {
-                $$ = new MethodCall(null, $1, null, @1);
-            }
-        | primary SEPARATING_DOUBLE_COLON CONSTANT_IDENTIFIER
-            {
-                $$ = new ConstantVariable($1, $3, @$);
-            }
-        | LEADING_DOUBLE_COLON CONSTANT_IDENTIFIER
-            {
-                $$ = new ConstantVariable(null, $2, @$);
-            }
-        | primary '[' array_key ']'
-            {
-                $$ = new ArrayItemAccess($1, $3, @$);
-            }
-        | LBRACK array_key ']'
-            {
-                $$ = new ArrayConstructor($2, @$);
-            }
-        | LBRACE '}'
-            {
-                $$ = new HashConstructor(null, null, @$);
-            }
-        | LBRACE maplets trailer '}'
-            {
-                $$ = new HashConstructor($2, null, @$);
-            }
-        | LBRACE args trailer '}'
-            {
-                $$ = new HashConstructor(null, CheckHashExpressions($2, @3), @$);
-            }                        
-        | YIELD '(' open_args ')'
-            {
-                $$ = new YieldCall(RequireNoBlockArg($3), @$);
-            }
-        | YIELD '(' ')'
-            {
-                $$ = new YieldCall(Arguments.Empty, @$);
-            }
-        | YIELD
-            {
-                $$ = new YieldCall(null, @1);
-            }
-        | DEFINED opt_nl '(' expr ')'
-            {
-                $$ = new IsDefinedExpression($4, @$);
-            }
-        | operation brace_block
-            {
-                $$ = new MethodCall(null, $1, null, $2, @1);
-            }
-        | method_call
-        | method_call brace_block
-            {    
-                $1.Block = $2;
-                $$ = $1;
-            }
-        | IF expr then compstmt if_tail END
-            {
-                $$ = MakeIfExpression($2.ToCondition(), $4, $5, @$);
-            }
-        | UNLESS expr then compstmt else_opt END
-            {
-                $$ = new UnlessExpression($2.ToCondition(), $4, $5, @$);
-            }
-        | WHILE
-            {
-                _tokenizer.COND_PUSH(1);
-            }
-          expr do
-            {
-                _tokenizer.COND_POP();
-            }
-          compstmt END
-            {
-                $$ = new WhileLoopExpression($3.ToCondition(), true, false, $6, @$);
-            }
-        | UNTIL
-            {
-                _tokenizer.COND_PUSH(1);
-            }
-          expr do
-            {
-                _tokenizer.COND_POP();
-            }
-          compstmt END
-            {
-                $$ = new WhileLoopExpression($3.ToCondition(), false, false, $6, @$);
-            }
-        | case_expression
-        | FOR block_parameters IN
-            {
-                _tokenizer.COND_PUSH(1);
-            }
-          expr do
-            {
-                _tokenizer.COND_POP();
-            }
-          compstmt END
-            {
-                $$ = new ForLoopExpression($2, $5, $8, @$);
-            }
-        | block_expression
-            {
-                $$ = $1;
-            }
-        | declaration_expression
-            {
-                $$ = $1;
-            }
+primary: 
+      numeric_literal
+    | symbol
+        {
+            $$ = new SymbolLiteral($1, @$);
+        }
+    | immutable_string
+    | string_concatenation
+        {
+            $$ = new StringConstructor($1, StringKind.Mutable, @1);
+        }
+    | shell_string
+    | regexp
+    | words
+    | verbatim_words
+    | var_ref
+    | match_reference
+        {
+            $$ = $1;
+        }
+    | FUNCTION_IDENTIFIER
+        {
+            $$ = new MethodCall(null, $1, null, @1);
+        }
+    | primary SEPARATING_DOUBLE_COLON CONSTANT_IDENTIFIER
+        {
+            $$ = new ConstantVariable($1, $3, @$);
+        }
+    | LEADING_DOUBLE_COLON CONSTANT_IDENTIFIER
+        {
+            $$ = new ConstantVariable(null, $2, @$);
+        }
+    | primary '[' array_key ']'
+        {
+            $$ = new ArrayItemAccess($1, $3, @$);
+        }
+    | LBRACK array_key ']'
+        {
+            $$ = new ArrayConstructor($2, @$);
+        }
+    | LBRACE '}'
+        {
+            $$ = new HashConstructor(null, null, @$);
+        }
+    | LBRACE maplets trailer '}'
+        {
+            $$ = new HashConstructor($2, null, @$);
+        }
+    | LBRACE args trailer '}'
+        {
+            $$ = new HashConstructor(null, PopHashArguments($2, @3), @$);
+        }                        
+    | YIELD '(' open_args ')'
+        {
+            $$ = new YieldCall(RequireNoBlockArg($3), @$);
+        }
+    | YIELD '(' ')'
+        {
+            $$ = new YieldCall(Arguments.Empty, @$);
+        }
+    | YIELD
+        {
+            $$ = new YieldCall(null, @1);
+        }
+    | DEFINED opt_nl '(' expr ')'
+        {
+            $$ = new IsDefinedExpression($4, @$);
+        }
+    | operation brace_block
+        {
+            $$ = new MethodCall(null, $1, null, $2, @1);
+        }
+    | method_call
+    | method_call brace_block
+        {    
+            $1.Block = $2;
+            $$ = $1;
+        }
+    | IF expr then compstmt if_tail END
+        {
+            $$ = MakeIfExpression($2.ToCondition(), $4, $5, @$);
+        }
+    | UNLESS expr then compstmt else_opt END
+        {
+            $$ = new UnlessExpression($2.ToCondition(), $4, $5, @$);
+        }
+    | WHILE
+        {
+            _tokenizer.COND_PUSH(1);
+        }
+      expr do
+        {
+            _tokenizer.COND_POP();
+        }
+      compstmt END
+        {
+            $$ = new WhileLoopExpression($3.ToCondition(), true, false, $6, @$);
+        }
+    | UNTIL
+        {
+            _tokenizer.COND_PUSH(1);
+        }
+      expr do
+        {
+            _tokenizer.COND_POP();
+        }
+      compstmt END
+        {
+            $$ = new WhileLoopExpression($3.ToCondition(), false, false, $6, @$);
+        }
+    | case_expression
+    | FOR block_parameters IN
+        {
+            _tokenizer.COND_PUSH(1);
+        }
+      expr do
+        {
+            _tokenizer.COND_POP();
+        }
+      compstmt END
+        {
+            $$ = new ForLoopExpression($2, $5, $8, @$);
+        }
+    | block_expression
+        {
+            $$ = $1;
+        }
+    | declaration_expression
+        {
+            $$ = $1;
+        }
 ;
         
 block_expression:        
@@ -1350,19 +1346,19 @@ declaration_expression:
         }
     | CLASS LSHFT expr
         {
-            $<Integer>$ = _inInstanceMethodDefinition;
+            $<Integer1>$ = _inInstanceMethodDefinition;
             _inInstanceMethodDefinition = 0;
         }
       term
         {
-            $<Integer>$ = _inSingletonMethodDefinition;
+            $<Integer1>$ = _inSingletonMethodDefinition;
             _inSingletonMethodDefinition = 0;
             EnterTopScope();
         }
       body END
         {
-            _inInstanceMethodDefinition = $<Integer>4;
-            _inSingletonMethodDefinition = $<Integer>6;
+            _inInstanceMethodDefinition = $<Integer1>4;
+            _inSingletonMethodDefinition = $<Integer1>6;
             $$ = new SingletonDeclaration(LeaveScope(), $3, $7, @$);
         }
     | MODULE qualified_module_name
@@ -1409,14 +1405,7 @@ declaration_expression:
 body: 
       compstmt rescue_clauses_opt else_opt ensure_opt
         {
-            ElseIfClause elseIf = $3;
-            Debug.Assert(elseIf == null || elseIf.Condition == null);
-            
-            if (elseIf != null && $2 == null) { 
-                ErrorSink.Add(_sourceUnit, "else without rescue is useless", @3, -1, Severity.Warning);
-            }
-            
-            $$ = new Body($1, $2, (elseIf != null) ? elseIf.Statements : null, $4, @$);
+            $$ = MakeBody($1, $2, $3, @3, $4, @$);
         }
 ;
 
@@ -1490,7 +1479,7 @@ block_parameters_opt:
         {
             $$ = CompoundLeftValue.UnspecifiedBlockSignature;
         }
-    | '|' /* empty */ '|' 
+    | '|' '|' 
         {
             $$ = CompoundLeftValue.EmptyBlockSignature;
         }
@@ -1519,8 +1508,7 @@ do_block:
 block_call: 
       command do_block
         {                            
-            $1.Block = $2;
-            $$ = $1;
+            ($$ = $1).Block = $2;
         }
     | block_call '.' operation2 opt_paren_args
         {
@@ -1580,41 +1568,44 @@ brace_block:
         }
 ;
 
-when_clauses : when_clause 
-                 {
-                     $$ = CollectionUtils.MakeList<WhenClause>($1); 
-                 }
-             | when_clauses when_clause 
-                 {
-                     $1.Add($2);
-                     $$ = $1;
-                 }
-             ;
+when_clauses: 
+      when_clause 
+        {
+            $$ = CollectionUtils.MakeList<WhenClause>($1); 
+        }
+    | when_clauses when_clause 
+        {
+            ($$ = $1).Add($2);
+        }
+;
 
 when_clause: 
       WHEN when_args then compstmt
          {
-             $$ = new WhenClause($<Expressions>2, $<Expression>2, $4, @$);
+             $$ = MakeWhenClause($2, $4, @4);
          }
 ;
             
 when_args: 
       args
         {
-            $$ = new TokenValue($1, null);
+            SetWhenClauseArguments($1, null);
         }
     | args ',' STAR arg
         {
-            $$ = new TokenValue($1, $4);
+            SetWhenClauseArguments($1, $4);
         }
     | STAR arg
         {
-            $$ = new TokenValue(null, $2);
+            SetWhenClauseArguments(0, $2);
         }
 ;
 
 rescue_clauses_opt:  
       /* empty */
+        {
+            $$ = null;
+        }
     | rescue_clauses
 ;
 
@@ -1625,8 +1616,7 @@ rescue_clauses:
         }
     | rescue_clauses rescue_clause 
         {
-            $1.Add($2);
-            $$ = $1;
+            ($$ = $1).Add($2);
         }
 ;
 
@@ -1647,6 +1637,9 @@ rescue_clause:
 
 exc_var: 
       /* empty */
+        {
+            $$ = null;
+        }
     | ASSOC lhs
         {
             $$ = $2;
@@ -1655,6 +1648,9 @@ exc_var:
 
 ensure_opt: 
       /* empty */
+        {
+            $$ = null;
+        }
     | ENSURE compstmt
         {
             $$ = $2;
@@ -1668,8 +1664,7 @@ string_concatenation:
         }
     | string_concatenation string
         {
-            $1.AddRange($2);
-            $$ = $1;
+            ($$ = $1).AddRange($2);
         }
 ;
 
@@ -1701,58 +1696,60 @@ regexp:
         }
 ;
 
-words    : WORDS_BEG WORD_SEPARATOR STRING_END
-            {
-                $$ = new ArrayConstructor(null, @$);
-            }
-        | WORDS_BEG word_list STRING_END
-            {
-                $$ = new ArrayConstructor(new Arguments($2, null, null, @2), @$);
-            }
-        ;
+words: 
+      WORDS_BEG WORD_SEPARATOR STRING_END
+        {
+            $$ = new ArrayConstructor(null, @$);
+        }
+    | WORDS_BEG word_list STRING_END
+        {
+            $$ = new ArrayConstructor(new Arguments($2.ToArray(), null, null, @2), @$);
+        }
+;
 
-word_list    : /* empty */
-                {
-                    $$ = new List<Expression>();
-                }
-            | word_list word WORD_SEPARATOR
-                {
-                    $1.Add(new StringConstructor($2, StringKind.Mutable, @2));
-                    $$ = $1;
-                }
-            ;
+word_list: 
+      /* empty */
+        {
+            $$ = new List<Expression>();
+        }
+    | word_list word WORD_SEPARATOR
+        {
+            ($$ = $1).Add(new StringConstructor($2, StringKind.Mutable, @2));
+        }
+;
 
-word    : string_content
-            {
-                $$ = CollectionUtils.MakeList<Expression>($1);
-            }
-        | word string_content
-            {
-                $1.Add($2);
-                $$ = $1;
-            }
-        ;
+word: 
+      string_content
+        {
+            $$ = CollectionUtils.MakeList<Expression>($1);
+        }
+    | word string_content
+        {
+            ($$ = $1).Add($2);
+        }
+;
 
-verbatim_words : VERBATIM_WORDS_BEGIN WORD_SEPARATOR STRING_END
-                   {
-                       $$ = new ArrayConstructor(null, @$);
-                   }
-               | VERBATIM_WORDS_BEGIN verbatim_word_list STRING_END
-                   {
-                       $$ = MakeVerbatimWords($2, @2, @$);
-                   }
-               ;
+verbatim_words: 
+      VERBATIM_WORDS_BEGIN WORD_SEPARATOR STRING_END
+        {
+            $$ = new ArrayConstructor(null, @$);
+        }
+    | VERBATIM_WORDS_BEGIN verbatim_word_list STRING_END
+        {
+            $$ = MakeVerbatimWords($2, @2, @$);
+        }
+;
 
-verbatim_word_list : /* empty */
-                       {
-                          $$ = new List<Expression>();
-                       }
-                   | verbatim_word_list STRING_CONTENT WORD_SEPARATOR
-                       {
-                          $1.Add(MakeStringLiteral($2, @2));
-                          $$ = $1;
-                       }
-                   ;
+verbatim_word_list: 
+      /* empty */
+        {
+            $$ = new List<Expression>();
+        }
+    | verbatim_word_list STRING_CONTENT WORD_SEPARATOR
+        {
+            ($$ = $1).Add(MakeStringLiteral($2, @2));
+        }
+;
 
 string_contents: 
       /* empty */
@@ -1761,27 +1758,27 @@ string_contents:
         }
     | string_contents string_content
         {
-            $1.Add($2);
-            $$ = $1;
+            ($$ = $1).Add($2);
         }
 ;
 
 
-string_content: STRING_CONTENT
-                    {
-                        $$ = MakeStringLiteral($1, @$);
-                    }
-                | STRING_EMBEDDED_VARIABLE_BEGIN string_embedded_variable
-                    {
-                        _tokenizer.StringEmbeddedVariableEnd($1);
-                        $$ = $2;
-                    }
-                | STRING_EMBEDDED_CODE_BEGIN compstmt '}'
-                    {
-                        _tokenizer.StringEmbeddedCodeEnd($1);
-                        $$ = MakeBlockExpression($2, @2);
-                    }
-                ;
+string_content: 
+      STRING_CONTENT
+        {
+            $$ = MakeStringLiteral($1, @$);
+        }
+    | STRING_EMBEDDED_VARIABLE_BEGIN string_embedded_variable
+        {
+            _tokenizer.StringEmbeddedVariableEnd($1);
+            $$ = $2;
+        }
+    | STRING_EMBEDDED_CODE_BEGIN compstmt '}'
+        {
+            _tokenizer.StringEmbeddedCodeEnd($1);
+            $$ = MakeBlockExpression($2, @2);
+        }
+;
 
 string_embedded_variable:
       GLOBAL_VARIABLE
@@ -1805,8 +1802,8 @@ string_embedded_variable:
 symbol:
     SYMBEG sym
       {
-        _tokenizer.SetState(LexicalState.EXPR_END);
-        $$ = $2;
+          _tokenizer.SetState(LexicalState.EXPR_END);
+          $$ = $2;
       }
 ;
 
@@ -1890,226 +1887,250 @@ match_reference:
         }
 ;
 
-superclass    : term
-                {
-                    $$ = null;
-                }
-            | '<' 
-                {
-                    _tokenizer.SetState(LexicalState.EXPR_BEG);
-                }
-              expr term
-                {
-                    $$ = $3;
-                }
-            | ERROR term
-                {
-                    StopErrorRecovery();
-                    $$ = null;
-                }
-            ;
+superclass: 
+      term
+        {
+            $$ = null;
+        }
+    | '<' 
+        {
+            _tokenizer.SetState(LexicalState.EXPR_BEG);
+        }
+      expr term
+        {
+            $$ = $3;
+        }
+    | ERROR term
+        {
+            StopErrorRecovery();
+            $$ = null;
+        }
+;
 
-parameters_declaration : '(' parameters opt_nl ')'
-                           {
-                               $$ = $2;
-                               _tokenizer.SetState(LexicalState.EXPR_BEG);
-                           }
-                       | parameters term
-                           {
-                               $$ = $1;
-                           }
-                       ;
+parameters_declaration:
+      '(' parameters opt_nl ')'
+          {
+              $$ = $2;
+              _tokenizer.SetState(LexicalState.EXPR_BEG);
+          }
+    | parameters term
+        {
+            $$ = $1;
+        }
+;
 
-parameters  : parameter_list ',' default_parameter_list ',' array_parameter block_parameter_opt
-            {
-                $$ = new Parameters($1, $3, $5, $6, @$);
-            }
-            | parameter_list ',' default_parameter_list block_parameter_opt
-                {
-                    $$ = new Parameters($1, $3, null, $4, @$);
-                }
-            | parameter_list ',' array_parameter block_parameter_opt
-                {
-                    $$ = new Parameters($1, null, $3, $4, @$);
-                }
-            | parameter_list block_parameter_opt
-                {
-                    $$ = new Parameters($1, null, null, $2, @$);
-                }
-            | default_parameter_list ',' array_parameter block_parameter_opt
-                {
-                    $$ = new Parameters(null, $1, $3, $4, @$);
-                }
-            | default_parameter_list block_parameter_opt
-                {
-                    $$ = new Parameters(null, $1, null, $2, @$);
-                }
-            | array_parameter block_parameter_opt
-                {
-                    $$ = new Parameters(null, null, $1, $2, @$);
-                }
-            | block_parameter
-                {
-                    $$ = new Parameters(null, null, null, $1, @$);
-                }
-            | /* empty */ 
-                {
-                    $$ = new Parameters(null, null, null, null, @$);
-                }
-            ;
+parameters: 
+      parameter_list ',' default_parameter_list ',' array_parameter block_parameter_opt
+        {
+            $$ = new Parameters($1, $3, $5, $6, @$);
+        }
+    | parameter_list ',' default_parameter_list block_parameter_opt
+        {
+            $$ = new Parameters($1, $3, null, $4, @$);
+        }
+    | parameter_list ',' array_parameter block_parameter_opt
+        {
+            $$ = new Parameters($1, null, $3, $4, @$);
+        }
+    | parameter_list block_parameter_opt
+        {
+            $$ = new Parameters($1, null, null, $2, @$);
+        }
+    | default_parameter_list ',' array_parameter block_parameter_opt
+        {
+            $$ = new Parameters(null, $1, $3, $4, @$);
+        }
+    | default_parameter_list block_parameter_opt
+        {
+            $$ = new Parameters(null, $1, null, $2, @$);
+        }
+    | array_parameter block_parameter_opt
+        {
+            $$ = new Parameters(null, null, $1, $2, @$);
+        }
+    | block_parameter
+        {
+            $$ = new Parameters(null, null, null, $1, @$);
+        }
+    | /* empty */ 
+        {
+            $$ = new Parameters(null, null, null, null, @$);
+        }
+;
 
-parameter    : CONSTANT_IDENTIFIER
-                {    
-                    _tokenizer.ReportError(Errors.FormalArgumentIsConstantVariable);
-                    $$ = DefineParameter(GenerateErrorConstantName(), @$);
-                }
-            | INSTANCE_VARIABLE
-                {
-                    _tokenizer.ReportError(Errors.FormalArgumentIsInstanceVariable);
-                    $$ = DefineParameter(GenerateErrorConstantName(), @$);
-                }
-            | GLOBAL_VARIABLE
-                {
-                    _tokenizer.ReportError(Errors.FormalArgumentIsGlobalVariable);
-                    $$ = DefineParameter(GenerateErrorConstantName(), @$);
-                }
-            | CLASS_VARIABLE
-                {
-                    _tokenizer.ReportError(Errors.FormalArgumentIsClassVariable);
-                    $$ = DefineParameter(GenerateErrorConstantName(), @$);
-                }                
-            | IDENTIFIER
-                {           
-                    $$ = DefineParameter($1, @$);
-                }
-            ;
+parameter: 
+      CONSTANT_IDENTIFIER
+        {    
+            _tokenizer.ReportError(Errors.FormalArgumentIsConstantVariable);
+            $$ = DefineParameter(GenerateErrorConstantName(), @$);
+        }
+    | INSTANCE_VARIABLE
+        {
+            _tokenizer.ReportError(Errors.FormalArgumentIsInstanceVariable);
+            $$ = DefineParameter(GenerateErrorConstantName(), @$);
+        }
+    | GLOBAL_VARIABLE
+        {
+            _tokenizer.ReportError(Errors.FormalArgumentIsGlobalVariable);
+            $$ = DefineParameter(GenerateErrorConstantName(), @$);
+        }
+    | CLASS_VARIABLE
+        {
+            _tokenizer.ReportError(Errors.FormalArgumentIsClassVariable);
+            $$ = DefineParameter(GenerateErrorConstantName(), @$);
+        }                
+    | IDENTIFIER
+        {           
+            $$ = DefineParameter($1, @$);
+        }
+;
 
-parameter_list : parameter
-                 {
-                    $$ = CollectionUtils.MakeList<LocalVariable>($1);
-                 }
-               | parameter_list ',' parameter
-                 {
-                    $1.Add($3);
-                    $$ = $1;
-                 }
-               ;
+parameter_list: 
+      parameter
+        {
+            $$ = CollectionUtils.MakeList<LocalVariable>($1);
+        }
+    | parameter_list ',' parameter
+        {
+            ($$ = $1).Add($3);
+        }
+;
 
-default_parameter : parameter '=' arg
-                    {        
-                        $$ = new SimpleAssignmentExpression($1, $3, null, @$);
-                    }
-                ;
+default_parameter: 
+      parameter '=' arg
+        {        
+            $$ = new SimpleAssignmentExpression($1, $3, null, @$);
+        }
+;
 
-default_parameter_list : default_parameter
-                          {
-                              $$ = CollectionUtils.MakeList<SimpleAssignmentExpression>($1);
-                          }
-                       | default_parameter_list ',' default_parameter
-                          {
-                              $1.Add($3);
-                              $$ = $1;
-                          }
-                       ; 
+default_parameter_list: 
+      default_parameter
+        {
+            $$ = CollectionUtils.MakeList<SimpleAssignmentExpression>($1);
+        }
+    | default_parameter_list ',' default_parameter
+        {
+            ($$ = $1).Add($3);
+        }
+; 
 
-array_parameter_mark : '*'
-                     | STAR
-                     ;
+array_parameter_mark: 
+      '*'
+    | STAR
+;
 
-array_parameter    : array_parameter_mark parameter
-                    {    
-                        $$ = $2;
-                    }
-                | array_parameter_mark
-                    {
-                        $$ = DefineParameter(Symbols.RestArgsLocal, @1);
-                    }
-                ;
+array_parameter: 
+      array_parameter_mark parameter
+        {    
+            $$ = $2;
+        }
+    | array_parameter_mark
+        {
+            $$ = DefineParameter(Symbols.RestArgsLocal, @1);
+        }
+;
 
-block_parameter_mark : '&'
-                     | AMPERSAND
-                     ;
+block_parameter_mark: 
+      '&'
+    | AMPERSAND
+;
 
-block_parameter : block_parameter_mark parameter
-                    {
-                        $$ = $2;
-                    }
-                ;
+block_parameter: 
+      block_parameter_mark parameter
+        {
+            $$ = $2;
+        }
+;
 
-block_parameter_opt    : /* empty */
-                    | ',' block_parameter
-                        {
-                            $$ = $2;
-                        }
-                    ;
+block_parameter_opt: 
+     /* empty */
+       {
+           $$ = null;
+       }
+   | ',' block_parameter
+       {
+           $$ = $2;
+       }
+;
 
-singleton    : var_ref
-            | '('
-                {
-                    _tokenizer.SetState(LexicalState.EXPR_BEG);
-                }
-              expr opt_nl ')'
-                {                        
-                    $$ = $3;
-                }
-            ;
+singleton: 
+     var_ref
+   | '('
+       {
+           _tokenizer.SetState(LexicalState.EXPR_BEG);
+       }
+     expr opt_nl ')'
+       {                        
+           $$ = $3;
+       }
+;
 
-maplets    : maplet 
-            {
-                $$ = CollectionUtils.MakeList<Maplet>($1);
-            }
-        | maplets ',' maplet
-            {
-                $1.Add($3);
-                $$ = $1;
-            }
-        ;
+maplets: 
+     maplet 
+       {
+           $$ = CollectionUtils.MakeList<Maplet>($1);
+       }
+   | maplets ',' maplet
+       {
+           ($$ = $1).Add($3);
+       }
+;
 
-maplet    : arg ASSOC arg
-            {
-                $$ = new Maplet($1, $3, @$);
-            }
-        ;
+maplet: 
+     arg ASSOC arg
+       {
+           $$ = new Maplet($1, $3, @$);
+       }
+;
 
-operation    : IDENTIFIER
-            | CONSTANT_IDENTIFIER
-            | FUNCTION_IDENTIFIER
-            ;
+operation: 
+     IDENTIFIER
+   | CONSTANT_IDENTIFIER
+   | FUNCTION_IDENTIFIER
+;
 
-operation2    : IDENTIFIER
-            | CONSTANT_IDENTIFIER
-            | FUNCTION_IDENTIFIER
-            | op
-            ;
+operation2: 
+     IDENTIFIER
+   | CONSTANT_IDENTIFIER
+   | FUNCTION_IDENTIFIER
+   | op
+;
 
-operation3    : IDENTIFIER
-            | FUNCTION_IDENTIFIER
-            | op
-            ;
+operation3: 
+     IDENTIFIER
+   | FUNCTION_IDENTIFIER
+   | op
+;
 
-dot_or_colon: '.'
-            | SEPARATING_DOUBLE_COLON
-            ;
+dot_or_colon: 
+     '.'
+   | SEPARATING_DOUBLE_COLON
+;
 
-opt_terms    : /* empty */
-            | terms
-            ;
+opt_terms: 
+      /* empty */
+    | terms
+;
 
-opt_nl    : /* empty */
-        | '\n'
-        ;
+opt_nl:
+      /* empty */
+    | '\n'
+;
 
-trailer    : /* empty */
-        | '\n'
-        | ','
-        ;
+trailer: 
+      /* empty */
+    | '\n'
+    | ','
+;
 
-term    : ';'        { StopErrorRecovery(); }
-        | '\n'
-        ;
+term: 
+      ';'        { StopErrorRecovery(); }
+    | '\n'
+;
 
-terms    : term
-        | terms ';'    { StopErrorRecovery(); }
-        ;
+terms: 
+      term
+    | terms ';'  { StopErrorRecovery(); }
+;
     
 %%

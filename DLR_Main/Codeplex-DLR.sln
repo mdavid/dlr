@@ -56,7 +56,15 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Chiron", "Languages\IronPyt
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Microsoft.Scripting.Silverlight", "Runtime\Src\Microsoft.Scripting.SilverLight\Microsoft.Scripting.Silverlight.csproj", "{C86A7A7B-3086-4136-9B56-17E8DCB38C8D}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "System.Dynamic.ComInterop", "Runtime\src\Microsoft.Dynamic.ComInterop\System.Dynamic.ComInterop.csproj", "{D4AE44AD-07B9-41DC-BB3B-1FDCDE3C987D}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ETSample1_CS", "Samples\ExpressionTree\ETSample1_CS\ETSample1_CS.csproj", "{82F00DA6-1447-42AE-A9E3-B326ACFBBFFA}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "ExpressionTrees", "ExpressionTrees", "{735DC44F-7E1C-41BB-ADA5-2E3E9BC93D9C}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Hosting API", "Hosting API", "{C4822375-A83F-47F0-9C90-B9123AC7B6CF}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ShapeScript", "Samples\Hosting\ShapeScript\ShapeScript.csproj", "{769916FC-40EA-4A2D-8D8E-B14152517CE0}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Microsoft.Dynamic", "Runtime\src\Microsoft.Dynamic\Microsoft.Dynamic.csproj", "{D4AE44AD-07B9-41DC-BB3B-1FDCDE3C987D}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -74,6 +82,13 @@ Global
 		{D4AE44AD-07B9-41DC-BB3B-1FDCDE3C987D}.DelaySigned Silverlight Release|Any CPU.ActiveCfg = Release|Any CPU
 		{D4AE44AD-07B9-41DC-BB3B-1FDCDE3C987D}.DelaySigned Release|Any CPU.Build.0 = DelaySigned Release|Any CPU
 		{D4AE44AD-07B9-41DC-BB3B-1FDCDE3C987D}.DelaySigned Release|Any CPU.ActiveCfg = DelaySigned Release|Any CPU
+		{769916FC-40EA-4A2D-8D8E-B14152517CE0}.DelaySigned Silverlight Release|Any CPU.ActiveCfg = Release|Any CPU
+		{769916FC-40EA-4A2D-8D8E-B14152517CE0}.DelaySigned Release|Any CPU.Build.0 = DelaySigned Release|Any CPU
+		{769916FC-40EA-4A2D-8D8E-B14152517CE0}.DelaySigned Release|Any CPU.ActiveCfg = DelaySigned Release|Any CPU
+		{82F00DA6-1447-42AE-A9E3-B326ACFBBFFA}.DelaySigned Silverlight Release|Any CPU.Build.0 = Release|Any CPU
+		{82F00DA6-1447-42AE-A9E3-B326ACFBBFFA}.DelaySigned Silverlight Release|Any CPU.ActiveCfg = Release|Any CPU
+		{82F00DA6-1447-42AE-A9E3-B326ACFBBFFA}.DelaySigned Release|Any CPU.Build.0 = DelaySigned Release|Any CPU
+		{82F00DA6-1447-42AE-A9E3-B326ACFBBFFA}.DelaySigned Release|Any CPU.ActiveCfg = DelaySigned Release|Any CPU
 		{C86A7A7B-3086-4136-9B56-17E8DCB38C8D}.DelaySigned Silverlight Release|Any CPU.Build.0 = DelaySigned Silverlight Release|Any CPU
 		{C86A7A7B-3086-4136-9B56-17E8DCB38C8D}.DelaySigned Silverlight Release|Any CPU.ActiveCfg = DelaySigned Silverlight Release|Any CPU
 		{C86A7A7B-3086-4136-9B56-17E8DCB38C8D}.DelaySigned Release|Any CPU.ActiveCfg = Silverlight DelaySigned Release|Any CPU
@@ -285,6 +300,24 @@ Global
 		{C86A7A7B-3086-4136-9B56-17E8DCB38C8D}.Silverlight Debug|Any CPU.Build.0 = Silverlight Debug|Any CPU
 		{C86A7A7B-3086-4136-9B56-17E8DCB38C8D}.Silverlight Release|Any CPU.ActiveCfg = Silverlight Release|Any CPU
 		{C86A7A7B-3086-4136-9B56-17E8DCB38C8D}.Silverlight Release|Any CPU.Build.0 = Silverlight Release|Any CPU
+		{82F00DA6-1447-42AE-A9E3-B326ACFBBFFA}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{82F00DA6-1447-42AE-A9E3-B326ACFBBFFA}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{82F00DA6-1447-42AE-A9E3-B326ACFBBFFA}.FxCop|Any CPU.ActiveCfg = Release|Any CPU
+		{82F00DA6-1447-42AE-A9E3-B326ACFBBFFA}.FxCop|Any CPU.Build.0 = Release|Any CPU
+		{82F00DA6-1447-42AE-A9E3-B326ACFBBFFA}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{82F00DA6-1447-42AE-A9E3-B326ACFBBFFA}.Release|Any CPU.Build.0 = Release|Any CPU
+		{82F00DA6-1447-42AE-A9E3-B326ACFBBFFA}.Silverlight Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{82F00DA6-1447-42AE-A9E3-B326ACFBBFFA}.Silverlight Debug|Any CPU.Build.0 = Debug|Any CPU
+		{82F00DA6-1447-42AE-A9E3-B326ACFBBFFA}.Silverlight Release|Any CPU.ActiveCfg = Release|Any CPU
+		{82F00DA6-1447-42AE-A9E3-B326ACFBBFFA}.Silverlight Release|Any CPU.Build.0 = Release|Any CPU
+		{769916FC-40EA-4A2D-8D8E-B14152517CE0}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{769916FC-40EA-4A2D-8D8E-B14152517CE0}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{769916FC-40EA-4A2D-8D8E-B14152517CE0}.FxCop|Any CPU.ActiveCfg = Release|Any CPU
+		{769916FC-40EA-4A2D-8D8E-B14152517CE0}.FxCop|Any CPU.Build.0 = Release|Any CPU
+		{769916FC-40EA-4A2D-8D8E-B14152517CE0}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{769916FC-40EA-4A2D-8D8E-B14152517CE0}.Release|Any CPU.Build.0 = Release|Any CPU
+		{769916FC-40EA-4A2D-8D8E-B14152517CE0}.Silverlight Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{769916FC-40EA-4A2D-8D8E-B14152517CE0}.Silverlight Release|Any CPU.ActiveCfg = Release|Any CPU
 		{D4AE44AD-07B9-41DC-BB3B-1FDCDE3C987D}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{D4AE44AD-07B9-41DC-BB3B-1FDCDE3C987D}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{D4AE44AD-07B9-41DC-BB3B-1FDCDE3C987D}.FxCop|Any CPU.ActiveCfg = FxCop|Any CPU
@@ -318,7 +351,11 @@ Global
 		{AA18A245-E342-4368-A474-83178311A742} = {07FD28A6-B302-49AB-A2C9-23D431F1CE2D}
 		{92A2631C-F9CE-4B0C-833A-64AD62AC801F} = {2FAC49E5-EF8E-4580-88F0-A7C2A01E2FA4}
 		{157A4685-D71A-4FF9-854F-64C9CAE21F43} = {2FAC49E5-EF8E-4580-88F0-A7C2A01E2FA4}
+		{735DC44F-7E1C-41BB-ADA5-2E3E9BC93D9C} = {96D44FD1-0623-46D7-9511-EEA27441CF36}
+		{C4822375-A83F-47F0-9C90-B9123AC7B6CF} = {96D44FD1-0623-46D7-9511-EEA27441CF36}
 		{7D07B0CE-FFA3-4402-BFF2-5F42B4267D2A} = {6544FA5E-6109-48AD-B674-3714A6A905AD}
 		{C86A7A7B-3086-4136-9B56-17E8DCB38C8D} = {6544FA5E-6109-48AD-B674-3714A6A905AD}
+		{82F00DA6-1447-42AE-A9E3-B326ACFBBFFA} = {735DC44F-7E1C-41BB-ADA5-2E3E9BC93D9C}
+		{769916FC-40EA-4A2D-8D8E-B14152517CE0} = {C4822375-A83F-47F0-9C90-B9123AC7B6CF}
 	EndGlobalSection
 EndGlobal

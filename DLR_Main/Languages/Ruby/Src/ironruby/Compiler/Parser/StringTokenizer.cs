@@ -96,15 +96,17 @@ namespace IronRuby.Compiler {
         private readonly StringType _properties;
         private readonly string _label;
         private readonly int _resumePosition;
+        private readonly int _resumeLineLength;
         private readonly char[] _resumeLine;
         private readonly int _firstLine;
         private readonly int _firstLineIndex;
 
-        public HeredocTokenizer(StringType properties, string label, int resumePosition, char[] resumeLine, int firstLine, int firstLineIndex) {
+        public HeredocTokenizer(StringType properties, string label, int resumePosition, char[] resumeLine, int resumeLineLength, int firstLine, int firstLineIndex) {
             _properties = properties;
             _label = label;
             _resumePosition = resumePosition;
             _resumeLine = resumeLine;
+            _resumeLineLength = resumeLineLength;
             _firstLine = firstLine;
             _firstLineIndex = firstLineIndex;
         }
@@ -126,6 +128,10 @@ namespace IronRuby.Compiler {
             get { return _resumeLine; }
         }
 
+        public int ResumeLineLength {
+            get { return _resumeLineLength; }
+        }
+        
         public int FirstLine {
             get { return _firstLine; }
         }

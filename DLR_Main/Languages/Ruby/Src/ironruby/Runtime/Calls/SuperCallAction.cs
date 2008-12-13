@@ -30,7 +30,7 @@ using IronRuby.Compiler;
 
 namespace IronRuby.Runtime.Calls {
 
-    public sealed class SuperCallAction : MetaObjectBinder, IExpressionSerializable, IEquatable<SuperCallAction> {
+    public sealed class SuperCallAction : DynamicMetaObjectBinder, IExpressionSerializable, IEquatable<SuperCallAction> {
         private readonly RubyCallSignature _signature;
         private readonly int _lexicalScopeId;
 
@@ -78,7 +78,7 @@ namespace IronRuby.Runtime.Calls {
 
         #region Rule Generation
 
-        public override MetaObject/*!*/ Bind(MetaObject/*!*/ context, MetaObject/*!*/[]/*!*/ args) {
+        public override DynamicMetaObject/*!*/ Bind(DynamicMetaObject/*!*/ context, DynamicMetaObject/*!*/[]/*!*/ args) {
             var mo = new MetaObjectBuilder();
             SetRule(mo, new CallArguments(context, args, _signature));
             return mo.CreateMetaObject(this, context, args);

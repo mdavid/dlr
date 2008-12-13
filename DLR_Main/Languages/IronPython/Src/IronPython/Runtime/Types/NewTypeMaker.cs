@@ -943,7 +943,7 @@ namespace IronPython.Runtime.Types {
                 }
             }
 
-            LocalBuilder retVal = il.DeclareLocal(typeof(MetaObject));
+            LocalBuilder retVal = il.DeclareLocal(typeof(DynamicMetaObject));
             Label retLabel = il.DefineLabel();
             if (explicitDynamicObject) {
                 _explicitMO = _tg.DefineField("__gettingMO", typeof(ThreadLocal<bool>), FieldAttributes.InitOnly | FieldAttributes.Private);

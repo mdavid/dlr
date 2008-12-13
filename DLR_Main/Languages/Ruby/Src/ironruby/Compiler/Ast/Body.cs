@@ -34,16 +34,16 @@ namespace IronRuby.Compiler.Ast {
     //   statements
     // end
     public partial class Body : Expression {
-        private readonly List<Expression>/*!*/ _statements;
+        private readonly Statements/*!*/ _statements;
         private readonly List<RescueClause> _rescueClauses;	// optional
-        private readonly List<Expression> _elseStatements;	// optional
-        private readonly List<Expression> _ensureStatements;	// optional
+        private readonly Statements _elseStatements;	// optional
+        private readonly Statements _ensureStatements;	// optional
 
         // TODO: readonly
-        public List<Expression>/*!*/ Statements { get { return _statements; } }
+        public Statements/*!*/ Statements { get { return _statements; } }
         public List<RescueClause> RescueClauses { get { return _rescueClauses; } }
-        public List<Expression> ElseStatements { get { return _elseStatements; } }
-        public List<Expression> EnsureStatements { get { return _ensureStatements; } }
+        public Statements ElseStatements { get { return _elseStatements; } }
+        public Statements EnsureStatements { get { return _ensureStatements; } }
 
         private bool HasExceptionHandling {
             get {
@@ -51,8 +51,8 @@ namespace IronRuby.Compiler.Ast {
             }
         }
 
-        public Body(List<Expression>/*!*/ statements, List<RescueClause> rescueClauses, List<Expression> elseStatements,
-            List<Expression> ensureStatements, SourceSpan location)
+        public Body(Statements/*!*/ statements, List<RescueClause> rescueClauses, Statements elseStatements,
+            Statements ensureStatements, SourceSpan location)
             : base(location) {
 
             Assert.NotNull(statements);
@@ -238,7 +238,7 @@ namespace IronRuby.Compiler.Ast {
         internal override Expression/*!*/ ToCondition() {
             // propagates 'in condition' property if we have a single element:
             if (_statements != null && _statements.Count == 1 && !HasExceptionHandling) {
-                _statements[0].ToCondition();
+                _statements.First.ToCondition();
             }
             return this;
         }

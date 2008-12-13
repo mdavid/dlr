@@ -21,10 +21,10 @@ using Microsoft.Scripting.Utils;
 namespace IronRuby.Compiler.Ast {
 
     public class CompoundRightValue {
-        private readonly List<Expression>/*!*/ _rightValues;
+        private readonly Expression/*!*/[]/*!*/ _rightValues;
         private readonly Expression _splattedValue;
 
-        public List<Expression>/*!*/ RightValues {
+        public Expression/*!*/[]/*!*/ RightValues {
             get { return _rightValues; }
         }
 
@@ -32,7 +32,7 @@ namespace IronRuby.Compiler.Ast {
             get { return _splattedValue; }
         }
 
-        public CompoundRightValue(List<Expression>/*!*/ rightValues, Expression splattedValue) {
+        public CompoundRightValue(Expression/*!*/[]/*!*/ rightValues, Expression splattedValue) {
             Assert.NotNull(rightValues);
 
             _rightValues = rightValues;

@@ -22,6 +22,8 @@ using System.Text;
 using System.Text.RegularExpressions;
 using IronRuby.Builtins;
 using IronRuby.Runtime;
+using System.Security.Permissions;
+using System.Runtime.Serialization;
 
 namespace IronRuby.StandardLibrary.StringScanner {
 
@@ -40,6 +42,19 @@ namespace IronRuby.StandardLibrary.StringScanner {
             : base(rubyClass) {
             _scanString = MutableString.Empty;
         }
+
+#if !SILVERLIGHT
+        public StringScanner(SerializationInfo/*!*/ info, StreamingContext context) 
+            : base(info, context) {
+            // TODO: deserialize
+        }
+
+        [SecurityPermission(SecurityAction.LinkDemand, Flags = SecurityPermissionFlag.SerializationFormatter)]
+        public override void GetObjectData(SerializationInfo/*!*/ info, StreamingContext context) {
+            base.GetObjectData(info, context);
+            // TODO: serialize
+        }
+#endif
 
         protected override RubyObject/*!*/ CreateInstance() {
             return new StringScanner(Class);

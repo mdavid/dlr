@@ -29,20 +29,20 @@ namespace IronRuby.Compiler.Ast {
         // { key1, value1, key2, value2, ... }
 
         private readonly List<Maplet> _maplets;
-        private readonly List<Expression> _expressions;
+        private readonly Expression[] _expressions;
 
         public List<Maplet> Maplets {
             get { return _maplets; }
         }
 
-        public List<Expression> Expressions {
+        public Expression[] Expressions {
             get { return _expressions; }
         }
 
-        public HashConstructor(List<Maplet> maplets, List<Expression> expressions, SourceSpan location)
+        public HashConstructor(List<Maplet> maplets, Expression[] expressions, SourceSpan location)
             : base(location) {
             ContractUtils.Requires(maplets == null || expressions == null);
-            ContractUtils.Requires(expressions == null || expressions.Count % 2 == 0, "expressions");
+            ContractUtils.Requires(expressions == null || expressions.Length % 2 == 0, "expressions");
 
             _maplets = maplets;
             _expressions = expressions;

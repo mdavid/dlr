@@ -34,7 +34,7 @@ namespace ToyScript.Binders {
             return cb != null && base.Equals(obj);
         }
 
-        public override MetaObject FallbackInvoke(MetaObject target, MetaObject[] args, MetaObject onBindingError) {
+        public override DynamicMetaObject FallbackInvoke(DynamicMetaObject target, DynamicMetaObject[] args, DynamicMetaObject onBindingError) {
             throw new NotImplementedException();
         }
     }

@@ -29,7 +29,7 @@ namespace IronRuby.Compiler.Ast {
     public partial class Arguments : Node {
         internal static readonly Arguments Empty = new Arguments(SourceSpan.None);
 
-        private readonly List<Expression> _expressions;
+        private readonly Expression[] _expressions;
         private readonly List<Maplet> _maplets;
         private readonly Expression _array;
         
@@ -37,7 +37,7 @@ namespace IronRuby.Compiler.Ast {
             get { return _expressions == null && _maplets == null && _array == null; }
         }
 
-        public List<Expression> Expressions { get { return _expressions; } }
+        public Expression[] Expressions { get { return _expressions; } }
         public List<Maplet> Maplets { get { return _maplets; } }
         public Expression Array { get { return _array; } }
         
@@ -52,19 +52,18 @@ namespace IronRuby.Compiler.Ast {
             : base(arg.Location) {
             ContractUtils.RequiresNotNull(arg, "arg");
 
-            _expressions = new List<Expression>();
-            _expressions.Add(arg);
+            _expressions = new Expression[] { arg };
             _maplets = null;
             _array = null;
         }
 
-        public Arguments(List<Expression/*!*/> arguments, List<Maplet/*!*/> maplets, Expression array, SourceSpan location)
+        public Arguments(Expression/*!*/[] arguments, List<Maplet/*!*/> maplets, Expression array, SourceSpan location)
             : base(location) {
             if (arguments != null) {
-                ContractUtils.RequiresNotNullItems(arguments, "arguments");
+                Assert.NotNullItems(arguments);
             }
             if (maplets != null) {
-                ContractUtils.RequiresNotNullItems(maplets, "maplets");
+                Assert.NotNullItems(maplets);
             }
 
             _expressions = arguments;

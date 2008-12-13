@@ -48,25 +48,23 @@ namespace IronRuby.Tests {
             Expect();
         }
 
-        public AssertTokenizer/*!*/ Load(string/*!*/ source) {
+        public AssertTokenizer/*!*/ Load(object/*!*/ source) { // source: byte[] or string
             Tests.Assert(_log.Errors.Count == 0, "Previous test case reported unexpected error/warning(s)");
 
-            _tokenizer = new Tokenizer(false, _log);
-            _tokenizer.Compatibility = _context.RubyOptions.Compatibility;
-            _tokenizer.Initialize(_context.CreateSnippet(source, SourceCodeKind.File));
-            _allTokens = new List<Tokens>();
-            _allValues = new List<object>();
-            return this;
-        }
+            _tokenizer = new Tokenizer(false, DummyVariableResolver.AllMethodNames) {
+                ErrorSink = _log,
+                Compatibility = _context.RubyOptions.Compatibility
+            };
 
-        public AssertTokenizer/*!*/ Load(byte[]/*!*/ source) {
-            Tests.Assert(_log.Errors.Count == 0, "Previous test case reported unexpected error/warning(s)");
-
-            _tokenizer = new Tokenizer(false, _log);
-            _tokenizer.Compatibility = _context.RubyOptions.Compatibility;
-            _tokenizer.Initialize(_context.CreateSourceUnit(
-                new BinaryContentProvider(source), null, BinaryEncoding.Instance, SourceCodeKind.File)
-            );
+            SourceUnit sourceUnit;
+            byte[] binarySource = source as byte[];
+            if (binarySource != null) {
+                sourceUnit = _context.CreateSourceUnit(new BinaryContentProvider(binarySource), null, BinaryEncoding.Instance, SourceCodeKind.File);
+            } else {
+                sourceUnit = _context.CreateSnippet((string)source, SourceCodeKind.File);
+            }
+            
+            _tokenizer.Initialize(sourceUnit);
             _allTokens = new List<Tokens>();
             _allValues = new List<object>();
             return this;
@@ -94,25 +92,16 @@ namespace IronRuby.Tests {
             return this;
         }
 
-        public AssertTokenizer/*!*/ Read(Tokens token, TokenValueType tokenValue) {
-            Next();
-            Tests.Assert(_actualToken == token);
-            Tests.Assert(_actualValue.Type == tokenValue);
-            return this;
-        }
-
         public AssertTokenizer/*!*/ Read(int expected) {
             Next();
             Tests.Assert(_actualToken == Tokens.Integer);
-            Tests.Assert(_actualValue.Type == TokenValueType.Integer);
-            Tests.Assert(expected == _actualValue.Integer);
+            Tests.Assert(expected == _actualValue.Integer1);
             return this;
         }
 
         public AssertTokenizer/*!*/ Read(string/*!*/ expected) {
             Next();
             Tests.Assert(_actualToken == Tokens.StringContent);
-            Tests.Assert(_actualValue.Type == TokenValueType.String);
             Tests.Assert(expected == _actualValue.String);
             return this;
         }
@@ -120,7 +109,6 @@ namespace IronRuby.Tests {
         public AssertTokenizer/*!*/ ReadSymbol(Tokens token, string expected) {
             Next();
             Tests.Assert(_actualToken == token);
-            Tests.Assert(_actualValue.Type == TokenValueType.String);
             Tests.Assert(expected == _actualValue.String);
             return this;
         }
@@ -128,7 +116,6 @@ namespace IronRuby.Tests {
         public AssertTokenizer/*!*/ Read(RubyRegexOptions expected) {
             Next();
             Tests.Assert(_actualToken == Tokens.RegexpEnd);
-            Tests.Assert(_actualValue.Type == TokenValueType.RegexOptions);
             Tests.Assert(expected == _actualValue.RegExOptions);
             return this;
         }
@@ -136,7 +123,6 @@ namespace IronRuby.Tests {
         public AssertTokenizer/*!*/ ReadBigInteger(string/*!*/ expected, uint @base) {
             Next();
             Tests.Assert(_actualToken == Tokens.BigInteger);
-            Tests.Assert(_actualValue.Type == TokenValueType.BigInteger);
             Tests.Assert(StringComparer.OrdinalIgnoreCase.Compare(_actualValue.BigInteger.ToString(@base), expected) == 0);
             return this;
         }
@@ -144,7 +130,6 @@ namespace IronRuby.Tests {
         public AssertTokenizer/*!*/ Read(double expected) {
             Next();
             Tests.Assert(_actualToken == Tokens.Float);
-            Tests.Assert(_actualValue.Type == TokenValueType.Double);
 
             if (Double.IsNaN(expected)) {
                 Tests.Assert(Double.IsNaN(_actualValue.Double));
@@ -179,5 +164,19 @@ namespace IronRuby.Tests {
         public AssertTokenizer/*!*/ this[string/*!*/ expected] {
             get { return Read(expected); }
         }
+
+        public AssertTokenizer/*!*/ this[int expected] {
+            get { return Read(expected); }
+        }
+
+        public AssertTokenizer/*!*/ this[Tokens token, string/*!*/ expected] {
+            get {
+                Next();
+                Tests.Assert(_actualToken == token);
+                Tests.Assert(expected == _actualValue.String);
+                return this; 
+            }
+        }
+
     }
 }

@@ -79,7 +79,7 @@ namespace Microsoft.Linq.Expressions {
         }
 
         internal virtual ReadOnlyCollection<Expression> GetOrMakeArguments() {
-            throw new NotImplementedException();
+            throw ContractUtils.Unreachable;
         }
 
         internal override Expression Accept(ExpressionVisitor visitor) {
@@ -94,17 +94,17 @@ namespace Microsoft.Linq.Expressions {
         /// subclass of DynamicExpression which is being used. 
         /// </summary>
         internal virtual DynamicExpression Rewrite(Expression[] args) {
-            throw new NotImplementedException();
+            throw ContractUtils.Unreachable;
         }
 
         #region IArgumentProvider Members
 
         Expression IArgumentProvider.GetArgument(int index) {
-            throw new NotImplementedException();
+            throw ContractUtils.Unreachable;
         }
 
         int IArgumentProvider.ArgumentCount {
-            get { throw new NotImplementedException(); }
+            get { throw ContractUtils.Unreachable; }
         }
 
         #endregion

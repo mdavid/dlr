@@ -22,7 +22,7 @@ using Microsoft.Scripting.Runtime;
 
 namespace ToyScript.Binders {
     public abstract class ClsBinder {
-        internal static MetaObject GetMemberOnType(Type type, string name, Expression expression, Restrictions restrictions) {
+        internal static DynamicMetaObject GetMemberOnType(Type type, string name, Expression expression, BindingRestrictions restrictions) {
             MemberInfo[] members = type.GetMember(name);
             if (members == null || members.Length != 1) {
                 return new ErrorMetaObject(typeof(MissingMemberException), "No or ambiguous member " + name, restrictions);
@@ -39,16 +39,16 @@ namespace ToyScript.Binders {
             }
         }
 
-        internal static MetaObject BindObjectGetMember(ToyGetMemberBinder action, MetaObject self) {
+        internal static DynamicMetaObject BindObjectGetMember(ToyGetMemberBinder action, DynamicMetaObject self) {
             Type type = self.RuntimeType;
             if (type == null) {
                 return action.Defer(self);
             }
 
-            MetaObject restricted = self.Restrict(type);
+            DynamicMetaObject restricted = self.Restrict(type);
 
             if (CompilerHelpers.IsStrongBox(self.Value)) {
-                MetaObject box = new ClsMetaObject(
+                DynamicMetaObject box = new ClsMetaObject(
                     Expression.Field(restricted.Expression, "Value"),
                     restricted.Restrictions
                 );
@@ -58,7 +58,7 @@ namespace ToyScript.Binders {
             }
         }
 
-        internal static MetaObject BindTypeGetMember(ToyGetMemberBinder action, MetaObject self) {
+        internal static DynamicMetaObject BindTypeGetMember(ToyGetMemberBinder action, DynamicMetaObject self) {
             Type type = self.LimitType;
             if (!type.IsSealed) {
                 return action.Defer(self);

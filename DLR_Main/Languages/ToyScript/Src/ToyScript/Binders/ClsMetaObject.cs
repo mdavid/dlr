@@ -19,8 +19,8 @@ using Microsoft.Scripting;
 using Microsoft.Linq.Expressions;
 
 namespace ToyScript.Binders {
-    class ClsMetaObject : MetaObject {
-        internal ClsMetaObject(Expression expression, Restrictions restrictions)
+    class ClsMetaObject : DynamicMetaObject {
+        internal ClsMetaObject(Expression expression, BindingRestrictions restrictions)
             : base(expression, restrictions) {
         }
     }

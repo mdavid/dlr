@@ -307,7 +307,7 @@ namespace Microsoft.Scripting.Generation {
         /// result of Object.GetType
         /// </summary>
         public static Type GetType(object obj) {
-            return obj == null ? Null.Type : obj.GetType();
+            return obj == null ? DynamicNull.Type : obj.GetType();
         }
 
         /// <summary>

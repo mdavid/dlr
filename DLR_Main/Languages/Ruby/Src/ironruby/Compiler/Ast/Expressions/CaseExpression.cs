@@ -51,7 +51,7 @@ namespace IronRuby.Compiler.Ast {
 
         private readonly Expression _value;
         private readonly List<WhenClause>/*!*/ _whenClauses;
-        private readonly List<Expression> _elseStatements;
+        private readonly Statements _elseStatements;
 
         public Expression Value {
             get { return _value; } 
@@ -61,15 +61,15 @@ namespace IronRuby.Compiler.Ast {
             get { return _whenClauses; }
         }
 
-        public List<Expression> ElseStatements {
+        public Statements ElseStatements {
             get { return _elseStatements; }
         }
 
         internal CaseExpression(Expression value, List<WhenClause>/*!*/ whenClauses, ElseIfClause elseClause, SourceSpan location)
-            :this (value, whenClauses, (elseClause != null) ? elseClause.Statements : null, location) {
+            : this(value, whenClauses, (elseClause != null) ? elseClause.Statements : null, location) {
         }
-    
-        public CaseExpression(Expression value, List<WhenClause>/*!*/ whenClauses, List<Expression> elseStatements, SourceSpan location)
+
+        public CaseExpression(Expression value, List<WhenClause>/*!*/ whenClauses, Statements elseStatements, SourceSpan location)
             : base(location) {
             ContractUtils.RequiresNotNull(whenClauses, "whenClauses");
 
@@ -140,7 +140,7 @@ namespace IronRuby.Compiler.Ast {
         // when <expr0>, ... [*<array>]
         // generates:
         // <MakeTest>(<expr0>) || <MakeTest>(<expr1>) || ... [ || <MakeArrayTest>(<array>) ]
-        internal static MSA.Expression/*!*/ TransformWhenCondition(AstGenerator/*!*/ gen, List<Expression> comparisons, 
+        internal static MSA.Expression/*!*/ TransformWhenCondition(AstGenerator/*!*/ gen, Expression[] comparisons, 
             Expression comparisonArray, MSA.Expression value) {
 
             MSA.Expression result;
@@ -151,7 +151,7 @@ namespace IronRuby.Compiler.Ast {
             }
 
             if (comparisons != null) {
-                for (int i = comparisons.Count - 1; i >= 0; i--) {
+                for (int i = comparisons.Length - 1; i >= 0; i--) {
                     result = Ast.OrElse(
                         MakeTest(gen, comparisons[i].TransformRead(gen), value),
                         result

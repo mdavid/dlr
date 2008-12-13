@@ -293,6 +293,11 @@ internal class LibraryDef {
                     def.Kind = ModuleKind.Module;
                 }
 
+                if (trait == module.Extends) {
+                    LogError("Module cannot extend itself: {0}", trait);
+                    continue;
+                }
+
                 if (module.Extends != null && module.Name == null) {
                     // extends a CLR type or an existing Ruby library class/module:
                     def.IsExtension = true;
@@ -577,7 +582,7 @@ internal class LibraryDef {
                         LogMethodError("CodeContext is obsolete use RubyContext instead.", methodDef, overload);
                     }
 
-                    if (type.IsGenericType && type.GetGenericTypeDefinition() == typeof(SiteLocalStorage<>)) {
+                    if (type.IsSubclassOf(typeof(SiteLocalStorage))) {
                         if (hasSelf || hasContext || hasBlock) {
                             LogMethodError("SiteLocalStorage must precede all other parameters", methodDef, overload);
                         }
@@ -890,10 +895,11 @@ internal class LibraryDef {
                         (def.HasClassInitializer) ? String.Format("new {0}(Load{1}_Class)", TypeActionOfRubyModule, def.Id) : "null"
                     );
                 } else {
-                    _output.Write("Define{0}Class(\"{1}\", typeof({2}), {3}, {4}, {5}, ",
+                    _output.Write("Define{0}Class(\"{1}\", typeof({2}), {3}, {4}, {5}, {6}, ",
                         def.IsGlobal ? "Global" : "",
                         def.QualifiedName,
                         TypeName(def.Extends),
+                        def.Extends == def.Trait ? "true" : "false", 
                         def.Super.RefName,
                         (def.HasInstanceInitializer) ? String.Format("new {0}(Load{1}_Instance)", TypeActionOfRubyModule, def.Id) : "null",
                         (def.HasClassInitializer) ? String.Format("new {0}(Load{1}_Class)", TypeActionOfRubyModule, def.Id) : "null"
@@ -927,10 +933,11 @@ internal class LibraryDef {
                         (def.HasClassInitializer) ? String.Format("new {0}(Load{1}_Class)", TypeActionOfRubyModule, def.Id) : "null"
                     );
                 } else {
-                    _output.Write("Define{0}Module(\"{1}\", typeof({2}), {3}, {4}, ",
+                    _output.Write("Define{0}Module(\"{1}\", typeof({2}), {3}, {4}, {5}, ",
                         def.IsGlobal ? "Global" : "",
                         def.QualifiedName,
                         TypeName(def.Extends),
+                        def.Extends == def.Trait ? "true" : "false",
                         (def.HasInstanceInitializer) ? String.Format("new {0}(Load{1}_Instance)", TypeActionOfRubyModule, def.Id) : "null",
                         (def.HasClassInitializer) ? String.Format("new {0}(Load{1}_Class)", TypeActionOfRubyModule, def.Id) : "null"
                     );

@@ -25,14 +25,14 @@ namespace IronRuby.Compiler.Ast {
     public partial class UnlessExpression : Expression {
 
         private readonly Expression/*!*/ _condition;
-        private readonly List<Expression> _statements;
+        private readonly Statements _statements;
         private readonly ElseIfClause _elseClause;
 
         public Expression/*!*/ Condition {
             get { return _condition; }
         }
 
-        public List<Expression> Statements {
+        public Statements Statements {
             get { return _statements; }
         }
 
@@ -40,7 +40,7 @@ namespace IronRuby.Compiler.Ast {
             get { return _elseClause; }
         }
 
-        public UnlessExpression(Expression/*!*/ condition, List<Expression>/*!*/ statements, ElseIfClause elseClause, SourceSpan location)
+        public UnlessExpression(Expression/*!*/ condition, Statements/*!*/ statements, ElseIfClause elseClause, SourceSpan location)
             : base(location) {
             ContractUtils.RequiresNotNull(condition, "condition");
             ContractUtils.RequiresNotNull(statements, "statements");

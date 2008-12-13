@@ -621,12 +621,12 @@ namespace IronRuby.Compiler.Ast {
             }
         }
 
-        internal List<MSA.Expression>/*!*/ TranformExpressions(List<Expression>/*!*/ arguments) {
+        internal List<MSA.Expression>/*!*/ TranformExpressions(IList<Expression>/*!*/ arguments) {
             Assert.NotNull(arguments);
             return TranformExpressions(arguments, new List<MSA.Expression>(arguments.Count));
         }
 
-        internal List<MSA.Expression>/*!*/ TranformExpressions(List<Expression>/*!*/ arguments, List<MSA.Expression>/*!*/ result) {
+        internal List<MSA.Expression>/*!*/ TranformExpressions(IList<Expression>/*!*/ arguments, List<MSA.Expression>/*!*/ result) {
             Assert.NotNullItems(arguments);
             Assert.NotNull(result);
 
@@ -637,18 +637,18 @@ namespace IronRuby.Compiler.Ast {
             return result;
         }
 
-        internal MSA.Expression/*!*/ TransformStatements(List<Expression>/*!*/ statements, ResultOperation resultOperation) {
+        internal MSA.Expression/*!*/ TransformStatements(Statements/*!*/ statements, ResultOperation resultOperation) {
             return TransformStatements(null, statements, null, resultOperation);
         }
 
-        internal MSA.Expression/*!*/ TransformStatements(MSA.Expression prologue, List<Expression>/*!*/ statements, ResultOperation resultOperation) {
+        internal MSA.Expression/*!*/ TransformStatements(MSA.Expression prologue, Statements/*!*/ statements, ResultOperation resultOperation) {
             return TransformStatements(prologue, statements, null, resultOperation);
         }
 
-        internal MSA.Expression/*!*/ TransformStatements(MSA.Expression prologue, List<Expression>/*!*/ statements, MSA.Expression epilogue, 
+        internal MSA.Expression/*!*/ TransformStatements(MSA.Expression prologue, Statements/*!*/ statements, MSA.Expression epilogue, 
             ResultOperation resultOperation) {
 
-            Assert.NotNullItems(statements);
+            Assert.NotNull(statements);
 
             int count = statements.Count + (prologue != null ? 1 : 0) + (epilogue != null ? 1 : 0);
 
@@ -672,9 +672,9 @@ namespace IronRuby.Compiler.Ast {
                 }
 
                 if (resultOperation.IsIgnore) {
-                    return statements[0].Transform(this);
+                    return statements.First.Transform(this);
                 } else {
-                    return statements[0].TransformResult(this, resultOperation);
+                    return statements.First.TransformResult(this, resultOperation);
                 }
 
             } else {
@@ -686,15 +686,15 @@ namespace IronRuby.Compiler.Ast {
                 }
 
                 // transform all but the last statement if it is an expression stmt:
-                for (int i = 0; i < statements.Count - 1; i++) {
-                    result[resultIndex++] = statements[i].Transform(this);
+                foreach (var statement in statements.AllButLast) {
+                    result[resultIndex++] = statement.Transform(this);
                 }
 
                 if (statements.Count > 0) {
                     if (resultOperation.IsIgnore) {
-                        result[resultIndex++] = statements[statements.Count - 1].Transform(this);
+                        result[resultIndex++] = statements.Last.Transform(this);
                     } else {
-                        result[resultIndex++] = statements[statements.Count - 1].TransformResult(this, resultOperation);
+                        result[resultIndex++] = statements.Last.TransformResult(this, resultOperation);
                     }
                 }
 
@@ -709,20 +709,21 @@ namespace IronRuby.Compiler.Ast {
             }
         }
 
-        internal MSA.Expression/*!*/ TransformStatementsToExpression(List<Expression> statements) {
+        internal MSA.Expression/*!*/ TransformStatementsToExpression(Statements statements) {
             if (statements == null || statements.Count == 0) {
                 return Ast.Constant(null);
             }
 
             if (statements.Count == 1) {
-                return statements[0].TransformRead(this);
+                return statements.First.TransformRead(this);
             }
 
             var result = new MSA.Expression[statements.Count];
-            for (int i = 0; i < result.Length - 1; i++) {
-                result[i] = statements[i].Transform(this);
+            int i = 0;
+            foreach (var statement in statements.AllButLast) {
+                result[i++] = statement.Transform(this);
             }
-            result[result.Length - 1] = statements[statements.Count - 1].TransformRead(this);
+            result[result.Length - 1] = statements.Last.TransformRead(this);
 
             return Ast.Block(new ReadOnlyCollection<MSA.Expression>(result));
         }

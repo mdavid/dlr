@@ -29,6 +29,9 @@ namespace IronRuby.Tests {
                 Scenario_ParseBigInts1,
                 Scenario_ParseNumbers1,
                 Scenario_ParseInstanceClassVariables1,
+                ParseGlobalVariables1,
+                ParseEscapes1,
+                ParseEolns1,
                 Scenario_ParseRegex1,
 
                 Scenario_RubyCategorizer1,
@@ -80,7 +83,8 @@ namespace IronRuby.Tests {
                 Strings6,
                 Strings7,
                 Strings8,
-                // TODO: Strings9,
+                ToSConversion1,
+                ToSConversion2,
 
                 Regex1,
                 Regex2,
@@ -283,6 +287,8 @@ namespace IronRuby.Tests {
                 RubyHosting2,
                 RubyHosting3,
                 RubyHosting4,
+                CrossRuntime1,
+                CrossRuntime2,
 
                 Scenario_RubyConsole1,
                 // TODO: interop, hosting: Scenario_RubyConsole2,

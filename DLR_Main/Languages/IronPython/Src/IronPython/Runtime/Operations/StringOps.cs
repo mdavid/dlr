@@ -301,6 +301,10 @@ namespace IronPython.Runtime.Operations {
             return s.IndexOf(item) != -1;
         }
 
+        public static string __format__(string self, string formatSpec) {
+            return self;
+        }
+
         public static int __len__(string s) {
             return s.Length;
         }
@@ -1072,6 +1076,33 @@ namespace IronPython.Runtime.Operations {
             }
             return ret.ToString();
         }
+
+        public static string/*!*/ format(CodeContext/*!*/ context, string format_string, params object[] args) {
+            return NewStringFormatter.FormatString(
+                PythonContext.GetContext(context),
+                format_string,
+                PythonTuple.MakeTuple(args),
+                new PythonDictionary()
+            );
+        }
+
+        public static string/*!*/ format(CodeContext/*!*/ context, string format_string, [ParamDictionary]IAttributesCollection kwargs, params object[] args) {
+            return NewStringFormatter.FormatString(
+                PythonContext.GetContext(context),
+                format_string,
+                PythonTuple.MakeTuple(args),
+                kwargs
+            );
+        }
+
+        public static IEnumerable<PythonTuple>/*!*/ _formatter_parser(this string/*!*/ self) {
+            return NewStringFormatter.GetFormatInfo(self);
+        }
+
+        public static PythonTuple/*!*/ _formatter_field_name_split(this string/*!*/ self) {
+            return NewStringFormatter.GetFieldNameInfo(self);
+        }
+
         #endregion
 
         #region operators
