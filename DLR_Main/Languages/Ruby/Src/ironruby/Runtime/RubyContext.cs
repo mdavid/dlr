@@ -90,6 +90,11 @@ namespace IronRuby.Runtime {
         private static KCode _kcode;
 
         /// <summary>
+        /// Thread#main
+        /// </summary>
+        private Thread _mainThread;
+
+        /// <summary>
         /// $/, $-O
         /// </summary>
         private MutableString _inputSeparator;
@@ -260,6 +265,10 @@ namespace IronRuby.Runtime {
             get { return _kcode; }
         }
 
+        public Thread MainThread {
+            get { return _mainThread; }
+        }
+
         public MutableString InputSeparator {
             get { return _inputSeparator; }
             set { _inputSeparator = value; }
@@ -381,6 +390,7 @@ namespace IronRuby.Runtime {
             _stringSeparator = null;
             _itemSeparator = null;
             _kcode = KCode.Default;
+            _mainThread = Thread.CurrentThread;
             
             if (_options.Verbosity <= 0) {
                 Verbose = null;

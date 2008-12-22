@@ -215,13 +215,15 @@ namespace IronRuby.Builtins {
         }
 
         internal virtual void EnsureInitialized() {
-            if (_state == State.Uninitialized) {
-                for (int i = 0; i < _mixins.Length; i++) {
-                    _mixins[i].EnsureInitialized();
-                }
-
+            lock(this) { // TODO: There is more work to be done to improve module initialization thread-safety and performance
                 if (_state == State.Uninitialized) {
-                    InitializeMembers();
+                    for (int i = 0; i < _mixins.Length; i++) {
+                        _mixins[i].EnsureInitialized();
+                    }
+
+                    if (_state == State.Uninitialized) {
+                        InitializeMembers();
+                    }
                 }
             }
         }

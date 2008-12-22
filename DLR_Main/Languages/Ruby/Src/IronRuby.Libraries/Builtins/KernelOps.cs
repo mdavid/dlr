@@ -788,7 +788,7 @@ namespace IronRuby.Builtins {
         [RubyMethod("sleep", RubyMethodAttributes.PrivateInstance)]
         [RubyMethod("sleep", RubyMethodAttributes.PublicSingleton)]
         public static void Sleep(object self) {
-            Thread.Sleep(Timeout.Infinite);
+            ThreadOps.Stop(Thread.CurrentThread);
         }
 
         [RubyMethod("sleep", RubyMethodAttributes.PrivateInstance)]

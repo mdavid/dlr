@@ -5125,12 +5125,16 @@ namespace IronRuby.Builtins {
             
             #if !SILVERLIGHT
             module.DefineLibraryMethod("run", 0x51, new System.Delegate[] {
-                new Action<System.Threading.Thread>(IronRuby.Builtins.ThreadOps.Run),
+                new Func<System.Threading.Thread, System.Threading.Thread>(IronRuby.Builtins.ThreadOps.Run),
             });
             
             #endif
             module.DefineLibraryMethod("status", 0x51, new System.Delegate[] {
                 new Func<System.Threading.Thread, System.Object>(IronRuby.Builtins.ThreadOps.Status),
+            });
+            
+            module.DefineLibraryMethod("stop?", 0x51, new System.Delegate[] {
+                new Func<System.Threading.Thread, System.Boolean>(IronRuby.Builtins.ThreadOps.IsStopped),
             });
             
             module.DefineLibraryMethod("terminate", 0x51, new System.Delegate[] {
@@ -5143,7 +5147,7 @@ namespace IronRuby.Builtins {
             
             #if !SILVERLIGHT
             module.DefineLibraryMethod("wakeup", 0x51, new System.Delegate[] {
-                new Action<System.Threading.Thread>(IronRuby.Builtins.ThreadOps.Run),
+                new Func<System.Threading.Thread, System.Threading.Thread>(IronRuby.Builtins.ThreadOps.Run),
             });
             
             #endif
@@ -5172,6 +5176,10 @@ namespace IronRuby.Builtins {
             
             module.DefineLibraryMethod("list", 0x61, new System.Delegate[] {
                 new Func<System.Object, IronRuby.Builtins.RubyArray>(IronRuby.Builtins.ThreadOps.List),
+            });
+            
+            module.DefineLibraryMethod("main", 0x61, new System.Delegate[] {
+                new Func<IronRuby.Runtime.RubyContext, IronRuby.Builtins.RubyClass, System.Threading.Thread>(IronRuby.Builtins.ThreadOps.GetMainThread),
             });
             
             module.DefineLibraryMethod("new", 0x61, new System.Delegate[] {

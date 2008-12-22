@@ -72,11 +72,11 @@ namespace IronRuby.Runtime {
                 SetCompiledTrace();
             }
 
-            AddBacktrace(result, _throwSiteTrace.GetFrames(), hasFileAccessPermissions, skipFrames);
+            AddBacktrace(result, _throwSiteTrace.GetFrames(), hasFileAccessPermissions, skipFrames, false);
 #endif
             if (_catchSiteTrace != null) {
                 // skip one frame - the catch-site frame is already included
-                AddBacktrace(result, _catchSiteTrace.GetFrames(), hasFileAccessPermissions, 1);
+                AddBacktrace(result, _catchSiteTrace.GetFrames(), hasFileAccessPermissions, 1, false);
             }
 
             _backtrace = result;
@@ -127,8 +127,8 @@ namespace IronRuby.Runtime {
             _backtraceInitialized = true;
         }
 
-        public static RubyArray/*!*/ CreateBacktrace(IEnumerable<StackFrame>/*!*/ stackTrace, int skipFrames) {
-            return AddBacktrace(new RubyArray(), stackTrace, DetectFileAccessPermissions(), skipFrames);
+        internal static RubyArray/*!*/ CreateBacktrace(RubyContext/*!*/ context, IEnumerable<StackFrame>/*!*/ stackTrace, int skipFrames) {
+            return AddBacktrace(new RubyArray(), stackTrace, DetectFileAccessPermissions(), skipFrames, context.Options.ExceptionDetail);
         }
 
         public static RubyArray/*!*/ CreateBacktrace(RubyContext/*!*/ context, int skipFrames) {
@@ -142,7 +142,7 @@ namespace IronRuby.Runtime {
 #else
                 StackTrace trace = new StackTrace(true);
 #endif
-                return AddBacktrace(new RubyArray(), trace.GetFrames(), DetectFileAccessPermissions(), skipFrames);
+                return AddBacktrace(new RubyArray(), trace.GetFrames(), DetectFileAccessPermissions(), skipFrames, context.Options.ExceptionDetail);
             }
         }
 
@@ -188,11 +188,11 @@ namespace IronRuby.Runtime {
         }
 
         private static RubyArray/*!*/ AddBacktrace(RubyArray/*!*/ result, IEnumerable<StackFrame> stackTrace, bool hasFileAccessPermission, 
-            int skipFrames) {
+            int skipFrames, bool exceptionDetail) {
 
             if (stackTrace != null) {
                 foreach (StackFrame frame in stackTrace) {
-                    if (IsVisibleFrame(frame.GetMethod())) {
+                    if (IsVisibleFrame(frame.GetMethod()) || exceptionDetail) {
                         if (skipFrames == 0) {
                             string methodName, file;
                             int line;

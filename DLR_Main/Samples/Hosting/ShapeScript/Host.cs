@@ -23,11 +23,10 @@ namespace ShapeScript {
             _output = new MemoryStream();
             _error = new MemoryStream();
 
-            //var configFile = Path.GetFullPath(Uri.UnescapeDataString(new Uri(typeof(Host).Assembly.CodeBase).AbsolutePath)) + ".config";
-
-            _runtime = IronPython.Hosting.Python.CreateRuntime();
+            var configFile = Path.GetFullPath(Uri.UnescapeDataString(new Uri(typeof(Host).Assembly.CodeBase).AbsolutePath)) + ".config";
+            
+            _runtime = new ScriptRuntime( ScriptRuntimeSetup.ReadConfiguration(configFile));
             _engine = _runtime.GetEngine("py");
-
             _runtime.Globals.SetVariable("prompt", Form1.PromptString);
 
             _theScope = _engine.CreateScope();
