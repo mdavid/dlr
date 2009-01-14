@@ -55,8 +55,6 @@ namespace IronRuby.Builtins {
             return ModuleConstMissingSharedSite.Target(ModuleConstMissingSharedSite, context, self, SymbolTable.StringToId(name));
         }
 
-        #region Helpers
-
         public static RubyCallAction InstanceCallAction(string/*!*/ name) {
             return RubyCallAction.Make(name, 0);
         }
@@ -68,7 +66,5 @@ namespace IronRuby.Builtins {
         public static RubyCallAction InstanceCallAction(string/*!*/ name, RubyCallSignature callSignature) {
             return RubyCallAction.Make(name, callSignature);
         }
-
-        #endregion        
     }
 }

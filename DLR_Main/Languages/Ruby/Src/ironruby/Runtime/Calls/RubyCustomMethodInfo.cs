@@ -12,9 +12,9 @@
  *
  *
  * ***************************************************************************/
+
 using System; using Microsoft;
-
-
+using System.Reflection;
 using Microsoft.Scripting.Actions;
 using Microsoft.Scripting.Runtime;
 using Microsoft.Scripting.Utils;
@@ -35,12 +35,16 @@ namespace IronRuby.Runtime.Calls {
             _ruleGenerator(metaBuilder, args, name);
         }
 
-        internal override void ApplyBlockFlowHandling(MetaObjectBuilder metaBuilder, CallArguments args) {
-            // nop
-        }
-
         protected internal override RubyMemberInfo/*!*/ Copy(RubyMemberFlags flags, RubyModule/*!*/ module) {
             return new RubyCustomMethodInfo(_ruleGenerator, flags, module);
+        }
+
+        public override MemberInfo/*!*/[]/*!*/ GetMembers() {
+            return new MemberInfo[] { _ruleGenerator.Method };
+        }
+
+        public override RubyMemberInfo TrySelectOverload(Type/*!*/[]/*!*/ parameterTypes) {
+            return this;
         }
     }
 }

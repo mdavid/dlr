@@ -1,11 +1,11 @@
 <Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003" ToolsVersion="3.5">
-  <Import Condition=" '$(BuildingTraversal)' == 'true' " Project="..\..\..\silverlight.settings.targets" />
+  <Import Condition=" '$(BuildingTraversal)' == 'true' " Project="..\..\..\Support\silverlight.settings.targets" />
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'DelaySigned Release|AnyCPU' ">    <DebugType>pdbonly</DebugType>    <Optimize>true</Optimize>    <OutputPath>..\..\..\..\Bin\DelaySigned Release\</OutputPath>    <DefineConstants>TRACE;SIGNED</DefineConstants>    <ErrorReport>prompt</ErrorReport>    <WarningLevel>4</WarningLevel>    <DelaySign>true</DelaySign>    <AssemblyOriginatorKeyFile>..\..\..\..\Runtime\Src\MSSharedLibKey.snk</AssemblyOriginatorKeyFile>    <SignAssembly>true</SignAssembly>  </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'DelaySigned Silverlight Release|AnyCPU' ">    <OutputPath>..\..\..\..\Bin\DelaySigned Silverlight Release\</OutputPath>    <DefineConstants>TRACE;SILVERLIGHT</DefineConstants>    <NoStdLib>true</NoStdLib>    <DebugType>pdbonly</DebugType>    <PlatformTarget>AnyCPU</PlatformTarget>    <ErrorReport>prompt</ErrorReport>    <SignAssembly>true</SignAssembly>    <AssemblyOriginatorKeyFile>..\..\..\..\Runtime\Src\SilverlightKey.snk</AssemblyOriginatorKeyFile>    <DelaySign>true</DelaySign>    <SilverlightBuild>true</SilverlightBuild>    <SilverlightSdkPath>$(ProgramFiles)\Microsoft Silverlight\2.0.31005.0</SilverlightSdkPath>  </PropertyGroup>
   <PropertyGroup>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
-    <ProductVersion>9.0.30729</ProductVersion>
+    <ProductVersion>9.0.30718</ProductVersion>
     <SchemaVersion>2.0</SchemaVersion>
     <ProjectGuid>{7F6984B4-EE6D-4E6F-ABB1-E210D7DC4FDD}</ProjectGuid>
     <OutputType>Library</OutputType>
@@ -171,6 +171,7 @@
     <Compile Include="Runtime\Calls\BlockDispatchers.cs" />
     <Compile Include="Builtins\RubyObject.cs" />
     <Compile Include="Builtins\RubyObject.Meta.cs" />
+    <Compile Include="Runtime\IntegerValue.cs" />
     <Compile Include="Runtime\IRubyObjectState.cs" />
     <Compile Include="Runtime\EqualityComparer.cs" />
     <Compile Include="Builtins\Hash.cs" />
@@ -290,7 +291,7 @@
     <Compile Include="Runtime\Calls\RubyMethodGroupInfo.cs" />
     <Compile Include="Builtins\RubyModule.cs" />
     <Compile Include="Builtins\RubyInputProvider.cs" />
-    <Compile Include="Runtime\GlobalScopeExtension.cs" />
+    <Compile Include="Runtime\RubyGlobalScope.cs" />
     <Compile Include="Runtime\RubyOps.cs" />
     <Compile Include="Runtime\Calls\RubyMethodInfo.cs" />
     <Compile Include="Runtime\RubyContext.cs" />
@@ -301,6 +302,7 @@
     <Compile Include="Runtime\RuntimeFlowControl.cs" />
     <Compile Include="Runtime\RuntimeErrorSink.cs" />
     <Compile Include="Runtime\StackUnwinder.cs" />
+    <Compile Include="Runtime\Union.cs" />
     <Compile Include="Runtime\Utils.cs" />
     <Compile Include="Builtins\MatchData.Subclass.cs" />
     <Compile Include="Builtins\Range.Subclass.cs" />
@@ -336,7 +338,7 @@
     </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" Condition=" $(SilverlightTreeBuild) != 'true' " />
-  <Import Project="..\..\..\silverlight.build.targets" Condition=" '$(SilverlightTreeBuild)' == 'true' " />
+  <Import Project="..\..\..\Support\silverlight.build.targets" Condition=" '$(SilverlightTreeBuild)' == 'true' " />
   <Target Name="BeforeBuild">
   </Target>
   <Target Name="AfterBuild">

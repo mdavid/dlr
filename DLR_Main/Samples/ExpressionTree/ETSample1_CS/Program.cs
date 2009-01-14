@@ -32,7 +32,7 @@ namespace ETSample1_CS {
         /// </summary>
         /// <returns>An expression that if executed will print "Hello world!"</returns>
         static Expression SimpleHelloWorld() {
-            //First step, we get the methodinfo for Console.WriteLine. This is standard reflection
+            //First step, we get the methodinfo for Console.WriteLine. This is standard reflection.
             MethodInfo WriteLine = typeof(Console).GetMethod("WriteLine", new Type[] { typeof(string) });
             //Second step, we create an expression that invokes that method with "Hello world!"
             return Expression.Call(null, WriteLine, Expression.Constant("Hello world!"));
@@ -98,7 +98,7 @@ namespace ETSample1_CS {
 
             //And now it all comes together. we create a Block (an expression that holds a list of expressions)
             //and we wrap that in a Scope, which defines the scope of a set of variables.
-            return Expression.Block(Expression.Block(Instructions), StarName, PlanetNumber);
+            return Expression.Block(new ParameterExpression[] { StarName, PlanetNumber }, Expression.Block(Instructions));
         }
 
         static Expression Print(String arg) {

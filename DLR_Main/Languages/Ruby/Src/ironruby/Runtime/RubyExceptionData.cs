@@ -24,6 +24,7 @@ using System.Security.Permissions;
 using IronRuby.Builtins;
 using Microsoft.Scripting.Interpretation;
 using Microsoft.Linq.Expressions;
+using System.Threading;
 
 namespace IronRuby.Runtime {
     /// <summary>
@@ -35,7 +36,10 @@ namespace IronRuby.Runtime {
         internal const string TopLevelMethodName = "#top-level-method#";
 
         // owner exception, needed for lazy initialization of message, backtrace
-        private Exception/*!*/ _exception; 
+        private Exception/*!*/ _exception;
+        // For asynchronous exceptions (Thread#raise), the user exception is wrapped in a TheadAbortException
+        private Exception/*!*/ _visibleException;
+        private Thread/*!*/ _throwingThread;
 
         // if this is set to null we need to initialize it
         private object _message; 
@@ -54,6 +58,8 @@ namespace IronRuby.Runtime {
 
         private RubyExceptionData(Exception/*!*/ exception) {
             _exception = exception;
+            _visibleException = exception;
+            _throwingThread = Thread.CurrentThread;
         }
 
         // Called lazily to create a Ruby backtrace.
@@ -84,6 +90,16 @@ namespace IronRuby.Runtime {
         }
 
         internal void SetCompiledTrace() {
+            if (_exception != _visibleException) {
+                // Thread#raise uses Thread.Abort to raise an async exception. In such cases, a different instance of 
+                // ThreadAbortException is thrown at the end of every catch block (as long as Thread.ResetAbort is not called). 
+                // However, we only want to remember the first one as it will have the most complete stack trace.
+                // So we ignore subsequent calls.
+                if (_backtraceInitialized) {
+                    return;
+                }
+            }
+
             Debug.Assert(!_backtraceInitialized);
 
 #if SILVERLIGHT // TODO: StackTrace.ctor(exception) security critical
@@ -120,6 +136,16 @@ namespace IronRuby.Runtime {
         }
 
         internal void SetInterpretedTrace(InterpreterState/*!*/ state) {
+            if (_exception != _visibleException) {
+                // Thread#raise uses Thread.Abort to raise an async exception. In such cases, a different instance of 
+                // ThreadAbortException is thrown at the end of every catch block (as long as Thread.ResetAbort is not called). 
+                // However, we only want to remember the first one as it will have the most complete stack trace.
+                // So we ignore subsequent calls.
+                if (_backtraceInitialized) {
+                    return;
+                }
+            }
+
             Debug.Assert(!_backtraceInitialized);
 
             // we need to copy the trace since the source locations in frames above catch site could be altered by further interpretation:
@@ -331,7 +357,28 @@ namespace IronRuby.Runtime {
         }
 
         internal static RubyExceptionData/*!*/ AssociateInstance(Exception/*!*/ e) {
-            var result = new RubyExceptionData(e);
+            RubyExceptionData result;
+
+            Exception visibleException = RubyUtils.GetVisibleException(e);
+            if (e == visibleException || visibleException == null) {
+                result = new RubyExceptionData(e);
+            } else {
+                // Async exception
+
+                Debug.Assert(e is ThreadAbortException);
+                result = GetInstance(visibleException);
+
+                // Since visibleException was instantiated by the thread calling Thread#raise, we need to reset it here
+                result._throwingThread = Thread.CurrentThread;
+
+                if (result._exception == visibleException) {
+                    // A different instance of ThreadAbortException is thrown at the end of every catch block (as long as
+                    // Thread.ResetAbort is not called). However, we only want to remember the first one 
+                    // as it will have the most complete stack trace.
+                    result._exception = e;
+                }
+            }
+
             e.Data[_DataKey] = result;
             return result;
         }
@@ -343,7 +390,7 @@ namespace IronRuby.Runtime {
         public object Message {
             get {
                 if (_message == null) {
-                    _message = MutableString.Create(_exception.Message);
+                    _message = MutableString.Create(_visibleException.Message);
                 }
                 return _message;
             }
@@ -372,8 +419,7 @@ namespace IronRuby.Runtime {
         /// This causes the new one to be lazily created the next time it is accessed
         /// </summary>
         public static void ClearBacktrace(Exception e) {
-            IDictionary dict = e.Data;
-            RubyExceptionData result = e.Data[_DataKey] as RubyExceptionData;
+            RubyExceptionData result = TryGetInstance(e);
             if (result != null) {
                 result._backtraceInitialized = false;
                 result._backtrace = null;
@@ -392,11 +438,33 @@ namespace IronRuby.Runtime {
         }
 
         public static Exception/*!*/ InitializeException(Exception/*!*/ exception, object message) {
+            RubyExceptionData data = RubyExceptionData.GetInstance(exception);
             // only set it if message is non-null. Otherwise, let lazy initialization create the default message from CLR exception message
             if (message != null) {
-                RubyExceptionData.GetInstance(exception).Message = message;
+                data.Message = message;
             }
+
             return exception;
         }
+
+#if SILVERLIGHT // Thread.ExceptionState
+        public static void ActiveExceptionHandled(Exception visibleException) {}
+#else
+        /// <summary>
+        /// This function calls Thread.ResetAbort. However, note that ResetAbort causes ThreadAbortException.ExceptionState 
+        /// to be cleared, and we use that to squirrel away the Ruby exception that the user is expecting. Hence, ResetAbort
+        /// should only be called when ThreadAbortException.ExceptionState no longer needs to be accessed.
+        /// </summary>
+        /// <param name="visibleException"></param>
+        public static void ActiveExceptionHandled(Exception visibleException) {
+            Debug.Assert(RubyUtils.GetVisibleException(visibleException) == visibleException);
+
+            RubyExceptionData data = RubyExceptionData.GetInstance(visibleException);
+            if (data._exception != visibleException && data._throwingThread == Thread.CurrentThread) {
+                Debug.Assert((Thread.CurrentThread.ThreadState & System.Threading.ThreadState.AbortRequested) != 0);
+                Thread.ResetAbort();
+            }
+        }
+#endif
     }
 }

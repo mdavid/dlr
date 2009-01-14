@@ -19,9 +19,10 @@ using Microsoft.Scripting.Runtime;
 using Microsoft.Scripting.Utils;
 
 namespace IronRuby.Runtime {
-    public class GlobalScopeExtension : ScopeExtension {
+    public class RubyGlobalScope : ScopeExtension {
         private RubyContext/*!*/ _context;
         private object/*!*/ _mainObject;
+        private RubyTopLevelScope _topLocalScope;
         private bool _isHosted;
 
         public RubyContext/*!*/ Context {
@@ -37,9 +38,14 @@ namespace IronRuby.Runtime {
             get { return _isHosted; }
         }
 
-        public GlobalScopeExtension(RubyContext/*!*/ context, Scope/*!*/ globalScope, object/*!*/ mainObject, bool isHosted)
-            : base(globalScope) {
-            Assert.NotNull(context, globalScope, mainObject);
+        internal RubyTopLevelScope TopLocalScope {
+            get { return _topLocalScope; }
+            set { _topLocalScope = value; }
+        }
+
+        public RubyGlobalScope(RubyContext/*!*/ context, Scope/*!*/ scope, object/*!*/ mainObject, bool isHosted)
+            : base(scope) {
+            Assert.NotNull(context, scope, mainObject);
             _context = context;
             _mainObject = mainObject;
             _isHosted = isHosted;

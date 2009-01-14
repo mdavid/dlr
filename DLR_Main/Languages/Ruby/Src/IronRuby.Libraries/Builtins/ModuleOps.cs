@@ -26,6 +26,7 @@ using Microsoft.Scripting.Actions;
 using Microsoft.Scripting.Runtime;
 using Microsoft.Scripting.Utils;
 using Microsoft.Scripting.Generation;
+using Microsoft.Scripting;
 
 namespace IronRuby.Builtins {
 
@@ -575,7 +576,7 @@ namespace IronRuby.Builtins {
 
         [RubyMethod("const_get")]
         public static object GetConstantValue(RubyScope/*!*/ scope, RubyModule/*!*/ self, [DefaultProtocol]string/*!*/ constantName) {
-            return RubyUtils.GetConstant(scope, self, constantName, true);
+            return RubyUtils.GetConstant(scope.GlobalScope, self, constantName, true);
         }
 
         [RubyMethod("const_set")]
@@ -658,8 +659,13 @@ namespace IronRuby.Builtins {
 
         internal static RubyArray/*!*/ GetMethods(RubyModule/*!*/ self, bool inherited, RubyMethodAttributes attributes) {
             var result = new RubyArray();
+            var symbolicNames = self.Context.RubyOptions.Compatibility > RubyCompatibility.Ruby18;
             self.ForEachMember(inherited, attributes, delegate(string/*!*/ name, RubyMemberInfo/*!*/ member) {
-                result.Add(MutableString.Create(name));
+                if (symbolicNames) {
+                    result.Add(SymbolTable.StringToId(name));
+                } else {
+                    result.Add(MutableString.Create(name));
+                }
             });
             return result;
         }

@@ -12,22 +12,20 @@
  *
  *
  * ***************************************************************************/
+
 using System; using Microsoft;
-
-
 using System.Collections.Generic;
 using System.Reflection;
-using Microsoft.Scripting.Actions;
 using Microsoft.Linq.Expressions;
 using Microsoft.Scripting.Runtime;
 using Microsoft.Scripting.Utils;
-
+using Microsoft.Scripting.Actions;
+using IronRuby.Compiler;
 using IronRuby.Builtins;
 
 namespace IronRuby.Runtime.Calls {
     using Ast = Microsoft.Linq.Expressions.Expression;
-    using IronRuby.Compiler;
-
+    
     internal class RubyEventInfo : RubyMemberInfo {
         private readonly EventInfo/*!*/ _eventInfo;
 
@@ -39,6 +37,14 @@ namespace IronRuby.Runtime.Calls {
 
         protected internal override RubyMemberInfo/*!*/ Copy(RubyMemberFlags flags, RubyModule/*!*/ module) {
             return new RubyEventInfo(_eventInfo, flags, module);
+        }
+
+        public override MemberInfo/*!*/[]/*!*/ GetMembers() {
+            return new MemberInfo[] { _eventInfo };
+        }
+
+        public override RubyMemberInfo TrySelectOverload(Type/*!*/[]/*!*/ parameterTypes) {
+            return parameterTypes.Length == 0 ? this : null;
         }
 
         internal override void BuildCallNoFlow(MetaObjectBuilder/*!*/ metaBuilder, CallArguments/*!*/ args, string/*!*/ name) {

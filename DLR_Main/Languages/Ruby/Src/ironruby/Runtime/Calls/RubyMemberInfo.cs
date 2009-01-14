@@ -12,14 +12,14 @@
  *
  *
  * ***************************************************************************/
+
 using System; using Microsoft;
-
-
+using System.Diagnostics;
+using System.Reflection;
 using Microsoft.Scripting.Actions;
 using Microsoft.Scripting.Runtime;
 using Microsoft.Scripting.Utils;
 using IronRuby.Builtins;
-using System.Diagnostics;
 
 namespace IronRuby.Runtime.Calls {
 
@@ -104,26 +104,46 @@ namespace IronRuby.Runtime.Calls {
             throw Assert.Unreachable;
         }
 
+        /// <summary>
+        /// Gets all the CLR members represented by this member info. 
+        /// </summary>
+        public virtual MemberInfo/*!*/[]/*!*/ GetMembers() {
+            throw Assert.Unreachable;
+        }
+
+        /// <summary>
+        /// Returns a copy of this member info that groups only those members of this member info that are generic
+        /// and of generic arity equal to the length of the given array of type arguments. Returns null if there are no such generic members.
+        /// All the members in the resulting info are constructed generic methods bound to the given type arguments.
+        /// </summary>
+        public virtual RubyMemberInfo TryBindGenericParameters(Type/*!*/[]/*!*/ typeArguments) {
+            return null;
+        }
+
+        public virtual RubyMemberInfo TrySelectOverload(Type/*!*/[]/*!*/ parameterTypes) {
+            throw Assert.Unreachable;
+        }
+
+        #region Dynamic Operations
+
         internal virtual void BuildCallNoFlow(MetaObjectBuilder/*!*/ metaBuilder, CallArguments/*!*/ args, string/*!*/ name) {
             throw Assert.Unreachable;
         }
 
-        internal virtual void ApplyBlockFlowHandling(MetaObjectBuilder/*!*/ metaBuilder, CallArguments/*!*/ args) {
-            // nop
-        }
-
         internal void BuildCall(MetaObjectBuilder/*!*/ metaBuilder, CallArguments/*!*/ args, string/*!*/ name) {
             BuildCallNoFlow(metaBuilder, args, name);
-            ApplyBlockFlowHandling(metaBuilder, args);
+            metaBuilder.BuildControlFlow(args);
         }
 
         internal virtual void BuildSuperCallNoFlow(MetaObjectBuilder/*!*/ metaBuilder, CallArguments/*!*/ args, string/*!*/ name, RubyModule/*!*/ declaringModule) {
             BuildCallNoFlow(metaBuilder, args, name);
         }
 
-        internal virtual void BuildSuperCall(MetaObjectBuilder/*!*/ metaBuilder, CallArguments/*!*/ args, string/*!*/ name, RubyModule/*!*/ declaringModule) {
+        internal void BuildSuperCall(MetaObjectBuilder/*!*/ metaBuilder, CallArguments/*!*/ args, string/*!*/ name, RubyModule/*!*/ declaringModule) {
             BuildSuperCallNoFlow(metaBuilder, args, name, declaringModule);
-            ApplyBlockFlowHandling(metaBuilder, args);
+            metaBuilder.BuildControlFlow(args);
         }
+
+        #endregion
     }
 }

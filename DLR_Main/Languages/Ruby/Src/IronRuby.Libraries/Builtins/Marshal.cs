@@ -187,7 +187,7 @@ namespace IronRuby.Builtins {
                 } else if (Double.IsNaN(value)) {
                     WriteStringValue(_nanString);
                 } else {
-                    StringFormatter sf = new StringFormatter(null, null, _context, "%.15g", new object[] { value });
+                    StringFormatter sf = new StringFormatter(_context, "%.15g", new object[] { value });
                     sf.TrailingZeroAfterWholeFloat = false;
                     WriteStringValue(sf.Format());
                 }
@@ -487,16 +487,19 @@ namespace IronRuby.Builtins {
         internal class MarshalReader {
             private readonly BinaryReader/*!*/ _reader;
             private readonly SiteLocalStorage<ReaderSites>/*!*/ _sites;
-            private readonly RubyContext/*!*/ _context;
-            private readonly Scope/*!*/ _globalScope;
+            private readonly RubyGlobalScope/*!*/ _globalScope;
             private readonly Proc _proc;
             private readonly Dictionary<int, string>/*!*/ _symbols;
             private readonly Dictionary<int, object>/*!*/ _objects;
 
-            internal MarshalReader(SiteLocalStorage<ReaderSites>/*!*/ sites, BinaryReader/*!*/ reader, RubyContext/*!*/ context, Scope/*!*/ globalScope, Proc proc) {
+            private RubyContext/*!*/ Context {
+                get { return _globalScope.Context; }
+            }
+
+            internal MarshalReader(SiteLocalStorage<ReaderSites>/*!*/ sites, BinaryReader/*!*/ reader, 
+                RubyGlobalScope/*!*/ globalScope, Proc proc) {
                 _sites = sites;
                 _reader = reader;
-                _context = context;
                 _globalScope = globalScope;
                 _proc = proc;
                 _symbols = new Dictionary<int, string>();
@@ -516,7 +519,7 @@ namespace IronRuby.Builtins {
                     string message = String.Format(
                         "incompatible marshal file format (can be read)\n\tformat version {0}.{1} required; {2}.{3} given",
                         MAJOR_VERSION, MINOR_VERSION, major, minor);
-                    _context.ReportWarning(message);
+                    Context.ReportWarning(message);
                 }
             }
 
@@ -591,7 +594,7 @@ namespace IronRuby.Builtins {
                 if (pos >= 0) {
                     value.Remove(pos, value.Length - pos);
                 }
-                return Protocols.ConvertToFloat(_context, value);
+                return Protocols.ConvertToFloat(Context, value);
             }
 
             private MutableString/*!*/ ReadString() {
@@ -617,7 +620,7 @@ namespace IronRuby.Builtins {
 
             private Hash/*!*/ ReadHash(int typeFlag) {
                 int count = ReadInt32();
-                Hash result = new Hash(_context);
+                Hash result = new Hash(Context);
                 for (int i = 0; i < count; i++) {
                     object key = ReadAnObject(false);
                     result[key] = ReadAnObject(false);
@@ -661,7 +664,7 @@ namespace IronRuby.Builtins {
             private object/*!*/ ReadObject() {
                 RubyClass theClass = ReadType();
                 int count = ReadInt32();
-                Hash attributes = new Hash(_context);
+                Hash attributes = new Hash(Context);
                 for (int i = 0; i < count; i++) {
                     string name = ReadSymbol();
                     attributes[name] = ReadAnObject(false);
@@ -671,12 +674,12 @@ namespace IronRuby.Builtins {
 
             private object/*!*/ ReadUsingLoad() {
                 RubyClass theClass = ReadType();
-                return _sites.Data.Load.Target(_sites.Data.Load, _context, theClass, ReadString());
+                return _sites.Data.Load.Target(_sites.Data.Load, Context, theClass, ReadString());
             }
 
             private object/*!*/ ReadUsingMarshalLoad() {
                 object obj = UnmarshalNewObject();
-                _sites.Data.MarshalLoad.Target(_sites.Data.MarshalLoad, _context, obj, ReadAnObject(false));
+                _sites.Data.MarshalLoad.Target(_sites.Data.MarshalLoad, Context, obj, ReadAnObject(false));
                 return obj;
             }
 
@@ -687,11 +690,11 @@ namespace IronRuby.Builtins {
 
             private object/*!*/ ReadClassOrModule(int typeFlag, string/*!*/ name) {
                 RubyModule result;
-                if (!_context.TryGetModule(_globalScope, name, out result)) {
+                if (!Context.TryGetModule(_globalScope, name, out result)) {
                     throw RubyExceptions.CreateArgumentError(String.Format("undefined class/module {0}", name));
                 }
 
-                bool isClass = (result is RubyClass);
+                bool isClass = result is RubyClass;
                 if (isClass && typeFlag == 'm') {
                     throw RubyExceptions.CreateArgumentError(
                         String.Format("{0} does not refer module", name));
@@ -718,7 +721,7 @@ namespace IronRuby.Builtins {
                 for (int i = 0; i < count; i++) {
                     string name = ReadSymbol();
                     if (name != names[i]) {
-                        RubyClass theClass = _context.GetClassOf(obj);
+                        RubyClass theClass = Context.GetClassOf(obj);
                         string message = String.Format("struct {0} not compatible ({1} for {2})", theClass.Name, name, names[i]);
                         throw RubyExceptions.CreateTypeError(message);
                     }
@@ -733,7 +736,7 @@ namespace IronRuby.Builtins {
                 int count = ReadInt32();
                 for (int i = 0; i < count; i++) {
                     string name = ReadSymbol();
-                    _context.SetInstanceVariable(obj, name, ReadAnObject(false));
+                    Context.SetInstanceVariable(obj, name, ReadAnObject(false));
                 }
                 return obj;
             }
@@ -895,7 +898,7 @@ namespace IronRuby.Builtins {
                         break;
                 }
                 if (runProc) {
-                    _sites.Data.ProcCall.Target(_sites.Data.ProcCall, _context, _proc, obj);
+                    _sites.Data.ProcCall.Target(_sites.Data.ProcCall, Context, _proc, obj);
                 }
                 return obj;
             }
@@ -961,7 +964,7 @@ namespace IronRuby.Builtins {
         [RubyMethod("restore", RubyMethodAttributes.PublicSingleton)]
         public static object Load(SiteLocalStorage<ReaderSites>/*!*/ sites, RubyScope/*!*/ scope, RubyModule/*!*/ self, [NotNull]MutableString/*!*/ source, [Optional]Proc proc) {
             BinaryReader reader = new BinaryReader(new MemoryStream(source.ConvertToBytes()));
-            MarshalReader loader = new MarshalReader(sites, reader, scope.RubyContext, scope.GlobalScope, proc);
+            MarshalReader loader = new MarshalReader(sites, reader, scope.GlobalScope, proc);
             return loader.Load();
         }
 
@@ -969,7 +972,7 @@ namespace IronRuby.Builtins {
         [RubyMethod("restore", RubyMethodAttributes.PublicSingleton)]
         public static object Load(SiteLocalStorage<ReaderSites>/*!*/ sites, RubyScope/*!*/ scope, RubyModule/*!*/ self, [NotNull]RubyIO/*!*/ source, [Optional]Proc proc) {
             BinaryReader reader = source.GetBinaryReader();
-            MarshalReader loader = new MarshalReader(sites, reader, scope.RubyContext, scope.GlobalScope, proc);
+            MarshalReader loader = new MarshalReader(sites, reader, scope.GlobalScope, proc);
             return loader.Load();
         }
 
@@ -986,7 +989,7 @@ namespace IronRuby.Builtins {
                 throw RubyExceptions.CreateTypeError("instance of IO needed");
             }
             BinaryReader reader = new BinaryReader(stream);
-            MarshalReader loader = new MarshalReader(sites, reader, scope.RubyContext, scope.GlobalScope, proc);
+            MarshalReader loader = new MarshalReader(sites, reader, scope.GlobalScope, proc);
             return loader.Load();
         }
 

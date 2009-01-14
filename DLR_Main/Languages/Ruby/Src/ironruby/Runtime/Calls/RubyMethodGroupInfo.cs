@@ -27,11 +27,11 @@ using Microsoft.Scripting.Runtime;
 using Microsoft.Scripting.Utils;
 using IronRuby.Builtins;
 using IronRuby.Compiler.Generation;
+using IronRuby.Compiler;
 
 using AstFactory = IronRuby.Compiler.Ast.AstFactory;
 using AstUtils = Microsoft.Scripting.Ast.Utils;
 using Ast = Microsoft.Linq.Expressions.Expression;
-using IronRuby.Compiler;
 
 namespace IronRuby.Runtime.Calls {
     
@@ -41,8 +41,8 @@ namespace IronRuby.Runtime.Calls {
     /// </summary>
     public sealed class RubyMethodGroupInfo : RubyMemberInfo {
         private readonly Delegate/*!*/[]/*!*/ _overloads;
-        private IList<MethodBase> _methodBases;
-        private IList<MethodBase> _staticDispatchMethods;
+        private MethodBase/*!*/[] _methodBases;
+        private MethodBase/*!*/[] _staticDispatchMethods;
         private bool? _hasVirtuals;
 
         // remove call site type object (CLR static methods don't accept self type):
@@ -53,14 +53,10 @@ namespace IronRuby.Runtime.Calls {
             get { return _isRubyMethod; }
         }
 
-        private IList<MethodBase>/*!*/ MethodBases {
+        private MethodBase/*!*/[]/*!*/ MethodBases {
             get {
                 if (_methodBases == null) {
-                    var result = new MethodBase[_overloads.Length];
-                    for (int i = 0; i < _overloads.Length; i++) {
-                        result[i] = _overloads[i].Method;
-                    }
-                    _methodBases = result;
+                    _methodBases = _overloads.ConvertAll((d) => d.Method);
                 }
 
                 // either all methods in the group are static or instance, a mixture is not allowed:
@@ -90,7 +86,7 @@ namespace IronRuby.Runtime.Calls {
         /// <summary>
         /// Creates a CLR method group.
         /// </summary>
-        internal RubyMethodGroupInfo(IList<MethodBase/*!*/>/*!*/ methods, RubyModule/*!*/ declaringModule, bool isStatic)
+        internal RubyMethodGroupInfo(MethodBase/*!*/[]/*!*/ methods, RubyModule/*!*/ declaringModule, bool isStatic)
             : base(RubyMemberFlags.Public, declaringModule) {
             Assert.NotNull(methods, declaringModule);
             _methodBases = methods;
@@ -100,15 +96,82 @@ namespace IronRuby.Runtime.Calls {
 
         // copy ctor
         private RubyMethodGroupInfo(RubyMethodGroupInfo/*!*/ info, RubyMemberFlags flags, RubyModule/*!*/ module)
+            : this(info, flags, module, info._methodBases) {
+        }
+
+        // copy ctor
+        private RubyMethodGroupInfo(RubyMethodGroupInfo/*!*/ info, RubyMemberFlags flags, RubyModule/*!*/ module, MethodBase/*!*/[] methodBases)
             : base(flags, module) {
-            _methodBases = info._methodBases;
+            _methodBases = methodBases;
             _overloads = info._overloads;
             _isRubyMethod = info._isRubyMethod;
             _isClrStatic = info._isClrStatic;
         }
 
+        public override MemberInfo/*!*/[]/*!*/ GetMembers() {
+            return ArrayUtils.MakeArray(MethodBases);
+        }
+
         protected internal override RubyMemberInfo/*!*/ Copy(RubyMemberFlags flags, RubyModule/*!*/ module) {
             return new RubyMethodGroupInfo(this, flags, module);
+        }
+
+        public override RubyMemberInfo TryBindGenericParameters(Type/*!*/[]/*!*/ typeArguments) {
+            var boundMethods = new List<MethodBase>();
+            foreach (var method in MethodBases) {
+                if (method.IsGenericMethodDefinition) {
+                    if (typeArguments.Length == method.GetGenericArguments().Length) {
+                        Debug.Assert(!(method is ConstructorInfo));
+                        boundMethods.Add(((MethodInfo)method).MakeGenericMethod(typeArguments));
+                    }
+                } else if (typeArguments.Length == 0) {
+                    boundMethods.Add(method);
+                }
+            }
+
+            if (boundMethods.Count == 0) {
+                return null;
+            }
+
+            return new RubyMethodGroupInfo(this, Flags, DeclaringModule, boundMethods.ToArray());
+        }
+
+        /// <summary>
+        /// Filters out methods that don't exactly match parameter types except for hidden parameters (RubyContext, RubyScope, site local storage).
+        /// </summary>
+        public override RubyMemberInfo TrySelectOverload(Type/*!*/[]/*!*/ parameterTypes) {
+            var boundMethods = new List<MethodBase>();
+            foreach (var method in MethodBases) {
+                if (IsOverloadSignature(method, parameterTypes)) {
+                    boundMethods.Add(method);
+                }
+            }
+
+            if (boundMethods.Count == 0) {
+                return null;
+            }
+
+            return new RubyMethodGroupInfo(this, Flags, DeclaringModule, boundMethods.ToArray());
+        }
+
+        private static bool IsOverloadSignature(MethodBase/*!*/ method, Type/*!*/[]/*!*/ parameterTypes) {
+            var infos = method.GetParameters();
+            int firstInfo = 0;
+            while (firstInfo < infos.Length && RubyBinder.IsHiddenParameter(infos[firstInfo])) {
+                firstInfo++;
+            }
+
+            if (infos.Length - firstInfo != parameterTypes.Length) {
+                return false;
+            }
+
+            for (int i = 0; i < parameterTypes.Length; i++) {
+                if (infos[firstInfo + i].ParameterType != parameterTypes[i]) {
+                    return false;
+                }
+            }
+
+            return true;
         }
 
         public override int Arity {
@@ -163,17 +226,17 @@ namespace IronRuby.Runtime.Calls {
             }
         }
 
-        private IList<MethodBase>/*!*/ GetStaticDispatchMethods(Type/*!*/ baseType, string/*!*/ name) {
+        private MethodBase/*!*/[]/*!*/ GetStaticDispatchMethods(Type/*!*/ baseType, string/*!*/ name) {
             if (!HasVirtuals) {
                 return MethodBases;
             }
             if (_staticDispatchMethods == null) {
-                _staticDispatchMethods = new MethodBase[MethodBases.Count];
-                for (int i = 0; i < MethodBases.Count; i++) {
+                _staticDispatchMethods = new MethodBase[MethodBases.Length];
+                for (int i = 0; i < MethodBases.Length; i++) {
                     MethodBase method = MethodBases[i];
                     _staticDispatchMethods[i] = method;
 
-                    MethodInfo methodInfo = (method as MethodInfo);
+                    MethodInfo methodInfo = method as MethodInfo;
                     if (methodInfo != null && methodInfo.IsVirtual) {
                         _staticDispatchMethods[i] = WrapMethod(methodInfo, baseType);
                     }
@@ -257,9 +320,12 @@ namespace IronRuby.Runtime.Calls {
                 // Allocates a variable holding BlockParam. At runtime the BlockParam is created with a new RFC instance that
                 // identifies the library method frame as a proc-converter target of a method unwinder triggered by break from a block.
                 //
-                // NOTE: We check for null block here -> test fore that fact is added in MakeActualArgs
-                if (metaBuilder.BfcVariable == null && args.Signature.HasBlock && args.GetBlock() != null && calleeHasBlockParam) {
-                    metaBuilder.BfcVariable = metaBuilder.GetTemporary(typeof(BlockParam), "#bfc");
+                // NOTE: We check for null block here -> test for that fact is added in MakeActualArgs
+                if (args.Signature.HasBlock && args.GetBlock() != null && calleeHasBlockParam) {
+                    if (metaBuilder.BfcVariable == null) {
+                        metaBuilder.BfcVariable = metaBuilder.GetTemporary(typeof(BlockParam), "#bfc");
+                    }
+                    metaBuilder.ControlFlowBuilder = RuleControlFlowBuilder;
                 }
 
                 var actualArgs = MakeActualArgs(metaBuilder, args, includeSelf, selfIsInstance, calleeHasBlockParam, true);
@@ -278,15 +344,11 @@ namespace IronRuby.Runtime.Calls {
             }
         }
 
-        internal override void ApplyBlockFlowHandling(MetaObjectBuilder metaBuilder, CallArguments args) {
-            ApplyBlockFlowHandlingInternal(metaBuilder, args);
-        }
-
         /// <summary>
         /// Takes current result and wraps it into try-filter(MethodUnwinder)-finally block that ensures correct "break" behavior for 
         /// library method calls with block given in bfcVariable (BlockParam).
         /// </summary>
-        internal static void ApplyBlockFlowHandlingInternal(MetaObjectBuilder/*!*/ metaBuilder, CallArguments/*!*/ args) {
+        public static void RuleControlFlowBuilder(MetaObjectBuilder/*!*/ metaBuilder, CallArguments/*!*/ args) {
             if (metaBuilder.Error) {
                 return;
             }

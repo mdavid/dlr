@@ -50,7 +50,7 @@ namespace IronRuby.Builtins {
         // null for singletons:
         private Type _underlyingSystemType;
         private readonly bool _isRubyClass;
-        private GlobalScopeExtension _globalScope;
+        private RubyGlobalScope _globalScope;
 
         // if this class is a struct represents its layout:
         private RubyStruct.Info _structInfo;
@@ -86,11 +86,11 @@ namespace IronRuby.Builtins {
             set { _structInfo = value; }
         }
 
-        internal override GlobalScopeExtension GlobalScope {
+        internal override RubyGlobalScope GlobalScope {
             get { return _globalScope; }
         }
 
-        internal void SetGlobalScope(GlobalScopeExtension/*!*/ value) {
+        internal void SetGlobalScope(RubyGlobalScope/*!*/ value) {
             Assert.NotNull(value);
             _globalScope = value;
         }
@@ -351,16 +351,26 @@ namespace IronRuby.Builtins {
                 return false;
             }
 
+            // We look only for members directly declared on the type and handle method overloads inheritance manually.  
             BindingFlags bindingFlags = BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.DeclaredOnly;
             bindingFlags |= (_isSingletonClass) ? BindingFlags.Static : BindingFlags.Instance;
 
-            if (name.EndsWith("=")) {
+            if (name == "[]" || name == "[]=") {
+                object[] attrs = type.GetCustomAttributes(typeof(DefaultMemberAttribute), false);
+                if (attrs.Length == 1) {
+                    // default indexer accessor:
+                    bool isSetter = name.Length == 3;
+                    if (TryGetClrProperty(type, bindingFlags, ((DefaultMemberAttribute)attrs[0]).MemberName, isSetter, out method)) {
+                        return true;
+                    }
+                }
+            } else if (name.LastCharacter() == '=') {
                 string propertyName = name.Substring(0, name.Length - 1);
                 
                 // property setter:
-                if (TryGetClrMethod(type, bindingFlags, "set_" + propertyName, out method)) return true;
+                if (TryGetClrProperty(type, bindingFlags, propertyName, true, out method)) return true;
                 unmangled = RubyUtils.TryUnmangleName(propertyName);
-                if (unmangled != null && TryGetClrMethod(type, bindingFlags, "set_" + unmangled, out method)) return true;
+                if (unmangled != null && TryGetClrProperty(type, bindingFlags, unmangled, true, out method)) return true;
 
                 // writeable field:
                 if (TryGetClrField(type, bindingFlags, propertyName, true, out method)) return true;
@@ -372,8 +382,8 @@ namespace IronRuby.Builtins {
                 if (unmangled != null && TryGetClrMethod(type, bindingFlags, unmangled, out method)) return true;
 
                 // getter:
-                if (TryGetClrMethod(type, bindingFlags, "get_" + name, out method)) return true;
-                if (unmangled != null && TryGetClrMethod(type, bindingFlags, "get_" + unmangled, out method)) return true;
+                if (TryGetClrProperty(type, bindingFlags, name, false, out method)) return true;
+                if (unmangled != null && TryGetClrProperty(type, bindingFlags, unmangled, false, out method)) return true;
 
                 // event:
                 if (TryGetClrEvent(type, bindingFlags, name, out method)) return true;
@@ -403,7 +413,7 @@ namespace IronRuby.Builtins {
             }
         }
 
-        private IList<MethodBase>/*!*/ SelectNonPrivateMethods(MemberInfo[]/*!*/ members) {
+        private MethodBase[]/*!*/ SelectNonPrivateMethods(MemberInfo[]/*!*/ members) {
             var result = new List<MethodBase>(members.Length);
             for (int i = 0; i < members.Length; i++) {
                 var method = (MethodBase)members[i];
@@ -411,7 +421,11 @@ namespace IronRuby.Builtins {
                     result.Add(method);
                 }
             }
-            return result;
+            return result.ToArray();
+        }
+
+        private bool TryGetClrProperty(Type/*!*/ type, BindingFlags bindingFlags, string/*!*/ name, bool isWrite, out RubyMemberInfo method) {
+            return TryGetClrMethod(type, bindingFlags, (isWrite ? "set_" : "get_") + name, out method);
         }
 
         private bool TryGetClrField(Type/*!*/ type, BindingFlags bindingFlags, string/*!*/ name, bool isWrite, out RubyMemberInfo method) {
@@ -461,6 +475,11 @@ namespace IronRuby.Builtins {
         /// Implements Class#new feature.
         /// </summary>
         public void BuildObjectConstruction(MetaObjectBuilder/*!*/ metaBuilder, CallArguments/*!*/ args, string/*!*/ methodName) {
+            BuildObjectConstructionNoFlow(metaBuilder, args, methodName);
+            metaBuilder.BuildControlFlow(args);
+        }
+
+        public void BuildObjectConstructionNoFlow(MetaObjectBuilder/*!*/ metaBuilder, CallArguments/*!*/ args, string/*!*/ methodName) {
             Debug.Assert(!IsSingletonClass, "Cannot instantiate singletons");
 
             Type type = GetUnderlyingSystemType();
@@ -503,7 +522,11 @@ namespace IronRuby.Builtins {
                 }
 
                 RubyMethodGroupInfo.BuildCallNoFlow(metaBuilder, args, methodName, constructionOverloads, includeSelf, false);
-                RubyMethodGroupInfo.ApplyBlockFlowHandlingInternal(metaBuilder, args);
+
+                // we need to handle break, which unwinds to a proc-converter that could be this method's frame:
+                if (!metaBuilder.Error) {
+                    metaBuilder.ControlFlowBuilder = RubyMethodGroupInfo.RuleControlFlowBuilder;
+                }
             }
         }
 
@@ -519,7 +542,7 @@ namespace IronRuby.Builtins {
             args.SetTarget(instanceVariable, null);
 
             if (initializer is RubyMethodInfo) {
-                initializer.BuildCall(metaBuilder, args, Symbols.Initialize);
+                initializer.BuildCallNoFlow(metaBuilder, args, Symbols.Initialize);
             } else {
                 // TODO: we need more refactoring of RubyMethodGroupInfo.BuildCall to be able to inline this:
                 metaBuilder.Result = Ast.Dynamic(
@@ -537,7 +560,9 @@ namespace IronRuby.Builtins {
                     Ast.Assign(instanceVariable, instanceExpr),
                     metaBuilder.Result
                 );
-                RubyMethodInfo.ApplyBlockFlowHandlingInternal(metaBuilder, args);
+
+                // we need to handle break, which unwinds to a proc-converter that could be this method's frame:
+                metaBuilder.ControlFlowBuilder = RubyMethodInfo.RuleControlFlowBuilder;
             }
         }
 

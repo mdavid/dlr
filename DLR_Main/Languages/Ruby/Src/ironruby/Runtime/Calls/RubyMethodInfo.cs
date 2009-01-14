@@ -27,6 +27,7 @@ using MethodDeclaration = IronRuby.Compiler.Ast.MethodDeclaration;
 using AstFactory = IronRuby.Compiler.Ast.AstFactory;
 using AstUtils = Microsoft.Scripting.Ast.Utils;
 using Ast = Microsoft.Linq.Expressions.Expression;
+using System.Reflection;
 
 namespace IronRuby.Runtime.Calls {
     public sealed class RubyMethodInfo : RubyMemberInfo {
@@ -72,6 +73,16 @@ namespace IronRuby.Runtime.Calls {
             );
         }
 
+        public override RubyMemberInfo TrySelectOverload(Type/*!*/[]/*!*/ parameterTypes) {
+            return parameterTypes.Length >= MandatoryParamCount 
+                && (HasUnsplatParameter || parameterTypes.Length <= MandatoryParamCount + OptionalParamCount)
+                && CollectionUtils.TrueForAll(parameterTypes, (type) => type == typeof(object)) ? this : null;
+        }
+
+        public override MemberInfo/*!*/[]/*!*/ GetMembers() {
+            return new MemberInfo[] { _method.Method };
+        }
+
         public override int Arity {
             get {
                 if (_optionalParamCount > 0) {
@@ -105,6 +116,9 @@ namespace IronRuby.Runtime.Calls {
         internal override void BuildCallNoFlow(MetaObjectBuilder/*!*/ metaBuilder, CallArguments/*!*/ args, string/*!*/ name) {
             Assert.NotNull(metaBuilder, args, name);
 
+            // any user method can yield to a block (regardless of whether block parameter is present or not):
+            metaBuilder.ControlFlowBuilder = RuleControlFlowBuilder;
+
             // 2 implicit args: self, block
             var argsBuilder = new ArgsBuilder(2, _mandatoryParamCount, _optionalParamCount, _hasUnsplatParameter);
             argsBuilder.SetImplicit(0, AstFactory.Box(args.TargetExpression));
@@ -133,17 +147,13 @@ namespace IronRuby.Runtime.Calls {
             }
         }
 
-        internal override void ApplyBlockFlowHandling(MetaObjectBuilder/*!*/ metaBuilder, CallArguments/*!*/ args) {
-            ApplyBlockFlowHandlingInternal(metaBuilder, args);
-        }
-
         /// <summary>
         /// Takes current result and wraps it into try-filter(MethodUnwinder)-finally block that ensures correct "break" behavior for 
         /// Ruby method calls with a block given in arguments.
         /// 
         /// Sets up a RFC frame similarly to MethodDeclaration.
         /// </summary>
-        internal static void ApplyBlockFlowHandlingInternal(MetaObjectBuilder/*!*/ metaBuilder, CallArguments/*!*/ args) {
+        public static void RuleControlFlowBuilder(MetaObjectBuilder/*!*/ metaBuilder, CallArguments/*!*/ args) {
             // TODO (improvement):
             // We don't special case null block here, although we could (we would need a test for that then).
             // We could also statically know (via call-site flag) that the current method is not a proc-converter (passed by ref),

@@ -30,6 +30,8 @@ using Microsoft.Scripting.Math;
 using Microsoft.Scripting.Runtime;
 using Microsoft.Scripting.Utils;
 using Microsoft.Scripting.Generation;
+using IronRuby.Compiler;
+using System.IO;
 
 namespace IronRuby.Builtins {
 
@@ -99,13 +101,27 @@ namespace IronRuby.Builtins {
 
         [RubyMethod("Integer", RubyMethodAttributes.PrivateInstance)]
         [RubyMethod("Integer", RubyMethodAttributes.PublicSingleton)]
-        public static object/*!*/ ToInteger(RubyContext/*!*/ context, object self, object obj) {
-            // TODO: MRI converts strings with base prefix ("0x1", "0d1", "0o1") and octals "000" as well
-            // should the protocol do that or is is a specificity of this method?
-            int fixnum;
-            BigInteger bignum;
-            Protocols.ConvertToInteger(context, obj, out fixnum, out bignum);
-            return (object)bignum ?? ScriptingRuntimeHelpers.Int32ToObject(fixnum);
+        public static object/*!*/ ToInteger(object self, [NotNull]MutableString/*!*/ value) {
+            var str = value.ConvertToString();
+            int i = 0;
+            object result = Tokenizer.ParseInteger(str, 0, ref i).ToObject();
+            
+            while (i < str.Length && Tokenizer.IsWhiteSpace(str[i])) {
+                i++;
+            }
+
+            if (i < str.Length) {
+                throw RubyExceptions.CreateArgumentError(String.Format("invalid value for Integer: \"{0}\"", str));
+            }
+
+            return result;
+        }
+
+        [RubyMethod("Integer", RubyMethodAttributes.PrivateInstance)]
+        [RubyMethod("Integer", RubyMethodAttributes.PublicSingleton)]
+        public static object/*!*/ ToInteger(ConversionStorage<IntegerValue>/*!*/ integerConversion, RubyContext/*!*/ context, object self, object value) {
+            var integer = Protocols.ConvertToInteger(integerConversion, context, value);
+            return integer.IsFixnum ? ScriptingRuntimeHelpers.Int32ToObject(integer.Fixnum) : integer.Bignum;
         }
 
         [RubyMethod("String", RubyMethodAttributes.PrivateInstance)]
@@ -373,23 +389,23 @@ namespace IronRuby.Builtins {
         [RubyMethod("load", RubyMethodAttributes.PublicSingleton)]
         public static bool Load(RubyScope/*!*/ scope, object self,
             [DefaultProtocol, NotNull]MutableString/*!*/ libraryName, [Optional]bool wrap) {
-            return scope.RubyContext.Loader.LoadFile(scope.GlobalScope, self, libraryName, wrap ? LoadFlags.LoadIsolated : LoadFlags.None);
+            return scope.RubyContext.Loader.LoadFile(scope.GlobalScope.Scope, self, libraryName, wrap ? LoadFlags.LoadIsolated : LoadFlags.None);
         }
 
         [RubyMethod("load_assembly", RubyMethodAttributes.PrivateInstance)]
         [RubyMethod("load_assembly", RubyMethodAttributes.PublicSingleton)]
-        public static bool LoadAssembly(RubyScope/*!*/ scope, object self,
+        public static bool LoadAssembly(RubyContext/*!*/ context, object self,
             [DefaultProtocol, NotNull]MutableString/*!*/ assemblyName, [DefaultProtocol, Optional, NotNull]MutableString libraryNamespace) {
 
             string initializer = libraryNamespace != null ? LibraryInitializer.GetFullTypeName(libraryNamespace.ConvertToString()) : null;
-            return scope.RubyContext.Loader.LoadAssembly(assemblyName.ConvertToString(), initializer, true);
+            return context.Loader.LoadAssembly(assemblyName.ConvertToString(), initializer, true);
         }
 
         [RubyMethod("require", RubyMethodAttributes.PrivateInstance)]
         [RubyMethod("require", RubyMethodAttributes.PublicSingleton)]
         public static bool Require(RubyScope/*!*/ scope, object self, 
             [DefaultProtocol, NotNull]MutableString/*!*/ libraryName) {
-            return scope.RubyContext.Loader.LoadFile(scope.GlobalScope, self, libraryName, LoadFlags.LoadOnce | LoadFlags.AppendExtensions);
+            return scope.RubyContext.Loader.LoadFile(scope.GlobalScope.Scope, self, libraryName, LoadFlags.LoadOnce | LoadFlags.AppendExtensions);
         }
 
         #endregion
@@ -550,16 +566,24 @@ namespace IronRuby.Builtins {
         // this overload is called only if the first parameter is string:
         [RubyMethod("printf", RubyMethodAttributes.PrivateInstance)]
         [RubyMethod("printf", RubyMethodAttributes.PublicSingleton)]
-        public static void PrintFormatted(ConversionStorage<int>/*!*/ fixnumCast, ConversionStorage<MutableString>/*!*/ tosConversion, 
+        public static void PrintFormatted(
+            ConversionStorage<IntegerValue>/*!*/ integerConversion,
+            ConversionStorage<int>/*!*/ fixnumCast, 
+            ConversionStorage<MutableString>/*!*/ tosConversion,
+            ConversionStorage<MutableString>/*!*/ stringCast, 
             BinaryOpStorage/*!*/ writeStorage, 
             RubyContext/*!*/ context, object self, [NotNull]MutableString/*!*/ format, [NotNull]params object[]/*!*/ args) {
 
-            PrintFormatted(fixnumCast, tosConversion, writeStorage, context, self, context.StandardOutput, format, args);
+            PrintFormatted(integerConversion, fixnumCast, tosConversion, stringCast, writeStorage, context, self, context.StandardOutput, format, args);
         }
 
         [RubyMethod("printf", RubyMethodAttributes.PrivateInstance)]
         [RubyMethod("printf", RubyMethodAttributes.PublicSingleton)]
-        public static void PrintFormatted(ConversionStorage<int>/*!*/ fixnumCast, ConversionStorage<MutableString>/*!*/ tosConversion, 
+        public static void PrintFormatted(
+            ConversionStorage<IntegerValue>/*!*/ integerConversion, 
+            ConversionStorage<int>/*!*/ fixnumCast, 
+            ConversionStorage<MutableString>/*!*/ tosConversion,
+            ConversionStorage<MutableString>/*!*/ stringCast, 
             BinaryOpStorage/*!*/ writeStorage,
             RubyContext/*!*/ context, object self, object io, [NotNull]object/*!*/ format, [NotNull]params object[]/*!*/ args) {
 
@@ -568,7 +592,9 @@ namespace IronRuby.Builtins {
             // TODO: BindAsObject attribute on format?
             // format cannot be strongly typed to MutableString due to ambiguity between signatures (MS, object) vs (object, MS)
             var site = writeStorage.GetCallSite("write");
-            site.Target(site, context, io, Sprintf(fixnumCast, tosConversion, context, self, Protocols.CastToString(context, format), args));
+            site.Target(site, context, io,
+                Sprintf(integerConversion, fixnumCast, tosConversion, context, self, Protocols.CastToString(stringCast, context, format), args)
+            );
         }
 
         [RubyMethod("putc", RubyMethodAttributes.PrivateInstance)]
@@ -666,6 +692,11 @@ namespace IronRuby.Builtins {
                 exception = new RuntimeError();
             }
 
+#if DEBUG && !SILVERLIGHT
+            if (RubyOptions.UseThreadAbortForSyncRaise) {
+                RubyUtils.RaiseAsyncException(Thread.CurrentThread, exception);
+            }
+#endif
             // rethrow semantics, preserves the backtrace associated with the exception:
             throw exception;
         }
@@ -676,7 +707,14 @@ namespace IronRuby.Builtins {
         [RubyMethod("fail", RubyMethodAttributes.PublicSingleton)]
         [RubyStackTraceHidden]
         public static void RaiseException(object self, [NotNull]MutableString/*!*/ message) {
-            throw RubyExceptionData.InitializeException(new RuntimeError(message.ToString()), message);
+            Exception exception = RubyExceptionData.InitializeException(new RuntimeError(message.ToString()), message);
+
+#if DEBUG && !SILVERLIGHT
+            if (RubyOptions.UseThreadAbortForSyncRaise) {
+                RubyUtils.RaiseAsyncException(Thread.CurrentThread, exception);
+            }
+#endif
+            throw exception;
         }
 
         [RubyMethod("raise", RubyMethodAttributes.PrivateInstance)]
@@ -687,8 +725,21 @@ namespace IronRuby.Builtins {
         public static void RaiseException(RespondToStorage/*!*/ respondToStorage, UnaryOpStorage/*!*/ storage0, BinaryOpStorage/*!*/ storage1, 
             RubyContext/*!*/ context, object self, object/*!*/ obj, [Optional]object arg, [Optional]RubyArray backtrace) {
 
+            Exception exception = CreateExceptionToRaise(respondToStorage, storage0, storage1, context, obj, arg, backtrace);
+#if DEBUG && !SILVERLIGHT
+            if (RubyOptions.UseThreadAbortForSyncRaise) {
+                RubyUtils.RaiseAsyncException(Thread.CurrentThread, exception);
+            }
+#endif
+            // rethrow semantics, preserves the backtrace associated with the exception:
+            throw exception;
+        }
+
+        internal static Exception CreateExceptionToRaise(RespondToStorage/*!*/ respondToStorage, UnaryOpStorage/*!*/ storage0, BinaryOpStorage/*!*/ storage1,
+            RubyContext/*!*/ context, object/*!*/ obj, object arg, RubyArray backtrace) {
+
             if (Protocols.RespondTo(respondToStorage, context, obj, "exception")) {
-                Exception e;
+                Exception e = null;
                 if (arg != Missing.Value) {
                     var site = storage1.GetCallSite("exception");
                     e = site.Target(site, context, obj, arg) as Exception;
@@ -701,9 +752,7 @@ namespace IronRuby.Builtins {
                     if (backtrace != null) {
                         ExceptionOps.SetBacktrace(e, backtrace);
                     }
-
-                    // rethrow semantics, preserves the backtrace associated with the exception:
-                    throw e;
+                    return e;
                 }
             }
 
@@ -788,7 +837,7 @@ namespace IronRuby.Builtins {
         [RubyMethod("sleep", RubyMethodAttributes.PrivateInstance)]
         [RubyMethod("sleep", RubyMethodAttributes.PublicSingleton)]
         public static void Sleep(object self) {
-            ThreadOps.Stop(Thread.CurrentThread);
+            ThreadOps.DoSleep();
         }
 
         [RubyMethod("sleep", RubyMethodAttributes.PrivateInstance)]
@@ -821,10 +870,11 @@ namespace IronRuby.Builtins {
         [RubyMethod("format", RubyMethodAttributes.PublicSingleton)]
         [RubyMethod("sprintf", RubyMethodAttributes.PrivateInstance)]
         [RubyMethod("sprintf", RubyMethodAttributes.PublicSingleton)]
-        public static MutableString/*!*/ Sprintf(ConversionStorage<int>/*!*/ fixnumCast, ConversionStorage<MutableString>/*!*/ tosConversion,
+        public static MutableString/*!*/ Sprintf(ConversionStorage<IntegerValue>/*!*/ integerCast, ConversionStorage<int>/*!*/ fixnumCast, 
+            ConversionStorage<MutableString>/*!*/ tosConversion,
             RubyContext/*!*/ context, object self, [DefaultProtocol, NotNull]MutableString/*!*/ format, [NotNull]params object[] args) {
 
-            return new StringFormatter(fixnumCast, tosConversion, context, format.ConvertToString(), args).Format();
+            return new StringFormatter(integerCast, fixnumCast, tosConversion, context, format.ConvertToString(), args).Format();
         }
 
         //srand
@@ -1190,9 +1240,9 @@ namespace IronRuby.Builtins {
 
         [RubyMethod("respond_to?")]
         public static bool RespondTo(RubyContext/*!*/ context, object self, 
-            [DefaultProtocol]string/*!*/ methodName, [DefaultProtocol, Optional]bool includePrivate) {
+            [DefaultProtocol]string/*!*/ methodName, [DefaultParameterValue(null)]object includePrivate) {
 
-            return context.ResolveMethod(self, methodName, includePrivate) != null;
+            return context.ResolveMethod(self, methodName, Protocols.IsTrue(includePrivate)) != null;
         }
 
         #region __send__, send
@@ -1387,11 +1437,11 @@ namespace IronRuby.Builtins {
         }
 
         [RubyMethod("to_a")]
-        public static RubyArray/*!*/ ToA(RubyScope/*!*/ scope, object self) {
+        public static RubyArray/*!*/ ToA(RubyContext/*!*/ context, object self) {
             // Return an array that contains self
             RubyArray result = new RubyArray(new object[] { self });
 
-            return scope.RubyContext.TaintObjectBy(result, self);
+            return context.TaintObjectBy(result, self);
         }
 
         [RubyMethod("to_s")]

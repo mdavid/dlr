@@ -28,7 +28,7 @@ Module Module1
     ''' </summary>
     ''' <returns>An expression that if executed will print "Hello world!"</returns>
     Function SimpleHelloWorld() As Expression
-        'First step, we get the methodinfo for Console.WriteLine. This is standard reflection
+        'First step, we get the methodinfo for Console.WriteLine. This is standard reflection.
         Dim WriteLine As MethodInfo = GetType(Console).GetMethod("WriteLine", New Type() {GetType(String)})
         'Second step, we create an expression that invokes that method with "Hello world!"
         Return Expression.Call(Nothing, WriteLine, Expression.Constant("Hello world!"))
@@ -94,7 +94,7 @@ Module Module1
 
         'And now it all comes together. we create a Block (an expression that holds a list of expressions)
         'and we wrap that in a Scope, which defines the scope of a set of variables.
-        Return Expression.Block(Expression.Block(Instructions), StarName, PlanetNumber)
+        Return Expression.Block(New ParameterExpression() {StarName, PlanetNumber}, Expression.Block(Instructions))
     End Function
 
     Function Print(ByVal arg As String) As Expression

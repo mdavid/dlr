@@ -12,22 +12,17 @@
  *
  *
  * ***************************************************************************/
+
 using System; using Microsoft;
-
-
-using Microsoft.Scripting;
-using Microsoft.Scripting.Actions;
-using Microsoft.Linq.Expressions;
-using Microsoft.Scripting.Runtime;
-using Microsoft.Scripting.Utils;
+using System.Diagnostics;
+using System.Reflection;
 using IronRuby.Builtins;
+using IronRuby.Compiler;
+using Microsoft.Scripting.Utils;
 using AstUtils = Microsoft.Scripting.Ast.Utils;
 
 namespace IronRuby.Runtime.Calls {
-    using Ast = Microsoft.Linq.Expressions.Expression;
     using AstFactory = IronRuby.Compiler.Ast.AstFactory;
-    using IronRuby.Compiler;
-    using System.Diagnostics;
 
     public abstract class RubyAttributeAccessorInfo : RubyMemberInfo {
         private readonly string/*!*/ _instanceVariableName;
@@ -39,6 +34,10 @@ namespace IronRuby.Runtime.Calls {
             Assert.NotEmpty(variableName);
             Debug.Assert(variableName.StartsWith("@"));
             _instanceVariableName = variableName;
+        }
+
+        public override MemberInfo/*!*/[]/*!*/ GetMembers() {
+            return Utils.EmptyMemberInfos;
         }
     }
 
@@ -57,6 +56,10 @@ namespace IronRuby.Runtime.Calls {
 
         protected internal override RubyMemberInfo/*!*/ Copy(RubyMemberFlags flags, RubyModule/*!*/ module) {
             return new RubyAttributeReaderInfo(flags, module, InstanceVariableName);
+        }
+
+        public override RubyMemberInfo TrySelectOverload(Type/*!*/[]/*!*/ parameterTypes) {
+            return parameterTypes.Length == 0 ? this : null;
         }
     }
 
@@ -79,6 +82,10 @@ namespace IronRuby.Runtime.Calls {
 
         protected internal override RubyMemberInfo/*!*/ Copy(RubyMemberFlags flags, RubyModule/*!*/ module) {
             return new RubyAttributeWriterInfo(flags, module, InstanceVariableName);
+        }
+
+        public override RubyMemberInfo TrySelectOverload(Type/*!*/[]/*!*/ parameterTypes) {
+            return parameterTypes.Length == 1 && parameterTypes[0] == typeof(object) ? this : null;
         }
     }
 }

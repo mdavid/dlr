@@ -67,7 +67,7 @@ namespace IronRuby.StandardLibrary.Yaml {
             _yamlMultiRegexps.Add(tagPrefix, new Regex("^" + tagPrefix, RegexOptions.Compiled));
         }
 
-        public Constructor(NodeProvider/*!*/ nodeProvider, RubyScope/*!*/ scope)
+        public Constructor(NodeProvider/*!*/ nodeProvider, RubyGlobalScope/*!*/ scope)
             : base(nodeProvider, scope) {
         }
 

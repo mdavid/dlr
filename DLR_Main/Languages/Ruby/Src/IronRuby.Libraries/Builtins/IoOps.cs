@@ -15,28 +15,27 @@
 
 using System; using Microsoft;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Runtime.CompilerServices;
 using Microsoft.Runtime.CompilerServices;
 
 using System.Runtime.InteropServices;
 using System.Threading;
+using IronRuby.Compiler.Generation;
 using IronRuby.Runtime;
+using IronRuby.Runtime.Calls;
 using Microsoft.Scripting.Math;
 using Microsoft.Scripting.Runtime;
-using IronRuby.Runtime.Calls;
-using System.Diagnostics;
-using Microsoft.Scripting.Generation;
+using Ast = Microsoft.Linq.Expressions.Expression;
 
 namespace IronRuby.Builtins {
 
     /// <summary>
     /// Implementation of IO builtin class. 
     /// </summary>
-    [RubyClass("IO", Extends = typeof(RubyIO)), Includes(typeof(RubyFileOps.Constants))]
+    [RubyClass("IO", Extends = typeof(RubyIO)), Includes(typeof(RubyFileOps.Constants)), Includes(typeof(Enumerable))]
     public class RubyIOOps {
-
-        // Mixins: File::Constants,Enumerable
 
         #region Constants
 
@@ -55,7 +54,7 @@ namespace IronRuby.Builtins {
 
         [RubyConstructor]
         public static RubyIO/*!*/ CreateIO(RubyClass/*!*/ self) {
-            // TODO: should create an IO object with uninitialize stream
+            // TODO: should create an IO object with an uninitialized stream
             throw new NotImplementedException();
         }
 
@@ -71,60 +70,31 @@ namespace IronRuby.Builtins {
             return result;
         }
 
+        [RubyMethod("initialize", RubyMethodAttributes.PrivateInstance)]
+        public static void CreateIO(RubyIO/*!*/ self) {
+            // TODO:
+        }
+
+        [RubyMethod("initialize", RubyMethodAttributes.PrivateInstance)]
+        public static void CreateIO(RubyIO/*!*/ self,
+            [DefaultProtocol]int fileDescriptor, [DefaultProtocol, NotNull, Optional]MutableString modeString) {
+
+            // TODO:
+            if (modeString != null) {
+                self.ResetIOMode(modeString.ConvertToString());
+            }
+        }
+
         //initialize_copy
+
+        [RubyMethod("for_fd", RubyMethodAttributes.PublicSingleton)]
+        public static RuleGenerator/*!*/ ForFileDescriptor() {
+            return new RuleGenerator(RuleGenerators.InstanceConstructor);
+        }
 
         #endregion
 
         #region Public singleton methods
-
-        [RubyMethod("for_fd", RubyMethodAttributes.PublicSingleton)]
-        public static RubyIO ForFd(RubyClass/*!*/ self, int fileDescriptor, [DefaultProtocol, NotNull]MutableString/*!*/ modeString) {
-            return CreateIO(self, fileDescriptor, modeString);
-        }
-
-        [RubyMethod("foreach", RubyMethodAttributes.PublicSingleton)]
-        public static void ForEach(BlockParam block, RubyClass/*!*/ self, [DefaultProtocol, NotNull]MutableString/*!*/ path) {
-            ForEach(block, self, path, self.Context.InputSeparator);
-        }
-
-        [RubyMethod("foreach", RubyMethodAttributes.PublicSingleton)]
-        public static void ForEach(BlockParam block, RubyClass/*!*/ self, [DefaultProtocol, NotNull]MutableString/*!*/ path, MutableString separator) {
-
-            using (RubyIO io = new RubyIO(self.Context, File.OpenRead(path.ConvertToString()), "r")) {
-                Each(block, io, separator);
-            }
-        }
-
-        // Explicit overloads
-
-        private readonly static CallSite<Func<CallSite, RubyContext, RubyClass, int, RubyIO>> _CreateIOSharedSite1 =
-            CallSite<Func<CallSite, RubyContext, RubyClass, int, RubyIO>>.Create(RubySites.InstanceCallAction("new", 1));
-
-        private readonly static CallSite<Func<CallSite, RubyContext, RubyClass, int, MutableString, RubyIO>> _CreateIOSharedSite11 =
-            CallSite<Func<CallSite, RubyContext, RubyClass, int, MutableString, RubyIO>>.Create(RubySites.InstanceCallAction("new", 2));
-
-        // TODO: these static fields are marked as internal since they are referenced from FileOps.cs. There is a static initialization problem where _Default.Binder in RubyContext
-        // isn't being initialized if these sites are stored in the RubyFileOps class. Perhaps we should do the wholesale consolidation of all sites into LibrarySites.cs?
-
-        internal readonly static CallSite<Func<CallSite, RubyContext, RubyClass, MutableString, MutableString, RubyIO>> _CreateIOSharedSite2 =
-            CallSite<Func<CallSite, RubyContext, RubyClass, MutableString, MutableString, RubyIO>>.Create(RubySites.InstanceCallAction("new", 2));
-
-        internal readonly static CallSite<Func<CallSite, RubyContext, RubyClass, MutableString, RubyIO>> _CreateIOSharedSite3 =
-            CallSite<Func<CallSite, RubyContext, RubyClass, MutableString, RubyIO>>.Create(RubySites.InstanceCallAction("new", 1));
-
-        internal readonly static CallSite<Func<CallSite, RubyContext, RubyClass, MutableString, int, RubyIO>> _CreateIOSharedSite4 =
-            CallSite<Func<CallSite, RubyContext, RubyClass, MutableString, int, RubyIO>>.Create(RubySites.InstanceCallAction("new", 2));
-
-        internal readonly static CallSite<Func<CallSite, RubyContext, RubyClass, MutableString, int, int, RubyIO>> _CreateIOSharedSite5 =
-            CallSite<Func<CallSite, RubyContext, RubyClass, MutableString, int, int, RubyIO>>.Create(RubySites.InstanceCallAction("new", 3));
-
-        // TCPSocket.open(host, port)
-        internal readonly static CallSite<Func<CallSite, RubyContext, RubyClass, MutableString, int, RubyIO>> _CreateIOSharedSite6 =
-            CallSite<Func<CallSite, RubyContext, RubyClass, MutableString, int, RubyIO>>.Create(RubySites.InstanceCallAction("new", 2));
-
-        // File.open(path, mode, perms)
-        internal readonly static CallSite<Func<CallSite, RubyContext, RubyClass, MutableString, MutableString, int, RubyIO>> _CreateIOSharedSite7 =
-            CallSite<Func<CallSite, RubyContext, RubyClass, MutableString, MutableString, int, RubyIO>>.Create(RubySites.InstanceCallAction("new", 3));
 
         internal static object TryInvokeOpenBlock(RubyContext/*!*/ context, BlockParam/*!*/ block, RubyIO/*!*/ io) {
             if (block == null)
@@ -138,38 +108,69 @@ namespace IronRuby.Builtins {
             }
         }
 
-        [RubyMethod("open", RubyMethodAttributes.PublicSingleton)]
-        public static object Open(RubyContext/*!*/ context, BlockParam/*!*/ block, RubyClass/*!*/ self, int fileDescriptor) {
-            RubyIO io = _CreateIOSharedSite1.Target(_CreateIOSharedSite1, context, self, fileDescriptor);
-            return TryInvokeOpenBlock(context, block, io);
+        #region foreach
+
+        [RubyMethod("foreach", RubyMethodAttributes.PublicSingleton)]
+        public static void ForEach(BlockParam block, RubyClass/*!*/ self, [DefaultProtocol, NotNull]MutableString/*!*/ path) {
+            ForEach(block, self, path, self.Context.InputSeparator);
         }
 
-        [RubyMethod("open", RubyMethodAttributes.PublicSingleton)]
-        public static object Open(RubyContext/*!*/ context, BlockParam/*!*/ block, RubyClass/*!*/ self, int fileDescriptor, [NotNull]MutableString/*!*/ mode) {
-            RubyIO io = _CreateIOSharedSite11.Target(_CreateIOSharedSite11, context, self, fileDescriptor, mode);
-            return TryInvokeOpenBlock(context, block, io);
-        }
-
-        [RubyMethod("open", RubyMethodAttributes.PublicSingleton)]
-        public static object Open(RubyContext/*!*/ context, BlockParam/*!*/ block, RubyClass/*!*/ self, int fileDescriptor, object mode) {
-            RubyIO io = _CreateIOSharedSite11.Target(_CreateIOSharedSite11, context, self, fileDescriptor, Protocols.CastToString(context, mode));
-            return TryInvokeOpenBlock(context, block, io);
-        }
-
-        [RubyMethod("open", RubyMethodAttributes.PublicSingleton)]
-        public static object Open(RubyContext/*!*/ context, BlockParam/*!*/ block, RubyClass/*!*/ self, MutableString/*!*/ host, int port) {
-            RubyIO io = _CreateIOSharedSite6.Target(_CreateIOSharedSite6, context, self, host, port);
-            return TryInvokeOpenBlock(context, block, io);
-        }
-
-        private static RubyIO OpenFileForRead(RubyContext/*!*/ context, MutableString/*!*/ path) {
-            string strPath = path.ConvertToString();
-            if (!File.Exists(strPath)) {
-                throw new Errno.NoEntryError(String.Format("No such file or directory - {0}", strPath));
+        [RubyMethod("foreach", RubyMethodAttributes.PublicSingleton)]
+        public static void ForEach(BlockParam block, RubyClass/*!*/ self, [DefaultProtocol, NotNull]MutableString/*!*/ path, MutableString separator) {
+            using (RubyIO io = new RubyIO(self.Context, File.OpenRead(path.ConvertToString()), "r")) {
+                Each(block, io, separator);
             }
-            return new RubyIO(context, File.OpenRead(strPath), "r");
         }
 
+        #endregion
+
+        #region open
+
+        [RubyMethod("open", RubyMethodAttributes.PublicSingleton)]
+        public static RuleGenerator/*!*/ Open() {
+            return new RuleGenerator((metaBuilder, args, name) => {
+                var targetClass = (RubyClass)args.Target;
+                targetClass.BuildObjectConstructionNoFlow(metaBuilder, args, name);
+
+                // TODO: initialize yields the block?
+                // TODO: null block check
+                if (args.Signature.HasBlock) {
+                    // ignore flow builder set up so far, we need one that creates a BlockParam for library calls:
+                    metaBuilder.ControlFlowBuilder = null;
+
+                    if (metaBuilder.BfcVariable == null) {
+                        metaBuilder.BfcVariable = metaBuilder.GetTemporary(typeof(BlockParam), "#bfc");
+                    }
+
+                    metaBuilder.Result = Ast.Call(typeof(RubyIOOps).GetMethod("InvokeOpenBlock"), 
+                        args.ContextExpression, 
+                        metaBuilder.BfcVariable, 
+                        metaBuilder.Result
+                    );
+
+                    RubyMethodGroupInfo.RuleControlFlowBuilder(metaBuilder, args);
+                } else {
+                    metaBuilder.BuildControlFlow(args);
+                }
+            });
+        }
+
+        [Emitted]
+        public static object InvokeOpenBlock(RubyContext/*!*/ context, BlockParam/*!*/ block, object obj) {
+            RubyIO io;
+            if (!RubyOps.IsRetrySingleton(obj) && block != null && (io = obj as RubyIO) != null) {
+                try {
+                    block.Yield(io, out obj);
+                } finally {
+                    io.Close();
+                }
+            }
+            return obj;
+        }
+
+        #endregion
+
+        #region pipe, popen
 #if !SILVERLIGHT
 
         //pipe
@@ -221,8 +222,10 @@ namespace IronRuby.Builtins {
 
             return new RubyIO(context, reader, writer, modeString.ConvertToString());
         }
-
 #endif
+        #endregion
+
+        #region select
 
         [RubyMethod("select", RubyMethodAttributes.PublicSingleton)]
         public static RubyArray Select(RubyContext/*!*/ context, object self, RubyArray read, [Optional]RubyArray write, [Optional]RubyArray error) {
@@ -341,6 +344,8 @@ namespace IronRuby.Builtins {
             }
             return io;
         }
+
+        #endregion
 
         //sysopen
 
@@ -667,11 +672,15 @@ namespace IronRuby.Builtins {
         }
 
         [RubyMethod("printf")]
-        public static void PrintFormatted(ConversionStorage<int>/*!*/ fixnumCast, ConversionStorage<MutableString>/*!*/ tosConversion, 
+        public static void PrintFormatted(
+            ConversionStorage<IntegerValue>/*!*/ integerConversion, 
+            ConversionStorage<int>/*!*/ fixnumCast, 
+            ConversionStorage<MutableString>/*!*/ tosConversion,
+            ConversionStorage<MutableString>/*!*/ stringCast, 
             BinaryOpStorage/*!*/ writeStorage,
             RubyContext/*!*/ context, RubyIO/*!*/ self, [DefaultProtocol, NotNull]MutableString/*!*/ format, [NotNull]params object[]/*!*/ args) {
 
-            KernelOps.PrintFormatted(fixnumCast, tosConversion, writeStorage, context, null, self, format, args);
+            KernelOps.PrintFormatted(integerConversion, fixnumCast, tosConversion, stringCast, writeStorage, context, null, self, format, args);
         }
 
         #endregion
@@ -699,7 +708,15 @@ namespace IronRuby.Builtins {
 
         #region read, read_nonblock
 
-        private static byte[] ReadAllBytes(RubyIO/*!*/ io) {
+        private static RubyIO/*!*/ OpenFileForRead(RubyContext/*!*/ context, MutableString/*!*/ path) {
+            string strPath = path.ConvertToString();
+            if (!File.Exists(strPath)) {
+                throw new Errno.NoEntryError(String.Format("No such file or directory - {0}", strPath));
+            }
+            return new RubyIO(context, File.OpenRead(strPath), "r");
+        }
+        
+        private static byte[]/*!*/ ReadAllBytes(RubyIO/*!*/ io) {
             var fixedBuffer = new byte[io.Length];
             io.ReadBytes(fixedBuffer, 0, (int)io.Length);
             return fixedBuffer;
