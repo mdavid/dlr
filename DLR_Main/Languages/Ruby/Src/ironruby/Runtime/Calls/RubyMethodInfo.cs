@@ -83,13 +83,11 @@ namespace IronRuby.Runtime.Calls {
             return new MemberInfo[] { _method.Method };
         }
 
-        public override int Arity {
-            get {
-                if (_optionalParamCount > 0) {
-                    return -_mandatoryParamCount - 1;
-                } else {
-                    return _mandatoryParamCount;
-                }
+        public override int GetArity() {
+            if (_optionalParamCount > 0) {
+                return -_mandatoryParamCount - 1;
+            } else {
+                return _mandatoryParamCount;
             }
         }
 

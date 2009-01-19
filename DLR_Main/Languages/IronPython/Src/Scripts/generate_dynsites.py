@@ -103,13 +103,19 @@ def generate_one_func_type(cw, n):
 [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Design", "CA1005:AvoidExcessiveParametersOnGenericTypes")]""")
     cw.write('public delegate TResult Func<%(gsig)s>(%(gparms)s);', gsig = gsig_1_result(n), gparms = gparams_1(n))
 
+def gen_func_action(cw, lo, med, hi, func):
+    cw.write("#if MICROSOFT_SCRIPTING_CORE")
+    for i in range(lo, med):
+        func(cw, i)
+    cw.write("\n#endif")
+    for i in range(med, hi):
+        func(cw, i)
+
 def gen_func_types(cw):
-    for i in range(2, 17):
-        generate_one_func_type(cw, i)
+    gen_func_action(cw, 2, 9, 17, generate_one_func_type)
 
 def gen_action_types(cw):
-    for i in range(2, 17):
-        generate_one_action_type(cw, i)
+    gen_func_action(cw, 2, 9, 17, generate_one_action_type)
 
 #
 # Pregenerated UpdateAndExecute methods for Func, Action delegate types
@@ -224,9 +230,9 @@ internal static %(methodDeclaration)s {
     Matchmaker mm = Interlocked.Exchange(ref MatchmakerCache<%(funcType)s>.Info, null);
     if (mm == null) {
         mm = new Matchmaker();
-        mm.Delegete = ruleTarget = mm.%(fallbackMethod)s<%(typeArgs)s>;
+        mm.Delegate = ruleTarget = mm.%(fallbackMethod)s<%(typeArgs)s>;
     } else {
-        ruleTarget = (%(funcType)s)mm.Delegete;
+        ruleTarget = (%(funcType)s)mm.Delegate;
     }
 
     try {    
@@ -280,12 +286,11 @@ internal static %(methodDeclaration)s {
         //
         // Level 2 cache lookup
         //
-        var args = new object[] { %(args)s };
     
         //
         // Any applicable rules in level 2 cache?
         //
-        if ((applicable = CallSiteOps.FindApplicableRules(@this, args)) != null) {
+        if ((applicable = CallSiteOps.FindApplicableRules(@this)) != null) {
             for (index = 0, count = applicable.Length; index < count; index++) {
                 rule = applicable[index];
     
@@ -306,7 +311,7 @@ internal static %(methodDeclaration)s {
                         //
                         CallSiteOps.AddRule(@this, rule);
                         // and then move it to the front of the L2 cache
-                        @this.RuleCache.MoveRule(rule, args);
+                        @this.RuleCache.MoveRule(rule);
                     }
                 }
     
@@ -326,7 +331,8 @@ internal static %(methodDeclaration)s {
         //
     
         rule = null;
-        
+        var args = new object[] { %(args)s };
+       
         for (; ; ) {
             rule = CallSiteOps.CreateNewRule(@this, rule, originalRule, args);
     

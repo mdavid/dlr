@@ -505,23 +505,23 @@ namespace IronRuby.Builtins {
                 metaBuilder.Result = MakeDelegateConstructorCall(type, args);
             } else {
                 MethodBase[] constructionOverloads;
+                SelfCallConvention callConvention;
 
-                bool includeSelf;
                 if (_structInfo != null) {
                     constructionOverloads = new MethodBase[] { Methods.CreateStructInstance };
-                    includeSelf = true;
+                    callConvention = SelfCallConvention.SelfIsParameter;
                 } else if (_factories != null) {
                     constructionOverloads = (MethodBase[])ReflectionUtils.GetMethodInfos(_factories);
-                    includeSelf = true;
+                    callConvention = SelfCallConvention.SelfIsParameter;
                 } else {
                     constructionOverloads = type.GetConstructors();
                     if (constructionOverloads.Length == 0) {
                         throw RubyExceptions.CreateTypeError(String.Format("allocator undefined for {0}", Name));
                     }
-                    includeSelf = false;
+                    callConvention = SelfCallConvention.NoSelf;
                 }
 
-                RubyMethodGroupInfo.BuildCallNoFlow(metaBuilder, args, methodName, constructionOverloads, includeSelf, false);
+                RubyMethodGroupInfo.BuildCallNoFlow(metaBuilder, args, methodName, constructionOverloads, callConvention);
 
                 // we need to handle break, which unwinds to a proc-converter that could be this method's frame:
                 if (!metaBuilder.Error) {
