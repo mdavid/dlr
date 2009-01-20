@@ -134,9 +134,6 @@
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
-    <None Include="Tests\test.ts" />
-  </ItemGroup>
-  <ItemGroup>
   </ItemGroup>
   <Import Project="..\..\..\Support\silverlight.build.targets" Condition=" '$(SilverlightTreeBuild)' == 'true' " />
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
