@@ -67,7 +67,17 @@ namespace Microsoft.Linq.Expressions.Compiler {
         /// </summary>
         private readonly TempMaker _tm = new TempMaker();
 
-        #region StackSpiller entry points
+        /// <summary>
+        /// Initial stack state. Normally empty, but when inlining the lambda
+        /// we might have a non-empty starting stack state.
+        /// </summary>
+        private readonly Stack _startingStack;
+
+        /// <summary>
+        /// Lambda rewrite result. We need this for inlined lambdas to figure
+        /// out whether we need to guarentee it an empty stack.
+        /// </summary>
+        private RewriteAction _lambdaRewrite;
 
         /// <summary>
         /// Analyzes a lambda, producing a new one that has correct invariants
@@ -76,12 +86,11 @@ namespace Microsoft.Linq.Expressions.Compiler {
         /// entering a try statement).
         /// </summary>
         internal static LambdaExpression AnalyzeLambda(LambdaExpression lambda) {
-            return lambda.Accept(new StackSpiller());
+            return lambda.Accept(new StackSpiller(Stack.Empty));
         }
 
-        #endregion
-
-        private StackSpiller() {
+        private StackSpiller(Stack stack) {
+            _startingStack = stack;
         }
 
         // called by Expression<T>.Accept
@@ -89,7 +98,8 @@ namespace Microsoft.Linq.Expressions.Compiler {
             VerifyTemps();
 
             // Lambda starts with an empty stack
-            Result body = RewriteExpressionFreeTemps(lambda.Body, Stack.Empty);
+            Result body = RewriteExpressionFreeTemps(lambda.Body, _startingStack);
+            _lambdaRewrite = body.Action;
 
             VerifyTemps();
 
@@ -422,8 +432,30 @@ namespace Microsoft.Linq.Expressions.Compiler {
         private Result RewriteInvocationExpression(Expression expr, Stack stack) {
             InvocationExpression node = (InvocationExpression)expr;
 
+            ChildRewriter cr;
+
+            // See if the lambda will be inlined
+            LambdaExpression lambda = node.LambdaOperand;
+            if (lambda != null) {
+                // Arguments execute on current stack
+                cr = new ChildRewriter(this, stack, node.Arguments.Count);
+                cr.Add(node.Arguments);
+
+                // Lambda body also executes on current stack 
+                var spiller = new StackSpiller(stack);
+                lambda = lambda.Accept(spiller);
+
+                if (cr.Rewrite || spiller._lambdaRewrite != RewriteAction.None) {
+                    node = new InvocationExpression(lambda, cr[0, -1], node.Type);
+                }
+
+                Result result = cr.Finish(node);
+                return new Result(result.Action | spiller._lambdaRewrite, result.Node);
+            }
+      
+            cr = new ChildRewriter(this, stack, node.Arguments.Count + 1);
+
             // first argument starts on stack as provided
-            ChildRewriter cr = new ChildRewriter(this, stack, node.Arguments.Count + 1);
             cr.Add(node.Expression);
 
             // rest of arguments have non-empty stack (delegate instance on the stack)
@@ -709,20 +741,40 @@ namespace Microsoft.Linq.Expressions.Compiler {
             SwitchExpression node = (SwitchExpression)expr;
 
             // The switch statement test is emitted on the stack in current state
-            Result test = RewriteExpressionFreeTemps(node.Test, stack);
+            Result switchValue = RewriteExpressionFreeTemps(node.SwitchValue, stack);
 
-            RewriteAction action = test.Action;
-            ReadOnlyCollection<SwitchCase> cases = node.SwitchCases;
+            RewriteAction action = switchValue.Action;
+            ReadOnlyCollection<SwitchCase> cases = node.Cases;
             SwitchCase[] clone = null;
             for (int i = 0; i < cases.Count; i++) {
                 SwitchCase @case = cases[i];
+
+                Expression[] cloneTests = null;
+                ReadOnlyCollection<Expression> testValues = @case.TestValues;
+                for (int j = 0; j < testValues.Count; j++) {
+                    // All tests execute at the same stack state as the switch.
+                    // This is guarenteed by the compiler (to simplify spilling)
+                    Result test = RewriteExpression(testValues[j], stack);
+                    action |= test.Action;
+
+                    if (cloneTests == null && test.Action != RewriteAction.None) {
+                        cloneTests = Clone(testValues, j);
+                    }
+
+                    if (cloneTests != null) {
+                        cloneTests[j] = test.Node;
+                    }
+                }
 
                 // And all the cases also run on the same stack level.
                 Result body = RewriteExpression(@case.Body, stack);
                 action |= body.Action;
 
-                if (body.Action != RewriteAction.None) {
-                    @case = new SwitchCase(@case.IsDefault, @case.Value, body.Node);
+                if (body.Action != RewriteAction.None || cloneTests != null) {
+                    if (cloneTests != null) {
+                        testValues = new ReadOnlyCollection<Expression>(cloneTests);
+                    }
+                    @case = new SwitchCase(body.Node, testValues);
 
                     if (clone == null) {
                         clone = Clone(cases, i);
@@ -734,13 +786,17 @@ namespace Microsoft.Linq.Expressions.Compiler {
                 }
             }
 
+            // default body also runs on initial stack
+            Result defaultBody = RewriteExpression(node.DefaultBody, stack);
+            action |= defaultBody.Action;
+
             if (action != RewriteAction.None) {
                 if (clone != null) {
                     // okay to wrap because we aren't modifying the array
                     cases = new ReadOnlyCollection<SwitchCase>(clone);
                 }
 
-                expr = new SwitchExpression(test.Node, node.BreakLabel, cases);
+                expr = new SwitchExpression(switchValue.Node, defaultBody.Node, node.Comparison, cases);
             }
 
             return new Result(action, expr);
@@ -840,9 +896,5 @@ namespace Microsoft.Linq.Expressions.Compiler {
         }
 
         #endregion
-    }
-
-    internal partial class StackSpiller {
-
     }
 }

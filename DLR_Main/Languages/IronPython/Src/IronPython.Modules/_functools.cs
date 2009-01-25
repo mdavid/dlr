@@ -22,12 +22,21 @@ using System.Threading;
 using IronPython.Runtime;
 using IronPython.Runtime.Binding;
 using IronPython.Runtime.Operations;
+using Microsoft.Scripting.Generation;
 using Microsoft.Scripting.Runtime;
 using Microsoft.Scripting.Utils;
 
 [assembly: PythonModule("_functools", typeof(IronPython.Modules.FunctionTools))]
 namespace IronPython.Modules {
     public static class FunctionTools {
+        public static object reduce(CodeContext/*!*/ context, SiteLocalStorage<CallSite<Func<CallSite, CodeContext, object, object, object, object>>> siteData, object func, object seq) {
+            return Builtin.reduce(context, siteData, func, seq);
+        }
+
+        public static object reduce(CodeContext/*!*/ context, SiteLocalStorage<CallSite<Func<CallSite, CodeContext, object, object, object, object>>> siteData, object func, object seq, object initializer) {
+            return Builtin.reduce(context, siteData, func, seq, initializer);
+        }
+        
         /// <summary>
         /// Returns a new callable object with the provided initial set of arguments
         /// bound to it.  Calling the new function then appends to the additional
