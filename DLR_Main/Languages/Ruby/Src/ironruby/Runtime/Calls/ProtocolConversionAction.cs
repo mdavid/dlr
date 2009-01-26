@@ -139,29 +139,39 @@ namespace IronRuby.Runtime.Calls {
                 }
             }
 
-            // check for type version:
-            metaBuilder.AddTargetTypeTest(args);
+            RubyClass targetClass = args.RubyContext.GetImmediateClassOf(args.Target);
+            Expression targetClassNameConstant = Ast.Constant(targetClass.GetNonSingletonClass().Name);
+            RubyMemberInfo respondToMethod;
+            ProtocolConversionAction selectedConversion = null;
+            RubyMemberInfo conversionMethod = null;
+            RubyMethodVisibility incompatibleRespondToVisibility = RubyMethodVisibility.None;
 
-            Expression targetClassNameConstant = Ast.Constant(ec.GetClassOf(args.Target).Name);
+            using (targetClass.Context.ClassHierarchyLocker()) {
+                // check for type version:
+                metaBuilder.AddTargetTypeTest(args.Target, targetClass, args.TargetExpression, args.RubyContext, args.ContextExpression);
 
-            // Kernel#respond_to? method is not overridden => we can optimize
-            RubyMemberInfo respondToMethod = ec.ResolveMethod(args.Target, Symbols.RespondTo, true).InvalidateSitesOnOverride();
-            if (respondToMethod == null ||
-                // the method is defined in library, hasn't been replaced by user defined method (TODO: maybe we should make this check better)
-                (respondToMethod.DeclaringModule == ec.KernelModule && respondToMethod is RubyMethodGroupInfo)) {
+                // we can optimize if Kernel#respond_to? method is not overridden:
+                respondToMethod = targetClass.ResolveMethodForSiteNoLock(Symbols.RespondTo, false, out incompatibleRespondToVisibility);
+                if (respondToMethod != null && respondToMethod.DeclaringModule == targetClass.Context.KernelModule && respondToMethod is RubyLibraryMethodInfo) { // TODO: better override detection
+                    respondToMethod = null;
 
-                ProtocolConversionAction selectedConversion = null;
-                RubyMemberInfo conversionMethod = null;
-                
-                foreach (var conversion in conversions) {
-                    selectedConversion = conversion;
-                    conversionMethod = ec.ResolveMethod(args.Target, conversion.ToMethodName, false).InvalidateSitesOnOverride();
-                    if (conversionMethod != null) {
-                        break;
+                    // get the first applicable conversion:
+                    foreach (var conversion in conversions) {
+                        selectedConversion = conversion;
+                        conversionMethod = targetClass.ResolveMethodForSiteNoLock(conversion.ToMethodName, false);
+                        if (conversionMethod != null) {
+                            break;
+                        }
                     }
                 }
+            }
 
-                if (conversionMethod == null) {
+            if (respondToMethod == null) {
+                if (incompatibleRespondToVisibility != RubyMethodVisibility.None) {
+                    // respond_to? is not visible:
+                    conversions[conversions.Length - 1].SetError(metaBuilder, targetClassNameConstant, args);
+                    return;
+                } else if (conversionMethod == null) {
                     // error:
                     selectedConversion.SetError(metaBuilder, targetClassNameConstant, args);
                     return;
@@ -178,10 +188,6 @@ namespace IronRuby.Runtime.Calls {
                     }
                     return;
                 }
-            } else if (!RubyModule.IsMethodVisible(respondToMethod, false)) {
-                // respond_to? is private:
-                conversions[conversions.Length - 1].SetError(metaBuilder, targetClassNameConstant, args);
-                return;
             }
 
             // slow path: invoke respond_to?, to_xxx and result validation:

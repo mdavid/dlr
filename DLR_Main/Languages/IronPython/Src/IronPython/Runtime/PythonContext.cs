@@ -545,12 +545,16 @@ namespace IronPython.Runtime {
                         break;
 
                     case SourceCodeKind.File:
-                        ast = parser.ParseFile(true);
+                        ast = parser.ParseFile(true, false);
+                        break;
+
+                    case SourceCodeKind.Statements:
+                        ast = parser.ParseFile(false, false);
                         break;
 
                     default:
-                    case SourceCodeKind.Statements:
-                        ast = parser.ParseFile(false);
+                    case SourceCodeKind.AutoDetect:
+                        ast = parser.ParseFile(true, true);
                         break;
                 }
 

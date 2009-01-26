@@ -25,6 +25,9 @@ using IronRuby.Runtime.Calls;
 using IronRuby.Compiler;
 
 namespace IronRuby.Runtime {
+    /// <summary>
+    /// Thread-safe.
+    /// </summary>
     public class RuntimeErrorSink : ErrorCounter {
         private readonly RubyContext/*!*/ _context;
 

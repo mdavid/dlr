@@ -333,7 +333,7 @@ namespace Microsoft.Scripting.Runtime {
             ContractUtils.RequiresNotNull(contentProvider, "contentProvider");
             ContractUtils.RequiresNotNull(encoding, "encoding");
             ContractUtils.Requires(path == null || path.Length > 0, "path", Strings.EmptyStringIsInvalidPath);
-            ContractUtils.Requires(EnumBounds.IsValid(kind), "kind");
+            ContractUtils.Requires(kind.IsValid(), "kind");
             ContractUtils.Requires(CanCreateSourceCode);
 
             return new SourceUnit(this, new LanguageBoundTextContentProvider(this, contentProvider, encoding), path, kind);
@@ -342,7 +342,7 @@ namespace Microsoft.Scripting.Runtime {
         public SourceUnit CreateSourceUnit(TextContentProvider contentProvider, string path, SourceCodeKind kind) {
             ContractUtils.RequiresNotNull(contentProvider, "contentProvider");
             ContractUtils.Requires(path == null || path.Length > 0, "path", Strings.EmptyStringIsInvalidPath);
-            ContractUtils.Requires(EnumBounds.IsValid(kind), "kind");
+            ContractUtils.Requires(kind.IsValid(), "kind");
             ContractUtils.Requires(CanCreateSourceCode);
 
             return new SourceUnit(this, contentProvider, path, kind);

@@ -124,11 +124,9 @@ namespace IronRuby.Runtime {
 
             RubyContext context = (RubyContext)language;
 
+            RubyModule module = context.CreateModule(null, null, null, null, null, null, null);
             object mainObject = new Object();
-            RubyClass mainSingleton = context.CreateMainSingleton(mainObject);
-            
-            RubyModule module = context.CreateModule(null, null, null, null, null);
-            mainSingleton.SetMixins(new RubyModule[] { module });
+            RubyClass mainSingleton = context.CreateMainSingleton(mainObject, new[] { module });
 
             RubyGlobalScope rubyGlobalScope = context.InitializeGlobalScope(globalScope, false);
             RubyTopLevelScope scope = new RubyTopLevelScope(rubyGlobalScope, null, locals);
@@ -591,27 +589,16 @@ namespace IronRuby.Runtime {
 
         [Emitted] // AliasStatement:
         public static void AliasMethod(RubyScope/*!*/ scope, string/*!*/ newName, string/*!*/ oldName) {
-            // MRI 1.8: if (newName == oldName) return;
-            // MRI 1.9: no check
-
-            // lexical lookup:
-            RubyModule owner = scope.GetMethodDefinitionOwner();
-            RubyMemberInfo method = owner.ResolveMethodFallbackToObject(oldName, true);
-            if (method != null) {
-                owner.AddMethodAlias(scope.RubyContext, newName, method);
-                return;
-            }
-
-            throw RubyExceptions.CreateUndefinedMethodError(owner, oldName);
+            scope.GetMethodDefinitionOwner().AddMethodAlias(newName, oldName);
         }
 
         [Emitted] // UndefineMethod:
         public static void UndefineMethod(RubyScope/*!*/ scope, string/*!*/ name) {
             RubyModule owner = scope.GetInnerMostModule();
+
             if (owner.ResolveMethod(name, true) == null) {
                 throw RubyExceptions.CreateUndefinedMethodError(owner, name);
             }
-
             owner.UndefineMethod(name);
         }
 
@@ -640,11 +627,6 @@ namespace IronRuby.Runtime {
         public static RubyModule/*!*/ DefineModule(RubyScope/*!*/ scope, object target, string/*!*/ name) {
             Assert.NotNull(scope);
             return RubyUtils.DefineModule(scope.GlobalScope, RubyUtils.GetModuleFromObject(scope.RubyContext, target), name);
-        }
-
-        [Emitted]
-        public static RubyModule/*!*/ ConvertNamespaceToModule(RubyScope/*!*/ scope, NamespaceTracker/*!*/ tracker) {
-            return scope.RubyContext.GetOrCreateModule(tracker);
         }
 
         #endregion

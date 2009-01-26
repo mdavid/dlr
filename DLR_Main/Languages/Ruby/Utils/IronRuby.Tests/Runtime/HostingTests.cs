@@ -172,12 +172,15 @@ Fixnum@*
 123
 ", OutputFlags.Match);
         }
-
+        
         public void CrossRuntime2() {
             var engine2 = Ruby.CreateEngine();
             Engine.Runtime.Globals.SetVariable("C", engine2.Execute("class C; def bar; end; self; end"));
             AssertExceptionThrown<InvalidOperationException>(() => Engine.Execute("class C; def foo; end; end"));
-            AssertExceptionThrown<InvalidOperationException>(() => Engine.Execute("class C; alias foo bar; end"));
+            
+            // alias operates in the runtime of the class within which scope it is used:
+            Engine.Execute("class C; alias foo bar; end");
+
             AssertExceptionThrown<InvalidOperationException>(() => Engine.Execute("class C; define_method(:goo) {}; end"));
             AssertExceptionThrown<InvalidOperationException>(() => Engine.Execute(@"
 module M; end
