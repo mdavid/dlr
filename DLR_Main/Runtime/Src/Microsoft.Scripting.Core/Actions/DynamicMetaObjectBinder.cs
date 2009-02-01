@@ -16,7 +16,6 @@ using System; using Microsoft;
 
 
 using System.Collections.ObjectModel;
-using System.Diagnostics;
 using Microsoft.Scripting.Utils;
 using Microsoft.Linq.Expressions;
 using Microsoft.Linq.Expressions.Compiler;
@@ -110,7 +109,7 @@ namespace Microsoft.Scripting {
             // so it makes sense to restrict on the target's type.
             // ideally IDO's should do this, but they often miss this.
             if (args[0] as IDynamicObject != null) {
-                BindingRestrictions idoRestriction = BindingRestrictions.GetTypeRestriction(target.Expression, target.LimitType);
+                BindingRestrictions idoRestriction = BindingRestrictions.GetTypeRestriction(target);
                 bindingRestrictions = idoRestriction.Merge(bindingRestrictions);
             }
 
@@ -180,7 +179,7 @@ namespace Microsoft.Scripting {
                     typeof(object),
                     delegateType,
                     this,
-                    new ReadOnlyCollection<Expression>(exprs)
+                    new TrueReadOnlyCollection<Expression>(exprs)
                 ),
                 rs
             );

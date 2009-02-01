@@ -15,15 +15,12 @@
 using System; using Microsoft;
 
 
-using Microsoft.Scripting.Utils;
-using System.Text;
-using System.Diagnostics;
 using System.Collections.ObjectModel;
-using System.Collections.Generic;
-using System.Globalization;
+using System.Diagnostics;
+using Microsoft.Scripting.Utils;
 
 namespace Microsoft.Linq.Expressions {
-    //CONFORMING
+
     /// <summary>
     /// Base class for specialized parameter expressions.  This version only holds onto the
     /// name which all subclasses need.  Specialized subclasses provide the type and by ref
@@ -165,7 +162,7 @@ namespace Microsoft.Linq.Expressions {
     }
 
     public partial class Expression {
-        //CONFORMING
+
         /// <summary>
         /// Creates a ParameterExpression node that can be used to identify a parameter or a variable in an expression tree.
         /// </summary>
@@ -198,22 +195,6 @@ namespace Microsoft.Linq.Expressions {
             ContractUtils.Requires(type != typeof(void), "type", Strings.ArgumentCannotBeOfTypeVoid);
             ContractUtils.Requires(!type.IsByRef, "type", Strings.TypeMustNotBeByRef);
             return ParameterExpression.Make(type, name, false);
-        }
-
-        //Variables must not be ByRef.
-        internal static void RequireVariableNotByRef(ParameterExpression v, string varName) {
-            Debug.Assert(varName != null);
-            if (v != null && v.IsByRef) {
-                throw new ArgumentException(Strings.VariableMustNotBeByRef, varName);
-            }
-        }
-
-        internal static void RequireVariablesNotByRef(ReadOnlyCollection<ParameterExpression> vs, string collectionName) {
-            Debug.Assert(vs != null);
-            Debug.Assert(collectionName != null);
-            foreach (ParameterExpression v in vs) {
-                RequireVariableNotByRef(v, collectionName);
-            }
         }
     }
 }

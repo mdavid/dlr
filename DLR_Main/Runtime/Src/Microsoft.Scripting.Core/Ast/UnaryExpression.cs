@@ -19,6 +19,8 @@ using System.Collections.ObjectModel;
 using System.Diagnostics;
 using System.Reflection;
 using Microsoft.Scripting.Utils;
+using System.Runtime.CompilerServices;
+using Microsoft.Runtime.CompilerServices;
 
 namespace Microsoft.Linq.Expressions {
     
@@ -244,7 +246,7 @@ namespace Microsoft.Linq.Expressions {
                 block[i] = Assign(temps[i], arg);
                 i++;
             }
-            index = MakeIndex(temps[0], index.Indexer, new ReadOnlyCollection<Expression>(args));
+            index = MakeIndex(temps[0], index.Indexer, new TrueReadOnlyCollection<Expression>(args));
             if (!prefix) {
                 var lastTemp = temps[i] = Parameter(index.Type, null);
                 block[i] = Assign(temps[i], index);
@@ -257,7 +259,7 @@ namespace Microsoft.Linq.Expressions {
                 block[i++] = Assign(index, FunctionalOp(index));
             }
             Debug.Assert(i == block.Length);
-            return Block(new ReadOnlyCollection<ParameterExpression>(temps), new ReadOnlyCollection<Expression>(block));
+            return Block(new TrueReadOnlyCollection<ParameterExpression>(temps), new TrueReadOnlyCollection<Expression>(block));
         }
     }
 
@@ -347,14 +349,15 @@ namespace Microsoft.Linq.Expressions {
             Type operandType = operand.Type;
             Type[] types = new Type[] { operandType };
             Type nnOperandType = TypeUtils.GetNonNullableType(operandType);
-            MethodInfo method = nnOperandType.GetMethod(name, BindingFlags.Static | BindingFlags.Public | BindingFlags.NonPublic, null, types, null);
+            BindingFlags flags = BindingFlags.Static | BindingFlags.Public | BindingFlags.NonPublic;
+            MethodInfo method = nnOperandType.GetMethodValidated(name, flags, null, types, null);
             if (method != null) {
                 return new UnaryExpression(unaryType, operand, method.ReturnType, method);
             }
             // try lifted call
             if (TypeUtils.IsNullableType(operandType)) {
                 types[0] = nnOperandType;
-                method = nnOperandType.GetMethod(name, BindingFlags.Static | BindingFlags.Public | BindingFlags.NonPublic, null, types, null);
+                method = nnOperandType.GetMethodValidated(name, flags, null, types, null);
                 if (method != null && method.ReturnType.IsValueType && !TypeUtils.IsNullableType(method.ReturnType)) {
                     return new UnaryExpression(unaryType, operand, TypeUtils.GetNullableType(method.ReturnType), method);
                 }

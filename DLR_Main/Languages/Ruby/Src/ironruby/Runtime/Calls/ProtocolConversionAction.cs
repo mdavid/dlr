@@ -73,6 +73,10 @@ namespace IronRuby.Runtime.Calls {
                 return ConvertToIntAction.Instance;
             }
 
+            if (parameterType == typeof(double)) {
+                return ConvertToFAction.Instance;
+            }
+
             if (parameterType == typeof(Union<int, MutableString>)) {
                 return CompositeConversionAction.ToFixnumToStr;
             }
@@ -400,7 +404,47 @@ namespace IronRuby.Runtime.Calls {
         protected override string/*!*/ ToMethodName { get { return Symbols.ToI; } }
         protected override MethodInfo ConversionResultValidator { get { return Methods.ToIntegerValidator; } }
     }
-    
+
+    /// <summary>
+    /// Calls to_f (in most cases) and wraps the result into double. It directly calls Kernel.Float for String, Fixnum and Bignum.
+    /// </summary>
+    public sealed class ConvertToFAction : ProtocolConversionAction<ConvertToFAction> {
+        protected override string/*!*/ TargetTypeName { get { return "Float"; } }
+        protected override string/*!*/ ToMethodName { get { return Symbols.ToF; } }
+        protected override MethodInfo ConversionResultValidator { get { return Methods.ToFloatValidator; } }
+
+        protected override bool TryImplicitConversion(MetaObjectBuilder/*!*/ metaBuilder, CallArguments/*!*/ args) {
+            object target = args.Target;
+
+            if (args.Target == null) {
+                metaBuilder.SetError(Methods.CreateTypeConversionError.OpCall(Ast.Constant("nil"), Ast.Constant(TargetTypeName)));
+                return true;
+            }
+
+            if (target is double) {
+                metaBuilder.Result = AstUtils.Convert(args.TargetExpression, typeof(double));
+                return true;
+            }
+
+            if (target is int) {
+                metaBuilder.Result = AstUtils.Convert(AstUtils.Convert(args.TargetExpression, typeof(int)), typeof(double));
+                return true;
+            }
+            if (target is BigInteger) {
+                Expression bigInt = AstUtils.Convert(args.TargetExpression, typeof(BigInteger));
+                metaBuilder.Result = Ast.Call(bigInt, Methods.ConvertBignumToFloat);
+                return true;
+            }
+            if (target is MutableString) {
+                Expression str = AstUtils.Convert(args.TargetExpression, typeof(MutableString));
+                metaBuilder.Result = Ast.Call(Methods.ConvertStringToFloat, str);
+                return true;
+            }
+
+            return false;
+        }
+    }
+
     public sealed class ConvertToSymbolAction : ProtocolConversionAction<ConvertToSymbolAction> {
         protected override string/*!*/ ToMethodName { get { return Symbols.ToStr; } }
         protected override string/*!*/ TargetTypeName { get { return "Symbol"; } }

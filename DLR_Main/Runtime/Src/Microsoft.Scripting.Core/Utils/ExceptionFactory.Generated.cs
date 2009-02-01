@@ -160,15 +160,6 @@ namespace Microsoft.Linq.Expressions {
         }
 
         /// <summary>
-        /// A string like  "variable must not be ByRef"
-        /// </summary>
-        internal static string VariableMustNotBeByRef {
-            get {
-                return "variable must not be ByRef";
-            }
-        }
-
-        /// <summary>
         /// A string like  "Type doesn't have constructor with a given signature"
         /// </summary>
         internal static string TypeDoesNotHaveConstructorForTheSignature {
@@ -391,6 +382,20 @@ namespace Microsoft.Linq.Expressions {
             get {
                 return "Quoted expression must be a lambda";
             }
+        }
+
+        /// <summary>
+        /// A string like  "Variable '{0}' uses unsupported type '{1}'. Reference types are not supported for variables."
+        /// </summary>
+        internal static string VariableMustNotBeByRef(object p0, object p1) {
+            return FormatString("Variable '{0}' uses unsupported type '{1}'. Reference types are not supported for variables.", p0, p1);
+        }
+
+        /// <summary>
+        /// A string like  "Found duplicate parameter '{0}'. Each ParameterExpression in the list must be a unique object."
+        /// </summary>
+        internal static string DuplicateVariable(object p0) {
+            return FormatString("Found duplicate parameter '{0}'. Each ParameterExpression in the list must be a unique object.", p0);
         }
 
         /// <summary>
@@ -1313,12 +1318,72 @@ namespace Microsoft.Linq.Expressions {
             return FormatString("When called from '{0}', rewriting a node of type '{1}' should return a non-null value of the same type. Alternatively, override '{2}' and change it to not visit children of this type.", p0, p1, p2);
         }
 
+        /// <summary>
+        /// A string like  "The value null is not of type '{0}' and cannot be used in this collection."
+        /// </summary>
+        internal static string InvalidNullValue(object p0) {
+            return FormatString("The value null is not of type '{0}' and cannot be used in this collection.", p0);
+        }
+
+        /// <summary>
+        /// A string like  "The value '{0}' is not of type '{1}' and cannot be used in this collection."
+        /// </summary>
+        internal static string InvalidObjectType(object p0, object p1) {
+            return FormatString("The value '{0}' is not of type '{1}' and cannot be used in this collection.", p0, p1);
+        }
+
+        /// <summary>
+        /// A string like  "TryExpression is not supported as an argument to method '{0}' because it has an argument with by-ref type. Construct the tree so the TryExpression is not nested inside of this expression."
+        /// </summary>
+        internal static string TryNotSupportedForMethodsWithRefArgs(object p0) {
+            return FormatString("TryExpression is not supported as an argument to method '{0}' because it has an argument with by-ref type. Construct the tree so the TryExpression is not nested inside of this expression.", p0);
+        }
+
+        /// <summary>
+        /// A string like  "TryExpression is not supported as a child expression when accessing a member on type '{0}' because it is a value type. Construct the tree so the TryExpression is not nested inside of this expression."
+        /// </summary>
+        internal static string TryNotSupportedForValueTypeInstances(object p0) {
+            return FormatString("TryExpression is not supported as a child expression when accessing a member on type '{0}' because it is a value type. Construct the tree so the TryExpression is not nested inside of this expression.", p0);
+        }
+
+        /// <summary>
+        /// A string like  "Collection was modified; enumeration operation may not execute."
+        /// </summary>
+        internal static string CollectionModifiedWhileEnumerating {
+            get {
+                return "Collection was modified; enumeration operation may not execute.";
+            }
+        }
+
+        /// <summary>
+        /// A string like  "Enumeration has either not started or has already finished."
+        /// </summary>
+        internal static string EnumerationIsDone {
+            get {
+                return "Enumeration has either not started or has already finished.";
+            }
+        }
+
     }
     /// <summary>
     ///    Strongly-typed and parameterized exception factory.
     /// </summary>
 
     internal static partial class Error {
+        /// <summary>
+        /// ArgumentException with message like "Variable '{0}' uses unsupported type '{1}'. Reference types are not supported for variables."
+        /// </summary>
+        internal static Exception VariableMustNotBeByRef(object p0, object p1) {
+            return new ArgumentException(Strings.VariableMustNotBeByRef(p0, p1));
+        }
+
+        /// <summary>
+        /// ArgumentException with message like "Found duplicate parameter '{0}'. Each ParameterExpression in the list must be a unique object."
+        /// </summary>
+        internal static Exception DuplicateVariable(object p0) {
+            return new ArgumentException(Strings.DuplicateVariable(p0));
+        }
+
         /// <summary>
         /// ArgumentException with message like "Start and End must be well ordered"
         /// </summary>
@@ -2143,6 +2208,48 @@ namespace Microsoft.Linq.Expressions {
         /// </summary>
         internal static Exception MustRewriteToSameType(object p0, object p1, object p2) {
             return new InvalidOperationException(Strings.MustRewriteToSameType(p0, p1, p2));
+        }
+
+        /// <summary>
+        /// ArgumentNullException with message like "The value null is not of type '{0}' and cannot be used in this collection."
+        /// </summary>
+        internal static Exception InvalidNullValue(object p0) {
+            return new ArgumentNullException(Strings.InvalidNullValue(p0));
+        }
+
+        /// <summary>
+        /// ArgumentException with message like "The value '{0}' is not of type '{1}' and cannot be used in this collection."
+        /// </summary>
+        internal static Exception InvalidObjectType(object p0, object p1) {
+            return new ArgumentException(Strings.InvalidObjectType(p0, p1));
+        }
+
+        /// <summary>
+        /// NotSupportedException with message like "TryExpression is not supported as an argument to method '{0}' because it has an argument with by-ref type. Construct the tree so the TryExpression is not nested inside of this expression."
+        /// </summary>
+        internal static Exception TryNotSupportedForMethodsWithRefArgs(object p0) {
+            return new NotSupportedException(Strings.TryNotSupportedForMethodsWithRefArgs(p0));
+        }
+
+        /// <summary>
+        /// NotSupportedException with message like "TryExpression is not supported as a child expression when accessing a member on type '{0}' because it is a value type. Construct the tree so the TryExpression is not nested inside of this expression."
+        /// </summary>
+        internal static Exception TryNotSupportedForValueTypeInstances(object p0) {
+            return new NotSupportedException(Strings.TryNotSupportedForValueTypeInstances(p0));
+        }
+
+        /// <summary>
+        /// InvalidOperationException with message like "Collection was modified; enumeration operation may not execute."
+        /// </summary>
+        internal static Exception CollectionModifiedWhileEnumerating() {
+            return new InvalidOperationException(Strings.CollectionModifiedWhileEnumerating);
+        }
+
+        /// <summary>
+        /// InvalidOperationException with message like "Enumeration has either not started or has already finished."
+        /// </summary>
+        internal static Exception EnumerationIsDone() {
+            return new InvalidOperationException(Strings.EnumerationIsDone);
         }
 
     }

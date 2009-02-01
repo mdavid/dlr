@@ -17,6 +17,9 @@ using System; using Microsoft;
 
 using System.Collections.ObjectModel;
 using Microsoft.Scripting.Utils;
+using System.Runtime.CompilerServices;
+using Microsoft.Runtime.CompilerServices;
+
 
 namespace Microsoft.Linq.Expressions.Compiler {
 
@@ -80,7 +83,7 @@ namespace Microsoft.Linq.Expressions.Compiler {
                         for (int i = 0; i < _bindings.Count; i++) {
                             newBindings[i] = _bindingRewriters[i].AsBinding();
                         }
-                        return Expression.MemberBind(_binding.Member, new ReadOnlyCollection<MemberBinding>(newBindings));
+                        return Expression.MemberBind(_binding.Member, new TrueReadOnlyCollection<MemberBinding>(newBindings));
                 }
                 throw ContractUtils.Unreachable;
             }
@@ -89,6 +92,7 @@ namespace Microsoft.Linq.Expressions.Compiler {
                 if (target.Type.IsValueType && _binding.Member is System.Reflection.PropertyInfo) {
                     throw Error.CannotAutoInitializeValueTypeMemberThroughProperty(_binding.Member);
                 }
+                RequireNotRefInstance(target);
 
                 MemberExpression member = Expression.MakeMemberAccess(target, _binding.Member);
                 ParameterExpression memberTemp = _spiller.MakeTemp(member.Type);
@@ -109,7 +113,7 @@ namespace Microsoft.Linq.Expressions.Compiler {
                 } else {
                     block[_bindings.Count + 1] = Expression.Empty();
                 }
-                return Expression.Block(block);
+                return MakeBlock(block);
             }
         }
 
@@ -148,7 +152,7 @@ namespace Microsoft.Linq.Expressions.Compiler {
                                 newInits[i] = Expression.ElementInit(_inits[i].AddMethod, cr[0, -1]);
                             }
                         }
-                        return Expression.ListBind(_binding.Member, new ReadOnlyCollection<ElementInit>(newInits));
+                        return Expression.ListBind(_binding.Member, new TrueReadOnlyCollection<ElementInit>(newInits));
                 }
                 throw ContractUtils.Unreachable;
             }
@@ -157,6 +161,7 @@ namespace Microsoft.Linq.Expressions.Compiler {
                 if (target.Type.IsValueType && _binding.Member is System.Reflection.PropertyInfo) {
                     throw Error.CannotAutoInitializeValueTypeElementThroughProperty(_binding.Member);
                 }
+                RequireNotRefInstance(target);
 
                 MemberExpression member = Expression.MakeMemberAccess(target, _binding.Member);
                 ParameterExpression memberTemp = _spiller.MakeTemp(member.Type);
@@ -178,7 +183,7 @@ namespace Microsoft.Linq.Expressions.Compiler {
                 } else {
                     block[_inits.Count + 1] = Expression.Empty();
                 }
-                return Expression.Block(block);
+                return MakeBlock(block);
             }
         }
 
@@ -204,10 +209,12 @@ namespace Microsoft.Linq.Expressions.Compiler {
             }
 
             internal override Expression AsExpression(Expression target) {
+                RequireNotRefInstance(target);
+
                 MemberExpression member = Expression.MakeMemberAccess(target, _binding.Member);
                 ParameterExpression memberTemp = _spiller.MakeTemp(member.Type);
 
-                return Expression.Block(
+                return MakeBlock(
                     Expression.Assign(memberTemp, _rhs),
                     Expression.Assign(member, memberTemp),
                     Expression.Empty()

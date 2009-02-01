@@ -40,7 +40,7 @@ namespace ToyScript.Binders {
         }
 
         internal static DynamicMetaObject BindObjectGetMember(ToyGetMemberBinder action, DynamicMetaObject self) {
-            Type type = self.RuntimeType;
+            Type type = self.GetRuntimeType();
             if (type == null) {
                 return action.Defer(self);
             }
@@ -54,12 +54,12 @@ namespace ToyScript.Binders {
                 );
                 return box.BindGetMember(action);
             } else {
-                return GetMemberOnType(restricted.LimitType, action.Name, restricted.Expression, restricted.Restrictions);
+                return GetMemberOnType(restricted.GetLimitType(), action.Name, restricted.Expression, restricted.Restrictions);
             }
         }
 
         internal static DynamicMetaObject BindTypeGetMember(ToyGetMemberBinder action, DynamicMetaObject self) {
-            Type type = self.LimitType;
+            Type type = self.GetLimitType();
             if (!type.IsSealed) {
                 return action.Defer(self);
             }

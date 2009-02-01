@@ -339,6 +339,15 @@ namespace IronPythonTest {
             AreEqual(2, (int)scope3.GetVariable("x"));
         }
 
+        public void ScenarioObjectOperations() {
+            var ops = _pe.Operations;
+            AreEqual("(1, 2, 3)", ops.Format(new PythonTuple(new object[] { 1, 2, 3 })));
+
+            var scope = _pe.CreateScope();
+            scope.SetVariable("ops", ops);
+            AreEqual("[1, 2, 3]", _pe.Execute<string>("ops.Format([1,2,3])", scope));
+        }
+
         public void ScenarioCP712() {
             ScriptScope scope1 = _env.CreateScope();
             _pe.CreateScriptSourceFromString("max(3, 4)", SourceCodeKind.InteractiveCode).Execute(scope1);
@@ -375,7 +384,6 @@ namespace IronPythonTest {
             x = pc.CreateSnippet("x", SourceCodeKind.Expression).Execute(otherModule.Scope);
             AreEqual(1, (int)x);
         }
-
 
         class CustomDictionary : IDictionary<string, object> {
             // Make "customSymbol" always be accessible. This could have been accomplished just by

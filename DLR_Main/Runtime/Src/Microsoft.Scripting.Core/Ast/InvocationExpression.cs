@@ -17,11 +17,9 @@ using System; using Microsoft;
 
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
-using System.Reflection;
-using Microsoft.Scripting;
-using Microsoft.Scripting.Utils;
-using System.Text;
 using System.Diagnostics;
+using Microsoft.Scripting.Utils;
+using System.Reflection;
 
 namespace Microsoft.Linq.Expressions {
     /// <summary>
@@ -112,7 +110,7 @@ namespace Microsoft.Linq.Expressions {
         ///<exception cref="T:System.InvalidOperationException">
         ///<paramref name="arguments" /> does not contain the same number of elements as the list of parameters for the delegate represented by <paramref name="expression" />.</exception>
         public static InvocationExpression Invoke(Expression expression, params Expression[] arguments) {
-            return Invoke(expression, arguments.ToReadOnly());
+            return Invoke(expression, (IEnumerable<Expression>)arguments);
         }
 
         ///<summary>Creates an <see cref="T:Microsoft.Linq.Expressions.InvocationExpression" />.</summary>
@@ -128,6 +126,17 @@ namespace Microsoft.Linq.Expressions {
         public static InvocationExpression Invoke(Expression expression, IEnumerable<Expression> arguments) {
             RequiresCanRead(expression, "expression");
 
+            var args = arguments.ToReadOnly();
+            var mi = GetInvokeMethod(expression);
+            ValidateArgumentTypes(mi, ExpressionType.Invoke, ref args);
+            return new InvocationExpression(expression, args, mi.ReturnType);
+        }
+
+        /// <summary>
+        /// Gets the delegate's Invoke method; used by InvocationExpression.
+        /// </summary>
+        /// <param name="expression">The expression to be invoked.</param>
+        internal static MethodInfo GetInvokeMethod(Expression expression) {
             Type delegateType = expression.Type;
             if (delegateType == typeof(Delegate)) {
                 throw Error.ExpressionTypeNotInvocable(delegateType);
@@ -139,10 +148,7 @@ namespace Microsoft.Linq.Expressions {
                 delegateType = exprType.GetGenericArguments()[0];
             }
 
-            var mi = delegateType.GetMethod("Invoke");
-            var args = arguments.ToReadOnly();
-            ValidateArgumentTypes(mi, ExpressionType.Invoke, ref args);
-            return new InvocationExpression(expression, args, mi.ReturnType);
+            return delegateType.GetMethod("Invoke");
         }
     }
 }

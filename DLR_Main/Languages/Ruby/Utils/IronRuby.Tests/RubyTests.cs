@@ -40,6 +40,7 @@ namespace IronRuby.Tests {
                 Scenario_RubyNameMangling2,
 
                 OverloadResolution_Block,
+                AmbiguousMatch,
 
                 Scenario_RubySimpleCall1,
                 Scenario_RubySimpleCall2, 
@@ -332,7 +333,8 @@ namespace IronRuby.Tests {
                 ClrConstructor1,
                 // TODO: ClrConstructor2,
                 Scenario_RubyEngine1,
-                Scenario_RubyInteractive,
+                Scenario_RubyInteractive1,
+                Scenario_RubyInteractive2,
                 
                 Scenario_RubyReturnValues1,
                 Scenario_RubyReturnValues2,

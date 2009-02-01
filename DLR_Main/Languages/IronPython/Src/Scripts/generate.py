@@ -36,7 +36,7 @@ source_directories = [
 ]
 
 exclude_directories = [
-    root_dir + "\\Runtime\\Tests\\LinqDlrTests",
+    root_dir + "\\runtime\\tests\\linqdlrtests",
 ]
 
 START = "#region Generated %s"
@@ -155,9 +155,12 @@ class CodeWriter:
         self.writeline("} finally {")
         self.indent()
 
-    def exit_block(self):
+    def exit_block(self, text=None, **kw):
         self.dedent()
-        self.writeline('}')
+        if text:
+            self.writeline("} " + text, **kw)
+        else:
+            self.writeline('}')
 
     def text(self):
         return '\n'.join(self.lines)
@@ -186,7 +189,7 @@ class CodeGenerator:
         return result
 
     def do_dir(self, dirname):
-        if dirname in exclude_directories:
+        if dirname.lower() in exclude_directories:
             return
         for file in listdir(dirname):            
             filename = pathjoin(dirname, file)

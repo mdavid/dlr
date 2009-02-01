@@ -16,12 +16,11 @@ using System; using Microsoft;
 
 
 using System.Collections.ObjectModel;
+using Microsoft.Scripting;
+using Microsoft.Scripting.Utils;
 using System.Globalization;
 using Microsoft.Linq.Expressions;
 using System.Reflection;
-using Microsoft.Scripting;
-using Microsoft.Scripting.Utils;
-using Microsoft.Linq.Expressions.Compiler;
 
 namespace Microsoft.Runtime.CompilerServices {
     /// <summary>
@@ -53,7 +52,7 @@ namespace Microsoft.Runtime.CompilerServices {
                 @params[i] = Expression.Parameter(pis[i + 1].ParameterType, "$arg" + i);
             }
 
-            Parameters = new ReadOnlyCollection<ParameterExpression>(@params);
+            Parameters = new TrueReadOnlyCollection<ParameterExpression>(@params);
             ReturnLabel = Expression.Label(invoke.GetReturnType());
         }
 

@@ -351,9 +351,11 @@
       <Compile Include="Interpreter\Instruction.cs" />
       <Compile Include="Interpreter\Interpreter.cs" />
       <Compile Include="Interpreter\LightCompiler.cs" />
+      <Compile Include="Interpreter\LightDelegateCreator.cs" />
       <Compile Include="Interpreter\LightGlobalRewriter.cs" />
       <Compile Include="Interpreter\LightLambda.cs" />
       <Compile Include="Interpreter\LightLambda.Generated.cs" />
+      <Compile Include="Interpreter\LightLambdaClosureVisitor.cs" />
       <Compile Include="Interpreter\LightScriptCode.cs" />
       <Compile Include="Interpreter\StackFrame.cs" />
     </ItemGroup>
@@ -380,6 +382,7 @@
       <Compile Include="Runtime\BaseSymbolDictionary.cs" />
       <Compile Include="Runtime\BinderOps.cs" />
       <Compile Include="Runtime\BinderType.cs" />
+      <Compile Include="Runtime\BindingRestrictionsHelpers.cs" />
       <Compile Include="Runtime\CallTargets.cs" />
       <Compile Include="Runtime\CallTypes.cs" />
       <Compile Include="Runtime\Cast.cs" />
@@ -396,6 +399,7 @@
       <Compile Include="Runtime\DlrConfiguration.cs" />
       <Compile Include="Runtime\DocumentationAttribute.cs" />
       <Compile Include="Runtime\DynamicLanguageProviderAttribute.cs" />
+      <Compile Include="Runtime\DynamicNull.cs" />
       <Compile Include="Runtime\DynamicOperations.cs" />
       <Compile Include="Runtime\DynamicRuntimeHostingProvider.cs" />
       <Compile Include="Runtime\DynamicStackFrame.cs" />
@@ -487,6 +491,7 @@
       <Compile Include="Utils\TypeExtensions.cs" />
       <Compile Include="Utils\TypeUtils.cs" />
       <Compile Include="Utils\ValueArray.cs" />
+      <Compile Include="Utils\WeakCollection.cs" />
       <Compile Include="Utils\WeakDictionary.cs" />
       <Compile Include="Utils\WeakHandle.cs" />
     </ItemGroup>

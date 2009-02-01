@@ -1307,6 +1307,21 @@ namespace IronRuby.Runtime {
         }
 
         [Emitted]
+        public static ArgumentException/*!*/ CreateArgumentsError(string message) {
+            return (ArgumentException)RubyExceptions.CreateArgumentError(message);
+        }
+
+        [Emitted]
+        public static ArgumentException/*!*/ CreateArgumentsErrorForMissingBlock(string message) {
+            return (ArgumentException)RubyExceptions.CreateArgumentError("block not supplied");
+        }
+
+        [Emitted]
+        public static ArgumentException/*!*/ CreateArgumentsErrorForProc(string className) {
+            return (ArgumentException)RubyExceptions.CreateArgumentError(String.Format("wrong type argument {0} (should be callable)", className));
+        }
+
+        [Emitted]
         public static ArgumentException/*!*/ MakeWrongNumberOfArgumentsError(int actual, int expected) {
             return new ArgumentException(String.Format("wrong number of arguments ({0} for {1})", actual, expected));
         }
@@ -1328,9 +1343,9 @@ namespace IronRuby.Runtime {
         }
 
         [Emitted]
-        public static Exception/*!*/ MakeAmbiguousMatchError(string/*!*/ methodName) {
+        public static Exception/*!*/ MakeAmbiguousMatchError(string/*!*/ message) {
             // TODO:
-            return new AmbiguousMatchException(String.Format("Found multiple methods for `{0}'", methodName));
+            return new AmbiguousMatchException(message);
         }
 
         #endregion
@@ -1491,6 +1506,36 @@ namespace IronRuby.Runtime {
             }
 
             throw new InvalidOperationException(String.Format("{0}#to_int/to_i should return Integer", className));
+        }
+
+        [Emitted] // ProtocolConversionAction
+        public static double ToFloatValidator(string/*!*/ className, object obj) {
+            if (obj is double) {
+                return (double)obj;
+            }
+
+            // to_f should not return System.Single in pure Ruby code. However, we allow it in IronRuby code
+            if (obj is float) {
+                return (double)(float)obj;
+            }
+
+            throw new InvalidOperationException(String.Format("{0}#to_f should return Float", className));
+        }
+
+        [Emitted]
+        public static double ConvertBignumToFloat(BigInteger/*!*/ value) {
+            return value.ToFloat64();
+        }
+
+        [Emitted]
+        public static double ConvertStringToFloat(MutableString/*!*/ value) {
+            double result;
+            bool complete;
+            if (Tokenizer.TryParseDouble(value.ConvertToString(), out result, out complete) && complete) {
+                return result;
+            }
+
+            throw RubyExceptions.CreateArgumentError("String#to_f should return Float");
         }
 
         [Emitted] // ProtocolConversionAction

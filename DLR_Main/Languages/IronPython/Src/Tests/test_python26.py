@@ -392,7 +392,8 @@ def test_tuple_count():
     AreEqual(t.count(2), 1)
     AreEqual(t.count(3), 4)
 
-def test__warnings():
+@skip("multiple_execute")
+def test_warnings():
     import sys
     from collections import deque
     from _warnings import (filters, default_action, once_registry, warn, warn_explicit)
@@ -467,7 +468,7 @@ def test__warnings():
     # remove generated files
     cleanup()
 
-def test__warnings_showwarning():
+def test_warnings_showwarning():
     try:
         from _warnings import showwarning
         from System.IO import StringWriter
@@ -659,7 +660,7 @@ def test_sys_flags():
     else:
         AreEqual(sys.flags.py3k_warning, 0)
 
-def test__functools_reduce():
+def test_functools_reduce():
     import _functools
     
     words = ["I", "am", "the", "walrus"]
@@ -669,5 +670,27 @@ def test__functools_reduce():
     
     AreEqual(_functools.reduce(combine, words), "I am the walrus")
     AreEqual(_functools.reduce(combine, words), reduce(combine, words))
+
+def test_log():
+    import math
+    
+    zeros = [-1, -1.0, -1L, 0, 0.0, 0L]
+    nonzeros = [2, 2.0, 2L]
+    ones = [1, 1.0, 1L]
+    
+    AreNotEqual(type(zeros[0]), type(zeros[2]))
+    
+    for z0 in zeros:
+        AssertError(ValueError, math.log, z0)
+        AssertError(ValueError, math.log10, z0)
+        for z in zeros:
+            AssertError(ValueError, math.log, z0, z)
+        for n in nonzeros + ones:
+            AssertError(ValueError, math.log, z0, n)
+            AssertError(ValueError, math.log, n, z0)
+    
+    for one in ones:
+        for n in nonzeros:
+            AssertError(ZeroDivisionError, math.log, n, 1)
 
 run_test(__name__)

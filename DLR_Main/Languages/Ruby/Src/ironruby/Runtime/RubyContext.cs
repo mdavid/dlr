@@ -217,6 +217,10 @@ namespace IronRuby.Runtime {
             get { return _options; }
         }
 
+        internal RubyBinder RubyBinder {
+            get { return (RubyBinder)Binder; }
+        }
+
         internal RubyScope/*!*/ EmptyScope {
             get { return _emptyScope; }
         }
@@ -317,7 +321,7 @@ namespace IronRuby.Runtime {
             _upTime = new Stopwatch();
             _upTime.Start();
 
-            Binder = new RubyBinder(manager);
+            Binder = new RubyBinder(this);
 
             _runtimeErrorSink = new RuntimeErrorSink(this);
             _globalVariables = new Dictionary<string, GlobalVariable>();
@@ -2010,6 +2014,16 @@ namespace IronRuby.Runtime {
             var encoding = rubyPreambleEncoding ?? preambleEncoding ?? defaultEncoding;
             return new SourceCodeReader(new StreamReader(stream, encoding, false), encoding);
 #endif
+        }
+
+        protected override string/*!*/ FormatObject(DynamicOperations/*!*/ operations, object obj) {
+            var inspectSite = operations.GetOrCreateSite<RubyContext, object, object>(
+                RubyCallAction.Make("inspect", RubyCallSignature.WithImplicitSelf(1))
+            );
+
+            var tosSite = operations.GetOrCreateSite<RubyContext, object, MutableString>(ConvertToSAction.Instance);
+
+            return tosSite.Target(tosSite, this, inspectSite.Target(inspectSite, this, obj)).ToString();
         }
 
         #endregion

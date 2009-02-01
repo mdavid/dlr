@@ -456,10 +456,10 @@ namespace Microsoft.Scripting.Runtime {
             }
 
             public override DynamicMetaObject FallbackConvert(DynamicMetaObject self, DynamicMetaObject onBindingError) {
-                if (Type.IsAssignableFrom(self.LimitType)) {
+                if (Type.IsAssignableFrom(self.GetLimitType())) {
                     return new DynamicMetaObject(
                         self.Expression,
-                        BindingRestrictions.GetTypeRestriction(self.Expression, self.LimitType)
+                        BindingRestrictionsHelpers.GetRuntimeTypeRestriction(self.Expression, self.GetLimitType())
                     );
                 }
 
@@ -468,7 +468,7 @@ namespace Microsoft.Scripting.Runtime {
                         self,
                         DynamicMetaObject.EmptyMetaObjects,
                         typeof(ArgumentTypeException),
-                        String.Format("Expected {0}, got {1}", Type.FullName, self.LimitType.FullName)
+                        String.Format("Expected {0}, got {1}", Type.FullName, self.GetLimitType().FullName)
                     );
             }
 
@@ -647,6 +647,16 @@ namespace Microsoft.Scripting.Runtime {
                 return mo.GetDynamicMemberNames().ToReadOnly();
             }
             return EmptyArray<string>.Instance;
+        }
+
+        /// <summary>
+        /// Returns a string representation of the object in a language specific object display format.
+        /// </summary>
+        /// <param name="operations">Dynamic sites container that could be used for any dynamic dispatches necessary for formatting.</param>
+        /// <param name="obj">Object to format.</param>
+        /// <returns>A string representation of object.</returns>
+        internal protected virtual string FormatObject(DynamicOperations operations, object obj) {
+            return obj == null ? "null" : obj.ToString();
         }
     }
 }
