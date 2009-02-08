@@ -69,7 +69,7 @@ namespace IronPython.Runtime.Binding {
 
             if (toType == typeof(object)) {
                 if (exprType.IsValueType) {
-                    return Ast.Convert(expr, toType);
+                    return AstUtils.Convert(expr, toType);
                 } else {
                     return expr;
                 }
@@ -82,7 +82,7 @@ namespace IronPython.Runtime.Binding {
             Type visType = CompilerHelpers.GetVisibleType(toType);
 
             if (exprType == typeof(PythonType) && visType == typeof(Type)) {
-                return Ast.Convert(expr, visType); // use the implicit conversion
+                return AstUtils.Convert(expr, visType); // use the implicit conversion
             }
 
             return Binders.Convert(
@@ -745,6 +745,12 @@ namespace IronPython.Runtime.Binding {
             Debug.Assert(t != null);
 
             return _sysTypes.ContainsKey(t) || t.IsDefined(typeof(PythonTypeAttribute), false);
+        }
+
+        public bool WarnOnPython3000 {
+            get {
+                return _context.PythonOptions.WarnPy3k;
+            }
         }
 
         /// <summary>

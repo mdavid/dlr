@@ -25,8 +25,10 @@ using IronPython.Runtime.Binding;
 using IronPython.Runtime.Operations;
 using IronPython.Runtime.Types;
 
+using Ast = Microsoft.Linq.Expressions.Expression;
+using AstUtils = Microsoft.Scripting.Ast.Utils;
+
 namespace IronPython.Runtime.Binding {
-    using Ast = Microsoft.Linq.Expressions.Expression;
 
     class PythonGetMemberBinder : DynamicMetaObjectBinder, IPythonSite, IExpressionSerializable {
         private readonly BinderState/*!*/ _state;
@@ -150,7 +152,18 @@ namespace IronPython.Runtime.Binding {
                 }
             }
 
-            return BinderState.GetBinderState(action).Binder.GetMember(name, self, codeContext, isNoThrow);
+            var res = BinderState.GetBinderState(action).Binder.GetMember(name, self, codeContext, isNoThrow);
+
+            // Default binder can return something typed to boolean or int.
+            // If that happens, we need to apply Python's boxing rules.
+            if (res.Expression.Type == typeof(bool) || res.Expression.Type == typeof(int)) {
+                res = new DynamicMetaObject(
+                    AstUtils.Convert(res.Expression, typeof(object)),
+                    res.Restrictions
+                );
+            }
+
+            return res;
         }
 
         private static Expression/*!*/ GetFailureExpression(Type/*!*/ limitType, string name, bool isNoThrow, DynamicMetaObjectBinder action) {
@@ -180,10 +193,6 @@ namespace IronPython.Runtime.Binding {
             get {
                 return (_options & GetMemberOptions.IsNoThrow) != 0;
             }
-        }
-
-        public override object CacheIdentity {
-            get { return this; }
         }
 
         public override int GetHashCode() {
@@ -234,7 +243,7 @@ namespace IronPython.Runtime.Binding {
         public override DynamicMetaObject FallbackGetMember(DynamicMetaObject self, DynamicMetaObject onBindingError) {
 #if !SILVERLIGHT
             DynamicMetaObject com;
-            if (Microsoft.Scripting.ComBinder.TryBindGetMember(this, self, out com)) {
+            if (Microsoft.Scripting.ComBinder.TryBindGetMember(this, self, out com, true)) {
                 return com;
             }
 #endif
@@ -262,11 +271,6 @@ namespace IronPython.Runtime.Binding {
             return ob._state.Binder == _state.Binder &&
                 base.Equals(obj);
         }
-
-        public override object CacheIdentity {
-            get { return this; }
-        }
-
     }
 
     [Flags]

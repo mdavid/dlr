@@ -596,7 +596,7 @@ namespace IronRuby.Runtime {
         public static void UndefineMethod(RubyScope/*!*/ scope, string/*!*/ name) {
             RubyModule owner = scope.GetInnerMostModule();
 
-            if (owner.ResolveMethod(name, true) == null) {
+            if (!owner.ResolveMethod(name, true).Found) {
                 throw RubyExceptions.CreateUndefinedMethodError(owner, name);
             }
             owner.UndefineMethod(name);
@@ -606,7 +606,7 @@ namespace IronRuby.Runtime {
         public static bool IsDefinedMethod(object self, RubyScope/*!*/ scope, string/*!*/ name) {
             // MRI: this is different from UndefineMethod, it behaves like Kernel#method (i.e. doesn't use lexical scope):
             // TODO: visibility
-            return scope.RubyContext.ResolveMethod(self, name, true) != null;
+            return scope.RubyContext.ResolveMethod(self, name, true).Found;
         }
 
         #endregion
@@ -1346,6 +1346,11 @@ namespace IronRuby.Runtime {
         public static Exception/*!*/ MakeAmbiguousMatchError(string/*!*/ message) {
             // TODO:
             return new AmbiguousMatchException(message);
+        }
+
+        [Emitted]
+        public static Exception/*!*/ MakePrivateMethodCalledError(RubyContext/*!*/ context, object target, string/*!*/ methodName) {
+            return RubyExceptions.CreatePrivateMethodCalled(context, target, methodName);
         }
 
         #endregion

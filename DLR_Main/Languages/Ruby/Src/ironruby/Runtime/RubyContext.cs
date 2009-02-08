@@ -773,6 +773,7 @@ namespace IronRuby.Runtime {
             );
 
             using (ClassHierarchyLocker()) {
+                // TODO: improve version updates
                 c.Updated("CreateInstanceSingleton");
             }
 
@@ -1029,7 +1030,7 @@ namespace IronRuby.Runtime {
         #region Member Resolution (thread-safe)
 
         // thread-safe:
-        public RubyMemberInfo ResolveMethod(object target, string/*!*/ name, bool includePrivate) {
+        public MethodResolutionResult ResolveMethod(object target, string/*!*/ name, bool includePrivate) {
             return GetImmediateClassOf(target).ResolveMethod(name, includePrivate);
         }
 

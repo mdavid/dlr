@@ -257,7 +257,7 @@ namespace ToyScript.Parser {
 
         internal Expression AddSpan(SourceSpan span, Expression expression) {
             if (_scope.Document != null) {
-                expression = Expression.DebugInfo(expression, _scope.Document, span.Start.Line, span.Start.Column, span.End.Line, span.End.Column);
+                expression = Utils.AddDebugInfo(expression, _scope.Document, span.Start, span.End);
             }
             return expression;
         }

@@ -77,6 +77,18 @@ namespace Microsoft.Linq.Expressions.Compiler {
             EmitExpressionEnd(startEmitted);
         }
 
+        private void EmitExpressionAsType(Expression node, Type type) {
+            if (type == typeof(void)) {
+                EmitExpressionAsVoid(node);
+            } else {
+                EmitExpression(node);
+                if (node.Type != type) {
+                    Debug.Assert(TypeUtils.AreReferenceAssignable(type, node.Type));
+                    _ilg.Emit(OpCodes.Castclass, type);
+                }
+            }
+        }
+
         #region label block tracking
 
         private ExpressionStart EmitExpressionStart(Expression node) {
@@ -187,35 +199,6 @@ namespace Microsoft.Linq.Expressions.Compiler {
             }
 
             EmitSetIndexCall(index, objectType);
-
-            // Restore the value
-            if (emitAs != EmitAs.Void) {
-                _ilg.Emit(OpCodes.Ldloc, temp);
-                FreeLocal(temp);
-            }
-        }
-
-        private void EmitArrayIndexAssignment(BinaryExpression node, EmitAs emitAs) {
-            Debug.Assert(node.Left.NodeType == ExpressionType.ArrayIndex);
-            var arrayIndex = (BinaryExpression)node.Left;
-
-            // Emit array object
-            EmitInstance(arrayIndex.Left, arrayIndex.Left.Type);
-
-            // Emit index
-            EmitExpression(arrayIndex.Right);
-
-            // Emit value
-            EmitExpression(node.Right);
-
-            // Save the expression value, if needed
-            LocalBuilder temp = null;
-            if (emitAs != EmitAs.Void) {
-                _ilg.Emit(OpCodes.Dup);
-                _ilg.Emit(OpCodes.Stloc, temp = GetLocal(node.Type));
-            }
-
-            _ilg.EmitStoreElement(arrayIndex.Type);
 
             // Restore the value
             if (emitAs != EmitAs.Void) {
@@ -525,9 +508,6 @@ namespace Microsoft.Linq.Expressions.Compiler {
                 case ExpressionType.Parameter:
                     EmitVariableAssignment(node, emitAs);
                     return;
-                case ExpressionType.ArrayIndex:
-                    EmitArrayIndexAssignment(node, emitAs);
-                    return;
                 default:
                     throw Error.InvalidLvalue(node.Left.NodeType);
             }
@@ -652,23 +632,21 @@ namespace Microsoft.Linq.Expressions.Compiler {
         }
 
         private void EmitDebugInfoExpression(Expression expr) {
-            var node = (DebugInfoExpression)expr;
-
             if (!_emitDebugSymbols) {
-                // just emit the body
-                EmitExpression(node.Expression);
                 return;
             }
+            var node = (DebugInfoExpression)expr;
 
             var symbolWriter = GetSymbolWriter(node.Document);
+
+            if (node.IsClear && _sequencePointCleared) {
+                //Emitting another clearance after one clearance does not
+                //have any effect, so we can save it.
+                return;
+            }
             _ilg.MarkSequencePoint(symbolWriter, node.StartLine, node.StartColumn, node.EndLine, node.EndColumn);
             _ilg.Emit(OpCodes.Nop);
-
-            EmitExpression(node.Expression);
-
-            // Clear the sequence point
-            _ilg.MarkSequencePoint(symbolWriter, 0xfeefee, 0, 0xfeefee, 0);
-            _ilg.Emit(OpCodes.Nop);
+            _sequencePointCleared = node.IsClear;
         }
 
         private ISymbolDocumentWriter GetSymbolWriter(SymbolDocumentInfo document) {

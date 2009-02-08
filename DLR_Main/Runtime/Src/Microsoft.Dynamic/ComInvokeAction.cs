@@ -25,10 +25,6 @@ using System.Diagnostics;
 
 namespace Microsoft.Scripting {
     internal sealed class  ComInvokeAction : InvokeBinder {
-        public override object CacheIdentity {
-            get { return this; }
-        }
-
         internal ComInvokeAction(params ArgumentInfo[] arguments)
             : base(arguments) {
         }
@@ -82,7 +78,7 @@ namespace Microsoft.Scripting {
             ArgumentInfo[] arginfos = new ArgumentInfo[argLen];
 
             for (int i = 0; i < argLen; i++) {
-                Expression argExpr = Expression.ArrayIndex(
+                Expression argExpr = Expression.ArrayAccess(
                     argAsArrayExpr,
                     Expression.Constant(i)
                 );
@@ -119,12 +115,7 @@ namespace Microsoft.Scripting {
                 restrictions
             );
         }
-
-        public override object CacheIdentity {
-            get { return this; }
-        }
     }
-
 }
 
 #endif

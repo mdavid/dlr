@@ -98,11 +98,13 @@ namespace Microsoft.Runtime.CompilerServices {
                 _SiteCtors = new CacheDict<Type, Func<CallSiteBinder, CallSite>>(100);
             }
             Func<CallSiteBinder, CallSite> ctor;
-            lock (_SiteCtors) {
-                if (!_SiteCtors.TryGetValue(delegateType, out ctor)) {
+
+            var ctors = _SiteCtors;
+            lock (ctors) {
+                if (!ctors.TryGetValue(delegateType, out ctor)) {
                     MethodInfo method = typeof(CallSite<>).MakeGenericType(delegateType).GetMethod("Create");
                     ctor = (Func<CallSiteBinder, CallSite>)Delegate.CreateDelegate(typeof(Func<CallSiteBinder, CallSite>), method);
-                    _SiteCtors.Add(delegateType, ctor);
+                    ctors.Add(delegateType, ctor);
                 }
             }
             return ctor(binder);
@@ -137,11 +139,6 @@ namespace Microsoft.Runtime.CompilerServices {
         /// </summary>
         internal SmallRuleSet<T> Rules;
 
-        /// <summary>
-        /// The Level 2 cache - all rules produced for the same generic instantiation
-        /// of the dynamic site (all dynamic sites with matching delegate type).
-        /// </summary>
-        private static Dictionary<object, RuleCache<T>> _cache;
 
         // Cached update delegate for all sites with a given T
         private static T _CachedUpdate;
@@ -182,33 +179,16 @@ namespace Microsoft.Runtime.CompilerServices {
         /// <summary>
         /// Clears the rule cache ... used by the call site tests.
         /// </summary>
-        private static void ClearRuleCache() {
-            if (_cache != null) {
-                lock (_cache) {
-                    _cache.Clear();
+        private void ClearRuleCache() {
+            // make sure it initialized/atomized etc...
+            Binder.GetRuleCache<T>();
+
+            var cache = Binder.Cache;
+
+            if (cache != null) {
+                lock (cache) {
+                    cache.Clear();
                 }
-            }
-        }
-
-        internal RuleCache<T> RuleCache {
-            get {
-                RuleCache<T> tree;
-                object cookie = _binder.CacheIdentity;
-
-                if (_cache == null) {
-                    Interlocked.CompareExchange(
-                        ref _cache,
-                         new Dictionary<object, RuleCache<T>>(),
-                         null);
-                }
-
-                lock (_cache) {
-                    if (!_cache.TryGetValue(cookie, out tree)) {
-                        _cache[cookie] = tree = new RuleCache<T>();
-                    }
-                }
-
-                return tree;
             }
         }
 

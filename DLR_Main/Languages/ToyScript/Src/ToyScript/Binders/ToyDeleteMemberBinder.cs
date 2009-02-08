@@ -22,10 +22,6 @@ namespace ToyScript.Binders {
             : base(name, false) {
         }
 
-        public override object CacheIdentity {
-            get { return this; }
-        }
-
         public override int GetHashCode() {
             return 197 ^ base.GetHashCode();
         }

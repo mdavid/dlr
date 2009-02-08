@@ -214,7 +214,7 @@ namespace IronPython.Compiler.Ast {
         }
 
         internal MSAst.Expression/*!*/ MakeAssignment(MSAst.ParameterExpression/*!*/ variable, MSAst.Expression/*!*/ right) {
-            return AstUtils.Assign(variable, Ast.Convert(right, variable.Type));
+            return AstUtils.Assign(variable, AstUtils.Convert(right, variable.Type));
         }
 
         internal MSAst.Expression/*!*/ MakeAssignment(MSAst.ParameterExpression/*!*/ variable, MSAst.Expression/*!*/ right, SourceSpan span) {
@@ -226,7 +226,7 @@ namespace IronPython.Compiler.Ast {
             // Do we need conversion?
             if (!CanAssign(type, expression.Type)) {
                 // Add conversion step to the AST
-                expression = Ast.Convert(expression, type);
+                expression = AstUtils.Convert(expression, type);
             }
             return expression;
         }
@@ -287,18 +287,11 @@ namespace IronPython.Compiler.Ast {
         }
 
         internal MSAst.Expression/*!*/ AddDebugInfo(MSAst.Expression/*!*/ expression, SourceLocation start, SourceLocation end) {
-            if (_document == null || !start.IsValid || !end.IsValid) {
-                return expression;
-            }
-            return MSAst.Expression.DebugInfo(expression, _document, start.Line, start.Column, end.Line, end.Column);
+            return Utils.AddDebugInfo(expression, _document, start, end);
         }
 
         internal MSAst.Expression/*!*/ AddDebugInfo(MSAst.Expression/*!*/ expression, SourceSpan location) {
-            if (_document == null || !location.IsValid) {
-                return expression;
-            }
-            return MSAst.Expression.DebugInfo(expression, _document,
-                location.Start.Line, location.Start.Column, location.End.Line, location.End.Column);
+            return Utils.AddDebugInfo(expression, _document, location.Start, location.End);
         }
 
         internal MSAst.Expression/*!*/ AddDebugInfoAndVoid(MSAst.Expression/*!*/ expression, SourceSpan location) {

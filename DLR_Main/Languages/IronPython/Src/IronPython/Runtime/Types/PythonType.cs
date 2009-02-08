@@ -43,6 +43,8 @@ namespace IronPython.Runtime.Types {
     [DebuggerDisplay("PythonType: {Name}")]
 #endif
     [PythonType("type")]
+    [Documentation(@"type(object) -> gets the type of the object
+type(name, bases, dict) -> creates a new type instance with the given name, base classes, and members from the dictionary")]
     public class PythonType : IMembersList, IDynamicObject, IWeakReferenceable, ICodeFormattable {
         private Type/*!*/ _underlyingSystemType;            // the underlying CLI system type for this type
         private string _name;                               // the name of the type
@@ -647,15 +649,7 @@ namespace IronPython.Runtime.Types {
         internal int Hash(object o) {
             EnsureHashSite();
 
-            object res = _hashSite.Target(_hashSite, o);
-            if (res is int) {
-                return (int)res;
-            } else if (res is BigInteger) {
-                // Python 2.5 defines the result of returning a long as hashing the long
-                return TypeCache.BigInteger.Hash(res);
-            }
-
-            return Converter.ConvertToInt32(res);
+            return _hashSite.Target(_hashSite, o);
         }
 
         internal bool TryGetLength(object o, out int length) {

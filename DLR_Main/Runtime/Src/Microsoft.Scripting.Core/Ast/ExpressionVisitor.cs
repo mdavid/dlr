@@ -47,7 +47,10 @@ namespace Microsoft.Linq.Expressions {
         /// <returns>The modified expression, if it or any subexpression was modified;
         /// otherwise, returns the original expression.</returns>
         public Expression Visit(Expression node) {
-            return (node == null) ? null : node.Accept(this);
+            if (node != null) {
+                return node.Accept(this);
+            }
+            return null;
         }
 
         /// <summary>
@@ -243,7 +246,7 @@ namespace Microsoft.Linq.Expressions {
             if (t == node.Test && l == node.IfTrue && r == node.IfFalse) {
                 return node;
             }
-            return Expression.Condition(t, l, r);
+            return Expression.Condition(t, l, r, node.Type);
         }
 
         /// <summary>
@@ -263,11 +266,7 @@ namespace Microsoft.Linq.Expressions {
         /// <returns>The modified expression, if it or any subexpression was modified;
         /// otherwise, returns the original expression.</returns>
         protected internal virtual Expression VisitDebugInfo(DebugInfoExpression node) {
-            Expression e = Visit(node.Expression);
-            if (e == node.Expression) {
-                return node;
-            }
-            return Expression.DebugInfo(e, node.Document, node.StartLine, node.StartColumn, node.EndLine, node.EndColumn);
+            return node;
         }
 
         /// <summary>
@@ -533,7 +532,7 @@ namespace Microsoft.Linq.Expressions {
             if (s == node.SwitchValue && c == node.Cases && d == node.DefaultBody) {
                 return node;
             }
-            return Expression.Switch(s, d, node.Comparison, c);
+            return Expression.Switch(node.Type, s, d, node.Comparison, c);
         }
 
         /// <summary>
@@ -570,7 +569,7 @@ namespace Microsoft.Linq.Expressions {
                 f == node.Fault) {
                 return node;
             }
-            return Expression.MakeTry(b, y, f, h);
+            return Expression.MakeTry(node.Type, b, y, f, h);
         }
 
         /// <summary>
