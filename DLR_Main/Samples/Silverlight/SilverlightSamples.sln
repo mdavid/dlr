@@ -56,20 +56,10 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Hosting", "Hosting", "{901E
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
-		DelaySigned Release|Any CPU = DelaySigned Release|Any CPU
-		DelaySigned Silverlight Release|Any CPU = DelaySigned Silverlight Release|Any CPU
 		Debug|Any CPU = Debug|Any CPU
 		Release|Any CPU = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
-		{7D07B0CE-FFA3-4402-BFF2-5F42B4267D2A}.DelaySigned Release|Any CPU.Build.0 = DelaySigned Release|Any CPU
-		{7D07B0CE-FFA3-4402-BFF2-5F42B4267D2A}.DelaySigned Release|Any CPU.ActiveCfg = DelaySigned Release|Any CPU
-		{F3E0E202-8C9F-465F-966A-1E28752327BE}.DelaySigned Release|Any CPU.ActiveCfg = Debug|Any CPU
-		{B302654B-9932-447D-9BE8-AC49202B646D}.DelaySigned Release|Any CPU.ActiveCfg = Debug|Any CPU
-		{27CFFEEF-A189-4AA7-AA9D-E97AB434DDC6}.DelaySigned Release|Any CPU.Build.0 = DelaySigned Release|Any CPU
-		{27CFFEEF-A189-4AA7-AA9D-E97AB434DDC6}.DelaySigned Release|Any CPU.ActiveCfg = DelaySigned Release|Any CPU
-		{32E139A2-6960-4224-930E-67BCB0ECEC51}.DelaySigned Release|Any CPU.Build.0 = DelaySigned Release|Any CPU
-		{32E139A2-6960-4224-930E-67BCB0ECEC51}.DelaySigned Release|Any CPU.ActiveCfg = DelaySigned Release|Any CPU
 		{32E139A2-6960-4224-930E-67BCB0ECEC51}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{32E139A2-6960-4224-930E-67BCB0ECEC51}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{32E139A2-6960-4224-930E-67BCB0ECEC51}.Release|Any CPU.ActiveCfg = Release|Any CPU

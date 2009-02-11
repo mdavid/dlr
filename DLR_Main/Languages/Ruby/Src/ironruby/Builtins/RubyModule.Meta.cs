@@ -22,7 +22,7 @@ using IronRuby.Runtime.Calls;
 
 namespace IronRuby.Builtins {
 
-    public partial class RubyModule : IDynamicObject {
+    public partial class RubyModule : IDynamicMetaObjectProvider {
         public virtual DynamicMetaObject/*!*/ GetMetaObject(Expression/*!*/ parameter) {
             return new Meta(parameter, BindingRestrictions.Empty, this);
         }

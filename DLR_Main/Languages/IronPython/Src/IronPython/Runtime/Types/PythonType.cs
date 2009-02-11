@@ -45,7 +45,7 @@ namespace IronPython.Runtime.Types {
     [PythonType("type")]
     [Documentation(@"type(object) -> gets the type of the object
 type(name, bases, dict) -> creates a new type instance with the given name, base classes, and members from the dictionary")]
-    public class PythonType : IMembersList, IDynamicObject, IWeakReferenceable, ICodeFormattable {
+    public class PythonType : IMembersList, IDynamicMetaObjectProvider, IWeakReferenceable, ICodeFormattable {
         private Type/*!*/ _underlyingSystemType;            // the underlying CLI system type for this type
         private string _name;                               // the name of the type
         private Dictionary<SymbolId, PythonTypeSlot> _dict; // type-level slots & attributes
@@ -681,7 +681,7 @@ type(name, bases, dict) -> creates a new type instance with the given name, base
             if (_eqSite == null) {
                 Interlocked.CompareExchange(
                     ref _eqSite,
-                    Context.CreateComparisonSite(StandardOperators.Equal),
+                    Context.CreateComparisonSite(PythonOperationKind.Equal),
                     null
                 );
             }
@@ -774,7 +774,7 @@ type(name, bases, dict) -> creates a new type instance with the given name, base
                     CallSite<Func<CallSite, object, int>>.Create(
                         new PythonOperationBinder(
                             Context.DefaultBinderState,
-                            OperatorStrings.Hash
+                            PythonOperationKind.Hash
                         )
                     ),
                     null
@@ -2060,7 +2060,7 @@ type(name, bases, dict) -> creates a new type instance with the given name, base
 
         #endregion
 
-        #region IDynamicObject Members
+        #region IDynamicMetaObjectProvider Members
 
         [PythonHidden]
         public DynamicMetaObject/*!*/ GetMetaObject(Expression/*!*/ parameter) {

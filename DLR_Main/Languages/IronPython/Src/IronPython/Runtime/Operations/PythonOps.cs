@@ -19,18 +19,12 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using Microsoft.Scripting;
 using System.IO;
+using Microsoft.Linq.Expressions;
 using System.Reflection;
 using System.Reflection.Emit;
-using System.Runtime.CompilerServices;
-using Microsoft.Runtime.CompilerServices;
-
 using System.Text;
 using System.Threading;
-using IronPython.Compiler;
-using IronPython.Hosting;
-using IronPython.Runtime.Binding;
-using IronPython.Runtime.Exceptions;
-using IronPython.Runtime.Types;
+
 using Microsoft.Scripting.Actions;
 using Microsoft.Scripting.Generation;
 using Microsoft.Scripting.Hosting.Providers;
@@ -38,6 +32,12 @@ using Microsoft.Scripting.Hosting.Shell;
 using Microsoft.Scripting.Math;
 using Microsoft.Scripting.Runtime;
 using Microsoft.Scripting.Utils;
+
+using IronPython.Compiler;
+using IronPython.Hosting;
+using IronPython.Runtime.Binding;
+using IronPython.Runtime.Exceptions;
+using IronPython.Runtime.Types;
 
 namespace IronPython.Runtime.Operations {
 
@@ -88,7 +88,7 @@ namespace IronPython.Runtime.Operations {
             // In 1.x, we could check for certain interfaces like ICallable*, but those interfaces were deprecated
             // in favor of dynamic sites. 
             // This is difficult to infer because we'd need to simulate the entire callbinder, which can include
-            // looking for [SpecialName] call methods and checking for a rule from IDynamicObject. But even that wouldn't
+            // looking for [SpecialName] call methods and checking for a rule from IDynamicMetaObjectProvider. But even that wouldn't
             // be complete since sites require the argument list of the call, and we only have the instance here. 
             // Thus check a dedicated IsCallable operator. This lets each object describe if it's callable.
 
@@ -624,22 +624,22 @@ namespace IronPython.Runtime.Operations {
         }
 
         public static object GreaterThanHelper(CodeContext/*!*/ context, object self, object other) {
-            return InternalCompare(context, Operators.GreaterThan, self, other);
+            return InternalCompare(context, PythonOperationKind.GreaterThan, self, other);
         }
 
         public static object LessThanHelper(CodeContext/*!*/ context, object self, object other) {
-            return InternalCompare(context, Operators.LessThan, self, other);
+            return InternalCompare(context, PythonOperationKind.LessThan, self, other);
         }
 
         public static object GreaterThanOrEqualHelper(CodeContext/*!*/ context, object self, object other) {
-            return InternalCompare(context, Operators.GreaterThanOrEqual, self, other);
+            return InternalCompare(context, PythonOperationKind.GreaterThanOrEqual, self, other);
         }
 
         public static object LessThanOrEqualHelper(CodeContext/*!*/ context, object self, object other) {
-            return InternalCompare(context, Operators.LessThanOrEqual, self, other);
+            return InternalCompare(context, PythonOperationKind.LessThanOrEqual, self, other);
         }
 
-        public static object InternalCompare(CodeContext/*!*/ context, Operators op, object self, object other) {
+        internal static object InternalCompare(CodeContext/*!*/ context, PythonOperationKind op, object self, object other) {
             object ret;
             if (PythonTypeOps.TryInvokeBinaryOperator(context, self, other, Symbols.OperatorToSymbol(op), out ret))
                 return ret;
@@ -670,7 +670,7 @@ namespace IronPython.Runtime.Operations {
         public static object PowerMod(CodeContext/*!*/ context, object x, object y, object z) {
             object ret;
             if (z == null) {
-                return PythonContext.GetContext(context).Operation(StandardOperators.Power, x, y);
+                return PythonContext.GetContext(context).Operation(PythonOperationKind.Power, x, y);
             }
             if (x is int && y is int && z is int) {
                 ret = Int32Ops.Power((int)x, (int)y, (int)z);
@@ -1022,7 +1022,7 @@ namespace IronPython.Runtime.Operations {
             }
 
             List res;
-            if (o is IDynamicObject) {
+            if (o is IDynamicMetaObjectProvider) {
                 res = new List();
 
                 PythonContext pc = PythonContext.GetContext(context);
@@ -2108,6 +2108,10 @@ namespace IronPython.Runtime.Operations {
             PerfTrack.NoteEvent(PerfTrack.Categories.Exceptions, throwable);
 
             return throwable;
+        }
+
+        public static Exception CreateThrowable(PythonType type, params object[] args) {
+            return PythonExceptions.CreateThrowable(type, args);
         }
 
         public static void ClearDynamicStackFrames() {
@@ -3234,8 +3238,40 @@ namespace IronPython.Runtime.Operations {
             return new ConversionBinder(GetBinderState(context), type, kind);
         }
 
-        public static DynamicMetaObjectBinder MakeOperationAction(CodeContext/*!*/ context, string operationName) {
-            return new PythonOperationBinder(GetBinderState(context), operationName);
+        public static DynamicMetaObjectBinder MakeOperationAction(CodeContext/*!*/ context, int operationName) {
+            return new PythonOperationBinder(GetBinderState(context), (PythonOperationKind)operationName);
+        }
+
+        public static DynamicMetaObjectBinder MakeUnaryOperationAction(CodeContext/*!*/ context, ExpressionType expressionType) {
+            return new PythonUnaryOperationBinder(GetBinderState(context), expressionType);
+        }
+
+        public static DynamicMetaObjectBinder MakeBinaryOperationAction(CodeContext/*!*/ context, ExpressionType expressionType) {
+            return new PythonBinaryOperationBinder(GetBinderState(context), expressionType);
+        }
+
+        public static DynamicMetaObjectBinder MakeGetIndexAction(CodeContext/*!*/ context, int argCount) {
+            return new PythonGetIndexBinder(GetBinderState(context), argCount);
+        }
+
+        public static DynamicMetaObjectBinder MakeSetIndexAction(CodeContext/*!*/ context, int argCount) {
+            return new PythonSetIndexBinder(GetBinderState(context), argCount);
+        }
+
+        public static DynamicMetaObjectBinder MakeDeleteIndexAction(CodeContext/*!*/ context, int argCount) {
+            return new PythonDeleteIndexBinder(GetBinderState(context), argCount);
+        }
+
+        public static DynamicMetaObjectBinder MakeGetSliceBinder(CodeContext/*!*/ context) {
+            return new PythonGetSliceBinder(GetBinderState(context));
+        }
+
+        public static DynamicMetaObjectBinder MakeSetSliceBinder(CodeContext/*!*/ context) {
+            return new PythonSetSliceBinder(GetBinderState(context));
+        }
+
+        public static DynamicMetaObjectBinder MakeDeleteSliceBinder(CodeContext/*!*/ context) {
+            return new PythonDeleteSliceBinder(GetBinderState(context));
         }
 
         /// <summary>
@@ -3300,6 +3336,39 @@ namespace IronPython.Runtime.Operations {
 
         public static int CompareFloats(double self, double other) {
             return DoubleOps.Compare(self, other);
+        }
+
+        public static byte[] MakeByteArray(this string s) {
+            byte[] ret = new byte[s.Length];
+            for (int i = 0; i < s.Length; i++) {
+                if (s[i] < 0x100) ret[i] = (byte)s[i];
+                else throw PythonOps.UnicodeDecodeError("'ascii' codec can't decode byte {0:X} in position {1}: ordinal not in range", (int)ret[i], i);
+            }
+            return ret;
+        }
+
+        public static string MakeString(this IList<byte> bytes) {
+            return MakeString(bytes, bytes.Count);
+        }
+
+        internal static string MakeString(this byte[] preamble, IList<byte> bytes) {
+            char[] chars = new char[preamble.Length + bytes.Count];
+            for (int i = 0; i < preamble.Length; i++) {
+                chars[i] = (char)preamble[i];
+            }
+            for (int i = 0; i < bytes.Count; i++) {
+                chars[i + preamble.Length] = (char)bytes[i];
+            }
+            return new String(chars);
+        }
+
+        internal static string MakeString(this IList<byte> bytes, int maxBytes) {
+            int bytesToCopy = Math.Min(bytes.Count, maxBytes);
+            StringBuilder b = new StringBuilder(bytesToCopy);
+            for (int i = 0; i < bytesToCopy; i++) {
+                b.Append((char)bytes[i]);
+            }
+            return b.ToString();
         }
 
         #region Exception Factories

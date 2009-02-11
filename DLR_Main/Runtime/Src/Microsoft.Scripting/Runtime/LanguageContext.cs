@@ -601,12 +601,28 @@ namespace Microsoft.Scripting.Runtime {
         /// By default, only returns IDO names
         /// </summary>
         internal protected virtual IList<string> GetMemberNames(object obj) {
-            var ido = obj as IDynamicObject;
+            var ido = obj as IDynamicMetaObjectProvider;
             if (ido != null) {
                 var mo = ido.GetMetaObject(Expression.Parameter(typeof(object), null));
                 return mo.GetDynamicMemberNames().ToReadOnly();
             }
             return EmptyArray<string>.Instance;
+        }
+
+        public virtual string GetDocumentation(object obj) {
+            return String.Empty;
+        }
+
+        public virtual IList<string> GetCallSignatures(object obj) {
+            return new string[0];
+        }
+
+        public virtual bool IsCallable(object obj) {
+            if (obj == null) {
+                return false;
+            }
+
+            return typeof(Delegate).IsAssignableFrom(obj.GetType());
         }
 
         /// <summary>
