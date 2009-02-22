@@ -326,6 +326,7 @@ namespace IronRuby.Builtins {
 
         [RubyMethod("inspect")]
         public static MutableString Inspect(RubyContext/*!*/ context, IDictionary<object, object>/*!*/ self) {
+
             using (IDisposable handle = RubyUtils.InfiniteInspectTracker.TrackObject(self)) {
                 if (handle == null) {
                     return MutableString.Create("{...}");
@@ -336,9 +337,9 @@ namespace IronRuby.Builtins {
                     if (str.Length != 1) {
                         str.Append(", ");
                     }
-                    str.Append(RubySites.Inspect(context, BaseSymbolDictionary.ObjToNull(pair.Key)));
+                    str.Append(context.Inspect(BaseSymbolDictionary.ObjToNull(pair.Key)));
                     str.Append("=>");
-                    str.Append(RubySites.Inspect(context, pair.Value));
+                    str.Append(context.Inspect(pair.Value));
                 }
                 str.Append('}');
                 return str;

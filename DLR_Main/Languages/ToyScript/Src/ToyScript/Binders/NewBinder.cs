@@ -15,10 +15,12 @@
 
 using System; using Microsoft;
 using Microsoft.Scripting;
+using Microsoft.Linq.Expressions;
 
 namespace ToyScript.Binders {
     sealed class NewBinder : CreateInstanceBinder {
-        public NewBinder() {
+        public NewBinder():
+            base(Expression.CallInfo(0)) {
         }
 
         public override int GetHashCode() {

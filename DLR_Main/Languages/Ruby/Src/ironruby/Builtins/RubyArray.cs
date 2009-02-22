@@ -157,7 +157,7 @@ namespace IronRuby.Builtins {
         #region DebugView
 
         internal string/*!*/ GetDebugView() {
-            return RubySites.Inspect(RubyContext._Default, this).ToString();
+            return RubyContext._Default.Inspect(this).ToString();
         }
 
         #endregion

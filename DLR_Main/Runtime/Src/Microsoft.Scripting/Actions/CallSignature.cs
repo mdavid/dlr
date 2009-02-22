@@ -117,7 +117,7 @@ namespace Microsoft.Scripting.Actions {
         [StateIndependent]
         public bool Equals(CallSignature other) {
             if (_infos == null) {
-                return other._infos == null;
+                return other._infos == null && other._argumentCount == _argumentCount;
             } else if (other._infos == null) {
                 return false;
             }
@@ -261,9 +261,9 @@ namespace Microsoft.Scripting.Actions {
             return _infos != null ? _infos[index].Kind : ArgumentType.Simple;
         }
 
-        public SymbolId GetArgumentName(int index) {
+        public string GetArgumentName(int index) {
             ContractUtils.Requires(index >= 0 && index < _argumentCount);
-            return _infos != null ? _infos[index].Name : SymbolId.Empty;
+            return _infos != null ? _infos[index].Name : null;
         }
 
         /// <summary>
@@ -286,14 +286,14 @@ namespace Microsoft.Scripting.Actions {
             return result;
         }
 
-        public SymbolId[] GetArgumentNames() {
+        public string[] GetArgumentNames() {
             if (_infos == null) {
-                return SymbolId.EmptySymbols;
+                return ArrayUtils.EmptyStrings;
             }
 
-            List<SymbolId> result = new List<SymbolId>();
+            List<string> result = new List<string>();
             foreach (Argument info in _infos) {
-                if (info.Name != SymbolId.Empty) {
+                if (info.Name != null) {
                     result.Add(info.Name);
                 }
             }

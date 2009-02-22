@@ -22,6 +22,9 @@ using System.IO;
 using Microsoft.Linq.Expressions;
 using System.Reflection;
 using System.Reflection.Emit;
+using System.Runtime.CompilerServices;
+using Microsoft.Runtime.CompilerServices;
+
 using System.Text;
 using System.Threading;
 
@@ -1563,6 +1566,11 @@ namespace IronPython.Runtime.Operations {
 #if !SILVERLIGHT
         public static void PrintException(CodeContext/*!*/ context, Exception/*!*/ exception, IConsole console) {
             PythonContext pc = PythonContext.GetContext(context);
+            PythonTuple exInfo = GetExceptionInfoLocal(context, exception);
+            pc.SetSystemStateValue("last_type", exInfo[0]);
+            pc.SetSystemStateValue("last_value", exInfo[1]);
+            pc.SetSystemStateValue("last_traceback", exInfo[2]);
+
             object exceptHook = pc.GetSystemStateValue("excepthook");
             BuiltinFunction bf = exceptHook as BuiltinFunction;
             if (console != null && bf != null && bf.DeclaringType == typeof(SysModule) && bf.Name == "excepthook") {
@@ -1570,8 +1578,6 @@ namespace IronPython.Runtime.Operations {
                 console.WriteLine(pc.FormatException(exception), Style.Error);
             } else {
                 // user defined except hook or no console
-                PythonTuple exInfo = GetExceptionInfoLocal(context, exception);
-
                 try {
                     PythonCalls.Call(context, exceptHook, exInfo[0], exInfo[1], exInfo[2]);
                 } catch (Exception e) {
@@ -1813,19 +1819,23 @@ namespace IronPython.Runtime.Operations {
         public static IEnumerator GetEnumeratorForIteration(CodeContext/*!*/ context, object enumerable) {
             IEnumerator enumerator;
             if (!TryGetEnumerator(context, enumerable, out enumerator)) {
-                throw PythonOps.TypeError(
-                    "iteration over non-sequence of type {0}",
-                    PythonOps.Repr(context, DynamicHelpers.GetPythonType(enumerable))
-                );
+                return ThrowTypeErrorForBadIteration(context, enumerable);
             }
 
             return enumerator;
         }
 
+        public static IEnumerator ThrowTypeErrorForBadIteration(CodeContext context, object enumerable) {
+            throw PythonOps.TypeError(
+                "iteration over non-sequence of type {0}",
+                PythonOps.Repr(context, DynamicHelpers.GetPythonType(enumerable))
+            );
+        }
+
         internal static bool TryGetEnumerator(CodeContext/*!*/ context, object enumerable, out IEnumerator enumerator) {
             string str = enumerable as string;
             if (str != null) {
-                enumerator = StringOps.StringEnumerator(str);
+                enumerator = StringEnumerator(str);
                 return true;
             }
 
@@ -1847,6 +1857,10 @@ namespace IronPython.Runtime.Operations {
 
             enumerator = ie.GetEnumerator();
             return true;
+        }
+
+        public static IEnumerator<string> StringEnumerator(string str) {
+            return StringOps.StringEnumerator(str);
         }
 
         #region Exception handling
@@ -2511,7 +2525,7 @@ namespace IronPython.Runtime.Operations {
             if (self.TryGetBoundCustomMember(context, Symbols.Iterator, out callable)) {
                 return CreatePythonEnumerable(self);
             } else if (self.TryGetBoundCustomMember(context, Symbols.GetItem, out callable)) {
-                return CreateItemEnumerable(self);
+                return CreateItemEnumerable(callable, PythonContext.GetContext(context).GetItemCallSite);
             }
 
             return null;
@@ -2531,7 +2545,7 @@ namespace IronPython.Runtime.Operations {
             if (self.TryGetBoundCustomMember(context, Symbols.Iterator, out callable)) {
                 return new IEnumerableOfTWrapper<T>(CreatePythonEnumerable(self));
             } else if (self.TryGetBoundCustomMember(context, Symbols.GetItem, out callable)) {
-                return new IEnumerableOfTWrapper<T>(CreateItemEnumerable(self));
+                return new IEnumerableOfTWrapper<T>(CreateItemEnumerable(callable, PythonContext.GetContext(context).GetItemCallSite));
             }
 
             return null;
@@ -2551,7 +2565,7 @@ namespace IronPython.Runtime.Operations {
             if (self.TryGetBoundCustomMember(context, Symbols.Iterator, out callable)) {
                 return CreatePythonEnumerator(self);
             } else if (self.TryGetBoundCustomMember(context, Symbols.GetItem, out callable)) {
-                return CreateItemEnumerator(self);
+                return CreateItemEnumerator(callable, PythonContext.GetContext(context).GetItemCallSite);
             }
 
             return null;
@@ -2891,7 +2905,7 @@ namespace IronPython.Runtime.Operations {
             return (T)obj;
         }
 
-        public static DynamicMetaObjectBinder MakeComplexCallAction(int count, bool list, SymbolId[] keywords) {
+        public static DynamicMetaObjectBinder MakeComplexCallAction(int count, bool list, string[] keywords) {
             Argument[] infos = CompilerHelpers.MakeRepeatedArray(Argument.Simple, count + keywords.Length);
             if (list) {
                 infos[count - 1] = new Argument(ArgumentType.List);
@@ -2900,15 +2914,13 @@ namespace IronPython.Runtime.Operations {
                 infos[count + i] = new Argument(keywords[i]);
             }
 
-            return new PythonInvokeBinder(
-                DefaultContext.DefaultPythonContext.DefaultBinderState,
+            return DefaultContext.DefaultPythonContext.DefaultBinderState.Invoke(
                 new CallSignature(infos)
             );
         }
 
         public static DynamicMetaObjectBinder MakeSimpleCallAction(int count) {
-            return new PythonInvokeBinder(
-                DefaultContext.DefaultPythonContext.DefaultBinderState,
+            return DefaultContext.DefaultPythonContext.DefaultBinderState.Invoke(
                 new CallSignature(CompilerHelpers.MakeRepeatedArray(Argument.Simple, count))
             );
         }
@@ -2939,16 +2951,31 @@ namespace IronPython.Runtime.Operations {
             return ((PythonGenerator)self).CheckThrowableAndReturnSendValue();
         }
 
-        public static ItemEnumerable CreateItemEnumerable(object baseObject) {
-            return ItemEnumerable.Create(baseObject);
+        public static ItemEnumerable CreateItemEnumerable(object callable, CallSite<Func<CallSite, CodeContext, object, int, object>> site) {
+            return new ItemEnumerable(callable, site);
+        }
+
+        public static IEnumerator MakePythonEnumerator(object iterator) {
+            IEnumerator enumerator;
+            IEnumerable enumerale = iterator as IEnumerable;
+            if (enumerale != null) {
+                enumerator = enumerale.GetEnumerator();
+            } else {
+                enumerator = new PythonEnumerator(iterator);
+            }
+            return enumerator;
+        }
+
+        public static DictionaryKeyEnumerator MakeDictionaryKeyEnumerator(PythonDictionary dict) {
+            return new DictionaryKeyEnumerator(dict._storage);
         }
 
         public static IEnumerable CreatePythonEnumerable(object baseObject) {
             return PythonEnumerable.Create(baseObject);
         }
 
-        public static IEnumerator CreateItemEnumerator(object baseObject) {
-            return ItemEnumerator.Create(baseObject);
+        public static IEnumerator CreateItemEnumerator(object callable, CallSite<Func<CallSite, CodeContext, object, int, object>> site) {
+            return new ItemEnumerator(callable, site);
         }
 
         public static IEnumerator CreatePythonEnumerator(object baseObject) {
@@ -3118,13 +3145,6 @@ namespace IronPython.Runtime.Operations {
             l.AddNoLock(o);
         }
 
-        public static PythonGenerator MarkGeneratorWithExceptionHandling(PythonGenerator/*!*/ generator) {
-            Debug.Assert(generator != null);
-
-            generator.CanSetSysExcInfo = true;
-            return generator;
-        }
-
         public static void InitializePythonGenerator(PythonGenerator/*!*/ generator, IEnumerator/*!*/ enumerator) {
             generator.Next = enumerator;
         }
@@ -3219,59 +3239,59 @@ namespace IronPython.Runtime.Operations {
         }
 
         public static DynamicMetaObjectBinder MakeInvokeAction(CodeContext/*!*/ context, CallSignature signature) {
-            return new PythonInvokeBinder(GetBinderState(context), signature);
+            return GetBinderState(context).Invoke(signature);
         }
 
         public static DynamicMetaObjectBinder MakeGetAction(CodeContext/*!*/ context, string name, bool isNoThrow) {
-            return new PythonGetMemberBinder(GetBinderState(context), name, isNoThrow);
+            return GetBinderState(context).GetMember(name);
         }
 
         public static DynamicMetaObjectBinder MakeSetAction(CodeContext/*!*/ context, string name) {
-            return new PythonSetMemberBinder(GetBinderState(context), name);
+            return GetBinderState(context).SetMember(name);
         }
 
         public static DynamicMetaObjectBinder MakeDeleteAction(CodeContext/*!*/ context, string name) {
-            return new PythonDeleteMemberBinder(GetBinderState(context), name);
+            return GetBinderState(context).DeleteMember(name);
         }
 
         public static DynamicMetaObjectBinder MakeConversionAction(CodeContext/*!*/ context, Type type, ConversionResultKind kind) {
-            return new ConversionBinder(GetBinderState(context), type, kind);
+            return GetBinderState(context).Convert(type, kind);
         }
 
         public static DynamicMetaObjectBinder MakeOperationAction(CodeContext/*!*/ context, int operationName) {
-            return new PythonOperationBinder(GetBinderState(context), (PythonOperationKind)operationName);
+            return GetBinderState(context).Operation((PythonOperationKind)operationName);
         }
 
         public static DynamicMetaObjectBinder MakeUnaryOperationAction(CodeContext/*!*/ context, ExpressionType expressionType) {
-            return new PythonUnaryOperationBinder(GetBinderState(context), expressionType);
+            return GetBinderState(context).UnaryOperation(expressionType);
         }
 
         public static DynamicMetaObjectBinder MakeBinaryOperationAction(CodeContext/*!*/ context, ExpressionType expressionType) {
-            return new PythonBinaryOperationBinder(GetBinderState(context), expressionType);
+            return GetBinderState(context).BinaryOperation(expressionType);
         }
 
         public static DynamicMetaObjectBinder MakeGetIndexAction(CodeContext/*!*/ context, int argCount) {
-            return new PythonGetIndexBinder(GetBinderState(context), argCount);
+            return GetBinderState(context).GetIndex(argCount);
         }
 
         public static DynamicMetaObjectBinder MakeSetIndexAction(CodeContext/*!*/ context, int argCount) {
-            return new PythonSetIndexBinder(GetBinderState(context), argCount);
+            return GetBinderState(context).SetIndex(argCount);
         }
 
         public static DynamicMetaObjectBinder MakeDeleteIndexAction(CodeContext/*!*/ context, int argCount) {
-            return new PythonDeleteIndexBinder(GetBinderState(context), argCount);
+            return GetBinderState(context).DeleteIndex(argCount);
         }
 
         public static DynamicMetaObjectBinder MakeGetSliceBinder(CodeContext/*!*/ context) {
-            return new PythonGetSliceBinder(GetBinderState(context));
+            return GetBinderState(context).GetSlice;
         }
 
         public static DynamicMetaObjectBinder MakeSetSliceBinder(CodeContext/*!*/ context) {
-            return new PythonSetSliceBinder(GetBinderState(context));
+            return GetBinderState(context).SetSlice;
         }
 
         public static DynamicMetaObjectBinder MakeDeleteSliceBinder(CodeContext/*!*/ context) {
-            return new PythonDeleteSliceBinder(GetBinderState(context));
+            return GetBinderState(context).DeleteSlice;
         }
 
         /// <summary>

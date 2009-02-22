@@ -217,7 +217,7 @@ namespace IronRuby.Compiler.Ast {
                 MSA.ParameterExpression variable = scope.DefineHiddenVariable("#value", body.Type);
                 body = Ast.Block(
                     Ast.TryCatch(
-                        Ast.Void(Ast.Assign(variable, body)),
+                        AstUtils.Void(Ast.Assign(variable, body)),
                         handler),
                     variable);
             }

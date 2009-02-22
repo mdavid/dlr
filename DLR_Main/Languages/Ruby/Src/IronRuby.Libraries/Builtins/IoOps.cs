@@ -34,7 +34,7 @@ namespace IronRuby.Builtins {
     /// <summary>
     /// Implementation of IO builtin class. 
     /// </summary>
-    [RubyClass("IO", Extends = typeof(RubyIO)), Includes(typeof(RubyFileOps.Constants)), Includes(typeof(Enumerable))]
+    [RubyClass("IO", Extends = typeof(RubyIO)), Includes(typeof(RubyFileOps.Constants), typeof(Enumerable))]
     public class RubyIOOps {
 
         #region Constants
@@ -675,12 +675,16 @@ namespace IronRuby.Builtins {
         public static void PrintFormatted(
             ConversionStorage<IntegerValue>/*!*/ integerConversion, 
             ConversionStorage<int>/*!*/ fixnumCast, 
+            ConversionStorage<double>/*!*/ tofConversion, 
             ConversionStorage<MutableString>/*!*/ tosConversion,
             ConversionStorage<MutableString>/*!*/ stringCast, 
             BinaryOpStorage/*!*/ writeStorage,
+            UnaryOpStorage/*!*/ inspectStorage,
             RubyContext/*!*/ context, RubyIO/*!*/ self, [DefaultProtocol, NotNull]MutableString/*!*/ format, [NotNull]params object[]/*!*/ args) {
 
-            KernelOps.PrintFormatted(integerConversion, fixnumCast, tosConversion, stringCast, writeStorage, context, null, self, format, args);
+            KernelOps.PrintFormatted(integerConversion, fixnumCast, tofConversion, tosConversion, stringCast, writeStorage, inspectStorage, context, 
+                null, self, format, args
+            );
         }
 
         #endregion

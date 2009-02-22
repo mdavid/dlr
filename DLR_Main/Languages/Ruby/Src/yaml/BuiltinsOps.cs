@@ -231,8 +231,8 @@ namespace IronRuby.StandardLibrary.Yaml {
     [RubyModule(Extends = typeof(Integer))]
     public static class YamlIntegerOps {
         [RubyMethod("to_yaml_node")]
-        public static Node ToYaml(object self, [NotNull]RubyRepresenter/*!*/ rep) {            
-            return rep.Scalar(self, RubySites.ToS(rep.Context, self));
+        public static Node ToYaml(ConversionStorage<MutableString>/*!*/ tosStorage, object self, [NotNull]RubyRepresenter/*!*/ rep) {
+            return rep.Scalar(self, Protocols.ConvertToString(tosStorage, rep.Context, self));
         }          
 
         [RubyMethod("taguri")]
@@ -244,8 +244,8 @@ namespace IronRuby.StandardLibrary.Yaml {
     [RubyModule(Extends = typeof(BigInteger))]
     public static class YamlBigIntegerOps {
         [RubyMethod("to_yaml_node")]
-        public static Node ToYaml([NotNull]BigInteger self, [NotNull]RubyRepresenter/*!*/ rep) {
-            return YamlIntegerOps.ToYaml(self, rep);
+        public static Node ToYaml(ConversionStorage<MutableString>/*!*/ tosStorage, [NotNull]BigInteger self, [NotNull]RubyRepresenter/*!*/ rep) {
+            return YamlIntegerOps.ToYaml(tosStorage, self, rep);
         } 
 
         [RubyMethod("taguri")]
@@ -257,8 +257,8 @@ namespace IronRuby.StandardLibrary.Yaml {
     [RubyModule(Extends = typeof(double))]
     public static class YamlDoubleOps {
         [RubyMethod("to_yaml_node")]
-        public static Node/*!*/ ToYaml(double self, [NotNull]RubyRepresenter/*!*/ rep) {
-            MutableString str = RubySites.ToS(rep.Context, self);
+        public static Node/*!*/ ToYaml(ConversionStorage<MutableString>/*!*/ tosStorage, double self, [NotNull]RubyRepresenter/*!*/ rep) {
+            MutableString str = Protocols.ConvertToString(tosStorage, rep.Context, self);
             if (str != null) {
                 if (str.Equals("Infinity")) {
                     str = MutableString.Create(".Inf");
@@ -303,7 +303,7 @@ namespace IronRuby.StandardLibrary.Yaml {
     public static class YamlRegexpOps {
         [RubyMethod("to_yaml_node")]
         public static Node ToYaml(object self, [NotNull]RubyRepresenter/*!*/ rep) {
-            return rep.Scalar(self, RubySites.Inspect(rep.Context, self));
+            return rep.Scalar(self, rep.Context.Inspect(self));
         }
 
         [RubyMethod("taguri")]
@@ -330,7 +330,7 @@ namespace IronRuby.StandardLibrary.Yaml {
     public static class YamlSymbolOps {
         [RubyMethod("to_yaml_node")]
         public static Node ToYaml(object self, [NotNull]RubyRepresenter/*!*/ rep) {
-            return rep.Scalar(self, RubySites.Inspect(rep.Context, self));
+            return rep.Scalar(self, rep.Context.Inspect(self));
         }
         
         [RubyMethod("taguri")]
@@ -342,9 +342,10 @@ namespace IronRuby.StandardLibrary.Yaml {
     [RubyModule(Extends = typeof(TrueClass))]
     public static class YamlTrueOps {
         [RubyMethod("to_yaml_node")]
-        public static Node ToYaml(object self, [NotNull]RubyRepresenter/*!*/ rep) {
-            return rep.Scalar(self, RubySites.ToS(rep.Context, self));
+        public static Node ToYaml(ConversionStorage<MutableString>/*!*/ tosStorage, object self, [NotNull]RubyRepresenter/*!*/ rep) {
+            return rep.Scalar(self, Protocols.ConvertToString(tosStorage, rep.Context, self));
         }
+
         [RubyMethod("taguri")]
         public static MutableString TagUri(object self) {
             return MutableString.Create("tag:yaml.org,2002:bool");
@@ -354,8 +355,8 @@ namespace IronRuby.StandardLibrary.Yaml {
     [RubyModule(Extends = typeof(FalseClass))]
     public static class YamlFalseOps {
         [RubyMethod("to_yaml_node")]
-        public static Node ToYaml(object self, [NotNull]RubyRepresenter/*!*/ rep) {
-            return rep.Scalar(self, RubySites.ToS(rep.Context, self));
+        public static Node ToYaml(ConversionStorage<MutableString>/*!*/ tosStorage, object self, [NotNull]RubyRepresenter/*!*/ rep) {
+            return rep.Scalar(self, Protocols.ConvertToString(tosStorage, rep.Context, self));
         }
 
         [RubyMethod("taguri")]

@@ -306,7 +306,8 @@ namespace IronRuby.Runtime {
             }
 
             RubyUtils.CheckConstantName(name);
-            return RubySites.ModuleConstMissing(RubyContext, GetInnerMostModule(), name);
+            var owner = GetInnerMostModule();
+            return owner.Context.ConstantMissing(owner, name);
         }
 
         // thread-safe:

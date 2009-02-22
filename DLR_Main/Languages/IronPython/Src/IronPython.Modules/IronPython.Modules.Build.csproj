@@ -6,6 +6,9 @@
     <OutputType>Library</OutputType>
     <RootNamespace>IronPython.Modules</RootNamespace>
     <AssemblyName>IronPython.Modules</AssemblyName>
+    <DebugSymbols>true</DebugSymbols>
+    <DebugType>pdbonly</DebugType>
+    <BinPlaceSymbols>false</BinPlaceSymbols>
     <WarningsNotAsErrors>618,1616,1685,3005,3008,649</WarningsNotAsErrors>
     <WarningLevel>4</WarningLevel>
     <GenerateAssemblyAttribute>false</GenerateAssemblyAttribute>
@@ -44,7 +47,6 @@
       <Compile Include="binascii.cs" />
       <Compile Include="cmath.cs" />
       <Compile Include="codecs.cs" />
-      <Compile Include="collections.cs" />
       <Compile Include="copy_reg.cs" />
       <Compile Include="cPickle.cs" />
       <Compile Include="cStringIO.cs" />
@@ -69,6 +71,7 @@
       <Compile Include="thread.cs" />
       <Compile Include="time.cs" />
       <Compile Include="xxsubtype.cs" />
+      <Compile Include="_collections.cs" />
       <Compile Include="_functools.cs" />
       <Compile Include="_random.cs" />
       <Compile Include="_sre.cs" />
