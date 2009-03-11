@@ -235,7 +235,7 @@ namespace IronPython.Runtime.Operations {
             object slotValue;
             foreach (object type in mro) {
                 if (PythonOps.TryGetBoundAttr(type, Symbols.Slots, out slots)) {
-                    List<string> slotNames = NewTypeMaker.SlotsToList(slots);
+                    List<string> slotNames = PythonType.SlotsToList(slots);
                     foreach (string slotName in slotNames) {
                         if (slotName == "__dict__") continue;
                         // don't reassign same-named slots from types earlier in the MRO
@@ -253,7 +253,7 @@ namespace IronPython.Runtime.Operations {
         /// <summary>
         /// Implements the default __reduce_ex__ method as specified by PEP 307 case 2 (new-style instance, protocol 0 or 1)
         /// </summary>
-        private static PythonTuple ReduceProtocol0(CodeContext/*!*/ context, object self) {
+        internal static PythonTuple ReduceProtocol0(CodeContext/*!*/ context, object self) {
             // CPython implements this in copy_reg._reduce_ex
 
             PythonType myType = DynamicHelpers.GetPythonType(self); // PEP 307 calls this "D"

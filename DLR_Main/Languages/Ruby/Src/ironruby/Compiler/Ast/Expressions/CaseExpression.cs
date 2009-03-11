@@ -117,16 +117,16 @@ namespace IronRuby.Compiler.Ast {
                     Methods.IEnumerable_Of_Object_GetEnumerator
                 )),
 
-                Ast.Assign(resultVariable, Ast.Constant(false)),
+                Ast.Assign(resultVariable, AstUtils.Constant(false)),
                 
                 AstUtils.While(
                     Ast.Call(enumVariable, Methods.IEnumerator_MoveNext),
                     AstUtils.If(
                         MakeTest(gen, Ast.Call(enumVariable, Methods.IEnumerator_get_Current), value),
                         Ast.Block(
-                            Ast.Assign(resultVariable, Ast.Constant(true)),
+                            Ast.Assign(resultVariable, AstUtils.Constant(true)),
                             Ast.Break(label),
-                            Ast.Empty()
+                            AstUtils.Empty()
                         )
                     ), 
                     null, 
@@ -147,7 +147,7 @@ namespace IronRuby.Compiler.Ast {
             if (comparisonArray != null) {
                 result = MakeArrayTest(gen, comparisonArray.TransformRead(gen), value);
             } else {
-                result = Ast.Constant(false);
+                result = AstUtils.Constant(false);
             }
 
             if (comparisons != null) {
@@ -169,7 +169,7 @@ namespace IronRuby.Compiler.Ast {
                 result = gen.TransformStatementsToExpression(_elseStatements);
             } else {
                 // no else clause => the result of the if-expression is nil:
-                result = Ast.Constant(null);
+                result = AstUtils.Constant(null);
             }
 
             MSA.Expression value;

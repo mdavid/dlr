@@ -77,7 +77,7 @@ namespace IronRuby.Runtime {
 
         #endregion
 
-        #region CastToString, TryCastToString, ConvertToString, Inspect
+        #region CastToString, TryCastToString, ConvertToString
 
         /// <summary>
         /// Converts an object to string using to_str protocol (<see cref="ConvertToStrAction"/>).
@@ -236,7 +236,7 @@ namespace IronRuby.Runtime {
 
         #endregion
 
-        #region IsTrue, IsEqual, RespondTo
+        #region IsTrue, IsEqual, RespondTo, Write
 
         /// <summary>
         /// Protocol for determining truth in Ruby (not null and not false)
@@ -249,6 +249,10 @@ namespace IronRuby.Runtime {
         /// Protocol for determining value equality in Ruby (uses IsTrue protocol on result of == call)
         /// </summary>
         public static bool IsEqual(BinaryOpStorage/*!*/ equals, RubyContext/*!*/ context, object lhs, object rhs) {
+            // check reference equality first:
+            if (lhs == rhs) {
+                return true;
+            }
             var site = equals.GetCallSite("==");
             return IsTrue(site.Target(site, context, lhs, rhs));
         }
@@ -256,6 +260,11 @@ namespace IronRuby.Runtime {
         public static bool RespondTo(RespondToStorage/*!*/ respondToStorage, RubyContext/*!*/ context, object target, string/*!*/ methodName) {
             var site = respondToStorage.GetCallSite();
             return IsTrue(site.Target(site, context, target, SymbolTable.StringToId(methodName)));
+        }
+
+        public static void Write(BinaryOpStorage/*!*/ writeStorage, RubyContext/*!*/ context, object target, object value) {
+            var site = writeStorage.GetCallSite("write");
+            site.Target(site, context, target, value);
         }
 
         #endregion
@@ -314,6 +323,30 @@ namespace IronRuby.Runtime {
             }
 
             throw RubyExceptions.MakeCoercionError(context, other, self);
+        }
+
+        /// <summary>
+        /// Applies given operator on coerced values and returns the result.
+        /// </summary>
+        /// <exception cref="TypeError">
+        /// "coerce" method is not defined, throws a subclass of SystemException, or returns something other than a pair of objects.
+        /// </exception>
+        public static object TryCoerceAndApply(
+            BinaryOpStorage/*!*/ coercionStorage,
+            BinaryOpStorage/*!*/ binaryOpStorage, string/*!*/ binaryOp,
+            RubyContext/*!*/ context, object self, object other) {
+
+            if (other == null) {
+                return null;
+            }
+
+            object result;
+            if (TryCoerceAndApply(coercionStorage, binaryOpStorage, binaryOp, context, self, other, out result)) {
+                if (result != null) {
+                    return RubyOps.IsTrue(result);
+                }
+            }
+            return null;
         }
 
         private static bool TryCoerceAndApply(

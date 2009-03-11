@@ -21,6 +21,7 @@ using Microsoft.Scripting.Runtime;
 using Microsoft.Scripting.Utils;
 using IronRuby.Compiler;
 using IronRuby.Builtins;
+using AstUtils = Microsoft.Scripting.Ast.Utils;
 
 namespace IronRuby.Runtime.Calls {
     using Ast = Microsoft.Linq.Expressions.Expression;
@@ -60,7 +61,7 @@ namespace IronRuby.Runtime.Calls {
             
             RubyCallAction.Bind(metaBuilder, binder.Name,
                 new CallArguments(
-                    new DynamicMetaObject(Ast.Constant(context), BindingRestrictions.Empty, context),
+                    new DynamicMetaObject(AstUtils.Constant(context), BindingRestrictions.Empty, context),
                     target, 
                     args, 
                     RubyCallSignature.Simple(binder.CallInfo.ArgumentCount)
@@ -68,7 +69,7 @@ namespace IronRuby.Runtime.Calls {
             );
 
             // TODO: we should return null if we fail, we need to throw exception for now:
-            return metaBuilder.CreateMetaObject(binder, DynamicMetaObject.EmptyMetaObjects);
+            return metaBuilder.CreateMetaObject(binder);
         }
     }
 }

@@ -19,6 +19,7 @@ using Microsoft.Scripting;
 using Microsoft.Scripting.Utils;
 using IronRuby.Builtins;
 using IronRuby.Runtime;
+using AstUtils = Microsoft.Scripting.Ast.Utils;
 
 namespace IronRuby.Compiler.Ast {
     using Ast = Microsoft.Linq.Expressions.Expression;
@@ -111,7 +112,7 @@ namespace IronRuby.Compiler.Ast {
                         Ast.Assign(scopeVariable, 
                             Methods.CreateModuleScope.OpCall(scope.VisibleVariables(), parentScope, rfcVariable, selfVariable)),
                         Ast.Assign(resultVariable, transformedBody),
-                        Ast.Empty()
+                        AstUtils.Empty()
                     )
                 ),
                 gen.DebugMarker("END OF " + debugString),

@@ -17,6 +17,7 @@ using System; using Microsoft;
 
 using Microsoft.Scripting;
 using MSA = Microsoft.Linq.Expressions;
+using AstUtils = Microsoft.Scripting.Ast.Utils;
 
 namespace IronRuby.Compiler.Ast {
     using Ast = Microsoft.Linq.Expressions.Expression;
@@ -44,7 +45,7 @@ namespace IronRuby.Compiler.Ast {
                         Ast.Convert(transformedReturnValue, gen.CurrentLoop.ResultVariable.Type)
                     ),
                     Ast.Break(gen.CurrentLoop.BreakLabel),
-                    Ast.Empty()
+                    AstUtils.Empty()
                 );
             }
 

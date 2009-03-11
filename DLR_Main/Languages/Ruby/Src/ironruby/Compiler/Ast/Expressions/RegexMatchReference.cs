@@ -19,6 +19,7 @@ using System.Diagnostics;
 using Microsoft.Scripting;
 using Microsoft.Scripting.Utils;
 using MSA = Microsoft.Linq.Expressions;
+using AstUtils = Microsoft.Scripting.Ast.Utils;
 
 namespace IronRuby.Compiler.Ast {
     using Ast = Microsoft.Linq.Expressions.Expression;
@@ -119,12 +120,12 @@ namespace IronRuby.Compiler.Ast {
                     return Methods.GetCurrentMatchSuffix.OpCall(gen.CurrentScopeVariable);
 
                 default:
-                    return Methods.GetCurrentMatchGroup.OpCall(gen.CurrentScopeVariable, Ast.Constant(_index));
+                    return Methods.GetCurrentMatchGroup.OpCall(gen.CurrentScopeVariable, AstUtils.Constant(_index));
             }            
         }
 
         internal override MSA.Expression TransformDefinedCondition(AstGenerator/*!*/ gen) {
-            return Ast.NotEqual(TransformRead(gen), Ast.Constant(null));
+            return Ast.NotEqual(TransformRead(gen), AstUtils.Constant(null));
         }
         
         internal override string/*!*/ GetNodeName(AstGenerator/*!*/ gen) {

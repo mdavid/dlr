@@ -20,6 +20,7 @@ using Microsoft.Scripting.Actions;
 using Microsoft.Scripting.Utils;
 using IronRuby.Builtins;
 using MSA = Microsoft.Linq.Expressions;
+using AstUtils = Microsoft.Scripting.Ast.Utils;
 
 namespace IronRuby.Compiler.Ast {
     using Ast = Microsoft.Linq.Expressions.Expression;
@@ -87,7 +88,7 @@ namespace IronRuby.Compiler.Ast {
         internal override MSA.Expression/*!*/ TransformDefinedCondition(AstGenerator/*!*/ gen) {
             // TODO:
             //throw new NotImplementedError();
-            return Ast.Constant(false);
+            return AstUtils.Constant(false);
         }
 
         internal override string/*!*/ GetNodeName(AstGenerator/*!*/ gen) {

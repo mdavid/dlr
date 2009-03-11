@@ -17,6 +17,7 @@ using System; using Microsoft;
 
 using Microsoft.Scripting;
 using MSA = Microsoft.Linq.Expressions;
+using AstUtils = Microsoft.Scripting.Ast.Utils;
 
 namespace IronRuby.Compiler.Ast {
     using Ast = Microsoft.Linq.Expressions.Expression;
@@ -41,9 +42,9 @@ namespace IronRuby.Compiler.Ast {
             // rescue clause:
             if (gen.CurrentRescue != null) {
                 return Ast.Block(
-                    Ast.Assign(gen.CurrentRescue.RetryingVariable, Ast.Constant(true)),
+                    Ast.Assign(gen.CurrentRescue.RetryingVariable, AstUtils.Constant(true)),
                     Ast.Continue(gen.CurrentRescue.ContinueLabel),
-                    Ast.Empty()
+                    AstUtils.Empty()
                 );
             }
 

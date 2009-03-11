@@ -45,7 +45,7 @@ namespace ToyScript.Parser.Ast {
                     )
                 );
             } else {
-                return tg.AddSpan(Span, Expression.Empty());
+                return tg.AddSpan(Span, AstUtils.Empty());
             }
         }
     }

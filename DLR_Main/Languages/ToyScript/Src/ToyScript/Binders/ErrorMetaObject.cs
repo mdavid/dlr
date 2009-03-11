@@ -18,6 +18,7 @@ using Microsoft.Scripting;
 using Microsoft.Linq.Expressions;
 using Microsoft.Scripting.Actions;
 using Microsoft.Scripting.Utils;
+using AstUtils = Microsoft.Scripting.Ast.Utils;
 
 namespace ToyScript.Binders {
     public class ErrorMetaObject : OperationMetaObject {
@@ -31,7 +32,7 @@ namespace ToyScript.Binders {
             return Expression.Throw(
                 Expression.New(
                     exception.GetConstructor(new Type[] { typeof(string) }),
-                    Expression.Constant(message)
+                    AstUtils.Constant(message)
                 )
             );
         }

@@ -24,35 +24,57 @@ using System.Globalization;
 
 namespace Microsoft.Linq.Expressions.Compiler {
     partial class LambdaCompiler {
-        private void EmitBlockExpression(Expression expr) {
+        private void EmitBlockExpression(Expression expr, CompilationFlags flags) {
             // emit body
-            Emit((BlockExpression)expr, EmitAs.Default);
+            Emit((BlockExpression)expr, UpdateEmitAsTypeFlag(flags, CompilationFlags.EmitAsDefaultType));
         }
 
-        private void Emit(BlockExpression node, EmitAs emitAs) {
+        private void Emit(BlockExpression node, CompilationFlags flags) {
             EnterScope(node);
 
+            CompilationFlags emitAs = flags & CompilationFlags.EmitAsTypeMask;
+
             int count = node.ExpressionCount;
+            CompilationFlags tailCall = flags & CompilationFlags.EmitAsTailCallMask;
+            CompilationFlags middleTailCall = tailCall == CompilationFlags.EmitAsNoTail ? CompilationFlags.EmitAsNoTail : CompilationFlags.EmitAsMiddle;
+
             for (int index = 0; index < count - 1; index++) {
                 var e = node.GetExpression(index);
+                var next = node.GetExpression(index + 1);
 
                 if (_emitDebugSymbols) {
-                    //No need to emit a clearance if the next expression in the block is also a
-                    //DebugInfoExprssion.
+                    // No need to emit a clearance if the next expression in the block is also a
+                    // DebugInfoExprssion.
                     var debugInfo = e as DebugInfoExpression;
-                    if (debugInfo != null && debugInfo.IsClear && node.GetExpression(index + 1) is DebugInfoExpression) {
+                    if (debugInfo != null && debugInfo.IsClear && next is DebugInfoExpression) {
                         continue;
                     }
                 }
-                EmitExpressionAsVoid(e);
+                // In the middle of the block.
+                // We may do better here by marking it as Tail if the following expressions are not going to emit any IL.
+                var tailCallFlag = middleTailCall;
+
+                var g = next as GotoExpression;
+                if (g != null && (g.Value == null || !Significant(g.Value))) {
+                    var labelInfo = ReferenceLabel(g.Target);
+                    if (labelInfo.CanReturn) {
+                        // Since tail call flags are not passed into EmitTryExpression, CanReturn means the goto will be emitted
+                        // as Ret. Therefore we can emit the current expression with tail call.
+                        tailCallFlag = CompilationFlags.EmitAsTail;
+                    }
+                }
+                flags = UpdateEmitAsTailCallFlag(flags, tailCallFlag);
+                EmitExpressionAsVoid(e, flags);
             }
 
             // if the type of Block it means this is not a Comma
             // so we will force the last expression to emit as void.
-            if (emitAs == EmitAs.Void || node.Type == typeof(void)) {
-                EmitExpressionAsVoid(node.GetExpression(count - 1));
+            // We don't need EmitAsType flag anymore, should only pass
+            // the EmitTailCall field in flags to emitting the last expression.
+            if (emitAs == CompilationFlags.EmitAsVoidType || node.Type == typeof(void)) {
+                EmitExpressionAsVoid(node.GetExpression(count - 1), tailCall);
             } else {
-                EmitExpressionAsType(node.GetExpression(count - 1), node.Type);
+                EmitExpressionAsType(node.GetExpression(count - 1), node.Type, tailCall);
             }
 
             ExitScope(node);
@@ -125,16 +147,16 @@ namespace Microsoft.Linq.Expressions.Compiler {
 
         #region SwitchExpression
 
-        private void EmitSwitchExpression(Expression expr) {
+        private void EmitSwitchExpression(Expression expr, CompilationFlags flags) {
             SwitchExpression node = (SwitchExpression)expr;
 
             // Try to emit it as an IL switch. Works for integer types.
-            if (TryEmitSwitchInstruction(node)) {
+            if (TryEmitSwitchInstruction(node, flags)) {
                 return;
             }
 
             // Try to emit as a hashtable lookup. Works for strings.
-            if (TryEmitHashtableSwitch(node)) {
+            if (TryEmitHashtableSwitch(node, flags)) {
                 return;
             }
 
@@ -144,9 +166,10 @@ namespace Microsoft.Linq.Expressions.Compiler {
             //
 
             var switchValue = Expression.Parameter(node.SwitchValue.Type, "switchValue");
-            var testValue = Expression.Parameter(node.Cases[0].TestValues[0].Type, "testValue");
+            var testValue = Expression.Parameter(GetTestValueType(node), "testValue");
             _scope.AddLocal(this, switchValue);
             _scope.AddLocal(this, testValue);
+
             EmitExpression(node.SwitchValue);
             _scope.EmitSet(switchValue);
 
@@ -160,6 +183,7 @@ namespace Microsoft.Linq.Expressions.Compiler {
                     // stack as the switch. This simplifies spilling.
                     EmitExpression(test);
                     _scope.EmitSet(testValue);
+                    Debug.Assert(TypeUtils.AreReferenceAssignable(testValue.Type, test.Type));
                     EmitExpressionAndBranch(true, Expression.Equal(switchValue, testValue, false, node.Comparison), labels[i]);
                 }
             }
@@ -169,7 +193,28 @@ namespace Microsoft.Linq.Expressions.Compiler {
             Label @default = (node.DefaultBody == null) ? end : _ilg.DefineLabel();
 
             // Emit the case and default bodies
-            EmitSwitchCases(node, labels, isGoto, @default, end);
+            EmitSwitchCases(node, labels, isGoto, @default, end, flags);
+        }
+
+        /// <summary>
+        /// Gets the common test test value type of the SwitchExpression.
+        /// </summary>
+        private static Type GetTestValueType(SwitchExpression node) {
+            if (node.Comparison == null) {
+                // If we have no comparison or the switch type is nullable, all
+                // right side types must be the same.
+                return node.Cases[0].TestValues[0].Type;
+            }
+
+            // Otherwise, get the type from the method.
+            // We don't support a lifted call in switch (where the method's args
+            // are not nullable but the expression passed are nullable) so we
+            // don't have to worry about that here.
+            Type result = node.Comparison.GetParametersCached()[1].ParameterType;
+            if (result.IsByRef) {
+                result = result.GetElementType();
+            }
+            return result;
         }
 
         private sealed class SwitchLabel {
@@ -265,7 +310,7 @@ namespace Microsoft.Linq.Expressions.Compiler {
         }
 
         // Tries to emit switch as a jmp table
-        private bool TryEmitSwitchInstruction(SwitchExpression node) {
+        private bool TryEmitSwitchInstruction(SwitchExpression node, CompilationFlags flags) {
             // If we have a comparison, bail
             if (node.Comparison != null) {
                 return false;
@@ -335,7 +380,7 @@ namespace Microsoft.Linq.Expressions.Compiler {
             EmitSwitchBuckets(info, buckets, 0, buckets.Count - 1);
 
             // Emit the case bodies and default
-            EmitSwitchCases(node, labels, isGoto, @default, end);
+            EmitSwitchCases(node, labels, isGoto, @default, end, flags);
 
             FreeLocal(value);
             return true;
@@ -375,7 +420,7 @@ namespace Microsoft.Linq.Expressions.Compiler {
             isGoto = false;
         }
 
-        private void EmitSwitchCases(SwitchExpression node, Label[] labels, bool[] isGoto, Label @default, Label end) {
+        private void EmitSwitchCases(SwitchExpression node, Label[] labels, bool[] isGoto, Label @default, Label end, CompilationFlags flags) {
             // Jump to default (to handle the fallthrough case)
             _ilg.Emit(OpCodes.Br, @default);
 
@@ -388,18 +433,24 @@ namespace Microsoft.Linq.Expressions.Compiler {
                 }
 
                 _ilg.MarkLabel(labels[i]);
-                EmitExpressionAsType(node.Cases[i].Body, node.Type);
+                EmitExpressionAsType(node.Cases[i].Body, node.Type, flags);
 
                 // Last case doesn't need branch
                 if (node.DefaultBody != null || i < n - 1) {
-                    _ilg.Emit(OpCodes.Br, end);
+                    if ((flags & CompilationFlags.EmitAsTailCallMask) == CompilationFlags.EmitAsTail) {
+                        //The switch case is at the tail of the lambda so
+                        //it is safe to emit a Ret.
+                        _ilg.Emit(OpCodes.Ret);
+                    } else {
+                        _ilg.Emit(OpCodes.Br, end);
+                    }
                 }
             }
 
             // Default value
             if (node.DefaultBody != null) {
                 _ilg.MarkLabel(@default);
-                EmitExpressionAsType(node.DefaultBody, node.Type);
+                EmitExpressionAsType(node.DefaultBody, node.Type, flags);
             }
 
             _ilg.MarkLabel(end);
@@ -495,7 +546,7 @@ namespace Microsoft.Linq.Expressions.Compiler {
             }
         }
 
-        private bool TryEmitHashtableSwitch(SwitchExpression node) {
+        private bool TryEmitHashtableSwitch(SwitchExpression node, CompilationFlags flags) {
             // If we have a comparison other than string equality, bail
             if (node.Comparison != typeof(string).GetMethod("op_Equality", BindingFlags.Public | BindingFlags.Static | BindingFlags.ExactBinding, null, new[] { typeof(string), typeof(string) }, null)) {
                 return false;
@@ -595,8 +646,7 @@ namespace Microsoft.Linq.Expressions.Compiler {
                 Expression.Switch(node.Type, switchIndex, node.DefaultBody, null, cases)
             );
 
-            // Emit it normally
-            EmitExpression(reduced);
+            EmitExpression(reduced, flags);
             return true;
         }
 

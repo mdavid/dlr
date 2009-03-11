@@ -29,6 +29,7 @@ using System.Collections.ObjectModel;
 using IronRuby.Compiler.Generation;
 using System.Runtime.Serialization;
 using System.Security.Permissions;
+using AstUtils = Microsoft.Scripting.Ast.Utils;
 
 namespace IronRuby.Builtins {
 
@@ -165,7 +166,7 @@ namespace IronRuby.Builtins {
                 metaBuilder.Result = Ast.Call(
                     Ast.Convert(args.TargetExpression, typeof(RubyStruct)),
                     typeof(RubyStruct).GetMethod("GetValue"),
-                    Ast.Constant(index)
+                    AstUtils.Constant(index)
                 );
             };
         }
@@ -178,7 +179,7 @@ namespace IronRuby.Builtins {
                 metaBuilder.Result = Ast.Call(
                     Ast.Convert(actualArgs[0], typeof(RubyStruct)),
                     typeof(RubyStruct).GetMethod("SetValue"),
-                    Ast.Constant(index),
+                    AstUtils.Constant(index),
                     Ast.Convert(actualArgs[1], typeof(object))
                 );
             };

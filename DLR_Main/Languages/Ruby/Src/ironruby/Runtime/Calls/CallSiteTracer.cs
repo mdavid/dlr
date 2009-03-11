@@ -31,6 +31,7 @@ using IronRuby.Runtime.Calls;
 
 using MSA = Microsoft.Linq.Expressions;
 using Ast = Microsoft.Linq.Expressions.Expression;
+using AstUtils = Microsoft.Scripting.Ast.Utils;
 
 namespace IronRuby.Runtime.Calls {
     public sealed class CallSiteTracer {
@@ -136,8 +137,8 @@ namespace IronRuby.Runtime.Calls {
 
                     args[last] = typeof(TracingRubyCallAction).GetMethod("EnterCallSite").MakeGenericMethod(args[last].Type).OpCall(
                         args[last],
-                        Ast.Constant(_sourceId), 
-                        Ast.Constant(_sites[node].Start.Index)
+                        AstUtils.Constant(_sourceId), 
+                        AstUtils.Constant(_sites[node].Start.Index)
                     );
 
                     return Ast.Dynamic(

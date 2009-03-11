@@ -47,12 +47,18 @@ namespace IronPython.Compiler {
         private const int MaxIndent = 80;
         private const int DefaultBufferCapacity = 1024;
 
-        public Tokenizer()
-            : this(ErrorSink.Null, true) {
+        public Tokenizer() {
+            _errors = ErrorSink.Null;
+            _verbatim = true;
+            _state = new State(null);
+            _dontImplyDedent = true;
         }
 
-        public Tokenizer(ErrorSink errorSink)
-            : this(errorSink, false) {
+        public Tokenizer(ErrorSink errorSink) {
+            _errors = errorSink;
+            _verbatim = false;
+            _state = new State(null);
+            _dontImplyDedent = true;
         }
 
         [Obsolete("Use the overload that takes a PythonCompilerOptions instead")]
@@ -166,6 +172,10 @@ namespace IronPython.Compiler {
         }
 
         public void Initialize(object state, TextReader reader, SourceUnit sourceUnit, SourceLocation initialLocation, int bufferCapacity) {
+            Initialize(state, reader, sourceUnit, initialLocation, bufferCapacity, null);
+        }
+
+        public void Initialize(object state, TextReader reader, SourceUnit sourceUnit, SourceLocation initialLocation, int bufferCapacity, PythonCompilerOptions compilerOptions) {
             ContractUtils.RequiresNotNull(reader, "reader");
 
             if (state != null) {
@@ -173,6 +183,10 @@ namespace IronPython.Compiler {
                 _state = new State((State)state);
             } else {
                 _state = new State(null);
+            }
+
+            if (compilerOptions != null && compilerOptions.InitialIndent != null) {
+                _state.Indent = (int[])compilerOptions.InitialIndent.Clone();
             }
 
             _sourceUnit = sourceUnit;

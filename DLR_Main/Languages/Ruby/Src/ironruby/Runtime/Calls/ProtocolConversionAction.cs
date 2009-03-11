@@ -44,7 +44,7 @@ namespace IronRuby.Runtime.Calls {
         public override DynamicMetaObject/*!*/ Bind(DynamicMetaObject/*!*/ context, DynamicMetaObject/*!*/[]/*!*/ args) {
             var mo = new MetaObjectBuilder();
             BuildConversion(mo, new CallArguments(context, args, Signature));
-            return mo.CreateMetaObject(this, context, args);
+            return mo.CreateMetaObject(this);
         }
 
         protected abstract void BuildConversion(MetaObjectBuilder/*!*/ metaBuilder, CallArguments/*!*/ args);
@@ -125,7 +125,7 @@ namespace IronRuby.Runtime.Calls {
             foreach (var conversion in conversions) {
                 if (conversion.TryImplicitConversion(metaBuilder, args)) {
                     if (args.Target == null) {
-                        metaBuilder.AddRestriction(Ast.Equal(args.TargetExpression, Ast.Constant(null, args.TargetExpression.Type)));
+                        metaBuilder.AddRestriction(Ast.Equal(args.TargetExpression, AstUtils.Constant(null, args.TargetExpression.Type)));
                     } else {
                         metaBuilder.AddTypeRestriction(args.Target.GetType(), args.TargetExpression);
                     }
@@ -138,7 +138,7 @@ namespace IronRuby.Runtime.Calls {
             }
 
             RubyClass targetClass = args.RubyContext.GetImmediateClassOf(args.Target);
-            Expression targetClassNameConstant = Ast.Constant(targetClass.GetNonSingletonClass().Name);
+            Expression targetClassNameConstant = AstUtils.Constant(targetClass.GetNonSingletonClass().Name);
             MethodResolutionResult respondToMethod, methodMissing = MethodResolutionResult.NotFound;
             ProtocolConversionAction selectedConversion = null;
             RubyMemberInfo conversionMethod = null;
@@ -148,20 +148,20 @@ namespace IronRuby.Runtime.Calls {
                 metaBuilder.AddTargetTypeTest(args.Target, targetClass, args.TargetExpression, args.RubyContext, args.ContextExpression);
 
                 // we can optimize if Kernel#respond_to? method is not overridden:
-                respondToMethod = targetClass.ResolveMethodForSiteNoLock(Symbols.RespondTo, true);
+                respondToMethod = targetClass.ResolveMethodForSiteNoLock(Symbols.RespondTo, RubyClass.IgnoreVisibility);
                 if (respondToMethod.Found && respondToMethod.Info.DeclaringModule == targetClass.Context.KernelModule && respondToMethod.Info is RubyLibraryMethodInfo) { // TODO: better override detection
                     respondToMethod = MethodResolutionResult.NotFound;
 
                     // get the first applicable conversion:
                     foreach (var conversion in conversions) {
                         selectedConversion = conversion;
-                        conversionMethod = targetClass.ResolveMethodForSiteNoLock(conversion.ToMethodName, true).Info;
+                        conversionMethod = targetClass.ResolveMethodForSiteNoLock(conversion.ToMethodName, RubyClass.IgnoreVisibility).Info;
                         if (conversionMethod != null) {
                             break;
                         } else {
                             // find method_missing - we need to add "to_xxx" methods to the missing methods table:
                             if (!methodMissing.Found) {
-                                methodMissing = targetClass.ResolveMethodNoLock(Symbols.MethodMissing, true);
+                                methodMissing = targetClass.ResolveMethodNoLock(Symbols.MethodMissing, RubyClass.IgnoreVisibility);
                             }
                             methodMissing.InvalidateSitesOnMissingMethodAddition(conversion.ToMethodName, targetClass.Context);
                         }
@@ -214,7 +214,7 @@ namespace IronRuby.Runtime.Calls {
                         Ast.Dynamic(
                             RubyCallAction.Make(Symbols.RespondTo, RubyCallSignature.WithImplicitSelf(1)),
                             typeof(object),
-                            args.ContextExpression, args.TargetExpression, Ast.Constant(SymbolTable.StringToId(toMethodName))
+                            args.ContextExpression, args.TargetExpression, AstUtils.Constant(SymbolTable.StringToId(toMethodName))
                         )
                     ),
 
@@ -236,13 +236,13 @@ namespace IronRuby.Runtime.Calls {
 
         protected virtual Expression/*!*/ MakeErrorExpression(CallArguments/*!*/ args, Expression/*!*/ targetClassNameConstant, Type/*!*/ resultType) {
             return Ast.Throw(
-                Methods.CreateTypeConversionError.OpCall(targetClassNameConstant, Ast.Constant(TargetTypeName)),
+                Methods.CreateTypeConversionError.OpCall(targetClassNameConstant, AstUtils.Constant(TargetTypeName)),
                 resultType
             );
         }
 
         protected virtual void SetError(MetaObjectBuilder/*!*/ metaBuilder, CallArguments/*!*/ args, Expression/*!*/ targetClassNameConstant, Type/*!*/ resultType) {
-            metaBuilder.SetError(Methods.CreateTypeConversionError.OpCall(targetClassNameConstant, Ast.Constant(TargetTypeName)));            
+            metaBuilder.SetError(Methods.CreateTypeConversionError.OpCall(targetClassNameConstant, AstUtils.Constant(TargetTypeName)));            
         }
 
         private Expression/*!*/ MakeValidatorCall(CallArguments/*!*/ args, Expression/*!*/ targetClassNameConstant, Expression/*!*/ result) {
@@ -255,10 +255,10 @@ namespace IronRuby.Runtime.Calls {
                 var args = resultType.GetGenericArguments();
                 var ctor = resultType.GetConstructor(args);
                 if (args[0].IsAssignableFrom(expression.Type)) {
-                    return Ast.New(ctor, expression, Ast.Default(args[1]));
+                    return Ast.New(ctor, expression, AstUtils.Default(args[1]));
                 } else {
                     Debug.Assert(args[1].IsAssignableFrom(expression.Type));
-                    return Ast.New(ctor, Ast.Default(args[0]), expression);
+                    return Ast.New(ctor, AstUtils.Default(args[0]), expression);
                 }
             } else {
                 return AstUtils.Convert(expression, resultType);
@@ -299,7 +299,7 @@ namespace IronRuby.Runtime.Calls {
 
         internal static bool TryImplicitConversionInternal(MetaObjectBuilder/*!*/ metaBuilder, CallArguments/*!*/ args) {
             if (args.Target == null) {
-                metaBuilder.Result = Ast.Constant(null);
+                metaBuilder.Result = AstUtils.Constant(null);
                 return true;
             }           
             
@@ -318,12 +318,12 @@ namespace IronRuby.Runtime.Calls {
 
         // return null if the object doesn't handle the conversion:
         protected override Expression/*!*/ MakeErrorExpression(CallArguments/*!*/ args, Expression/*!*/ targetClassNameConstant, Type/*!*/ resultType) {
-            return Ast.Constant(null, resultType);
+            return AstUtils.Constant(null, resultType);
         }
 
         // return null if the object doesn't handle the conversion:
         protected override void SetError(MetaObjectBuilder/*!*/ metaBuilder, CallArguments/*!*/ args, Expression/*!*/ targetClassNameConstant, Type/*!*/ resultType) {
-            metaBuilder.Result = Ast.Constant(null, resultType);
+            metaBuilder.Result = AstUtils.Constant(null, resultType);
         }
     }
 
@@ -405,7 +405,7 @@ namespace IronRuby.Runtime.Calls {
             object target = args.Target;
 
             if (target == null) {
-                metaBuilder.SetError(Methods.CreateTypeConversionError.OpCall(Ast.Constant("nil"), Ast.Constant(TargetTypeName)));
+                metaBuilder.SetError(Methods.CreateTypeConversionError.OpCall(AstUtils.Constant("nil"), AstUtils.Constant(TargetTypeName)));
                 return true;
             }
             
@@ -434,7 +434,7 @@ namespace IronRuby.Runtime.Calls {
             object target = args.Target;
 
             if (args.Target == null) {
-                metaBuilder.SetError(Methods.CreateTypeConversionError.OpCall(Ast.Constant("nil"), Ast.Constant(TargetTypeName)));
+                metaBuilder.SetError(Methods.CreateTypeConversionError.OpCall(AstUtils.Constant("nil"), AstUtils.Constant(TargetTypeName)));
                 return true;
             }
 
@@ -482,7 +482,7 @@ namespace IronRuby.Runtime.Calls {
             object target = args.Target;
 
             if (args.Target == null) {
-                metaBuilder.SetError(Methods.CreateTypeConversionError.OpCall(Ast.Constant("nil"), Ast.Constant(TargetTypeName)));
+                metaBuilder.SetError(Methods.CreateTypeConversionError.OpCall(AstUtils.Constant("nil"), AstUtils.Constant(TargetTypeName)));
                 return true;
             }
 
@@ -512,29 +512,22 @@ namespace IronRuby.Runtime.Calls {
         }
     }
 
-    public sealed class ConvertToSymbolAction : ProtocolConversionAction<ConvertToSymbolAction> {
+    public sealed class ConvertToSymbolAction : ConvertToReferenceTypeAction<ConvertToSymbolAction, string> {
         protected override string/*!*/ ToMethodName { get { return Symbols.ToStr; } }
         protected override string/*!*/ TargetTypeName { get { return "Symbol"; } }
         protected override MethodInfo ConversionResultValidator { get { return Methods.ToSymbolValidator; } }
 
         protected override bool TryImplicitConversion(MetaObjectBuilder/*!*/ metaBuilder, CallArguments/*!*/ args) {
+            if (base.TryImplicitConversion(metaBuilder, args)) {
+                return true;
+            }
+
             object target = args.Target;
             var targetExpression = args.TargetExpression;
             
-            if (args.Target == null) {
-                metaBuilder.SetError(Methods.CreateTypeConversionError.OpCall(Ast.Constant("nil"), Ast.Constant(TargetTypeName)));
-                return true;
-            }
-
             var str = target as MutableString;
             if (str != null) {
                 metaBuilder.Result = Methods.ConvertMutableStringToSymbol.OpCall(AstUtils.Convert(targetExpression, typeof(MutableString)));
-                return true;
-            }
-
-            var sym = target as string;
-            if (sym != null) {
-                metaBuilder.Result = AstUtils.Convert(targetExpression, typeof(string));
                 return true;
             }
 

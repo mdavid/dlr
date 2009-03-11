@@ -22,6 +22,7 @@ using IronRuby.Runtime;
 using IronRuby.Runtime.Calls;
 using Microsoft.Scripting;
 using Microsoft.Scripting.Utils;
+using AstUtils = Microsoft.Scripting.Ast.Utils;
 
 namespace IronRuby.Compiler.Ast {
     using Ast = Microsoft.Linq.Expressions.Expression;
@@ -59,24 +60,30 @@ namespace IronRuby.Compiler.Ast {
         internal override MSA.Expression/*!*/ TransformRead(AstGenerator/*!*/ gen) {
             switch (_kind) {
                 case StringKind.Mutable:
-                    return TransformConcatentation(gen, _parts, Methods.CreateMutableString, null);
+                    return TransformConcatentation(gen, _parts, Methods.CreateMutableString);
 
                 case StringKind.Immutable:
-                    return TransformConcatentation(gen, _parts, Methods.CreateSymbol, null);
+                    return TransformConcatentation(gen, _parts, Methods.CreateSymbol);
 
                 case StringKind.Command:
                     return Ast.Dynamic(RubyCallAction.Make("`", new RubyCallSignature(1, RubyCallFlags.HasScope | RubyCallFlags.HasImplicitSelf)), typeof(object),
                         gen.CurrentScopeVariable,
                         gen.CurrentSelfVariable,
-                        TransformConcatentation(gen, _parts, Methods.CreateMutableString, null)
+                        TransformConcatentation(gen, _parts, Methods.CreateMutableString)
                     );
             }
 
             throw Assert.Unreachable;
         }
 
-        internal static MSA.Expression/*!*/ TransformConcatentation(AstGenerator/*!*/ gen, List<Expression>/*!*/ parts, 
-            Func<string, MethodInfo>/*!*/ opFactory, MSA.Expression additionalArg) {
+        internal static MSA.Expression/*!*/ TransformConcatentation(AstGenerator/*!*/ gen, List<Expression>/*!*/ parts, Func<string, MethodInfo>/*!*/ opFactory) {
+            return TransformConcatentation(gen, parts, opFactory, null, null);
+        }
+
+        internal static MSA.Expression/*!*/ TransformConcatentation(AstGenerator/*!*/ gen, List<Expression>/*!*/ parts,
+            Func<string, MethodInfo>/*!*/ opFactory, MSA.Expression regexOptions, MSA.Expression regexCache) {
+
+            ContractUtils.Requires((regexOptions == null) == (regexCache == null));
 
             var opSuffix = new StringBuilder(Math.Min(parts.Count, 4));
 
@@ -84,26 +91,29 @@ namespace IronRuby.Compiler.Ast {
 
             if (merged.Count <= RubyOps.MakeStringParamCount) {
                 if (merged.Count == 0) {
-                    merged.Add(Ast.Constant(String.Empty));
+                    merged.Add(AstUtils.Constant(String.Empty));
                     opSuffix.Append(RubyOps.SuffixBinary);
                 }
 
                 if (opSuffix.IndexOf(RubyOps.SuffixEncoded) != -1) {
-                    merged.Add(Ast.Constant(RubyEncoding.GetCodePage(gen.Encoding)));
+                    merged.Add(AstUtils.Constant(RubyEncoding.GetCodePage(gen.Encoding)));
                 }
 
-                if (additionalArg != null) {
-                    merged.Add(additionalArg);
+                if (regexOptions != null) {
+                    merged.Add(regexOptions);
+                    merged.Add(regexCache);
                 }
 
                 return opFactory(opSuffix.ToString()).OpCall(merged);
             } else {
                 var paramArray = Ast.NewArrayInit(typeof(object), merged);
-                var codePage = Ast.Constant(RubyEncoding.GetCodePage(gen.Encoding));
-                
-                return (additionalArg != null) ?
-                    opFactory("N").OpCall(paramArray, codePage, additionalArg) :
-                    opFactory("N").OpCall(paramArray, codePage);
+                var codePage = AstUtils.Constant(RubyEncoding.GetCodePage(gen.Encoding));
+
+                if (regexOptions == null) {
+                    return opFactory("N").OpCall(paramArray, codePage);
+                } else {
+                    return opFactory("N").OpCall(paramArray, codePage, regexOptions, regexCache);
+                }
             } 
         }
 
@@ -116,7 +126,7 @@ namespace IronRuby.Compiler.Ast {
 
             // finish trailing literals:
             if (literals.Count > 0) {
-                result.Add(Ast.Constant(Concat(literals, concatLength)));
+                result.Add(AstUtils.Constant(Concat(literals, concatLength)));
                 opName.Append(OpSuffix(gen, concatEncoding));
             }
 
@@ -150,7 +160,7 @@ namespace IronRuby.Compiler.Ast {
                     ConcatLiteralsAndTransformRecursive(gen, ctor.Parts, literals, ref concatLength, ref concatEncoding, result, opName);
                 } else {
                     if (literals.Count > 0) {
-                        result.Add(Ast.Constant(Concat(literals, concatLength)));
+                        result.Add(AstUtils.Constant(Concat(literals, concatLength)));
                         opName.Append(OpSuffix(gen, concatEncoding));
                         concatLength = 0;
                         concatEncoding = StringLiteralEncoding.Ascii;

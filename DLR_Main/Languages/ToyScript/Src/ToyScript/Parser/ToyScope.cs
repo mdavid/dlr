@@ -17,6 +17,7 @@ using System; using Microsoft;
 using System.Collections.Generic;
 using Microsoft.Linq.Expressions;
 using Microsoft.Scripting.Ast;
+using AstUtils = Microsoft.Scripting.Ast.Utils;
 
 namespace ToyScript.Parser {
     class ToyScope {
@@ -110,7 +111,7 @@ namespace ToyScript.Parser {
 
         private Expression AddReturnLabel(Expression body) {
             if (body.Type == typeof(void)) {
-                body = Expression.Block(body, Expression.Constant(null, typeof(object)));
+                body = Expression.Block(body, AstUtils.Constant(null, typeof(object)));
             }
             return Expression.Label(_return, body);
         }

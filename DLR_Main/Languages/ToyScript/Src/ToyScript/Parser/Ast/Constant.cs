@@ -17,6 +17,7 @@ using System; using Microsoft;
 
 using Microsoft.Linq.Expressions;
 using Microsoft.Scripting;
+using AstUtils = Microsoft.Scripting.Ast.Utils;
 
 namespace ToyScript.Parser.Ast {
 
@@ -29,7 +30,7 @@ namespace ToyScript.Parser.Ast {
         }
 
         protected internal override Expression Generate(ToyGenerator tg) {
-            return Expression.Constant(_value);
+            return AstUtils.Constant(_value);
         }
     }
 }

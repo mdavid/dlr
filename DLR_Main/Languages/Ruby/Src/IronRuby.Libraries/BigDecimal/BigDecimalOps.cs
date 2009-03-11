@@ -746,7 +746,7 @@ namespace IronRuby.StandardLibrary.BigDecimal {
         [RubyMethod(">")]
         public static object GreaterThan(BinaryOpStorage/*!*/ coercionStorage, BinaryOpStorage/*!*/ comparisonStorage, 
             RubyContext/*!*/ context, BigDecimal/*!*/ self, object other) {
-            return Protocols.CoerceAndRelate(coercionStorage, comparisonStorage, ">", context, self, other);
+            return Protocols.TryCoerceAndApply(coercionStorage, comparisonStorage, ">", context, self, other); 
         }
 
         #endregion
@@ -780,7 +780,7 @@ namespace IronRuby.StandardLibrary.BigDecimal {
         [RubyMethod(">=")]
         public static object GreaterThanOrEqual(BinaryOpStorage/*!*/ coercionStorage, BinaryOpStorage/*!*/ comparisonStorage, 
             RubyContext/*!*/ context, BigDecimal/*!*/ self, object other) {
-            return Protocols.CoerceAndRelate(coercionStorage, comparisonStorage, ">=", context, self, other);
+            return Protocols.TryCoerceAndApply(coercionStorage, comparisonStorage, ">=", context, self, other);
         }
 
         #endregion
@@ -814,7 +814,7 @@ namespace IronRuby.StandardLibrary.BigDecimal {
         [RubyMethod("<")]
         public static object LessThan(BinaryOpStorage/*!*/ coercionStorage, BinaryOpStorage/*!*/ comparisonStorage, 
             RubyContext/*!*/ context, BigDecimal/*!*/ self, object other) {
-            return Protocols.CoerceAndRelate(coercionStorage, comparisonStorage, "<", context, self, other);
+            return Protocols.TryCoerceAndApply(coercionStorage, comparisonStorage, "<", context, self, other);
         }
 
         #endregion
@@ -848,7 +848,7 @@ namespace IronRuby.StandardLibrary.BigDecimal {
         [RubyMethod("<=")]
         public static object LessThanOrEqual(BinaryOpStorage/*!*/ coercionStorage, BinaryOpStorage/*!*/ comparisonStorage, 
             RubyContext/*!*/ context, BigDecimal/*!*/ self, object other) {
-            return Protocols.CoerceAndRelate(coercionStorage, comparisonStorage, "<=", context, self, other);
+            return Protocols.TryCoerceAndApply(coercionStorage, comparisonStorage, "<=", context, self, other);
         }
 
         #endregion

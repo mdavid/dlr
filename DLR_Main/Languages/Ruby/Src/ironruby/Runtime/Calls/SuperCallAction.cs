@@ -79,7 +79,7 @@ namespace IronRuby.Runtime.Calls {
         public override DynamicMetaObject/*!*/ Bind(DynamicMetaObject/*!*/ context, DynamicMetaObject/*!*/[]/*!*/ args) {
             var mo = new MetaObjectBuilder();
             BuildSuperCall(mo, new CallArguments(context, args, _signature));
-            return mo.CreateMetaObject(this, context, args);
+            return mo.CreateMetaObject(this);
         }
 
         internal void BuildSuperCall(MetaObjectBuilder/*!*/ metaBuilder, CallArguments/*!*/ args) {
@@ -96,7 +96,7 @@ namespace IronRuby.Runtime.Calls {
             metaBuilder.AddCondition(
                 Methods.IsSuperCallTarget.OpCall(
                     AstUtils.Convert(args.ScopeExpression, typeof(RubyScope)),
-                    Ast.Constant(currentDeclaringModule),
+                    AstUtils.Constant(currentDeclaringModule),
                     AstUtils.Constant(currentMethodName),
                     targetExpression
                 )
@@ -143,7 +143,7 @@ namespace IronRuby.Runtime.Calls {
             return Expression.Call(
                 Methods.GetMethod(typeof(SuperCallAction), "Make", typeof(RubyCallSignature), typeof(int)),
                 _signature.CreateExpression(),
-                Expression.Constant(_lexicalScopeId)
+                AstUtils.Constant(_lexicalScopeId)
             );
         }
 

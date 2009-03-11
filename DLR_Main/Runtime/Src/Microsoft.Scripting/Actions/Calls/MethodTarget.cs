@@ -114,16 +114,13 @@ namespace Microsoft.Scripting.Actions.Calls {
             MethodBase mb = Method;
             MethodInfo mi = mb as MethodInfo;
             Expression ret, call;
-            if (!mb.IsPublic || (mb.DeclaringType != null && !mb.DeclaringType.IsVisible)) {
-                if (mi != null) {
-                    mi = CompilerHelpers.GetCallableMethod(mi, _binder._binder.PrivateBinding);
-                    if (mi != null) mb = mi;
-                }
+            if (mi != null) {
+                mb = CompilerHelpers.GetCallableMethod(mi, _binder._binder.PrivateBinding);
             }
 
             ConstructorInfo ci = mb as ConstructorInfo;
             Debug.Assert(mi != null || ci != null);
-            if (mb.IsPublic && (mb.DeclaringType == null || mb.DeclaringType.IsVisible)) {
+            if (CompilerHelpers.IsVisible(mb)) {
                 // public method
                 if (mi != null) {
                     Expression instance = mi.IsStatic ? null : _instanceBuilder.ToExpression(parameterBinder, parameters, usageMarkers);
@@ -134,19 +131,19 @@ namespace Microsoft.Scripting.Actions.Calls {
             } else {
                 // Private binding, invoke via reflection
                 if (mi != null) {
-                    Expression instance = mi.IsStatic ? Ast.Constant(null) : _instanceBuilder.ToExpression(parameterBinder, parameters, usageMarkers);
+                    Expression instance = mi.IsStatic ? AstUtils.Constant(null) : _instanceBuilder.ToExpression(parameterBinder, parameters, usageMarkers);
                     Debug.Assert(instance != null, "Can't skip instance expression");
 
                     call = Ast.Call(
                         typeof(BinderOps).GetMethod("InvokeMethod"),
-                        Ast.Constant(mi),
+                        AstUtils.Constant(mi),
                         AstUtils.Convert(instance, typeof(object)),
                         AstUtils.NewArrayHelper(typeof(object), args)
                     );
                 } else {
                     call = Ast.Call(
                         typeof(BinderOps).GetMethod("InvokeConstructor"),
-                        Ast.Constant(ci),
+                        AstUtils.Constant(ci),
                         AstUtils.NewArrayHelper(typeof(object), args)
                     );
                 }

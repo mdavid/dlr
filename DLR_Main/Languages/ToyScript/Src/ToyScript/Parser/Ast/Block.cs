@@ -17,6 +17,7 @@ using System; using Microsoft;
 
 using Microsoft.Linq.Expressions;
 using Microsoft.Scripting;
+using AstUtils = Microsoft.Scripting.Ast.Utils;
 
 namespace ToyScript.Parser.Ast {
     class Block : Statement {
@@ -32,7 +33,7 @@ namespace ToyScript.Parser.Ast {
             for (int i = 0; i < _statements.Length; i++) {
                 statements[i] = _statements[i].Generate(tg);
             }
-            statements[_statements.Length] = Expression.Empty();
+            statements[_statements.Length] = AstUtils.Empty();
             return Expression.Block(statements);
         }
     }

@@ -26,7 +26,7 @@ namespace ToyScript.Parser.Ast {
         }
 
         protected internal override Expression Generate(ToyGenerator tg) {
-            return tg.AddSpan(Span, Expression.Empty());
+            return tg.AddSpan(Span, AstUtils.Empty());
         }
     }
 }

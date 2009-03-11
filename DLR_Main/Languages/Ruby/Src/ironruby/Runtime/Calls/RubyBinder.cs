@@ -90,7 +90,7 @@ namespace IronRuby.Runtime.Calls {
                 outerComma = ", ";
             }
 
-            return Methods.MakeAmbiguousMatchError.OpCall(Ast.Constant(sb.ToString()));
+            return Methods.MakeAmbiguousMatchError.OpCall(AstUtils.Constant(sb.ToString()));
         }
 
         private Expression MakeIncorrectArgumentCountError(BindingTarget target) {
@@ -102,8 +102,8 @@ namespace IronRuby.Runtime.Calls {
             }
 
             return Methods.MakeWrongNumberOfArgumentsError.OpCall(
-                Ast.Constant(target.ActualArgumentCount),
-                Ast.Constant(minArgs));
+                AstUtils.Constant(target.ActualArgumentCount),
+                AstUtils.Constant(minArgs));
         }
 
         private Expression MakeCallFailureError(BindingTarget target) {
@@ -113,7 +113,7 @@ namespace IronRuby.Runtime.Calls {
                         foreach (ConversionResult cr in cf.ConversionResults) {
                             if (cr.Failed) {
                                 if (typeof(Proc).IsAssignableFrom(cr.To)) {
-                                    return Methods.CreateArgumentsErrorForProc.OpCall(Ast.Constant(GetTypeName(cr.From)));
+                                    return Methods.CreateArgumentsErrorForProc.OpCall(AstUtils.Constant(GetTypeName(cr.From)));
                                 }
 
                                 Debug.Assert(typeof(BlockParam).IsSealed);
@@ -123,8 +123,8 @@ namespace IronRuby.Runtime.Calls {
                                 }
 
                                 return Methods.CreateTypeConversionError.OpCall(
-                                        Ast.Constant(GetTypeName(cr.From)),
-                                        Ast.Constant(GetTypeName(cr.To)));
+                                        AstUtils.Constant(GetTypeName(cr.From)),
+                                        AstUtils.Constant(GetTypeName(cr.To)));
                             }
                         }
                         break;
@@ -319,7 +319,7 @@ namespace IronRuby.Runtime.Calls {
                     Ast.Call(
                         typeof(Converter).GetMethod("ConvertToDelegate"),
                         AstUtils.Convert(expr, typeof(object)),
-                        Ast.Constant(toType)
+                        AstUtils.Constant(toType)
                     ),
                     toType
                 );
@@ -331,7 +331,7 @@ namespace IronRuby.Runtime.Calls {
                 typeIs = Ast.TypeIs(expr, toType);
             } else {
                 typeIs = Ast.Call(
-                    AstUtils.Convert(Ast.Constant(toType), typeof(Type)),
+                    AstUtils.Convert(AstUtils.Constant(toType), typeof(Type)),
                     typeof(Type).GetMethod("IsInstanceOfType"),
                     AstUtils.Convert(expr, typeof(object))
                 );
@@ -339,7 +339,7 @@ namespace IronRuby.Runtime.Calls {
 
             Expression convertExpr = null;
             if (expr.Type == typeof(DynamicNull)) {
-                convertExpr = Ast.Default(visType);
+                convertExpr = AstUtils.Default(visType);
             } else {
                 convertExpr = Ast.Convert(expr, visType);
             }
@@ -351,7 +351,7 @@ namespace IronRuby.Runtime.Calls {
                     Ast.Call(
                         GetGenericConvertMethod(visType),
                         AstUtils.Convert(expr, typeof(object)),
-                        Ast.Constant(visType.TypeHandle)
+                        AstUtils.Constant(visType.TypeHandle)
                     ),
                     visType
                 )
@@ -503,17 +503,21 @@ namespace IronRuby.Runtime.Calls {
             return result;
         }
 
-        internal static DynamicMetaObject TryBindCovertToDelegate(ConvertBinder/*!*/ action, DynamicMetaObject/*!*/ target) {
-            if (typeof(Delegate).IsAssignableFrom(action.Type)) {
-                return new DynamicMetaObject(
-                    Methods.CreateDelegateFromMethod.OpCall(
-                        Ast.Constant(action.Type),
-                        AstUtils.Convert(target.Expression, typeof(RubyMethod))
-                    ),
-                    target.Restrictions.Merge(BindingRestrictionsHelpers.GetRuntimeTypeRestriction(target.Expression, target.Value.GetType()))
-                );
+        internal static DynamicMetaObject TryBindCovertToDelegate(RubyMetaObject/*!*/ metaTarget, ConvertBinder/*!*/ binder, MethodInfo/*!*/ delegateFactory) {
+            var metaBuilder = new MetaObjectBuilder();
+            return TryBuildConversionToDelegate(metaBuilder, metaTarget, binder.Type, delegateFactory) ? metaBuilder.CreateMetaObject(binder) : null;
+        }
+
+        internal static bool TryBuildConversionToDelegate(MetaObjectBuilder/*!*/ metaBuilder, RubyMetaObject/*!*/ metaTarget, Type/*!*/ delegateType, MethodInfo/*!*/ delegateFactory) {
+            MethodInfo invoke;
+            if (!typeof(Delegate).IsAssignableFrom(delegateType) || (invoke = delegateType.GetMethod("Invoke")) == null) {
+                return false;
             }
-            return null;
+
+            var type = metaTarget.Value.GetType();
+            metaBuilder.AddTypeRestriction(type, metaTarget.Expression);
+            metaBuilder.Result = delegateFactory.OpCall(AstUtils.Constant(delegateType), Ast.Convert(metaTarget.Expression, type));
+            return true;
         }
 
         #endregion

@@ -208,6 +208,38 @@ namespace Microsoft.Scripting.Utils {
             return false;
         }
 
+        internal static bool HasReferenceConversion(Type source, Type dest) {
+            Debug.Assert(source != null && dest != null);
+
+            // void -> void conversion is handled elsewhere
+            // (it's an identity conversion)
+            // All other void conversions are disallowed.
+            if (source == typeof(void) || dest == typeof(void)) {
+                return false;
+            }
+
+            Type nnSourceType = TypeUtils.GetNonNullableType(source);
+            Type nnDestType = TypeUtils.GetNonNullableType(dest);
+
+            // Down conversion
+            if (nnSourceType.IsAssignableFrom(nnDestType)) {
+                return true;
+            }
+            // Up conversion
+            if (nnDestType.IsAssignableFrom(nnSourceType)) {
+                return true;
+            }
+            // Interface conversion
+            if (source.IsInterface || dest.IsInterface) {
+                return true;
+            }
+            // Object conversion
+            if (source == typeof(object) || dest == typeof(object)) {
+                return true;
+            }
+            return false;
+        }
+
         internal static bool IsConvertible(Type type) {
             type = GetNonNullableType(type);
             if (type.IsEnum) {
@@ -230,6 +262,22 @@ namespace Microsoft.Scripting.Utils {
                 default:
                     return false;
             }
+        }
+
+        internal static bool HasReferenceEquality(Type left, Type right) {
+            if (left.IsValueType || right.IsValueType) {
+                return false;
+            }
+
+            // If we have an interface and a reference type then we can do 
+            // reference equality.
+
+            // If we have two reference types and one is assignable to the
+            // other then we can do reference equality.
+
+            return left.IsInterface || right.IsInterface ||
+                AreReferenceAssignable(left, right) ||
+                AreReferenceAssignable(right, left);
         }
 
         internal static bool HasBuiltInEqualityOperator(Type left, Type right) {

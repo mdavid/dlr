@@ -77,6 +77,8 @@
       <Compile Include="Builtins\RubyClass.cs" />
       <Compile Include="Builtins\RubyClass.Meta.cs" />
       <Compile Include="Builtins\RubyEncoding.cs" />
+      <Compile Include="Builtins\RubyEvent.cs" />
+      <Compile Include="Builtins\RubyEvent.Meta.cs" />
       <Compile Include="Builtins\RubyInputProvider.cs" />
       <Compile Include="Builtins\RubyMethod.cs" />
       <Compile Include="Builtins\RubyMethod.Meta.cs" />
@@ -88,7 +90,6 @@
       <Compile Include="Builtins\RubyRegex.cs" />
       <Compile Include="Builtins\RubyRegex.Subclass.cs" />
       <Compile Include="Builtins\RubyRegexOptions.cs" />
-      <Compile Include="Builtins\RubySites.cs" />
       <Compile Include="Builtins\RubyStruct.cs" />
       <Compile Include="Builtins\TypeDescriptor.Generated.cs" />
     </ItemGroup>
@@ -343,6 +344,7 @@
       <Compile Include="Runtime\Calls\RubyLambdaMethodInfo.cs" />
       <Compile Include="Runtime\Calls\RubyLibraryMethodInfo.cs" />
       <Compile Include="Runtime\Calls\RubyMemberInfo.cs" />
+      <Compile Include="Runtime\Calls\RubyMetaObject.cs" />
       <Compile Include="Runtime\Calls\RubyMethodGroupBase.cs" />
       <Compile Include="Runtime\Calls\RubyMethodGroupInfo.cs" />
       <Compile Include="Runtime\Calls\RubyMethodInfo.cs" />

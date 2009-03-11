@@ -38,6 +38,11 @@ using Microsoft.Runtime.CompilerServices;
 namespace IronRuby.Builtins {
 
     public sealed partial class RubyClass : RubyModule, IDuplicable {
+        /// <summary>
+        /// Visibility context within which all methods are visible.
+        /// </summary>
+        public const RubyClass IgnoreVisibility = null;
+
         public const string/*!*/ ClassSingletonName = "__ClassSingleton";
         public const string/*!*/ ClassSingletonSingletonName = "__ClassSingletonSingleton";
         public const string/*!*/ MainSingletonName = "__MainSingleton";
@@ -512,15 +517,15 @@ namespace IronRuby.Builtins {
             return result;
         }
 
-        public override MethodResolutionResult ResolveMethodFallbackToObjectNoLock(string/*!*/ name, bool includeMethod) {
+        public override MethodResolutionResult ResolveMethodFallbackToObjectNoLock(string/*!*/ name, RubyClass visibilityContext) {
             // Note: all classes include Object in ancestors, so we don't need to search there.
-            return ResolveMethodNoLock(name, includeMethod);
+            return ResolveMethodNoLock(name, visibilityContext);
         }
 
         internal RubyMemberInfo ResolveMethodMissingForSite(string/*!*/ name, RubyMethodVisibility incompatibleVisibility) {
             Context.RequiresClassHierarchyLock();
-            var methodMissing = ResolveMethodForSiteNoLock(Symbols.MethodMissing, true);
-            if (incompatibleVisibility != RubyMethodVisibility.Private) {
+            var methodMissing = ResolveMethodForSiteNoLock(Symbols.MethodMissing, null);
+            if (incompatibleVisibility == RubyMethodVisibility.None) {
                 methodMissing.InvalidateSitesOnMissingMethodAddition(name, Context);
             }
             return methodMissing.Info;
@@ -839,7 +844,7 @@ namespace IronRuby.Builtins {
 
             EventInfo eventInfo = type.GetEvent(name, bindingFlags);
             if (eventInfo != null) {
-                method = new RubyEventInfo(eventInfo, RubyMemberFlags.Public, this);
+                method = new RubyEventInfo((EventTracker)MemberTracker.FromMemberInfo(eventInfo), RubyMemberFlags.Public, this);
                 return true;
             }
 
@@ -860,7 +865,7 @@ namespace IronRuby.Builtins {
             argsBuilder.AddCallArguments(metaBuilder, args);
 
             if (!metaBuilder.Error) {
-                metaBuilder.Result = MakeAllocatorCall(args, () => Ast.Constant(Name));
+                BuildAllocatorCall(metaBuilder, args, () => AstUtils.Constant(Name));
             }
         }
         
@@ -881,7 +886,9 @@ namespace IronRuby.Builtins {
             using (Context.ClassHierarchyLocker()) {
                 metaBuilder.AddVersionTest(this);
 
-                initializer = ResolveMethodForSiteNoLock(Symbols.Initialize, true).Info;
+                initializer = ResolveMethodForSiteNoLock(Symbols.Initialize, IgnoreVisibility).Info;
+                // TODO:
+                //ResolveMethodMissingForSite
             }
 
             RubyMethodInfo overriddenInitializer = initializer as RubyMethodInfo;
@@ -890,13 +897,15 @@ namespace IronRuby.Builtins {
             // Is user class (defined in Ruby code) => construct it as if it had initializer that calls super immediately
             // (we need to "inherit" factories/constructors from the base class (e.g. class S < String; self; end.new('foo')).
             if (overriddenInitializer != null || (_isRubyClass && _structInfo == null)) {
-                metaBuilder.Result = MakeAllocatorCall(args, () => Ast.Constant(Name));
+                BuildAllocatorCall(metaBuilder, args, () => AstUtils.Constant(Name));
 
-                if (overriddenInitializer != null || (_isRubyClass && initializer != null && !initializer.IsEmpty)) {
-                    BuildOverriddenInitializerCall(metaBuilder, args, initializer);
+                if (!metaBuilder.Error) {
+                    if (overriddenInitializer != null || (_isRubyClass && initializer != null && !initializer.IsEmpty)) {
+                        BuildOverriddenInitializerCall(metaBuilder, args, initializer);
+                    }
                 }
-            } else if (type.IsSubclassOf(typeof(Delegate))) {
-                metaBuilder.Result = MakeDelegateConstructorCall(type, args);
+            } else if (typeof(Delegate).IsAssignableFrom(type)) {
+                BuildDelegateConstructorCall(metaBuilder, args, type);
             } else {
                 MethodBase[] constructionOverloads;
                 SelfCallConvention callConvention;
@@ -960,50 +969,76 @@ namespace IronRuby.Builtins {
             }
         }
 
-        public Expression/*!*/ MakeAllocatorCall(CallArguments/*!*/ args, Func<Expression>/*!*/ defaultExceptionMessage) {
+        public void BuildAllocatorCall(MetaObjectBuilder/*!*/ metaBuilder, CallArguments/*!*/ args, Func<Expression>/*!*/ defaultExceptionMessage) {
             Type type = GetUnderlyingSystemType();
 
             if (_structInfo != null) {
-                return Methods.AllocateStructInstance.OpCall(AstUtils.Convert(args.TargetExpression, typeof(RubyClass)));
+                metaBuilder.Result = Methods.AllocateStructInstance.OpCall(AstUtils.Convert(args.TargetExpression, typeof(RubyClass)));
+                return;
             }
 
             if (type.IsSubclassOf(typeof(Delegate))) {
-                return MakeDelegateConstructorCall(type, args);
+                BuildDelegateConstructorCall(metaBuilder, args, type);
+                return;
             }
 
             ConstructorInfo ctor;
             if (IsException()) {
                 if ((ctor = type.GetConstructor(new[] { typeof(string) })) != null) {
-                    return Ast.New(ctor, defaultExceptionMessage());
+                    metaBuilder.Result = Ast.New(ctor, defaultExceptionMessage());
+                    return;
                 } else if ((ctor = type.GetConstructor(new[] { typeof(string), typeof(Exception) })) != null) {
-                    return Ast.New(ctor, defaultExceptionMessage(), Ast.Constant(null));
+                    metaBuilder.Result = Ast.New(ctor, defaultExceptionMessage(), AstUtils.Constant(null));
+                    return;
                 }
             }
 
             if ((ctor = type.GetConstructor(new[] { typeof(RubyClass) })) != null) {
-                return Ast.New(ctor, AstUtils.Convert(args.TargetExpression, typeof(RubyClass)));
-            }
-            
-            if ((ctor = type.GetConstructor(new[] { typeof(RubyContext) })) != null) {
-                return Ast.New(ctor, args.ContextExpression);
-            }
- 
-            if ((ctor = type.GetConstructor(Type.EmptyTypes)) != null) {
-                return Ast.New(ctor);
+                metaBuilder.Result = Ast.New(ctor, AstUtils.Convert(args.TargetExpression, typeof(RubyClass)));
+                return;
             }
 
-            throw RubyExceptions.CreateAllocatorUndefinedError(this);
+            if ((ctor = type.GetConstructor(new[] { typeof(RubyContext) })) != null) {
+                metaBuilder.Result = Ast.New(ctor, args.ContextExpression);
+                return;
+            }
+
+            if ((ctor = type.GetConstructor(Type.EmptyTypes)) != null) {
+                metaBuilder.Result = Ast.New(ctor);
+                return;
+            }
+
+            metaBuilder.SetError(Methods.MakeAllocatorUndefinedError.OpCall(Ast.Convert(args.TargetExpression, typeof(RubyClass))));
         }
 
-        private Expression/*!*/ MakeDelegateConstructorCall(Type/*!*/ type, CallArguments/*!*/ args) {
+        private void BuildDelegateConstructorCall(MetaObjectBuilder/*!*/ metaBuilder, CallArguments/*!*/ args, Type/*!*/ type) {
             if (args.Signature.HasBlock) {
-                return Methods.CreateDelegateFromProc.OpCall(
-                    Ast.Constant(type),
-                    AstUtils.Convert(args.GetBlockExpression(), typeof(Proc))
-                );
+                if (args.ExplicitArgumentCount == 2) {
+                    metaBuilder.Result = Methods.CreateDelegateFromProc.OpCall(
+                        AstUtils.Constant(type),
+                        AstUtils.Convert(args.GetBlockExpression(), typeof(Proc))
+                    );
+                } else {
+                    metaBuilder.SetError(Methods.MakeWrongNumberOfArgumentsError.OpCall(
+                        AstUtils.Constant(args.ExplicitArgumentCount - 1), AstUtils.Constant(0)
+                    ));
+                }
             } else {
                 // TODO:
-                throw new NotImplementedError("no block given");
+                throw new NotSupportedException();
+                //var actualArgs = RubyMethodGroupBase.MakeActualArgs(metaBuilder, args, SelfCallConvention.NoSelf, false, false);
+                //if (actualArgs.Length == 1) {
+                //    var convertBinder = args.RubyContext.CreateConvertBinder(type, true);
+                //    var converted = convertBinder.Bind(actualArgs[0], DynamicMetaObject.EmptyMetaObjects);
+
+                //    // TODO: Should MakeActualArgs return a struct that provides us an information whether to treat particular argument's restrictions as conditions?
+                //    // Items of a splatted array are stored in locals. Therefore we cannot apply restrictions on them.
+                //    metaBuilder.SetMetaResult(converted, args.SimpleArgumentCount == 0 && args.Signature.HasSplattedArgument);
+                //} else {
+                //    metaBuilder.SetError(Methods.MakeWrongNumberOfArgumentsError.OpCall(
+                //        AstUtils.Constant(args.ExplicitArgumentCount - 1), AstUtils.Constant(0)
+                //    ));
+                //}
             }
         }
 

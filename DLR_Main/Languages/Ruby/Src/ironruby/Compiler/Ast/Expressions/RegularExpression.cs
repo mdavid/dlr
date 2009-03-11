@@ -19,6 +19,10 @@ using System.Collections.Generic;
 using Microsoft.Scripting;
 using Microsoft.Scripting.Utils;
 using IronRuby.Builtins;
+using System.Runtime.CompilerServices;
+using Microsoft.Runtime.CompilerServices;
+
+using AstUtils = Microsoft.Scripting.Ast.Utils;
 
 namespace IronRuby.Compiler.Ast {
     using Ast = Microsoft.Linq.Expressions.Expression;
@@ -55,7 +59,12 @@ namespace IronRuby.Compiler.Ast {
         }
 
         internal override MSA.Expression/*!*/ TransformRead(AstGenerator/*!*/ gen) {
-            var result = StringConstructor.TransformConcatentation(gen, _pattern, Methods.CreateRegex, Ast.Constant(_options));
+            var result = StringConstructor.TransformConcatentation(
+                gen, 
+                _pattern, 
+                Methods.CreateRegex, 
+                AstUtils.Constant(_options), 
+                AstUtils.Constant(new StrongBox<RubyRegex>()));
 
             if (_isCondition) {
                 result = Methods.MatchLastInputLine.OpCall(result, gen.CurrentScopeVariable);

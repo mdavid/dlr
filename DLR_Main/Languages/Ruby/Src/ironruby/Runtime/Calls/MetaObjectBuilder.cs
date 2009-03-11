@@ -63,30 +63,25 @@ namespace IronRuby.Runtime.Calls {
             set { _treatRestrictionsAsConditions = value; }
         }
 
-        internal DynamicMetaObject/*!*/ CreateMetaObject(DynamicMetaObjectBinder/*!*/ action, DynamicMetaObject/*!*/ context, DynamicMetaObject/*!*/[]/*!*/ args) {
-            return CreateMetaObject(action, ArrayUtils.Insert(context, args));
-        }
-
-        internal DynamicMetaObject/*!*/ CreateMetaObject(DynamicMetaObjectBinder/*!*/ action, DynamicMetaObject/*!*/[]/*!*/ siteArgs) {
+        internal DynamicMetaObject/*!*/ CreateMetaObject(DynamicMetaObjectBinder/*!*/ action) {
             Debug.Assert(ControlFlowBuilder == null, "Control flow required but not built");
 
             var expr = _error ? Ast.Throw(_result) : _result;
 
-            BindingRestrictions restrictions;
             if (_condition != null) {
-                var deferral = action.Defer(siteArgs);
-                expr = Ast.Condition(_condition, AstUtils.Convert(expr, typeof(object)), deferral.Expression);
-                restrictions = deferral.Restrictions;
-            } else {
-                restrictions = BindingRestrictions.Empty;
+                var deferral = action.GetUpdateExpression(typeof(object));
+                expr = Ast.Condition(_condition, AstUtils.Convert(expr, typeof(object)), deferral);
             }
 
             if (_temps != null) {
                 expr = Ast.Block(_temps, expr);
             }
 
+            BindingRestrictions restrictions;
             if (_restriction != null) {
-                restrictions = restrictions.Merge(BindingRestrictions.GetExpressionRestriction(_restriction));
+                restrictions = BindingRestrictions.GetExpressionRestriction(_restriction);
+            } else {
+                restrictions = BindingRestrictions.Empty;
             }
 
             return new DynamicMetaObject(expr, restrictions);
@@ -101,7 +96,7 @@ namespace IronRuby.Runtime.Calls {
         }
 
         public void SetWrongNumberOfArgumentsError(int actual, int expected) {
-            SetError(Methods.MakeWrongNumberOfArgumentsError.OpCall(Ast.Constant(actual), Ast.Constant(expected)));
+            SetError(Methods.MakeWrongNumberOfArgumentsError.OpCall(AstUtils.Constant(actual), AstUtils.Constant(expected)));
         }
 
         public void AddCondition(Expression/*!*/ condition) {
@@ -120,19 +115,21 @@ namespace IronRuby.Runtime.Calls {
 
         public static Expression/*!*/ GetObjectTypeTestExpression(object value, Expression/*!*/ expression) {
             if (value == null) {
-                return Ast.Equal(expression, Ast.Constant(null));
+                return Ast.Equal(expression, AstUtils.Constant(null));
             } else {
                 return RuleBuilder.MakeTypeTestExpression(value.GetType(), expression);
             }
         }
 
         public void AddTypeRestriction(Type/*!*/ type, Expression/*!*/ expression) {
+            // TODO: assertion failure in DLR:
+            // AddRestriction(Ast.TypeEqual(expression, type));
             AddRestriction(RuleBuilder.MakeTypeTestExpression(type, expression));
         }
 
         public void AddObjectTypeRestriction(object value, Expression/*!*/ expression) {
             if (value == null) {
-                AddRestriction(Ast.Equal(expression, Ast.Constant(null)));
+                AddRestriction(Ast.Equal(expression, AstUtils.Constant(null)));
             } else {
                 AddTypeRestriction(value.GetType(), expression);
             }
@@ -154,7 +151,7 @@ namespace IronRuby.Runtime.Calls {
             
             // singleton nil:
             if (target == null) {
-                AddRestriction(Ast.Equal(targetParameter, Ast.Constant(null)));
+                AddRestriction(Ast.Equal(targetParameter, AstUtils.Constant(null)));
                 AddFullVersionTest(context.NilClass, context, contextExpression);
                 return;
             }
@@ -163,7 +160,7 @@ namespace IronRuby.Runtime.Calls {
             if (target is bool) {
                 AddRestriction(Ast.AndAlso(
                     Ast.TypeIs(targetParameter, typeof(bool)),
-                    Ast.Equal(Ast.Convert(targetParameter, typeof(bool)), Ast.Constant(target))
+                    Ast.Equal(Ast.Convert(targetParameter, typeof(bool)), AstUtils.Constant(target))
                 ));
 
                 if ((bool)target) {
@@ -180,7 +177,7 @@ namespace IronRuby.Runtime.Calls {
                 AddRestriction(
                     Ast.Equal(
                         Ast.Convert(targetParameter, typeof(object)),
-                        Ast.Convert(Ast.Constant(target), typeof(object))
+                        Ast.Convert(AstUtils.Constant(target), typeof(object))
                     )
                 );
 
@@ -206,7 +203,7 @@ namespace IronRuby.Runtime.Calls {
                                 ), 
                                 Fields.StrongBox_Of_Int_Value
                             ),
-                            Ast.Constant(targetClass.Version.Value)
+                            AstUtils.Constant(targetClass.Version.Value)
                         )
                     );
                     return;
@@ -225,7 +222,7 @@ namespace IronRuby.Runtime.Calls {
             cls.Context.RequiresClassHierarchyLock();
 
             // check for runtime (note that the module's runtime could be different from the call-site runtime):
-            AddRestriction(Ast.Equal(contextExpression, Ast.Constant(context)));
+            AddRestriction(Ast.Equal(contextExpression, AstUtils.Constant(context)));
 
             AddVersionTest(cls);
         }
@@ -234,12 +231,12 @@ namespace IronRuby.Runtime.Calls {
             cls.Context.RequiresClassHierarchyLock();
 
             // check for module version (do not burn a module reference to the rule):
-            AddCondition(Ast.Equal(Ast.Field(Ast.Constant(cls.Version), Fields.StrongBox_Of_Int_Value), Ast.Constant(cls.Version.Value)));
+            AddCondition(Ast.Equal(Ast.Field(AstUtils.Constant(cls.Version), Fields.StrongBox_Of_Int_Value), AstUtils.Constant(cls.Version.Value)));
         }
 
         internal bool AddSplattedArgumentTest(object value, Expression/*!*/ expression, out int listLength, out ParameterExpression/*!*/ listVariable) {
             if (value == null) {
-                AddRestriction(Ast.Equal(expression, Ast.Constant(null)));
+                AddRestriction(Ast.Equal(expression, AstUtils.Constant(null)));
             } else {
                 // test exact type:
                 AddTypeRestriction(value.GetType(), expression);
@@ -251,7 +248,7 @@ namespace IronRuby.Runtime.Calls {
                     listVariable = GetTemporary(type, "#list");
                     AddCondition(Ast.Equal(
                         Ast.Property(Ast.Assign(listVariable, Ast.Convert(expression, type)), type.GetProperty("Count")),
-                        Ast.Constant(list.Count))
+                        AstUtils.Constant(list.Count))
                     );
                     return true;
                 }

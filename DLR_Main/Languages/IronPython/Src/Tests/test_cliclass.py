@@ -1443,7 +1443,11 @@ def test_underlying_type():
         pass
 
 def test_a_override_patching():
-    clr.AddReference('Microsoft.Scripting.Core')
+    if System.Environment.Version.Major >=4:
+        clr.AddReference("System.Core")
+    else:
+        clr.AddReference("Microsoft.Scripting.Core")
+    
     # derive from object
     class x(object):
         pass
@@ -1453,13 +1457,14 @@ def test_a_override_patching():
 
     # derive from a type which overrides GetHashCode
     from Microsoft.Scripting import InvokeBinder
+    from Microsoft.Scripting import CallInfo
     from System.Linq.Expressions import Expression
     
     class y(InvokeBinder):
         def GetHashCode(self): return super(InvokeBinder, self).GetHashCode()
     
     # now the super call should work & should include the InvokeBinder new type
-    TestHelpers.HashObject(y(Expression[()].CallInfo(0)))
+    TestHelpers.HashObject(y(CallInfo(0)))
     
 run_test(__name__)
 

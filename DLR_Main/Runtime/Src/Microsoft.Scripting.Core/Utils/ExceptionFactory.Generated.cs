@@ -277,11 +277,11 @@ namespace Microsoft.Linq.Expressions {
         }
 
         /// <summary>
-        /// A string like  "Argument must be exception"
+        /// A string like  "Argument must not have a value type."
         /// </summary>
-        internal static string ArgumentMustBeException {
+        internal static string ArgumentMustNotHaveValueType {
             get {
-                return "Argument must be exception";
+                return "Argument must not have a value type.";
             }
         }
 
@@ -463,6 +463,13 @@ namespace Microsoft.Linq.Expressions {
         }
 
         /// <summary>
+        /// A string like  "Cannot convert the result type '{0}' of the dynamic binding to the result type '{1}' expected by the call site."
+        /// </summary>
+        internal static string CannotConvertDynamicResult(object p0, object p1) {
+            return FormatString("Cannot convert the result type '{0}' of the dynamic binding to the result type '{1}' expected by the call site.", p0, p1);
+        }
+
+        /// <summary>
         /// A string like  "The unary operator {0} is not defined for the type '{1}'."
         /// </summary>
         internal static string UnaryOperatorNotDefined(object p0, object p1) {
@@ -474,6 +481,13 @@ namespace Microsoft.Linq.Expressions {
         /// </summary>
         internal static string BinaryOperatorNotDefined(object p0, object p1, object p2) {
             return FormatString("The binary operator {0} is not defined for the types '{1}' and '{2}'.", p0, p1, p2);
+        }
+
+        /// <summary>
+        /// A string like  "Reference equality is not defined for the types '{0}' and '{1}'."
+        /// </summary>
+        internal static string ReferenceEqualityNotDefined(object p0, object p1) {
+            return FormatString("Reference equality is not defined for the types '{0}' and '{1}'.", p0, p1);
         }
 
         /// <summary>
@@ -863,6 +877,20 @@ namespace Microsoft.Linq.Expressions {
         }
 
         /// <summary>
+        /// A string like  "Instance property '{0}' that takes no argument is not defined for type '{1}'"
+        /// </summary>
+        internal static string InstancePropertyWithoutParameterNotDefinedForType(object p0, object p1) {
+            return FormatString("Instance property '{0}' that takes no argument is not defined for type '{1}'", p0, p1);
+        }
+
+        /// <summary>
+        /// A string like  "Instance property '{0}{1}' is not defined for type '{2}'"
+        /// </summary>
+        internal static string InstancePropertyWithSpecifiedParametersNotDefinedForType(object p0, object p1, object p2) {
+            return FormatString("Instance property '{0}{1}' is not defined for type '{2}'", p0, p1, p2);
+        }
+
+        /// <summary>
         /// A string like  "Method '{0}' is not defined for type '{1}'"
         /// </summary>
         internal static string MethodNotDefinedForType(object p0, object p1) {
@@ -1049,6 +1077,13 @@ namespace Microsoft.Linq.Expressions {
         /// </summary>
         internal static string MethodWithArgsDoesNotExistOnType(object p0, object p1) {
             return FormatString("No method '{0}' on type '{1}' is compatible with the supplied arguments.", p0, p1);
+        }
+
+        /// <summary>
+        /// A string like  "No generic method '{0}' on type '{1}' is compatible with the supplied type arguments and arguments. No type arguments should be provided if the method is non-generic. "
+        /// </summary>
+        internal static string GenericMethodWithArgsDoesNotExistOnType(object p0, object p1) {
+            return FormatString("No generic method '{0}' on type '{1}' is compatible with the supplied type arguments and arguments. No type arguments should be provided if the method is non-generic. ", p0, p1);
         }
 
         /// <summary>
@@ -1349,10 +1384,24 @@ namespace Microsoft.Linq.Expressions {
         }
 
         /// <summary>
-        /// A string like  "When called from '{0}', rewriting a node of type '{1}' should return a non-null value of the same type. Alternatively, override '{2}' and change it to not visit children of this type."
+        /// A string like  "When called from '{0}', rewriting a node of type '{1}' must return a non-null value of the same type. Alternatively, override '{2}' and change it to not visit children of this type."
         /// </summary>
-        internal static string MustRewriteToSameType(object p0, object p1, object p2) {
-            return FormatString("When called from '{0}', rewriting a node of type '{1}' should return a non-null value of the same type. Alternatively, override '{2}' and change it to not visit children of this type.", p0, p1, p2);
+        internal static string MustRewriteToSameNode(object p0, object p1, object p2) {
+            return FormatString("When called from '{0}', rewriting a node of type '{1}' must return a non-null value of the same type. Alternatively, override '{2}' and change it to not visit children of this type.", p0, p1, p2);
+        }
+
+        /// <summary>
+        /// A string like  "Rewriting child expression from type '{0}' to type '{1}' is not allowed, because it would change the meaning of the operation. If this is intentional, override '{2}' and change it to allow this rewrite."
+        /// </summary>
+        internal static string MustRewriteChildToSameType(object p0, object p1, object p2) {
+            return FormatString("Rewriting child expression from type '{0}' to type '{1}' is not allowed, because it would change the meaning of the operation. If this is intentional, override '{2}' and change it to allow this rewrite.", p0, p1, p2);
+        }
+
+        /// <summary>
+        /// A string like  "Rewritten expression calls operator method '{0}', but the original node had no operator method. If this is is intentional, override '{1}' and change it to allow this rewrite."
+        /// </summary>
+        internal static string MustRewriteWithoutMethod(object p0, object p1) {
+            return FormatString("Rewritten expression calls operator method '{0}', but the original node had no operator method. If this is is intentional, override '{1}' and change it to allow this rewrite.", p0, p1);
         }
 
         /// <summary>
@@ -1408,6 +1457,20 @@ namespace Microsoft.Linq.Expressions {
             get {
                 return "The operation cannot be performed in heterogeneous app domain.";
             }
+        }
+
+        /// <summary>
+        /// A string like  "Test value of type '{0}' cannot be used for the comparison method parameter of type '{1}'"
+        /// </summary>
+        internal static string TestValueTypeDoesNotMatchComparisonMethodParameter(object p0, object p1) {
+            return FormatString("Test value of type '{0}' cannot be used for the comparison method parameter of type '{1}'", p0, p1);
+        }
+
+        /// <summary>
+        /// A string like  "Switch value of type '{0}' cannot be used for the comparison method parameter of type '{1}'"
+        /// </summary>
+        internal static string SwitchValueTypeDoesNotMatchComparisonMethodParameter(object p0, object p1) {
+            return FormatString("Switch value of type '{0}' cannot be used for the comparison method parameter of type '{1}'", p0, p1);
         }
 
     }
@@ -1487,6 +1550,13 @@ namespace Microsoft.Linq.Expressions {
         }
 
         /// <summary>
+        /// InvalidCastException with message like "Cannot convert the result type '{0}' of the dynamic binding to the result type '{1}' expected by the call site."
+        /// </summary>
+        internal static Exception CannotConvertDynamicResult(object p0, object p1) {
+            return new InvalidCastException(Strings.CannotConvertDynamicResult(p0, p1));
+        }
+
+        /// <summary>
         /// InvalidOperationException with message like "The unary operator {0} is not defined for the type '{1}'."
         /// </summary>
         internal static Exception UnaryOperatorNotDefined(object p0, object p1) {
@@ -1498,6 +1568,13 @@ namespace Microsoft.Linq.Expressions {
         /// </summary>
         internal static Exception BinaryOperatorNotDefined(object p0, object p1, object p2) {
             return new InvalidOperationException(Strings.BinaryOperatorNotDefined(p0, p1, p2));
+        }
+
+        /// <summary>
+        /// InvalidOperationException with message like "Reference equality is not defined for the types '{0}' and '{1}'."
+        /// </summary>
+        internal static Exception ReferenceEqualityNotDefined(object p0, object p1) {
+            return new InvalidOperationException(Strings.ReferenceEqualityNotDefined(p0, p1));
         }
 
         /// <summary>
@@ -1851,6 +1928,20 @@ namespace Microsoft.Linq.Expressions {
         }
 
         /// <summary>
+        /// ArgumentException with message like "Instance property '{0}' that takes no argument is not defined for type '{1}'"
+        /// </summary>
+        internal static Exception InstancePropertyWithoutParameterNotDefinedForType(object p0, object p1) {
+            return new ArgumentException(Strings.InstancePropertyWithoutParameterNotDefinedForType(p0, p1));
+        }
+
+        /// <summary>
+        /// ArgumentException with message like "Instance property '{0}{1}' is not defined for type '{2}'"
+        /// </summary>
+        internal static Exception InstancePropertyWithSpecifiedParametersNotDefinedForType(object p0, object p1, object p2) {
+            return new ArgumentException(Strings.InstancePropertyWithSpecifiedParametersNotDefinedForType(p0, p1, p2));
+        }
+
+        /// <summary>
         /// ArgumentException with message like "Method '{0}' is not defined for type '{1}'"
         /// </summary>
         internal static Exception MethodNotDefinedForType(object p0, object p1) {
@@ -2023,6 +2114,13 @@ namespace Microsoft.Linq.Expressions {
         /// </summary>
         internal static Exception MethodWithArgsDoesNotExistOnType(object p0, object p1) {
             return new InvalidOperationException(Strings.MethodWithArgsDoesNotExistOnType(p0, p1));
+        }
+
+        /// <summary>
+        /// InvalidOperationException with message like "No generic method '{0}' on type '{1}' is compatible with the supplied type arguments and arguments. No type arguments should be provided if the method is non-generic. "
+        /// </summary>
+        internal static Exception GenericMethodWithArgsDoesNotExistOnType(object p0, object p1) {
+            return new InvalidOperationException(Strings.GenericMethodWithArgsDoesNotExistOnType(p0, p1));
         }
 
         /// <summary>
@@ -2285,10 +2383,24 @@ namespace Microsoft.Linq.Expressions {
         }
 
         /// <summary>
-        /// InvalidOperationException with message like "When called from '{0}', rewriting a node of type '{1}' should return a non-null value of the same type. Alternatively, override '{2}' and change it to not visit children of this type."
+        /// InvalidOperationException with message like "When called from '{0}', rewriting a node of type '{1}' must return a non-null value of the same type. Alternatively, override '{2}' and change it to not visit children of this type."
         /// </summary>
-        internal static Exception MustRewriteToSameType(object p0, object p1, object p2) {
-            return new InvalidOperationException(Strings.MustRewriteToSameType(p0, p1, p2));
+        internal static Exception MustRewriteToSameNode(object p0, object p1, object p2) {
+            return new InvalidOperationException(Strings.MustRewriteToSameNode(p0, p1, p2));
+        }
+
+        /// <summary>
+        /// InvalidOperationException with message like "Rewriting child expression from type '{0}' to type '{1}' is not allowed, because it would change the meaning of the operation. If this is intentional, override '{2}' and change it to allow this rewrite."
+        /// </summary>
+        internal static Exception MustRewriteChildToSameType(object p0, object p1, object p2) {
+            return new InvalidOperationException(Strings.MustRewriteChildToSameType(p0, p1, p2));
+        }
+
+        /// <summary>
+        /// InvalidOperationException with message like "Rewritten expression calls operator method '{0}', but the original node had no operator method. If this is is intentional, override '{1}' and change it to allow this rewrite."
+        /// </summary>
+        internal static Exception MustRewriteWithoutMethod(object p0, object p1) {
+            return new InvalidOperationException(Strings.MustRewriteWithoutMethod(p0, p1));
         }
 
         /// <summary>
@@ -2338,6 +2450,20 @@ namespace Microsoft.Linq.Expressions {
         /// </summary>
         internal static Exception HomogenousAppDomainRequired() {
             return new InvalidOperationException(Strings.HomogenousAppDomainRequired);
+        }
+
+        /// <summary>
+        /// ArgumentException with message like "Test value of type '{0}' cannot be used for the comparison method parameter of type '{1}'"
+        /// </summary>
+        internal static Exception TestValueTypeDoesNotMatchComparisonMethodParameter(object p0, object p1) {
+            return new ArgumentException(Strings.TestValueTypeDoesNotMatchComparisonMethodParameter(p0, p1));
+        }
+
+        /// <summary>
+        /// ArgumentException with message like "Switch value of type '{0}' cannot be used for the comparison method parameter of type '{1}'"
+        /// </summary>
+        internal static Exception SwitchValueTypeDoesNotMatchComparisonMethodParameter(object p0, object p1) {
+            return new ArgumentException(Strings.SwitchValueTypeDoesNotMatchComparisonMethodParameter(p0, p1));
         }
 
     }

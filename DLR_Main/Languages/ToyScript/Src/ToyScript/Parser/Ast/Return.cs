@@ -33,7 +33,7 @@ namespace ToyScript.Parser.Ast {
         }
 
         protected internal override Expression Generate(ToyGenerator tg) {
-            Expression value = _expression != null ? _expression.Generate(tg) : Expression.Constant(null, typeof(object));
+            Expression value = _expression != null ? _expression.Generate(tg) : AstUtils.Constant(null, typeof(object));
             return tg.AddSpan(
                 Span,
                 Expression.Return(tg.Scope.ReturnLabel, AstUtils.Convert(value, typeof(object)))

@@ -12,14 +12,17 @@
  *
  *
  * ***************************************************************************/
+
 using System; using Microsoft;
-
-
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+
 using Microsoft.Scripting;
-using IronPython.Runtime;
+using Microsoft.Scripting.Runtime;
 using Microsoft.Scripting.Utils;
+
+using IronPython.Runtime;
+
 using AstUtils = Microsoft.Scripting.Ast.Utils;
 using MSAst = Microsoft.Linq.Expressions;
 
@@ -37,6 +40,8 @@ namespace IronPython.Compiler.Ast {
         private PythonVariable _modVariable;        // Variable for the the __module__ (module name)
         private PythonVariable _docVariable;        // Variable for the __doc__ attribute
         private PythonVariable _modNameVariable;    // Variable for the module's __name__
+
+        private static int _classId;
 
         public ClassDefinition(SymbolId name, Expression[] bases, Statement body) {
             _name = name;
@@ -90,8 +95,12 @@ namespace IronPython.Compiler.Ast {
             set { _modNameVariable = value; }
         }
 
-        protected override bool ExposesLocalVariables {
-            get { return true; }
+        internal override bool ExposesLocalVariable(PythonVariable variable) {
+            if (variable.Name == Symbols.Module) {
+                return false;
+            }
+
+            return true;
         }
 
         internal override PythonVariable BindName(PythonNameBinder binder, SymbolId name) {
@@ -115,65 +124,63 @@ namespace IronPython.Compiler.Ast {
 
             return null;
         }
-
+        
         internal override MSAst.Expression Transform(AstGenerator ag) {
-            MSAst.Expression bases = Ast.NewArrayInit(
-                typeof(object),
-                ag.TransformAndConvert(_bases, typeof(object))
-            );
-            ag.DisableInterpreter = true;
-            AstGenerator body = new AstGenerator(ag, SymbolTable.IdToString(_name), false, false);
+            AstGenerator builder = new AstGenerator(ag, SymbolTable.IdToString(_name), false, false);
+
+            // we always need to create a nested context for class defs
+            builder.CreateNestedContext();
 
             List<MSAst.Expression> init = new List<MSAst.Expression>();
-            CreateVariables(body, init);
+            CreateVariables(builder, init);
 
             // Create the body
-            MSAst.Expression bodyStmt = body.Transform(_body);
-            MSAst.Expression modStmt = AstUtils.Assign(_modVariable.Variable, _modNameVariable.Variable);
+            MSAst.Expression bodyStmt = builder.Transform(_body);
+            MSAst.Expression modStmt = ag.Globals.Assign(ag.Globals.GetVariable(_modVariable), ag.Globals.GetVariable(_modNameVariable));
 
-            MSAst.Expression docStmt;
             string doc = ag.GetDocumentation(_body);
             if (doc != null) {
-                docStmt =
-                    AstUtils.Assign(
-                        _docVariable.Variable,
-                        Ast.Constant(doc)
-                    );
-            } else {
-                docStmt = Ast.Empty();
+                init.Add(
+                    ag.Globals.Assign(
+                        ag.Globals.GetVariable(_docVariable),
+                        AstUtils.Constant(doc)
+                    )
+                );
             }
 
-            MSAst.Expression returnStmt = Ast.Return(body.ReturnLabel, AstUtils.CodeContext());
-
-            body.Block.Dictionary = true;
-            body.Block.Visible = false;
-            body.Block.Body = body.WrapScopeStatements(
+            bodyStmt = builder.WrapScopeStatements(
                 Ast.Block(
-                    init.Count == 0 ? 
-                        AstGenerator.EmptyBlock : 
+                    init.Count == 0 ?
+                        AstGenerator.EmptyBlock :
                         Ast.Block(new ReadOnlyCollection<MSAst.Expression>(init)),
                     modStmt,
-                    docStmt,
                     bodyStmt,
-                    returnStmt,
-                    Ast.Empty()
+                    builder.LocalContext    // return value
                 )
             );
-            body.Block.Body = body.AddReturnTarget(body.Block.Body);
 
-            MSAst.LambdaExpression lambda = body.Block.MakeLambda(typeof(IronPython.Compiler.CallTarget0));
+            MSAst.LambdaExpression lambda = Ast.Lambda(
+                typeof(Func<CodeContext>),
+                builder.MakeBody(bodyStmt, true, false),
+                builder.Name + "$" + _classId++,
+                builder.Parameters
+            );
+
             MSAst.Expression classDef = Ast.Call(
                 AstGenerator.GetHelperMethod("MakeClass"),
-                AstUtils.CodeContext(),
-                Ast.Constant(SymbolTable.IdToString(_name)),
-                bases,
-                Ast.Constant(FindSelfNames()),
-                lambda
+                lambda,
+                ag.LocalContext,
+                AstUtils.Constant(SymbolTable.IdToString(_name)),
+                Ast.NewArrayInit(
+                    typeof(object),
+                    ag.TransformAndConvert(_bases, typeof(object))
+                ),
+                AstUtils.Constant(FindSelfNames())
             );
 
             classDef = ag.AddDecorators(classDef, _decorators);
 
-            return ag.AddDebugInfo(AstUtils.Assign(_variable.Variable, classDef), new SourceSpan(Start, Header));
+            return ag.AddDebugInfo(ag.Globals.Assign(ag.Globals.GetVariable(_variable), classDef), new SourceSpan(Start, Header));
         }
 
         public override void Walk(PythonWalker walker) {

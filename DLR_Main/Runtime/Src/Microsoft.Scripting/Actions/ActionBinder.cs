@@ -227,7 +227,7 @@ namespace Microsoft.Scripting.Actions {
             return ErrorInfo.FromException(
                 Expression.New(
                     typeof(InvalidOperationException).GetConstructor(new Type[] { typeof(string) }),
-                    Expression.Constant(Strings.InvalidOperation_ContainsGenericParameters(tracker.DeclaringType.Name, tracker.Name))
+                    AstUtils.Constant(Strings.InvalidOperation_ContainsGenericParameters(tracker.DeclaringType.Name, tracker.Name))
                 )
             );
         }
@@ -236,7 +236,7 @@ namespace Microsoft.Scripting.Actions {
             return ErrorInfo.FromException(
                 Expression.New(
                     typeof(MissingMemberException).GetConstructor(new Type[] { typeof(string) }),
-                    Expression.Constant(name)
+                    AstUtils.Constant(name)
                 )
             );
         }
@@ -245,7 +245,7 @@ namespace Microsoft.Scripting.Actions {
             return ErrorInfo.FromException(
                 Expression.New(
                     typeof(MemberAccessException).GetConstructor(new Type[] { typeof(string) }),
-                    Expression.Constant(info.Name)
+                    AstUtils.Constant(info.Name)
                 )
             );
         }
@@ -310,7 +310,7 @@ namespace Microsoft.Scripting.Actions {
             return ErrorInfo.FromException(
                 Expression.New(
                     typeof(MissingMemberException).GetConstructor(new Type[] { typeof(string) }),
-                    Expression.Constant(message)
+                    AstUtils.Constant(message)
                 )
             );
         }
@@ -319,7 +319,7 @@ namespace Microsoft.Scripting.Actions {
             return ErrorInfo.FromException(
                 Expression.Call(
                     typeof(ScriptingRuntimeHelpers).GetMethod("CannotConvertError"),
-                    Expression.Constant(toType),
+                    AstUtils.Constant(toType),
                     AstUtils.Convert(value, typeof(object))
                )
             );
@@ -335,10 +335,11 @@ namespace Microsoft.Scripting.Actions {
             return ErrorInfo.FromException(
                 Expression.New(
                     typeof(MissingMemberException).GetConstructor(new Type[] { typeof(string) }),
-                    Expression.Constant(name)
+                    AstUtils.Constant(name)
                 )
             );
         }
+
 
         #endregion
 
@@ -353,7 +354,7 @@ namespace Microsoft.Scripting.Actions {
             return rule.MakeError(
                 Expression.New(
                     typeof(MissingMemberException).GetConstructor(new Type[] { typeof(string) }),
-                    Expression.Constant(name)
+                    AstUtils.Constant(name)
                 )
             );
         }
@@ -375,7 +376,7 @@ namespace Microsoft.Scripting.Actions {
             return ErrorInfo.FromValueNoError(
                 Expression.Call(
                     typeof(ScriptingRuntimeHelpers).GetMethod("SetEvent"),
-                    Expression.Constant(ev),
+                    AstUtils.Constant(ev),
                     rule.Parameters[1]
                 )
             );
@@ -414,10 +415,13 @@ namespace Microsoft.Scripting.Actions {
 
             foreach (Type ext in extTypes) {
                 foreach (MemberInfo mi in ext.GetMember(name, BindingFlags.DeclaredOnly | BindingFlags.Public | BindingFlags.Instance | BindingFlags.Static)) {
-                    if (ext != declaringType) {
-                        members.Add(MemberTracker.FromMemberInfo(mi, declaringType));
-                    } else {
-                        members.Add(MemberTracker.FromMemberInfo(mi));
+                    MemberInfo newMember = mi;
+                    if (PrivateBinding || (newMember = CompilerHelpers.TryGetVisibleMember(mi)) != null) {
+                        if (ext != declaringType) {
+                            members.Add(MemberTracker.FromMemberInfo(newMember, declaringType));
+                        } else {
+                            members.Add(MemberTracker.FromMemberInfo(newMember));
+                        }
                     }
                 }
 
@@ -472,11 +476,11 @@ namespace Microsoft.Scripting.Actions {
                 BoundMemberTracker bmt = (BoundMemberTracker)memberTracker;
                 return Expression.New(
                     typeof(BoundMemberTracker).GetConstructor(new Type[] { typeof(MemberTracker), typeof(object) }),
-                    Expression.Constant(bmt.BoundTo),
+                    AstUtils.Constant(bmt.BoundTo),
                     bmt.Instance);
             }
 
-            return Expression.Constant(memberTracker);
+            return AstUtils.Constant(memberTracker);
         }
 
         /// <summary>

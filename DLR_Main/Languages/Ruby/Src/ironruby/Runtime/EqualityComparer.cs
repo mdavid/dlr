@@ -21,6 +21,7 @@ using Microsoft.Runtime.CompilerServices;
 using IronRuby.Builtins;
 using Microsoft.Scripting.Runtime;
 using Microsoft.Scripting.Utils;
+using IronRuby.Runtime.Calls;
 
 namespace IronRuby.Runtime {
     // Even though Ruby types overload Equals & GetHashCode, we can't use them
@@ -30,11 +31,11 @@ namespace IronRuby.Runtime {
     public class EqualityComparer : IEqualityComparer<object> {
         private readonly RubyContext/*!*/ _context;
 
-        private static readonly CallSite<Func<CallSite, RubyContext, object, object>>/*!*/ _HashSharedSite = CallSite<Func<CallSite, RubyContext, object, object>>.Create(
-            RubySites.InstanceCallAction("hash"));
+        private readonly CallSite<Func<CallSite, RubyContext, object, object>>/*!*/ _HashSharedSite = 
+            CallSite<Func<CallSite, RubyContext, object, object>>.Create(RubyCallAction.Make("hash", RubyCallSignature.WithImplicitSelf(0)));
 
-        private static readonly CallSite<Func<CallSite, RubyContext, object, object, bool>>/*!*/ _EqlSharedSite = CallSite<Func<CallSite, RubyContext, object, object, bool>>.Create(
-            RubySites.InstanceCallAction("eql?", 1));
+        private readonly CallSite<Func<CallSite, RubyContext, object, object, bool>>/*!*/ _EqlSharedSite =
+            CallSite<Func<CallSite, RubyContext, object, object, bool>>.Create(RubyCallAction.Make("eql?", RubyCallSignature.WithImplicitSelf(1)));
 
         // friend: RubyContext
         internal EqualityComparer(RubyContext/*!*/ context) {

@@ -20,6 +20,7 @@ using System.Diagnostics;
 using Microsoft.Linq.Expressions;
 using System.Reflection;
 using Microsoft.Scripting.Utils;
+using AstUtils = Microsoft.Scripting.Ast.Utils;
 
 namespace Microsoft.Scripting.Interpreter {
 
@@ -98,6 +99,9 @@ namespace Microsoft.Scripting.Interpreter {
     }
     
     public class LightCompiler {
+        private static readonly MethodInfo _RunMethod = typeof(Interpreter).GetMethod("Run");
+        private static readonly MethodInfo _GetCurrentMethod = typeof(MethodBase).GetMethod("GetCurrentMethod");
+
         private List<Instruction> _instructions = new List<Instruction>();
         private int _maxStackDepth = 0;
         private int _currentStackDepth = 0;
@@ -315,6 +319,8 @@ namespace Microsoft.Scripting.Interpreter {
             }
 
             if (!_closureVariables.Contains(expr)) {
+                Debug.Assert(_parent != null);
+
                 _parent.EnsureAvailableForClosure(expr);
                 _closureVariables.Add(expr);
             }
@@ -373,9 +379,11 @@ namespace Microsoft.Scripting.Interpreter {
         }
 
 
-        private void AddVariable(ParameterExpression expr) {
+        private int AddVariable(ParameterExpression expr) {
+            int index = _locals.Count;
             _locals.Add(expr);
             _localIsBoxed.Add(false);
+            return index;
         }
 
         private void CompileParameterExpression(Expression expr) {
@@ -387,9 +395,16 @@ namespace Microsoft.Scripting.Interpreter {
         private void CompileBlockExpression(Expression expr, bool asVoid) {
             var node = (BlockExpression)expr;
 
-            //TODO pop these off a stack when exiting
+            // TODO: pop these off a stack when exiting
+            // TODO: basic flow analysis so we don't have to initialize all
+            // variables.
             foreach (var local in node.Variables) {
-                this.AddVariable(local);
+                int index = this.AddVariable(local);
+                object value = GetDefaultOfType(local.Type);
+                if (value != null) {
+                    this.AddInstruction(new PushInstruction(value));
+                    this.AddInstruction(new SetLocalVoidInstruction(index));
+                }
             }
 
             for (int i = 0; i < node.Expressions.Count - 1; i++) {
@@ -399,8 +414,19 @@ namespace Microsoft.Scripting.Interpreter {
             if (asVoid) {
                 this.CompileAsVoid(lastExpression);
             } else {
-                this.Compile(lastExpression);
+                this.Compile(lastExpression, asVoid);
             }
+        }
+
+        private static object GetDefaultOfType(Type type) {
+            if (!type.IsValueType) {
+                return null;
+            } else if (type == typeof(int)) {
+                return 0;
+            } else if (type == typeof(bool)) {
+                return false;
+            }
+            return Activator.CreateInstance(type);
         }
 
         private void CompileIndexAssignment(BinaryExpression node, bool asVoid) {
@@ -414,12 +440,20 @@ namespace Microsoft.Scripting.Interpreter {
             if (pi != null) {
                 var method = pi.GetSetMethod();
                 this.Compile(member.Expression);
-                if (!asVoid) {
-                    // need to dup node.Right correctly with a temp
-                    throw new NotImplementedException();
-                }
                 this.Compile(node.Right);
+
+                int index = 0;
+                if (!asVoid) {
+                    index = AddVariable(Expression.Parameter(node.Right.Type, null));
+                    AddInstruction(new SetLocalInstruction(index));
+                    // TODO: free the variable when it goes out of scope
+                }
+
                 AddInstruction(new CallInstruction(method));
+
+                if (!asVoid) {
+                    AddInstruction(new GetLocalInstruction(index));
+                }
                 return;
             }
 
@@ -504,7 +538,8 @@ namespace Microsoft.Scripting.Interpreter {
 
 
         private void CompileArrayIndex(Expression array, Expression index) {
-            if (array.Type == typeof(object[]) && index.Type == typeof(int)) {
+            Type elemType = array.Type.GetElementType();
+            if ((elemType.IsClass || elemType.IsInterface) && index.Type == typeof(int)) {
                 this.Compile(array);
                 this.Compile(index);
                 AddInstruction(ArrayIndexInstruction<object>.Instance);
@@ -529,11 +564,14 @@ namespace Microsoft.Scripting.Interpreter {
         private void CompileConvertUnaryExpression(Expression expr) {
             var node = (UnaryExpression)expr;
 
-            if (expr.Type == typeof(void)) {
-                this.CompileAsVoid(node.Operand);
-            } else {
-                this.Compile(node.Operand);
-                //TODO check the logic on this, but we think we can ignore conversions in this boxed world
+            // TODO: check the logic on this, but we think we can ignore conversions in this boxed world
+            Compile(node.Operand);
+
+            if (node.Method != null) {
+                // We should be able to ignore Int32ToObject
+                if (node.Method != Runtime.ScriptingRuntimeHelpers.Int32ToObjectMethod) {
+                    AddInstruction(new CallInstruction(node.Method));
+                }
             }
         }
 
@@ -584,25 +622,25 @@ namespace Microsoft.Scripting.Interpreter {
         }
 
 
-        private void CompileConditionalExpression(Expression expr) {
+        private void CompileConditionalExpression(Expression expr, bool asVoid) {
             var node = (ConditionalExpression)expr;
             this.Compile(node.Test);
 
-            if (node.IfTrue == Expression.Empty()) {
+            if (node.IfTrue == AstUtils.Empty()) {
                 var endOfFalse = MakeLabel();
                 AddBranch(new BranchTrueInstruction(), endOfFalse);
-                this.Compile(node.IfFalse);
+                this.Compile(node.IfFalse, asVoid);
                 endOfFalse.Mark();
             } else {
                 var endOfTrue = MakeLabel();
                 AddBranch(new BranchFalseInstruction(), endOfTrue);
-                this.Compile(node.IfTrue);
+                this.Compile(node.IfTrue, asVoid);
 
-                if (node.IfFalse != Expression.Empty()) {
+                if (node.IfFalse != AstUtils.Empty()) {
                     var endOfFalse = MakeLabel();
                     AddBranch(endOfFalse);
                     endOfTrue.Mark();
-                    this.Compile(node.IfFalse);
+                    this.Compile(node.IfFalse, asVoid);
                     endOfFalse.Mark();
                 } else {
                     endOfTrue.Mark();
@@ -739,6 +777,7 @@ namespace Microsoft.Scripting.Interpreter {
             if (expr.NodeType == ExpressionType.Throw) {
                 var throwNode = (UnaryExpression)expr;
                 Debug.Assert(throwNode.Operand == null);
+                _currentStackDepth = -1;
                 return;
             }
 
@@ -762,6 +801,24 @@ namespace Microsoft.Scripting.Interpreter {
         private void CompileTryExpression(Expression expr) {
             var node = (TryExpression)expr;
 
+            if (node.Fault != null) {
+                throw new NotImplementedException();
+            }
+
+            // See if the handler is a no-op, in which case we ignore the whole
+            // try expression.
+            if (node.Finally == null && node.Handlers.Count == 1) {
+                var block = node.Handlers[0].Body as BlockExpression;
+                if (block != null && block.Expressions.Count == 2) {
+                    var skip = block.Expressions[0] as Ast.SkipInterpretExpression;
+                    if (skip != null && EndsWithRethrow(block)) {
+                        new ParameterVisitor(this).Visit(skip);
+                        Compile(node.Body);
+                        return;
+                    }
+                }
+            }
+
             Label startOfFinally = MakeLabel();
 
             if (node.Finally != null) {
@@ -780,7 +837,7 @@ namespace Microsoft.Scripting.Interpreter {
                 AddBranch(startOfFinally);
             }
 
-            if (node.Finally == null && node.Fault == null && node.Handlers.Count == 1) {
+            if (node.Finally == null && node.Handlers.Count == 1) {
                 var handler = node.Handlers[0];
                 if (handler.Filter == null && handler.Test == typeof(Exception) && handler.Variable == null) {
                     if (EndsWithRethrow(handler.Body)) {
@@ -807,7 +864,7 @@ namespace Microsoft.Scripting.Interpreter {
                 this.AddHandler(handler.Test, parameter, start, end);
 
                 _exceptionForRethrowStack.Push(parameter);
-                _currentStackDepth = startingStack + 1;
+                _currentStackDepth = System.Math.Max(startingStack + 1, 1);
                 SetVariable(parameter, true);
                 
                 this.Compile(handler.Body);
@@ -819,10 +876,6 @@ namespace Microsoft.Scripting.Interpreter {
                 AddBranch(startOfFinally);
             }
             
-            if (node.Fault != null) {
-                throw new NotImplementedException();
-            }
-
             if (node.Finally != null) {
                 var myLabels = _finallyLabels.Pop();
                 var myNewTargets = new List<Label>();
@@ -910,6 +963,16 @@ namespace Microsoft.Scripting.Interpreter {
 
         private void CompileMethodCallExpression(Expression expr) {
             var node = (MethodCallExpression)expr;
+
+            if (node.Method == _GetCurrentMethod && node.Object == null && node.Arguments.Count == 0) {
+                // If we call GetCurrentMethod, it will expose details of the
+                // interpreter's CallInstruction. Instead, we use
+                // Interpreter.Run, which logically represents the running
+                // method, and will appear in the stack trace of an exception.
+                AddInstruction(new PushInstruction(_RunMethod));
+                return;
+            }
+
             //TODO support pass by reference and lots of other fancy stuff
 
             if (!node.Method.IsStatic) {
@@ -923,26 +986,8 @@ namespace Microsoft.Scripting.Interpreter {
             AddInstruction(new CallInstruction(node.Method));
         }
 
-        private bool TryConstantFold(IList<Expression> argExpressions, out object[] args) {
-            args = new object[argExpressions.Count];
-            for (int i = 0; i < args.Length; i++) {
-                ConstantExpression ce = argExpressions[i] as ConstantExpression;
-                if (ce == null) return false;
-                args[i] = ce.Value;
-            }
-            return true;
-        }
-
-
         private void CompileNewExpression(Expression expr) {
             var node = (NewExpression)expr;
-            object[] args;
-            //TODO this reflects poorly on the incoming tree
-            if (TryConstantFold(node.Arguments, out args)) {
-                object value = node.Constructor.Invoke(args);
-                PushConstant(value);
-                return;
-            }
 
             foreach (var arg in node.Arguments) {
                 this.Compile(arg);
@@ -957,17 +1002,28 @@ namespace Microsoft.Scripting.Interpreter {
             var member = node.Member;
             FieldInfo fi = member as FieldInfo;
             if (fi != null) {
-                if (fi.IsInitOnly && fi.IsStatic) {
-                    object value = fi.GetValue(null);
-                    PushConstant(value);
-                    return;
+                if (fi.IsLiteral) {
+                    PushConstant(fi.GetRawConstantValue());
+                } else if (fi.IsStatic) {
+                    if (fi.IsInitOnly) {
+                        object value = fi.GetValue(null);
+                        PushConstant(value);
+                    } else {
+                        AddInstruction(new StaticFieldAccessInstruction(fi));
+                    }
+                } else {
+                    Compile(node.Expression);
+                    AddInstruction(new FieldAccessInstruction(fi));
                 }
+                return;
             }
 
             PropertyInfo pi = member as PropertyInfo;
             if (pi != null) {
                 var method = pi.GetGetMethod();
-                this.Compile(node.Expression);
+                if (node.Expression != null) {
+                    this.Compile(node.Expression);
+                }
                 AddInstruction(new CallInstruction(method));
                 return;
             }
@@ -978,40 +1034,61 @@ namespace Microsoft.Scripting.Interpreter {
 
         private void CompileNewArrayExpression(Expression expr) {
             var node = (NewArrayExpression)expr;
-            object[] args;
-            //TODO this reflects poorly on the incoming tree
-            if (TryConstantFold(node.Expressions, out args)) {
-                Array array;
-                if (node.NodeType == ExpressionType.NewArrayInit) {
-                    array = Array.CreateInstance(node.Type.GetElementType(), args.Length);
-                    for (int i = 0; i < args.Length; i++) {
-                        array.SetValue(args[i], i);
-                    }
-                } else if (node.NodeType == ExpressionType.NewArrayBounds) {
-                    if (args.Length != 1) throw new NotImplementedException();
-                    array = Array.CreateInstance(node.Type.GetElementType(), (int)args[0]);
-                } else {
-                    throw new NotImplementedException();
-                }
-                PushConstant(array);
-                return;
+
+            foreach (var arg in node.Expressions) {
+                this.Compile(arg);
             }
+
+            Type elementType = node.Type.GetElementType();
+            int count = node.Expressions.Count;
 
             if (node.NodeType == ExpressionType.NewArrayInit) {
-                foreach (var arg in node.Expressions) {
-                    this.Compile(arg);
+                AddInstruction(new NewArrayInitInstruction(elementType, count));
+            } else if (node.NodeType == ExpressionType.NewArrayBounds) {
+                if (count == 1) {
+                    AddInstruction(new NewArrayBoundsInstruction1(elementType));
+                } else {
+                    AddInstruction(new NewArrayBoundsInstructionN(elementType, count));
                 }
-                AddInstruction(new NewArrayInstruction(node.Type.GetElementType(), node.Expressions.Count));
-                return;
+            } else {
+                throw new System.NotImplementedException();
+            }
+        }
+
+        class ParameterVisitor : ExpressionVisitor {
+            private readonly LightCompiler _compiler;
+
+            public ParameterVisitor(LightCompiler compiler) {
+                _compiler = compiler;
             }
 
-            throw new System.NotImplementedException();
+            protected override Expression VisitParameter(ParameterExpression node) {
+                _compiler.GetVariable(node);
+                return node;
+            }
+
+            protected override Expression VisitLambda<T>(Expression<T> node) {
+                return node;
+            }
         }
 
         private void CompileExtensionExpression(Expression expr) {
             var instructionProvider = expr as IInstructionProvider;
             if (instructionProvider != null) {
                 AddInstruction(instructionProvider.GetInstruction(this));
+                
+                // we need to walk the reduced expression in case it has any closure 
+                // variables that we'd need to track when we actually turn around and 
+                // compile it
+                if (expr.CanReduce) {
+                    new ParameterVisitor(this).Visit(expr.Reduce());
+                }
+                return;
+            }
+
+            var skip = expr as Ast.SkipInterpretExpression;
+            if (skip != null) {
+                new ParameterVisitor(this).Visit(skip);
                 return;
             }
 
@@ -1104,6 +1181,14 @@ namespace Microsoft.Scripting.Interpreter {
             throw new System.NotImplementedException();
         }
 
+        internal void Compile(Expression expr, bool asVoid) {
+            if (asVoid) {
+                CompileAsVoid(expr);
+            } else {
+                Compile(expr);
+            }
+        }
+
         internal void CompileAsVoid(Expression expr) {
             switch (expr.NodeType) {
                 case ExpressionType.Assign:
@@ -1131,7 +1216,7 @@ namespace Microsoft.Scripting.Interpreter {
 
 
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Maintainability", "CA1502:AvoidExcessiveComplexity")]
-        internal void Compile(Expression expr) {
+        public void Compile(Expression expr) {
             int startingStackDepth = this._currentStackDepth;
             switch (expr.NodeType) {
                 case ExpressionType.Add: CompileBinaryExpression(expr); break;
@@ -1142,7 +1227,7 @@ namespace Microsoft.Scripting.Interpreter {
                 case ExpressionType.ArrayIndex: CompileBinaryExpression(expr); break;
                 case ExpressionType.Call: CompileMethodCallExpression(expr); break;
                 case ExpressionType.Coalesce: CompileCoalesceBinaryExpression(expr); break;
-                case ExpressionType.Conditional: CompileConditionalExpression(expr); break;
+                case ExpressionType.Conditional: CompileConditionalExpression(expr, expr.Type == typeof(void)); break;
                 case ExpressionType.Constant: CompileConstantExpression(expr); break;
                 case ExpressionType.Convert: CompileConvertUnaryExpression(expr); break;
                 case ExpressionType.ConvertChecked: CompileConvertUnaryExpression(expr); break;

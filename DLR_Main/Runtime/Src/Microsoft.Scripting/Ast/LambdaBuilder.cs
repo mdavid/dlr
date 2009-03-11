@@ -19,6 +19,9 @@ using System.Collections.ObjectModel;
 using System.Diagnostics;
 using Microsoft.Linq.Expressions;
 using System.Reflection;
+using System.Runtime.CompilerServices;
+using Microsoft.Runtime.CompilerServices;
+
 using System.Threading;
 using Microsoft.Scripting.Utils;
 using AstUtils = Microsoft.Scripting.Ast.Utils;
@@ -321,7 +324,7 @@ namespace Microsoft.Scripting.Ast {
                 lambdaType,
                 AddDefaultReturn(MakeBody()),
                 _name + "$" + Interlocked.Increment(ref _lambdaId),
-                new ReadOnlyCollection<ParameterExpression>(_params.ToArray())
+                new ReadOnlyCollectionBuilder<ParameterExpression>(_params)
             );
 
             // The builder is now completed
@@ -476,7 +479,7 @@ namespace Microsoft.Scripting.Ast {
                             AstUtils.Convert(
                                 Expression.ArrayAccess(
                                     delegateParamarray,
-                                    Expression.Constant(i)
+                                    AstUtils.Constant(i)
                                 ),
                                 mappedParameter.Type
                              )
@@ -503,7 +506,7 @@ namespace Microsoft.Scripting.Ast {
                                 Expression.Call(
                                     shifter,
                                     delegateParamarray,
-                                    Expression.Constant(unwrap)
+                                    AstUtils.Constant(unwrap)
                                 ),
                                 mappedParameter.Type
                             )
@@ -574,7 +577,7 @@ namespace Microsoft.Scripting.Ast {
                             typeof(RuntimeHelpers).GetMethod("CreateNestedCodeContext"),
                             Utils.VariableDictionary(vars),
                             Utils.CodeContext(),
-                            Expression.Constant(_visible)
+                            AstUtils.Constant(_visible)
                         )
                     );
                 }
@@ -591,7 +594,7 @@ namespace Microsoft.Scripting.Ast {
         // Add a default return value if needed
         private Expression AddDefaultReturn(Expression body) {
             if (body.Type == typeof(void) && _returnType != typeof(void)) {
-                body = Expression.Block(body, Expression.Default(_returnType));
+                body = Expression.Block(body, Utils.Default(_returnType));
             }
             return body;
         }

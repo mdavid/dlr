@@ -287,7 +287,7 @@ namespace IronRuby.Runtime {
         public EqualityComparer/*!*/ EqualityComparer {
             get {
                 if (_equalityComparer == null) {
-                    Interlocked.CompareExchange(ref _equalityComparer, new EqualityComparer(this), null);
+                    _equalityComparer = new EqualityComparer(this);
                 }
                 return _equalityComparer;
             }
@@ -324,6 +324,7 @@ namespace IronRuby.Runtime {
             Binder = new RubyBinder(this);
 
             _runtimeErrorSink = new RuntimeErrorSink(this);
+            _equalityComparer = new EqualityComparer(this);
             _globalVariables = new Dictionary<string, GlobalVariable>();
             _moduleCache = new Dictionary<Type, RubyModule>();
             _namespaceCache = new Dictionary<NamespaceTracker, RubyModule>();
@@ -1037,7 +1038,13 @@ namespace IronRuby.Runtime {
 
         // thread-safe:
         public MethodResolutionResult ResolveMethod(object target, string/*!*/ name, bool includePrivate) {
-            return GetImmediateClassOf(target).ResolveMethod(name, includePrivate);
+            var owner = GetImmediateClassOf(target);
+            return owner.ResolveMethod(name, includePrivate ? RubyClass.IgnoreVisibility : owner);
+        }
+
+        // thread-safe:
+        public MethodResolutionResult ResolveMethod(object target, string/*!*/ name, RubyClass visibilityContext) {
+            return GetImmediateClassOf(target).ResolveMethod(name, visibilityContext);
         }
 
         // thread-safe:
@@ -1624,7 +1631,7 @@ namespace IronRuby.Runtime {
             if (Options.InterpretedMode) {
                 return new InterpretedScriptCode(lambda, sourceUnit);
             } else {
-                return new ScriptCode(lambda, sourceUnit);
+                return new LegacyScriptCode(lambda, sourceUnit);
             }
         }
 

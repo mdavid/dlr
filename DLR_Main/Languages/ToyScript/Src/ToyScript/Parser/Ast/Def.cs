@@ -43,7 +43,7 @@ namespace ToyScript.Parser.Ast {
             List<Expression> names = new List<Expression>();
             foreach (string parameter in _parameters) {
                 tg.Scope.CreateParameter(parameter);
-                names.Add(Expression.Constant(parameter));
+                names.Add(AstUtils.Constant(parameter));
             }
 
             Expression body = _body.Generate(tg);
@@ -55,7 +55,7 @@ namespace ToyScript.Parser.Ast {
                 tg.GetOrMakeLocal(_name),
                 Expression.Call(
                     typeof(ToyFunction).GetMethod("Create"),
-                    Expression.Constant(_name),
+                    AstUtils.Constant(_name),
                     Expression.NewArrayInit(typeof(string), names),
                     lambda
                 )

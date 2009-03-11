@@ -39,7 +39,7 @@ def get_invoke_type_names(i):
     return get_type_names(i - 1) + ['TRet']
 
 def get_cast_args(i):
-    return ['%s != null ? (%s)%s : default(%s)' % (x[0], x[1], x[0], x[1]) for x in zip(get_args(i), get_type_names(i))]
+    return ['(%s)%s' % (x[0], x[1]) for x in zip(get_type_names(i), get_args(i))]
 
 def get_type_params(i):
     if i == 0: return ''
@@ -113,7 +113,7 @@ def gen_run_method(cw, n, is_void):
     if type_params: types = '<' + ','.join(type_params) + '>'
     else: types = ''
     
-    cw.enter_block('public %s Run%s%d%s(%s)' % (ret_type, name_extra, n,
+    cw.enter_block('internal %s Run%s%d%s(%s)' % (ret_type, name_extra, n,
                                                 types, 
                                                 ','.join(param_names)))
         
@@ -137,7 +137,7 @@ def gen_run_method(cw, n, is_void):
     
     
 def gen_run_methods(cw):
-    cw.write('public const int MaxParameters = %d;' % MAX_TYPES)
+    cw.write('internal const int MaxParameters = %d;' % MAX_TYPES)
     for i in xrange(MAX_TYPES):
         gen_run_method(cw, i, False)
         gen_run_method(cw, i, True)

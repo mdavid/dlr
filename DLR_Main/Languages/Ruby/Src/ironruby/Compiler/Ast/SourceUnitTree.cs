@@ -145,7 +145,7 @@ namespace IronRuby.Compiler.Ast {
                 case TopScopeFactoryKind.Main:
                     scopeFactoryCall = Methods.CreateMainTopLevelScope.OpCall(
                         scope.VisibleVariables(), parentScope, language, selfVariable, rfcVariable,
-                        Ast.Constant(gen.SourceUnit.Path, typeof(string)), Ast.Constant(_dataOffset)
+                        AstUtils.Constant(gen.SourceUnit.Path, typeof(string)), AstUtils.Constant(_dataOffset)
                     );
                     break;
 

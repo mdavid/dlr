@@ -56,7 +56,7 @@ namespace ToyScript {
 
             Expression<DlrMainCallTarget> globalAst = new GlobalLookupRewriter().RewriteLambda(ast);
 
-            return new ScriptCode(globalAst, sourceUnit);
+            return new LegacyScriptCode(globalAst, sourceUnit);
         }
     }
 }

@@ -236,12 +236,17 @@ namespace IronRuby.Runtime {
 
         [Emitted]
         public static object GetLocalVariable(RubyScope/*!*/ scope, string/*!*/ name) {
-            return scope.ResolveLocalVariable(name);
+            return scope.ResolveLocalVariable(SymbolTable.StringToId(name));
         }
 
         [Emitted]
         public static object SetLocalVariable(object value, RubyScope/*!*/ scope, string/*!*/ name) {
-            return scope.Frame[SymbolTable.StringToId(name)] = value;
+            return scope.ResolveAndSetLocalVariable(SymbolTable.StringToId(name), value);
+        }
+
+        [Emitted]
+        public static StrongBox<int>/*!*/ GetSelfClassVersionHandle(RubyScope/*!*/ scope) {
+            return scope.SelfImmediateClass.Version;
         }
 
         #endregion
@@ -596,7 +601,7 @@ namespace IronRuby.Runtime {
         public static void UndefineMethod(RubyScope/*!*/ scope, string/*!*/ name) {
             RubyModule owner = scope.GetInnerMostModule();
 
-            if (!owner.ResolveMethod(name, true).Found) {
+            if (!owner.ResolveMethod(name, RubyClass.IgnoreVisibility).Found) {
                 throw RubyExceptions.CreateUndefinedMethodError(owner, name);
             }
             owner.UndefineMethod(name);
@@ -606,7 +611,7 @@ namespace IronRuby.Runtime {
         public static bool IsDefinedMethod(object self, RubyScope/*!*/ scope, string/*!*/ name) {
             // MRI: this is different from UndefineMethod, it behaves like Kernel#method (i.e. doesn't use lexical scope):
             // TODO: visibility
-            return scope.RubyContext.ResolveMethod(self, name, true).Found;
+            return scope.RubyContext.ResolveMethod(self, name, RubyClass.IgnoreVisibility).Found;
         }
 
         #endregion
@@ -951,80 +956,121 @@ namespace IronRuby.Runtime {
 
         #endregion
 
-        public const int MakeStringParamCount = 2;
-        public const char SuffixEncoded = 'E';
-        public const char SuffixBinary = 'B';
-        public const char SuffixMutable = 'M';
-        public const char SuffixUTF8 = 'U';
+        /// <summary>
+        /// Each string part type will be specified using one of the following suffices
+        /// </summary>
+        public const char SuffixEncoded = 'E'; // Use encoding codepage System.String
+        public const char SuffixBinary = 'B'; // Binary (ASCII) System.String
+        public const char SuffixUTF8 = 'U'; // UTF8 encoded System.String
+        public const char SuffixMutable = 'M'; // String part is a Ruby string variable - because of variable substitution using "#{var}"
 
-        // TODO: encodings
+        /// <summary>
+        /// Specialized signatures exist for upto the following number of string parts
+        /// </summary>
+        public const int MakeStringParamCount = 2;
+
         #region CreateRegex
 
-        [Emitted]
-        public static RubyRegex/*!*/ CreateRegexB(string/*!*/ str1, RubyRegexOptions options) {
+        private static RubyRegex/*!*/ CreateRegexWorker(
+            RubyRegexOptions options, 
+            StrongBox<RubyRegex> regexpCache, 
+            bool isLiteralWithoutSubstitutions,
+            Func<RubyRegex> createRegex) {
+
             try {
-                return new RubyRegex(str1, options);
+                bool once = ((options & RubyRegexOptions.Once) == RubyRegexOptions.Once) || isLiteralWithoutSubstitutions;
+                if (once) {
+                    // Note that the user is responsible for thread synchronization
+                    if (regexpCache.Value == null) {
+                        regexpCache.Value = createRegex();
+                    }
+                    return regexpCache.Value;
+                } else {
+                    // In the future, we can consider caching the last Regexp. For some regexp literals 
+                    // with substitution, the substition will be the same most of the time
+                    return createRegex();
+                }
             } catch (RegexpError e) {
-                // Ideally, this should be thrown during parsing of the source.
-                // Note that since the argument is a System.String, we know that this is a regexp literal,
-                // and not a literal with embedded variable interpolation/substitution (eg. /#{var}/)
-                throw new SyntaxError(e.Message);
+                if (isLiteralWithoutSubstitutions) {
+                    // Ideally, this should be thrown during parsing of the source, even if the 
+                    // expression happens to be unreachable at runtime.
+                    throw new SyntaxError(e.Message);
+                } else {
+                    throw;
+                }
             }
         }
 
         [Emitted]
-        public static RubyRegex/*!*/ CreateRegexU(string/*!*/ str1, RubyRegexOptions options) {
-            return new RubyRegex(str1, options);
+        public static RubyRegex/*!*/ CreateRegexB(string/*!*/ str1, RubyRegexOptions options, StrongBox<RubyRegex> regexpCache) {
+            Func<RubyRegex> createRegex = delegate { return new RubyRegex(str1, options); };
+            return CreateRegexWorker(options, regexpCache, true, createRegex);
         }
 
         [Emitted]
-        public static RubyRegex/*!*/ CreateRegexE(string/*!*/ str1, int codepage, RubyRegexOptions options) {
-            return new RubyRegex(str1, options);
+        public static RubyRegex/*!*/ CreateRegexU(string/*!*/ str1, RubyRegexOptions options, StrongBox<RubyRegex> regexpCache) {
+            Func<RubyRegex> createRegex = delegate { return new RubyRegex(CreateMutableStringU(str1), options); };
+            return CreateRegexWorker(options, regexpCache, true, createRegex);
+        }
+
+        [Emitted]
+        public static RubyRegex/*!*/ CreateRegexE(string/*!*/ str1, int codepage, RubyRegexOptions options, StrongBox<RubyRegex> regexpCache) {
+            Func<RubyRegex> createRegex = delegate { return new RubyRegex(CreateMutableStringE(str1, codepage), options); };
+            return CreateRegexWorker(options, regexpCache, true, createRegex);
         }
         
         [Emitted]
-        public static RubyRegex/*!*/ CreateRegexM(MutableString str1, RubyRegexOptions options) {
-            return new RubyRegex(MutableString.CreateInternal(str1), options);
+        public static RubyRegex/*!*/ CreateRegexM(MutableString str1, RubyRegexOptions options, StrongBox<RubyRegex> regexpCache) {
+            Func<RubyRegex> createRegex = delegate { return new RubyRegex(CreateMutableStringM(str1), options); };
+            return CreateRegexWorker(options, regexpCache, false, createRegex);
         }
 
         [Emitted]
-        public static RubyRegex/*!*/ CreateRegexBM(string/*!*/ str1, MutableString str2, RubyRegexOptions options) {
-            return new RubyRegex(MutableString.Create(str1).Append(str2), options);
+        public static RubyRegex/*!*/ CreateRegexBM(string/*!*/ str1, MutableString str2, RubyRegexOptions options, StrongBox<RubyRegex> regexpCache) {
+            Func<RubyRegex> createRegex = delegate { return new RubyRegex(CreateMutableStringBM(str1, str2), options); };
+            return CreateRegexWorker(options, regexpCache, false, createRegex);
         }
 
         [Emitted]
-        public static RubyRegex/*!*/ CreateRegexUM(string/*!*/ str1, MutableString str2, RubyRegexOptions options) {
-            return new RubyRegex(MutableString.Create(str1).Append(str2), options);
+        public static RubyRegex/*!*/ CreateRegexUM(string/*!*/ str1, MutableString str2, RubyRegexOptions options, StrongBox<RubyRegex> regexpCache) {
+            Func<RubyRegex> createRegex = delegate { return new RubyRegex(CreateMutableStringUM(str1, str2), options); };
+            return CreateRegexWorker(options, regexpCache, false, createRegex);
         }
 
         [Emitted]
-        public static RubyRegex/*!*/ CreateRegexEM(string/*!*/ str1, MutableString str2, int codepage, RubyRegexOptions options) {
-            return new RubyRegex(MutableString.Create(str1).Append(str2), options);
+        public static RubyRegex/*!*/ CreateRegexEM(string/*!*/ str1, MutableString str2, int codepage, RubyRegexOptions options, StrongBox<RubyRegex> regexpCache) {
+            Func<RubyRegex> createRegex = delegate { return new RubyRegex(CreateMutableStringEM(str1, str2, codepage), options); };
+            return CreateRegexWorker(options, regexpCache, false, createRegex);
         }
 
         [Emitted]
-        public static RubyRegex/*!*/ CreateRegexMB(MutableString str1, string/*!*/ str2, RubyRegexOptions options) {
-            return new RubyRegex(MutableString.CreateInternal(str1).Append(str2), options);
+        public static RubyRegex/*!*/ CreateRegexMB(MutableString str1, string/*!*/ str2, RubyRegexOptions options, StrongBox<RubyRegex> regexpCache) {
+            Func<RubyRegex> createRegex = delegate { return new RubyRegex(CreateMutableStringMB(str1, str2), options); };
+            return CreateRegexWorker(options, regexpCache, false, createRegex);
         }
 
         [Emitted]
-        public static RubyRegex/*!*/ CreateRegexMU(MutableString str1, string/*!*/ str2, RubyRegexOptions options) {
-            return new RubyRegex(MutableString.CreateInternal(str1).Append(str2), options);
+        public static RubyRegex/*!*/ CreateRegexMU(MutableString str1, string/*!*/ str2, RubyRegexOptions options, StrongBox<RubyRegex> regexpCache) {
+            Func<RubyRegex> createRegex = delegate { return new RubyRegex(CreateMutableStringMU(str1, str2), options); };
+            return CreateRegexWorker(options, regexpCache, false, createRegex);
         }
 
         [Emitted]
-        public static RubyRegex/*!*/ CreateRegexME(MutableString str1, string/*!*/ str2, int codepage, RubyRegexOptions options) {
-            return new RubyRegex(MutableString.CreateInternal(str1).Append(str2), options);
+        public static RubyRegex/*!*/ CreateRegexME(MutableString str1, string/*!*/ str2, int codepage, RubyRegexOptions options, StrongBox<RubyRegex> regexpCache) {
+            Func<RubyRegex> createRegex = delegate { return new RubyRegex(CreateMutableStringME(str1, str2, codepage), options); };
+            return CreateRegexWorker(options, regexpCache, false, createRegex);
         }
 
         [Emitted]
-        public static RubyRegex/*!*/ CreateRegexMM(MutableString str1, MutableString str2, RubyRegexOptions options) {
-            return new RubyRegex(MutableString.CreateInternal(str1).Append(str2), options);
+        public static RubyRegex/*!*/ CreateRegexMM(MutableString str1, MutableString str2, RubyRegexOptions options, StrongBox<RubyRegex> regexpCache) {
+            Func<RubyRegex> createRegex = delegate { return new RubyRegex(CreateMutableStringMM(str1, str2), options); };
+            return CreateRegexWorker(options, regexpCache, false, createRegex);
         }
 
         [Emitted]
-        public static RubyRegex/*!*/ CreateRegexN(object[]/*!*/ strings, int codepage, RubyRegexOptions options) {
-            return new RubyRegex(ConcatenateStrings(strings), options);
+        public static RubyRegex/*!*/ CreateRegexN(object[]/*!*/ strings, int codepage, RubyRegexOptions options, StrongBox<RubyRegex> regexpCache) {
+            Func<RubyRegex> createRegex = delegate { return new RubyRegex(CreateMutableStringN(strings, codepage), options); };
+            return CreateRegexWorker(options, regexpCache, false, createRegex);
         }
 
         #endregion
@@ -1258,7 +1304,7 @@ namespace IronRuby.Runtime {
         [Emitted] //Body:
         public static void SetCurrentExceptionAndStackTrace(RubyScope/*!*/ scope, Exception/*!*/ exception) {
             if (RubyExceptionData.TryGetInstance(exception) == null) {
-                RubyExceptionData.AssociateInstance(exception).SetCompiledTrace();
+                RubyExceptionData.AssociateInstance(exception).SetCompiledTrace(scope.RubyContext);
             }
             scope.RubyContext.CurrentException = exception;
         }
@@ -1268,17 +1314,15 @@ namespace IronRuby.Runtime {
             scope.RubyContext.CurrentException = exception;
         }
 
-        private static readonly CallSite<Func<CallSite, RubyContext, object, object, bool>>/*!*/ _compareExceptionSite = CallSite<Func<CallSite, RubyContext, object, object, bool>>.Create(
-            RubySites.InstanceCallAction("===", 1));
-
         [Emitted] //RescueClause:
-        public static bool CompareException(RubyScope/*!*/ scope, object classObject) {            
+        public static bool CompareException(BinaryOpStorage/*!*/ comparisonStorage, RubyScope/*!*/ scope, object classObject) {            
             // throw the same exception when classObject is nil
             if (!(classObject is RubyModule)) {
                 throw RubyExceptions.CreateTypeError("class or module required for rescue clause");
             }
-            
-            bool result = _compareExceptionSite.Target(_compareExceptionSite, scope.RubyContext, classObject, scope.RubyContext.CurrentException);
+
+            var site = comparisonStorage.GetCallSite("===");
+            bool result = IsTrue(site.Target(site, scope.RubyContext, classObject, scope.RubyContext.CurrentException));
             if (result) {
                 RubyExceptionData.ActiveExceptionHandled(scope.RubyContext.CurrentException);
             }
@@ -1286,17 +1330,17 @@ namespace IronRuby.Runtime {
         }
 
         [Emitted] //RescueClause:
-        public static bool CompareSplattedExceptions(RubyScope/*!*/ scope, object classObjects) {
+        public static bool CompareSplattedExceptions(BinaryOpStorage/*!*/ comparisonStorage, RubyScope/*!*/ scope, object classObjects) {
             var list = classObjects as IList;
             if (list != null) {
                 for (int i = 0; i < list.Count; i++) {
-                    if (CompareException(scope, list[i])) {
+                    if (CompareException(comparisonStorage, scope, list[i])) {
                         return true;
                     }
                 }
                 return false;
             } else {
-                return CompareException(scope, classObjects);
+                return CompareException(comparisonStorage, scope, classObjects);
             }
         }
 
@@ -1356,8 +1400,18 @@ namespace IronRuby.Runtime {
         }
 
         [Emitted]
+        public static Exception/*!*/ MakeAllocatorUndefinedError(RubyClass/*!*/ classObj) {
+            return RubyExceptions.CreateAllocatorUndefinedError(classObj);
+        }
+
+        [Emitted]
         public static Exception/*!*/ MakePrivateMethodCalledError(RubyContext/*!*/ context, object target, string/*!*/ methodName) {
             return RubyExceptions.CreatePrivateMethodCalled(context, target, methodName);
+        }
+
+        [Emitted]
+        public static Exception/*!*/ MakeProtectedMethodCalledError(RubyContext/*!*/ context, object target, string/*!*/ methodName) {
+            return RubyExceptions.CreateProtectedMethodCalled(context, target, methodName);
         }
 
         #endregion
@@ -1740,16 +1794,14 @@ namespace IronRuby.Runtime {
         /// EventInfo is passed in as object since it is an internal type.
         /// </summary>
         [Emitted]
-        public static object HookupEvent(EventInfo/*!*/ eventInfo, object target, Proc/*!*/ proc) {
-            Assert.NotNull(eventInfo, proc);
+        public static Proc/*!*/ HookupEvent(RubyEventInfo/*!*/ eventInfo, object/*!*/ target, Proc/*!*/ proc) {
+            eventInfo.Tracker.AddHandler(target, proc, eventInfo.Context);
+            return proc;
+        }
 
-            BlockParam bp = CreateBfcForProcCall(proc);
-            Delegate eh = BinderOps.GetDelegate(proc.LocalScope.RubyContext, bp, eventInfo.EventHandlerType);
-            MethodInfo mi = eventInfo.GetAddMethod();
-
-            mi.Invoke(target, new object[] { eh });
-
-            return null;
+        [Emitted]
+        public static RubyEvent/*!*/ CreateEvent(RubyEventInfo/*!*/ eventInfo, object/*!*/ target, string/*!*/ name) {
+            return new RubyEvent(target, eventInfo, name);
         }
 
         [Emitted]

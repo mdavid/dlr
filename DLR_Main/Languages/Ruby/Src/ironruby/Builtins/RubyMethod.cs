@@ -12,16 +12,15 @@
  *
  *
  * ***************************************************************************/
-
 using System; using Microsoft;
+
+
 using System.Diagnostics;
-using System.Reflection;
-using Microsoft.Scripting;
-using Microsoft.Scripting.Actions;
-using Microsoft.Scripting.Runtime;
-using Microsoft.Scripting.Utils;
+using IronRuby.Runtime;
 using IronRuby.Runtime.Calls;
+using Microsoft.Scripting.Utils;
 using Ast = Microsoft.Linq.Expressions.Expression;
+using AstUtils = Microsoft.Scripting.Ast.Utils;
 
 namespace IronRuby.Builtins {
     
@@ -63,10 +62,10 @@ namespace IronRuby.Builtins {
 
             // TODO: we could compare infos here:
             // first argument must be this method:
-            metaBuilder.AddRestriction(Ast.Equal(args.TargetExpression, Ast.Constant(this)));
+            metaBuilder.AddRestriction(Ast.Equal(args.TargetExpression, AstUtils.Constant(this)));
 
             // set the target (becomes self in the called method):
-            args.SetTarget(Ast.Constant(_target), _target);
+            args.SetTarget(AstUtils.Constant(_target), _target);
 
             _info.BuildCall(metaBuilder, args, _name);
         }

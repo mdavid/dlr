@@ -95,8 +95,7 @@ namespace IronPython.Compiler.Ast {
             MSAst.ParameterExpression exit = ag.GetTemporary("with_exit");
             statements[1] = ag.MakeAssignment(
                 exit,
-                Binders.Get(
-                    ag.BinderState,
+                ag.Get(
                     typeof(object),
                     "__exit__",
                     manager
@@ -109,12 +108,10 @@ namespace IronPython.Compiler.Ast {
             MSAst.ParameterExpression value = ag.GetTemporary("with_value");
             statements[2] = ag.MakeAssignment(
                 value,
-                Binders.Invoke(
-                    ag.BinderState,
+                ag.Invoke(
                     typeof(object),
                     new CallSignature(0),
-                    Binders.Get(
-                        ag.BinderState,
+                    ag.Get(
                         typeof(object),
                         "__enter__",
                         manager
@@ -128,7 +125,7 @@ namespace IronPython.Compiler.Ast {
             MSAst.ParameterExpression exc = ag.GetTemporary("with_exc", typeof(bool));
             statements[3] = ag.MakeAssignment(
                 exc,
-                Ast.Constant(true)
+                AstUtils.Constant(true)
             );
 
             //******************************************************************
@@ -161,7 +158,7 @@ namespace IronPython.Compiler.Ast {
                                 _var.TransformSet(ag, SourceSpan.None, value, PythonOperationKind.None),
                 // BLOCK
                                 ag.Transform(_body),
-                                Ast.Empty()
+                                AstUtils.Empty()
                             ),
                             _body.Span
                         ) :
@@ -176,17 +173,15 @@ namespace IronPython.Compiler.Ast {
                 // exc = False
                         ag.MakeAssignment(
                             exc,
-                            Ast.Constant(false)
+                            AstUtils.Constant(false)
                         ),
                 //  if not exit(*sys.exc_info()):
                 //      raise
                         AstUtils.IfThen(
-                            Binders.Convert(
-                                ag.BinderState,
+                            ag.Convert(
                                 typeof(bool),
                                 ConversionResultKind.ExplicitCast,
-                                Binders.Operation(
-                                    ag.BinderState,
+                                ag.Operation(
                                     typeof(object),
                                     PythonOperationKind.Not,
                                     MakeExitCall(ag, exit, exception)
@@ -194,7 +189,7 @@ namespace IronPython.Compiler.Ast {
                             ),
                             Ast.Rethrow()
                         ),
-                        Ast.Empty()
+                        AstUtils.Empty()
                     )
                 // finally:
                 ).Finally(
@@ -203,18 +198,21 @@ namespace IronPython.Compiler.Ast {
                     AstUtils.IfThen(
                         exc,
                         ag.AddDebugInfo(
-                            Ast.Dynamic(
-                                ag.BinderState.Invoke(
-                                    new CallSignature(3)        // signature doesn't include function
+                            Ast.Block(
+                                Ast.Dynamic(
+                                    ag.BinderState.Invoke(
+                                        new CallSignature(3)        // signature doesn't include function
+                                    ),
+                                    typeof(object),
+                                    new MSAst.Expression[] {
+                                        ag.LocalContext,
+                                        exit,
+                                        AstUtils.Constant(null),
+                                        AstUtils.Constant(null),
+                                        AstUtils.Constant(null)
+                                    }
                                 ),
-                                typeof(object),
-                                new MSAst.Expression[] {
-                                    AstUtils.CodeContext(),
-                                    exit,
-                                    Ast.Constant(null),
-                                    Ast.Constant(null),
-                                    Ast.Constant(null)
-                                }
+                                Ast.Empty()
                             ),
                             _contextManager.Span
                         )
@@ -222,7 +220,7 @@ namespace IronPython.Compiler.Ast {
                 );
             statements[4] = ag.AddDebugInfo(statements[4], Span);
 
-            statements[5] = Ast.Empty();
+            statements[5] = AstUtils.Empty();
             return ag.AddDebugInfo(Ast.Block(statements), _body.Span);
         }
 
@@ -232,18 +230,16 @@ namespace IronPython.Compiler.Ast {
             //    exit(*sys.exc_info())
             // we'll actually do:
             //    exit(*PythonOps.GetExceptionInfoLocal($exception))
-            return Binders.Convert(
-                ag.BinderState,
+            return ag.Convert(
                 typeof(bool),
                 ConversionResultKind.ExplicitCast,
-                Binders.Invoke(
-                    ag.BinderState,
+                ag.Invoke(
                     typeof(object),
                     new CallSignature(ArgumentType.List),
                     exit,
                     Ast.Call(
                         AstGenerator.GetHelperMethod("GetExceptionInfoLocal"),
-                        AstUtils.CodeContext(),
+                        ag.LocalContext,
                         exception
                     )
                 )

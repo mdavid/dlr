@@ -54,7 +54,7 @@ namespace IronRuby.StandardLibrary.Yaml {
                 new Func<System.Object, IronRuby.Builtins.MutableString>(IronRuby.StandardLibrary.Yaml.YamlFalseOps.TagUri)
             );
             
-            module.DefineLibraryMethod("to_yaml_node", 0x11, 
+            module.DefineLibraryMethod("to_yaml_node", 0x12, 
                 new Func<IronRuby.Runtime.ConversionStorage<IronRuby.Builtins.MutableString>, System.Object, IronRuby.StandardLibrary.Yaml.RubyRepresenter, IronRuby.StandardLibrary.Yaml.Node>(IronRuby.StandardLibrary.Yaml.YamlFalseOps.ToYaml)
             );
             
@@ -65,7 +65,7 @@ namespace IronRuby.StandardLibrary.Yaml {
                 new Func<IronRuby.Runtime.RubyContext, System.Object, IronRuby.Builtins.MutableString>(IronRuby.StandardLibrary.Yaml.YamlHashOps.TagUri)
             );
             
-            module.DefineLibraryMethod("to_yaml_node", 0x11, 
+            module.DefineLibraryMethod("to_yaml_node", 0x12, 
                 new Func<IronRuby.Builtins.Hash, IronRuby.StandardLibrary.Yaml.RubyRepresenter, IronRuby.StandardLibrary.Yaml.Node>(IronRuby.StandardLibrary.Yaml.YamlHashOps.ToYamlNode)
             );
             
@@ -76,7 +76,7 @@ namespace IronRuby.StandardLibrary.Yaml {
                 new Func<System.Object, IronRuby.Builtins.MutableString>(IronRuby.StandardLibrary.Yaml.YamlIntegerOps.TagUri)
             );
             
-            module.DefineLibraryMethod("to_yaml_node", 0x11, 
+            module.DefineLibraryMethod("to_yaml_node", 0x12, 
                 new Func<IronRuby.Runtime.ConversionStorage<IronRuby.Builtins.MutableString>, System.Object, IronRuby.StandardLibrary.Yaml.RubyRepresenter, IronRuby.StandardLibrary.Yaml.Node>(IronRuby.StandardLibrary.Yaml.YamlIntegerOps.ToYaml)
             );
             
@@ -84,19 +84,19 @@ namespace IronRuby.StandardLibrary.Yaml {
         
         private static void LoadIronRuby__Builtins__MutableString_Instance(IronRuby.Builtins.RubyModule/*!*/ module) {
             module.DefineLibraryMethod("is_binary_data?", 0x11, 
-                new Func<IronRuby.Runtime.RubyContext, IronRuby.Builtins.MutableString, System.Object>(IronRuby.StandardLibrary.Yaml.YamlStringOps.IsBinaryData)
+                new Func<IronRuby.Runtime.UnaryOpStorage, IronRuby.Runtime.RubyContext, IronRuby.Builtins.MutableString, System.Object>(IronRuby.StandardLibrary.Yaml.YamlStringOps.IsBinaryData)
             );
             
             module.DefineLibraryMethod("is_complex_yaml?", 0x11, 
-                new Func<IronRuby.Runtime.RubyContext, IronRuby.Builtins.MutableString, System.Boolean>(IronRuby.StandardLibrary.Yaml.YamlStringOps.IsComplexYaml)
+                new Func<IronRuby.Runtime.CallSiteStorage<Func<Microsoft.Runtime.CompilerServices.CallSite, IronRuby.Runtime.RubyContext, System.Object, IronRuby.Builtins.MutableString>>, IronRuby.Runtime.CallSiteStorage<Func<Microsoft.Runtime.CompilerServices.CallSite, IronRuby.Runtime.RubyContext, System.Object, IronRuby.Builtins.RubyArray>>, IronRuby.Runtime.RubyContext, IronRuby.Builtins.MutableString, System.Boolean>(IronRuby.StandardLibrary.Yaml.YamlStringOps.IsComplexYaml)
             );
             
             module.DefineLibraryMethod("taguri", 0x11, 
                 new Func<System.Object, IronRuby.Builtins.MutableString>(IronRuby.StandardLibrary.Yaml.YamlStringOps.TagUri)
             );
             
-            module.DefineLibraryMethod("to_yaml_node", 0x11, 
-                new Func<IronRuby.Builtins.MutableString, IronRuby.StandardLibrary.Yaml.RubyRepresenter, IronRuby.StandardLibrary.Yaml.Node>(IronRuby.StandardLibrary.Yaml.YamlStringOps.ToYamlNode)
+            module.DefineLibraryMethod("to_yaml_node", 0x12, 
+                new Func<IronRuby.Runtime.UnaryOpStorage, IronRuby.Builtins.MutableString, IronRuby.StandardLibrary.Yaml.RubyRepresenter, IronRuby.StandardLibrary.Yaml.Node>(IronRuby.StandardLibrary.Yaml.YamlStringOps.ToYamlNode)
             );
             
         }
@@ -106,8 +106,8 @@ namespace IronRuby.StandardLibrary.Yaml {
                 new Func<IronRuby.Builtins.Range, IronRuby.Builtins.MutableString>(IronRuby.StandardLibrary.Yaml.YamlRangeOps.TagUri)
             );
             
-            module.DefineLibraryMethod("to_yaml_node", 0x11, 
-                new Func<System.Object, IronRuby.StandardLibrary.Yaml.RubyRepresenter, IronRuby.StandardLibrary.Yaml.Node>(IronRuby.StandardLibrary.Yaml.YamlRangeOps.ToYaml)
+            module.DefineLibraryMethod("to_yaml_node", 0x12, 
+                new Func<IronRuby.Runtime.UnaryOpStorage, IronRuby.Runtime.UnaryOpStorage, IronRuby.Runtime.UnaryOpStorage, IronRuby.Builtins.Range, IronRuby.StandardLibrary.Yaml.RubyRepresenter, IronRuby.StandardLibrary.Yaml.Node>(IronRuby.StandardLibrary.Yaml.YamlRangeOps.ToYaml)
             );
             
         }
@@ -117,14 +117,14 @@ namespace IronRuby.StandardLibrary.Yaml {
                 new Func<IronRuby.Runtime.RubyContext, System.Object, IronRuby.Builtins.MutableString>(IronRuby.StandardLibrary.Yaml.YamlArrayOps.TagUri)
             );
             
-            module.DefineLibraryMethod("to_yaml_node", 0x11, 
+            module.DefineLibraryMethod("to_yaml_node", 0x12, 
                 new Func<IronRuby.Runtime.RubyContext, IronRuby.Builtins.RubyArray, IronRuby.StandardLibrary.Yaml.RubyRepresenter, IronRuby.StandardLibrary.Yaml.Node>(IronRuby.StandardLibrary.Yaml.YamlArrayOps.ToYamlNode)
             );
             
         }
         
         private static void LoadIronRuby__Builtins__RubyClass_Instance(IronRuby.Builtins.RubyModule/*!*/ module) {
-            module.DefineLibraryMethod("to_yaml_node", 0x11, 
+            module.DefineLibraryMethod("to_yaml_node", 0x12, 
                 new Func<IronRuby.Runtime.RubyContext, System.Object, IronRuby.StandardLibrary.Yaml.RubyRepresenter, IronRuby.StandardLibrary.Yaml.Node>(IronRuby.StandardLibrary.Yaml.YamlClassOps.ToYamlNode)
             );
             
@@ -142,8 +142,8 @@ namespace IronRuby.StandardLibrary.Yaml {
                 new Func<IronRuby.Builtins.RubyRegex, IronRuby.Builtins.MutableString>(IronRuby.StandardLibrary.Yaml.YamlRegexpOps.TagUri)
             );
             
-            module.DefineLibraryMethod("to_yaml_node", 0x11, 
-                new Func<System.Object, IronRuby.StandardLibrary.Yaml.RubyRepresenter, IronRuby.StandardLibrary.Yaml.Node>(IronRuby.StandardLibrary.Yaml.YamlRegexpOps.ToYaml)
+            module.DefineLibraryMethod("to_yaml_node", 0x12, 
+                new Func<IronRuby.Builtins.RubyRegex, IronRuby.StandardLibrary.Yaml.RubyRepresenter, IronRuby.StandardLibrary.Yaml.Node>(IronRuby.StandardLibrary.Yaml.YamlRegexpOps.ToYaml)
             );
             
         }
@@ -153,7 +153,7 @@ namespace IronRuby.StandardLibrary.Yaml {
                 new Func<IronRuby.Builtins.RubyStruct, IronRuby.Builtins.MutableString>(IronRuby.StandardLibrary.Yaml.YamlStructOps.TagUri)
             );
             
-            module.DefineLibraryMethod("to_yaml_node", 0x11, 
+            module.DefineLibraryMethod("to_yaml_node", 0x12, 
                 new Func<IronRuby.Builtins.RubyStruct, IronRuby.StandardLibrary.Yaml.RubyRepresenter, IronRuby.StandardLibrary.Yaml.Node>(IronRuby.StandardLibrary.Yaml.YamlStructOps.ToYamlNode)
             );
             
@@ -164,7 +164,7 @@ namespace IronRuby.StandardLibrary.Yaml {
                 new Func<System.Object, IronRuby.Builtins.MutableString>(IronRuby.StandardLibrary.Yaml.YamlTrueOps.TagUri)
             );
             
-            module.DefineLibraryMethod("to_yaml_node", 0x11, 
+            module.DefineLibraryMethod("to_yaml_node", 0x12, 
                 new Func<IronRuby.Runtime.ConversionStorage<IronRuby.Builtins.MutableString>, System.Object, IronRuby.StandardLibrary.Yaml.RubyRepresenter, IronRuby.StandardLibrary.Yaml.Node>(IronRuby.StandardLibrary.Yaml.YamlTrueOps.ToYaml)
             );
             
@@ -182,7 +182,7 @@ namespace IronRuby.StandardLibrary.Yaml {
                 new Func<Microsoft.Scripting.Math.BigInteger, IronRuby.Builtins.MutableString>(IronRuby.StandardLibrary.Yaml.YamlBigIntegerOps.TagUri)
             );
             
-            module.DefineLibraryMethod("to_yaml_node", 0x11, 
+            module.DefineLibraryMethod("to_yaml_node", 0x12, 
                 new Func<IronRuby.Runtime.ConversionStorage<IronRuby.Builtins.MutableString>, Microsoft.Scripting.Math.BigInteger, IronRuby.StandardLibrary.Yaml.RubyRepresenter, IronRuby.StandardLibrary.Yaml.Node>(IronRuby.StandardLibrary.Yaml.YamlBigIntegerOps.ToYaml)
             );
             
@@ -193,7 +193,7 @@ namespace IronRuby.StandardLibrary.Yaml {
                 new Func<System.Object, IronRuby.Builtins.MutableString>(IronRuby.StandardLibrary.Yaml.YamlNilOps.TagUri)
             );
             
-            module.DefineLibraryMethod("to_yaml_node", 0x11, 
+            module.DefineLibraryMethod("to_yaml_node", 0x12, 
                 new Func<System.Object, IronRuby.StandardLibrary.Yaml.RubyRepresenter, IronRuby.StandardLibrary.Yaml.Node>(IronRuby.StandardLibrary.Yaml.YamlNilOps.ToYaml)
             );
             
@@ -204,7 +204,7 @@ namespace IronRuby.StandardLibrary.Yaml {
                 new Func<System.Object, IronRuby.Builtins.MutableString>(IronRuby.StandardLibrary.Yaml.YamlSymbolOps.TagUri)
             );
             
-            module.DefineLibraryMethod("to_yaml_node", 0x11, 
+            module.DefineLibraryMethod("to_yaml_node", 0x12, 
                 new Func<System.Object, IronRuby.StandardLibrary.Yaml.RubyRepresenter, IronRuby.StandardLibrary.Yaml.Node>(IronRuby.StandardLibrary.Yaml.YamlSymbolOps.ToYaml)
             );
             
@@ -215,7 +215,7 @@ namespace IronRuby.StandardLibrary.Yaml {
                 new Func<System.DateTime, IronRuby.Builtins.MutableString>(IronRuby.StandardLibrary.Yaml.DateTimeOps.TagUri)
             );
             
-            module.DefineLibraryMethod("to_yaml_node", 0x11, 
+            module.DefineLibraryMethod("to_yaml_node", 0x12, 
                 new Func<System.DateTime, IronRuby.StandardLibrary.Yaml.RubyRepresenter, IronRuby.StandardLibrary.Yaml.Node>(IronRuby.StandardLibrary.Yaml.DateTimeOps.ToYaml)
             );
             
@@ -226,7 +226,7 @@ namespace IronRuby.StandardLibrary.Yaml {
                 new Func<System.Double, IronRuby.Builtins.MutableString>(IronRuby.StandardLibrary.Yaml.YamlDoubleOps.TagUri)
             );
             
-            module.DefineLibraryMethod("to_yaml_node", 0x11, 
+            module.DefineLibraryMethod("to_yaml_node", 0x12, 
                 new Func<IronRuby.Runtime.ConversionStorage<IronRuby.Builtins.MutableString>, System.Double, IronRuby.StandardLibrary.Yaml.RubyRepresenter, IronRuby.StandardLibrary.Yaml.Node>(IronRuby.StandardLibrary.Yaml.YamlDoubleOps.ToYaml)
             );
             
@@ -237,8 +237,8 @@ namespace IronRuby.StandardLibrary.Yaml {
                 new Func<IronRuby.Runtime.RubyContext, System.Object, IronRuby.Builtins.MutableString>(IronRuby.StandardLibrary.Yaml.YamlExceptionOps.TagUri)
             );
             
-            module.DefineLibraryMethod("to_yaml_node", 0x11, 
-                new Func<System.Exception, IronRuby.StandardLibrary.Yaml.RubyRepresenter, IronRuby.StandardLibrary.Yaml.Node>(IronRuby.StandardLibrary.Yaml.YamlExceptionOps.ToYamlNode)
+            module.DefineLibraryMethod("to_yaml_node", 0x12, 
+                new Func<IronRuby.Runtime.CallSiteStorage<Func<Microsoft.Runtime.CompilerServices.CallSite, IronRuby.Runtime.RubyContext, System.Exception, System.Object>>, System.Exception, IronRuby.StandardLibrary.Yaml.RubyRepresenter, IronRuby.StandardLibrary.Yaml.Node>(IronRuby.StandardLibrary.Yaml.YamlExceptionOps.ToYamlNode)
             );
             
         }
@@ -252,7 +252,7 @@ namespace IronRuby.StandardLibrary.Yaml {
                 new Func<IronRuby.Runtime.RubyContext, System.Object, System.Object[], System.Object>(IronRuby.StandardLibrary.Yaml.YamlObjectOps.ToYaml)
             );
             
-            module.DefineLibraryMethod("to_yaml_node", 0x11, 
+            module.DefineLibraryMethod("to_yaml_node", 0x12, 
                 new Func<System.Object, IronRuby.StandardLibrary.Yaml.RubyRepresenter, System.Object>(IronRuby.StandardLibrary.Yaml.YamlObjectOps.ToYamlProperties)
             );
             
@@ -281,7 +281,7 @@ namespace IronRuby.StandardLibrary.Yaml {
             );
             
             module.DefineLibraryMethod("dump_stream", 0x21, 
-                new Func<IronRuby.Runtime.RubyScope, IronRuby.Builtins.RubyModule, System.Object[], System.Object>(IronRuby.StandardLibrary.Yaml.RubyYaml.DumpStream)
+                new Func<IronRuby.Runtime.UnaryOpStorage, IronRuby.Runtime.BinaryOpStorage, IronRuby.Runtime.UnaryOpStorage, IronRuby.Runtime.RubyScope, IronRuby.Builtins.RubyModule, System.Object[], System.Object>(IronRuby.StandardLibrary.Yaml.RubyYaml.DumpStream)
             );
             
             module.DefineLibraryMethod("each_document", 0x21, 
@@ -305,7 +305,7 @@ namespace IronRuby.StandardLibrary.Yaml {
             );
             
             module.DefineLibraryMethod("load_stream", 0x21, 
-                new Func<IronRuby.Runtime.RubyScope, IronRuby.Builtins.RubyModule, System.Object, System.Object>(IronRuby.StandardLibrary.Yaml.RubyYaml.LoadStream)
+                new Func<IronRuby.Runtime.UnaryOpStorage, IronRuby.Runtime.BinaryOpStorage, IronRuby.Runtime.RubyScope, IronRuby.Builtins.RubyModule, System.Object, System.Object>(IronRuby.StandardLibrary.Yaml.RubyYaml.LoadStream)
             );
             
             module.DefineLibraryMethod("parse", 0x21, 

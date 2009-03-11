@@ -20,7 +20,7 @@ using Microsoft.Linq.Expressions;
 namespace ToyScript.Binders {
     sealed class NewBinder : CreateInstanceBinder {
         public NewBinder():
-            base(Expression.CallInfo(0)) {
+            base(new CallInfo(0)) {
         }
 
         public override int GetHashCode() {

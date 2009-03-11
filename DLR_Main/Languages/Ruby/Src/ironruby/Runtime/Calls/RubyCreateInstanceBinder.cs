@@ -18,6 +18,7 @@ using Microsoft.Scripting;
 using Microsoft.Scripting.Actions;
 using Microsoft.Scripting.Runtime;
 using Microsoft.Scripting.Utils;
+using AstUtils = Microsoft.Scripting.Ast.Utils;
 
 namespace IronRuby.Runtime.Calls {
     using IronRuby.Builtins;
@@ -51,7 +52,7 @@ namespace IronRuby.Runtime.Calls {
 
             RubyCallAction.Bind(metaBuilder, "new", 
                 new CallArguments(
-                    new DynamicMetaObject(Ast.Constant(context), BindingRestrictions.Empty, context),
+                    new DynamicMetaObject(AstUtils.Constant(context), BindingRestrictions.Empty, context),
                     target, 
                     args, 
                     RubyCallSignature.Simple(args.Length)
@@ -59,7 +60,7 @@ namespace IronRuby.Runtime.Calls {
             );
 
             // TODO: we should return null if we fail, we need to throw exception due to version update optimization:
-            return metaBuilder.CreateMetaObject(binder, DynamicMetaObject.EmptyMetaObjects);
+            return metaBuilder.CreateMetaObject(binder);
         }
     }
 }

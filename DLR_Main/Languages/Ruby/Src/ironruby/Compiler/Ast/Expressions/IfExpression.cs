@@ -19,6 +19,7 @@ using System.Collections.Generic;
 using Microsoft.Scripting;
 using Microsoft.Scripting.Utils;
 using MSA = Microsoft.Linq.Expressions;
+using AstUtils = Microsoft.Scripting.Ast.Utils;
 
 namespace IronRuby.Compiler.Ast {
     using Ast = Microsoft.Linq.Expressions.Expression;
@@ -70,7 +71,7 @@ namespace IronRuby.Compiler.Ast {
                 i--;
             } else {
                 // no else clause => the result of the if-expression is nil:
-                result = Ast.Constant(null);
+                result = AstUtils.Constant(null);
             }
 
             while (i >= 0) {
