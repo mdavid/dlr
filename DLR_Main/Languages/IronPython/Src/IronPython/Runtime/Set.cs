@@ -307,6 +307,10 @@ namespace IronPython.Runtime {
 
         #region NonOperator Operations
 
+        public object union() {
+            return SetHelpers.MakeSet(this, this);
+        }
+
         public object union(object s) {
             return SetHelpers.Union(this, s);
         }
@@ -319,6 +323,10 @@ namespace IronPython.Runtime {
             return res;
         }
 
+        public object intersection() {
+            return SetHelpers.MakeSet(this, this);
+        }
+
         public object intersection(object s) {
             return SetHelpers.Intersection(this, s);
         }
@@ -329,6 +337,10 @@ namespace IronPython.Runtime {
                 res = SetHelpers.Intersection(res, s);
             }
             return res;
+        }
+
+        public object difference() {
+            return SetHelpers.MakeSet(this, this);
         }
 
         public object difference(object s) {
@@ -345,6 +357,10 @@ namespace IronPython.Runtime {
 
         public object symmetric_difference(object s) {
             return SetHelpers.SymmetricDifference(this, s);
+        }
+
+        public bool isdisjoint(object s) {
+            return SetHelpers.Intersection(this, s).__len__() == 0;
         }
 
         public SetCollection copy() {
@@ -387,7 +403,6 @@ namespace IronPython.Runtime {
         /// <summary>
         /// Appends one or more IEnumerables to an existing set
         /// </summary>
-        /// <param name="s"></param>
         public void update([NotNull] params object[] ss) {
             foreach (object s in ss) {
                 update(s);
@@ -879,6 +894,10 @@ namespace IronPython.Runtime {
 
         #region NonOperator operations
 
+        public object union() {
+            return SetHelpers.MakeSet(this, this);
+        }
+
         public object union(object s) {
             return SetHelpers.Union(this, s);
         }
@@ -891,6 +910,10 @@ namespace IronPython.Runtime {
             return res;
         }
 
+        public object intersection() {
+            return SetHelpers.MakeSet(this, this);
+        }
+
         public object intersection(object s) {
             return (SetHelpers.Intersection(this, s));
         }
@@ -901,6 +924,10 @@ namespace IronPython.Runtime {
                 res = SetHelpers.Intersection(res, s);
             }
             return res;
+        }
+
+        public object difference() {
+            return SetHelpers.MakeSet(this, this);
         }
 
         public object difference(object s) {
@@ -917,6 +944,10 @@ namespace IronPython.Runtime {
 
         public object symmetric_difference(object s) {
             return SetHelpers.SymmetricDifference(this, s);
+        }
+
+        public bool isdisjoint(object s) {
+            return SetHelpers.Intersection(this, s).__len__() == 0;
         }
 
         public object copy() {

@@ -26,6 +26,9 @@ namespace Microsoft.Linq.Expressions {
     /// <summary>
     /// Represents an expression that has a binary operator.
     /// </summary>
+#if !SILVERLIGHT
+    [DebuggerTypeProxy(typeof(Expression.BinaryExpressionProxy))]
+#endif
     public class BinaryExpression : Expression {
         private readonly Expression _left;
         private readonly Expression _right;
@@ -273,7 +276,7 @@ namespace Microsoft.Linq.Expressions {
                 }
                 if (TypeUtils.IsNullableType(_left.Type)) {
                     MethodInfo method = GetMethod();
-                    return method == null || method.GetParametersCached()[0].ParameterType != _left.Type;
+                    return method == null || method.GetParametersCached()[0].ParameterType.GetNonRefType() != _left.Type;
                 }
                 return false;
             }

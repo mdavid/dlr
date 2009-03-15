@@ -69,7 +69,7 @@ namespace IronPython.Runtime.Operations {
         }
 
         /// <summary>
-        /// Creates a new dictionary extracting the keys & valeus from the
+        /// Creates a new dictionary extracting the keys and values from the
         /// provided data array.  Keys/values are adjacent in the array with
         /// the value coming first.
         /// </summary>
@@ -78,7 +78,7 @@ namespace IronPython.Runtime.Operations {
         }
 
         /// <summary>
-        /// Creates a new dictionary extracting the keys & valeus from the
+        /// Creates a new dictionary extracting the keys and values from the
         /// provided data array.  Keys/values are adjacent in the array with
         /// the value coming first.
         /// </summary>
@@ -1213,10 +1213,10 @@ namespace IronPython.Runtime.Operations {
                 if (ostop < 0) {
                     ostop += length;
                     if (ostop < 0) {
-                        ostop = Math.Min(length, -1);
+                        ostop = ostep > 0 ? Math.Min(length, 0) : Math.Min(length - 1, -1);
                     }
-                } else if (ostop > length) {
-                    ostop = length;
+                } else if (ostop >= length) {
+                    ostop = ostep > 0 ? length : length - 1;
                 }
             }
 
@@ -1399,6 +1399,7 @@ namespace IronPython.Runtime.Operations {
         /// Creates enumerator from the input parameter e, and then extracts 
         /// expected number of values, returning them as array
         /// </summary>
+        /// <param name="context">The code context of the AST getting enumerator values.</param>
         /// <param name="e">object to enumerate</param>
         /// <param name="expected">expected number of objects to extract from the enumerator</param>
         /// <returns>
@@ -1528,7 +1529,6 @@ namespace IronPython.Runtime.Operations {
         /// <summary>
         /// Prints newline into specified destination. Sets softspace property to false.
         /// </summary>
-        /// <param name="dest"></param>
         public static void PrintNewlineWithDest(CodeContext/*!*/ context, object dest) {
             PythonOps.Write(context, dest, "\n");
             PythonOps.SetSoftspace(dest, ScriptingRuntimeHelpers.False);
@@ -1537,7 +1537,6 @@ namespace IronPython.Runtime.Operations {
         /// <summary>
         /// Prints value into default standard output with Python comma semantics.
         /// </summary>
-        /// <param name="o"></param>
         public static void PrintComma(CodeContext/*!*/ context, object o) {
             PrintCommaWithDest(context, PythonContext.GetContext(context).SystemStandardOut, o);
         }
@@ -1545,8 +1544,6 @@ namespace IronPython.Runtime.Operations {
         /// <summary>
         /// Prints value into specified destination with Python comma semantics.
         /// </summary>
-        /// <param name="dest"></param>
-        /// <param name="o"></param>
         public static void PrintCommaWithDest(CodeContext/*!*/ context, object dest, object o) {
             PythonOps.WriteSoftspace(context, dest);
             string s = o == null ? "None" : PythonOps.ToString(o);
@@ -1602,6 +1599,7 @@ namespace IronPython.Runtime.Operations {
         /// 
         /// import spam.eggs
         /// </summary>
+        [ProfilerTreatsAsExternal]
         public static object ImportTop(CodeContext/*!*/ context, string fullName, int level) {
             return Importer.Import(context, fullName, null, level);
         }
@@ -1611,9 +1609,7 @@ namespace IronPython.Runtime.Operations {
         /// 
         /// import spam.eggs as ham
         /// </summary>
-        /// <param name="context"></param>
-        /// <param name="fullName"></param>
-        /// <returns></returns>
+        [ProfilerTreatsAsExternal]
         public static object ImportBottom(CodeContext/*!*/ context, string fullName, int level) {
             object module = Importer.Import(context, fullName, null, level);
 
@@ -1633,6 +1629,7 @@ namespace IronPython.Runtime.Operations {
         /// 
         /// from spam import eggs1, eggs2 
         /// </summary>
+        [ProfilerTreatsAsExternal]
         public static object ImportWithNames(CodeContext/*!*/ context, string fullName, string[] names, int level) {
             return Importer.Import(context, fullName, PythonTuple.MakeTuple(names), level);
         }
@@ -1654,6 +1651,7 @@ namespace IronPython.Runtime.Operations {
         /// 
         /// from spam import *
         /// </summary>
+        [ProfilerTreatsAsExternal]
         public static void ImportStar(CodeContext/*!*/ context, string fullName, int level) {
             object newmod = Importer.Import(context, fullName, PythonTuple.MakeTuple("*"), level);
 
@@ -1724,6 +1722,7 @@ namespace IronPython.Runtime.Operations {
         /// 
         /// exec code
         /// </summary>
+        [ProfilerTreatsAsExternal]
         public static void UnqualifiedExec(CodeContext/*!*/ context, object code) {
             IAttributesCollection locals = null;
             IAttributesCollection globals = null;
@@ -1755,6 +1754,7 @@ namespace IronPython.Runtime.Operations {
         /// 
         /// exec code in globals [, locals ]
         /// </summary>
+        [ProfilerTreatsAsExternal]
         public static void QualifiedExec(CodeContext/*!*/ context, object code, IAttributesCollection globals, object locals) {
             PythonFile pf;
             Stream cs;
@@ -1796,7 +1796,7 @@ namespace IronPython.Runtime.Operations {
                 PythonCompilerOptions compilerOptions = Builtin.GetRuntimeGeneratedCodeCompilerOptions(context, true, 0);
 
                 // do interpretation only on strings -- not on files, streams, or code objects
-                code = new FunctionCode(pythonContext.CompilePythonCode(Compiler.Ast.CompilationMode.Loookup, source, compilerOptions, ThrowingErrorSink.Default));
+                code = new FunctionCode(pythonContext.CompilePythonCode(Compiler.Ast.CompilationMode.Lookup, source, compilerOptions, ThrowingErrorSink.Default));
             }
 
             FunctionCode fc = code as FunctionCode;
@@ -2025,6 +2025,7 @@ namespace IronPython.Runtime.Operations {
         /// <summary>
         /// Get an exception tuple for a given exception. This is like the inverse of MakeException.
         /// </summary>
+        /// <param name="context">the code context</param>
         /// <param name="ex">the exception to create a tuple for.</param>
         /// <returns>a tuple of (type, value, traceback)</returns>
         /// <remarks>This is called directly by the With statement so that it can get an exception tuple
@@ -2666,6 +2667,15 @@ namespace IronPython.Runtime.Operations {
             }
 
             return null;
+        }
+
+        public static object ConvertFloatToComplex(object value) {
+            if (value == null) {
+                return null;
+            }
+
+            double d = (double)value;
+            return new Complex64(d, 0.0);
         }
 
         internal static bool CheckingConvertToInt(object value) {

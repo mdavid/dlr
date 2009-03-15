@@ -1,4 +1,4 @@
-require File.dirname(__FILE__) + '/../spec_helper'
+require File.dirname(__FILE__) + '/../../spec_helper'
 require File.dirname(__FILE__) + '/shared/load'
 require 'ironruby'
 
@@ -103,8 +103,25 @@ describe "Loading of custom assembly outside of the load path" do
   end
 end
 
-=begin
 describe "Static dependency loading" do
+  assembly("B\\b.generated.cs", :out => "B\\b.generated.dll") do
+    csc <<-EOL
+    public class B {
+      public static int Main() {
+        return 1;
+      }
+    }
+    EOL
+  end
+  assembly("A\\a.generated.cs", :out => "A\\a.generated.dll", :references => "B\\b.generated.dll") do
+    csc <<-EOL
+    public class A {
+      public static int Main() {
+        return B.Main();
+      }
+    }
+    EOL
+  end
   it "loads a dependent assembly from load paths" do
     ruby_exe("dependencies1/test1.rb", :dir => File.dirname(__FILE__)).chomp.should == "1"
   end
@@ -113,7 +130,6 @@ describe "Static dependency loading" do
     ruby_exe("dependencies1/test2.rb", :dir => File.dirname(__FILE__)).chomp.should == "true"
   end
 end
-=end
 
 
 describe "Modifying and reloading custom assembly" do 

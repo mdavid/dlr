@@ -82,27 +82,11 @@ namespace IronPython.Runtime {
 
         [Documentation("__import__(name) -> module\n\nImport a module.")]
         public static object __import__(CodeContext/*!*/ context, string name) {
-            return __import__(context, name, null, null, null);
+            return __import__(context, name, null, null, null, -1);
         }
 
-        [Documentation("__import__(name, globals) -> module\n\nImport a module.")]
-        public static object __import__(CodeContext/*!*/ context, string name, object globals) {
-            return __import__(context, name, globals, null, null);
-
-        }
-
-        [Documentation("__import__(name, globals, locals) -> module\n\nImport a module.")]
-        public static object __import__(CodeContext/*!*/ context, string name, object globals, object locals) {
-            return __import__(context, name, globals, locals, null);
-        }
-
-        [Documentation("__import__(name, globals, locals, fromlist) -> module\n\nImport a module.")]
-        public static object __import__(CodeContext/*!*/ context, string name, object globals, object locals, object fromlist) {
-            return __import__(context, name, globals, locals, fromlist, -1);
-        }
-
-        [Documentation("__import__(name, globals, locals, fromlist) -> module\n\nImport a module.")]
-        public static object __import__(CodeContext/*!*/ context, string name, object globals, object locals, object fromlist, int level) {
+        [Documentation("__import__(name, globals, locals, fromlist, level) -> module\n\nImport a module.")]
+        public static object __import__(CodeContext/*!*/ context, string name, [DefaultParameterValue(null)]object globals, [DefaultParameterValue(null)]object locals, [DefaultParameterValue(null)]object fromlist, [DefaultParameterValue(-1)]int level) {
             //!!! remove suppress in GlobalSuppressions.cs when CodePlex 2704 is fixed.
             ISequence from = fromlist as ISequence;
             PythonContext pc = PythonContext.GetContext(context);
@@ -466,7 +450,7 @@ namespace IronPython.Runtime {
             // TODO: remove TrimStart
             var sourceUnit = pythonContext.CreateSnippet(expression.TrimStart(' ', '\t'), SourceCodeKind.Expression);
             var compilerOptions = GetRuntimeGeneratedCodeCompilerOptions(context, true, 0);
-            var scriptCode = pythonContext.CompilePythonCode(Compiler.Ast.CompilationMode.Loookup, sourceUnit, compilerOptions, ThrowingErrorSink.Default);
+            var scriptCode = pythonContext.CompilePythonCode(Compiler.Ast.CompilationMode.Lookup, sourceUnit, compilerOptions, ThrowingErrorSink.Default);
 
             return scriptCode.Run(scope);
         }

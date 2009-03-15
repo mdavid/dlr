@@ -365,6 +365,9 @@ namespace IronPython.Runtime.Types {
         /// </summary>
         /// <param name="call">The call binder we're doing the call for</param>
         /// <param name="codeContext">An expression which points to the code context</param>
+        /// <param name="function">the meta object for the built in function</param>
+        /// <param name="enforceProtected">true if we should enforce protected method calls, passing true is bad</param>
+        /// <param name="hasSelf">true if we're calling with an instance</param>
         /// <param name="args">The arguments being passed to the function</param>
         /// <param name="functionRestriction">A restriction for the built-in function, method desc, etc...</param>
         /// <param name="bind">A delegate to perform the actual call to the method.</param>
@@ -434,7 +437,7 @@ namespace IronPython.Runtime.Types {
             BindingTarget target = result.Target;
             res = result.MetaObject;
 
-            // BUG: enforceProtected should alwyas be enforced, but we have some tests that depend upon it not being enforced.
+            // BUG: enforceProtected should always be enforced, but we have some tests that depend upon it not being enforced.
             if (enforceProtected && target.Method != null && (target.Method.IsFamily || target.Method.IsFamilyOrAssembly)) {
                 // report an error when calling a protected member
                 res = new DynamicMetaObject(
@@ -450,6 +453,20 @@ namespace IronPython.Runtime.Types {
                     Ast.Property(null, typeof(PythonOps), "NotImplemented"),
                     res.Restrictions
                 );
+            } else if (target.Method != null) {
+                // Add profiling information for this builtin function, if applicable
+                IPythonSite pythonSite = (call as IPythonSite);
+                if (pythonSite != null) {
+                    var pc = PythonContext.GetContext(pythonSite.Binder.Context);
+                    var po = pc.Options as PythonOptions;
+                    if (po != null && po.EnableProfiler) {
+                        Profiler profiler = Profiler.GetProfiler(pc);
+                        res = new DynamicMetaObject(
+                            profiler.AddProfiling(res.Expression, target.Method),
+                            res.Restrictions
+                        );
+                    }
+                }
             }
 
             // add any warnings that are applicable for calling this function
