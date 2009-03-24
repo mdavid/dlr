@@ -32,7 +32,6 @@
       <!--          Parser          -->
       <!--                          -->
       <Compile Include="Parser\AssertTokenizer.cs" />
-      <Compile Include="Parser\BinaryContentProvider.cs" />
       <Compile Include="Parser\CoverageParserLogger.cs" />
       <Compile Include="Parser\DefaultParserLogger.cs" />
       <Compile Include="Parser\ParserTests.cs" />
@@ -69,6 +68,7 @@
       <Compile Include="Runtime\MethodTests.cs" />
       <Compile Include="Runtime\MiscTests.cs" />
       <Compile Include="Runtime\ModuleTests.cs" />
+      <Compile Include="Runtime\MutableStringTests.cs" />
       <Compile Include="Runtime\OverloadResolutionTests.cs" />
       <Compile Include="Runtime\ProtocolTests.cs" />
       <Compile Include="Runtime\RangeTests.cs" />

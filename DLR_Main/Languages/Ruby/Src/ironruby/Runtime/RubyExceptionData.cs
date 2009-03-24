@@ -76,7 +76,8 @@ namespace IronRuby.Runtime {
             var result = new RubyArray();
             // Compiled trace: contains frames starting with the throw site up to the first filter/catch that the exception was caught by:
             StackTrace throwSiteTrace = DebugInfoAvailable ? new StackTrace(_exception, true) : new StackTrace(_exception);
-            AddBacktrace(result, throwSiteTrace.GetFrames(), hasFileAccessPermissions, skipFrames, false);
+            bool exceptionDetail = (context == null) ? RubyOptions.DefaultExceptionDetail : context.Options.ExceptionDetail;
+            AddBacktrace(result, throwSiteTrace.GetFrames(), hasFileAccessPermissions, skipFrames, exceptionDetail);
 
             if (catchSiteTrace != null) {
                 // skip one frame - the catch-site frame is already included
@@ -228,13 +229,27 @@ namespace IronRuby.Runtime {
             methodName = method.Name;
 
             fileName = (hasFileAccessPermission) ? frame.GetFileName() : null;
-            line = frame.GetFileLineNumber();
+            var sourceLine = line = frame.GetFileLineNumber();
 
             if (TryParseRubyMethodName(ref methodName, ref fileName, ref line)) {
                 // Ruby method:
                 if (methodName == TopLevelMethodName) {
                     methodName = null;
                 }
+
+                if (sourceLine == 0) {
+                    RubyMethodDebugInfo debugInfo;
+                    if (RubyMethodDebugInfo.TryGet(method, out debugInfo)) {
+                        var ilOffset = frame.GetILOffset();
+                        if (ilOffset >= 0) {
+                            var mappedLine = debugInfo.Map(ilOffset);
+                            if (mappedLine != 0) {
+                                line = mappedLine;
+                            }
+                        }
+                    }
+                }
+
                 return true;
             } else if (method.IsDefined(typeof(RubyStackTraceHiddenAttribute), false)) {
                 return false;

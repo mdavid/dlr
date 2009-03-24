@@ -51,7 +51,7 @@ namespace IronRuby.Builtins {
         public static object GetClassVariable(RubyModule/*!*/ self, [DefaultProtocol, NotNull]string/*!*/ variableName) {
             object value;
             if (self.TryResolveClassVariable(variableName, out value) == null) {
-                RubyUtils.CheckClassVariableName(variableName);
+                self.Context.CheckClassVariableName(variableName);
                 throw RubyExceptions.CreateNameError(String.Format("uninitialized class variable {0} in {1}", variableName, self.Name));
             }
             return value;
@@ -60,7 +60,7 @@ namespace IronRuby.Builtins {
         // not thread-safe:
         [RubyMethod("class_variable_set", RubyMethodAttributes.PrivateInstance)]
         public static object ClassVariableSet(RubyModule/*!*/ self, [DefaultProtocol, NotNull]string/*!*/ variableName, object value) {
-            RubyUtils.CheckClassVariableName(variableName);
+            self.Context.CheckClassVariableName(variableName);
             self.SetClassVariable(variableName, value);
             return value;
         }
@@ -70,7 +70,7 @@ namespace IronRuby.Builtins {
         public static object RemoveClassVariable(RubyModule/*!*/ self, [DefaultProtocol, NotNull]string/*!*/ variableName) {
             object value;
             if (!self.TryGetClassVariable(variableName, out value)) {
-                RubyUtils.CheckClassVariableName(variableName);
+                self.Context.CheckClassVariableName(variableName);
                 throw RubyExceptions.CreateNameError(String.Format("class variable {0} not defined for {1}", variableName, self.Name));
             }
             self.RemoveClassVariable(variableName);
@@ -82,7 +82,7 @@ namespace IronRuby.Builtins {
         public static object RemoveConstant(RubyModule/*!*/ self, [DefaultProtocol, NotNull]string/*!*/ constantName) {
             object value;
             if (!self.TryGetConstantNoAutoload(constantName, out value)) {
-                RubyUtils.CheckConstantName(constantName);
+                self.Context.CheckConstantName(constantName);
                 throw RubyExceptions.CreateNameError(String.Format("constant {0}::{1} not defined", self.Name, constantName));
             }
             self.RemoveConstant(constantName);
@@ -326,7 +326,7 @@ namespace IronRuby.Builtins {
                     );
                 }
 
-                self.SetDefinedMethodNoEventNoLock(self.Context, methodName, info, attributesScope.Visibility);
+                self.SetDefinedMethodNoEventNoLock(self.Context, methodName, info, visibility);
             }
 
             self.Context.MethodAdded(self, methodName);
@@ -456,6 +456,11 @@ namespace IronRuby.Builtins {
         // thread-safe:
         [RubyMethod("remove_method", RubyMethodAttributes.PrivateInstance)]
         public static RubyModule/*!*/ RemoveMethod(RubyModule/*!*/ self, [DefaultProtocol, NotNull]string/*!*/ methodName) {
+            // MRI 1.8: reports a warning and allows removal
+            // MRI 1.9: throws a NameError
+            if (self == self.Context.ObjectClass && methodName == Symbols.Initialize) {
+                throw RubyExceptions.CreateNameError("Cannot remove Object#initialize");
+            }
             if (!self.RemoveMethod(methodName)) {
                 throw RubyExceptions.CreateUndefinedMethodError(self, methodName);
             }
@@ -666,7 +671,7 @@ namespace IronRuby.Builtins {
         // not thread-safe
         [RubyMethod("class_variable_defined?", RubyMethodAttributes.PublicInstance)]
         public static bool ClassVariableDefined(RubyModule/*!*/ self, [DefaultProtocol, NotNull]string/*!*/ variableName) {
-            RubyUtils.CheckClassVariableName(variableName);
+            self.Context.CheckClassVariableName(variableName);
             object value;
             return self.TryResolveClassVariable(variableName, out value) != null;
         }
@@ -678,7 +683,7 @@ namespace IronRuby.Builtins {
         // thread-safe:
         [RubyMethod("const_defined?")]
         public static bool IsConstantDefined(RubyModule/*!*/ self, [DefaultProtocol, NotNull]string/*!*/ constantName) {
-            RubyUtils.CheckConstantName(constantName);
+            self.Context.CheckConstantName(constantName);
             object constant;
 
             // MRI checks declared constans only and don't trigger autoload:
@@ -694,7 +699,7 @@ namespace IronRuby.Builtins {
         // thread-safe:
         [RubyMethod("const_set")]
         public static object SetConstantValue(RubyModule/*!*/ self, [DefaultProtocol, NotNull]string/*!*/ constantName, object value) {
-            RubyUtils.CheckConstantName(constantName);
+            self.Context.CheckConstantName(constantName);
             RubyUtils.SetConstant(self, constantName, value);
             return value;
         }
@@ -860,7 +865,7 @@ namespace IronRuby.Builtins {
         public static void SetAutoloadedConstant(RubyModule/*!*/ self,
             [DefaultProtocol, NotNull]string/*!*/ constantName, [DefaultProtocol, NotNull]MutableString/*!*/ path) {
 
-            RubyUtils.CheckConstantName(constantName);
+            self.Context.CheckConstantName(constantName);
             if (path.IsEmpty) {
                 throw RubyExceptions.CreateArgumentError("empty file name");
             }

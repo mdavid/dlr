@@ -23,6 +23,9 @@ using Microsoft.Linq.Expressions.Compiler;
 using System.Reflection;
 using System.Reflection.Emit;
 using System.Threading;
+using System.Runtime.CompilerServices;
+using Microsoft.Runtime.CompilerServices;
+
 
 namespace Microsoft.Linq.Expressions {
     /// <summary>
@@ -117,27 +120,44 @@ namespace Microsoft.Linq.Expressions {
         /// </summary>
         /// <returns>A delegate containing the compiled version of the lambda.</returns>
         public Delegate Compile() {
-            return LambdaCompiler.Compile(this);
+            return LambdaCompiler.Compile(this, null);
+        }
+
+        /// <summary>
+        /// Produces a delegate that represents the lambda expression.
+        /// </summary>
+        /// <param name="debugInfoGenerator">Debugging information generator used by the compiler to mark sequence points and annotate local variables.</param>
+        /// <returns>A delegate containing the compiled version of the lambda.</returns>
+        public Delegate Compile(DebugInfoGenerator debugInfoGenerator) {
+            ContractUtils.RequiresNotNull(debugInfoGenerator, "debugInfoGenerator");
+            return LambdaCompiler.Compile(this, debugInfoGenerator);
         }
 
         /// <summary>
         /// Compiles the lambda into a method definition.
         /// </summary>
         /// <param name="method">A <see cref="MethodBuilder"/> which will be used to hold the lambda's IL.</param>
-        /// <param name="emitDebugSymbols">A parameter that indicates if debugging information should be emitted.</param>
-        public void CompileToMethod(MethodBuilder method, bool emitDebugSymbols) {
+        public void CompileToMethod(MethodBuilder method) {
+            CompileToMethodInternal(method, null);
+        }
+
+        /// <summary>
+        /// Compiles the lambda into a method definition and custom debug information.
+        /// </summary>
+        /// <param name="method">A <see cref="MethodBuilder"/> which will be used to hold the lambda's IL.</param>
+        /// <param name="debugInfoGenerator">Debugging information generator used by the compiler to mark sequence points and annotate local variables.</param>
+        public void CompileToMethod(MethodBuilder method, DebugInfoGenerator debugInfoGenerator) {
+            ContractUtils.RequiresNotNull(debugInfoGenerator, "debugInfoGenerator");
+            CompileToMethodInternal(method, debugInfoGenerator);
+        }
+
+        private void CompileToMethodInternal(MethodBuilder method, DebugInfoGenerator debugInfoGenerator) {
             ContractUtils.RequiresNotNull(method, "method");
             ContractUtils.Requires(method.IsStatic, "method");
-
             var type = method.DeclaringType as TypeBuilder;
             ContractUtils.Requires(type != null, "method", Strings.MethodBuilderDoesNotHaveTypeBuilder);
-            
-            if (emitDebugSymbols) {
-                var module = method.Module as ModuleBuilder;
-                ContractUtils.Requires(module != null, "method", Strings.MethodBuilderDoesNotHaveModuleBuilder);
-            }
 
-            LambdaCompiler.Compile(this, method, emitDebugSymbols);
+            LambdaCompiler.Compile(this, method, debugInfoGenerator);
         }
 
         internal abstract LambdaExpression Accept(StackSpiller spiller);
@@ -152,12 +172,7 @@ namespace Microsoft.Linq.Expressions {
     /// Lambda expressions take input through parameters and are expected to be fully bound. 
     /// </remarks>
     public sealed class Expression<TDelegate> : LambdaExpression {
-        internal Expression(
-            string name,
-            Expression body,
-            bool tailCall,
-            ReadOnlyCollection<ParameterExpression> parameters
-        )
+        internal Expression(Expression body, string name, bool tailCall, ReadOnlyCollection<ParameterExpression> parameters)
             : base(typeof(TDelegate), name, body, tailCall, parameters) {
         }
 
@@ -166,7 +181,17 @@ namespace Microsoft.Linq.Expressions {
         /// </summary>
         /// <returns>A delegate containing the compiled version of the lambda.</returns>
         public new TDelegate Compile() {
-            return (TDelegate)(object)LambdaCompiler.Compile(this);
+            return (TDelegate)(object)LambdaCompiler.Compile(this, null);
+        }
+
+        /// <summary>
+        /// Produces a delegate that represents the lambda expression.
+        /// </summary>
+        /// <param name="debugInfoGenerator">Debugging information generator used by the compiler to mark sequence points and annotate local variables.</param>
+        /// <returns>A delegate containing the compiled version of the lambda.</returns>
+        public new TDelegate Compile(DebugInfoGenerator debugInfoGenerator) {
+            ContractUtils.RequiresNotNull(debugInfoGenerator, "debugInfoGenerator");
+            return (TDelegate)(object)LambdaCompiler.Compile(this, debugInfoGenerator);
         }
 
         internal override Expression Accept(ExpressionVisitor visitor) {
@@ -176,87 +201,40 @@ namespace Microsoft.Linq.Expressions {
         internal override LambdaExpression Accept(StackSpiller spiller) {
             return spiller.Rewrite(this);
         }
+
+        internal static LambdaExpression Create(Expression body, string name, bool tailCall, ReadOnlyCollection<ParameterExpression> parameters) {
+            return new Expression<TDelegate>(body, name, tailCall, parameters);
+        }
     }
 
 
     public partial class Expression {
-        //internal lambda factory that creates an instance of Expression<delegateType>
-        internal static LambdaExpression Lambda(
-                ExpressionType nodeType,
-                Type delegateType,
-                string name,
-                Expression body,
-                bool tailCall,
-                ReadOnlyCollection<ParameterExpression> parameters
-        ) {
-            if (nodeType == ExpressionType.Lambda) {
-                // got or create a delegate to the public Expression.Lambda<T> method and call that will be used for
-                // creating instances of this delegate type
-                Func<Expression, string, IEnumerable<ParameterExpression>, LambdaExpression> func;
 
-                if (_exprCtors == null) {
-                    EnsureLambdaFastPathInitialized();
-                }
+        /// <summary>
+        /// Creates an Expression{T} given the delegate type. Caches the
+        /// factory method to speed up repeated creations for the same T.
+        /// </summary>
+        internal static LambdaExpression CreateLambda(Type delegateType, string name, Expression body, bool tailCall, ReadOnlyCollection<ParameterExpression> parameters) {
+            // Get or create a delegate to the public Expression.Lambda<T>
+            // method and call that will be used for creating instances of this
+            // delegate type
+            LambdaFactory factory;
 
-                lock (_exprCtors) {
-                    if (!_exprCtors.TryGetValue(delegateType, out func)) {
-                        _exprCtors[delegateType] = func = (Func<Expression, string, IEnumerable<ParameterExpression>, LambdaExpression>)
-                            Delegate.CreateDelegate(
-                                typeof(Func<Expression, string, IEnumerable<ParameterExpression>, LambdaExpression>),
-                                _lambdaCtorMethod.MakeGenericMethod(delegateType)
-                            );
-                    }
-                }
-
-                return func(body, name, parameters);
+            if (_LambdaFactories == null) {
+                // NOTE: this must be Interlocked assigment since we use _LambdaFactories for locking.
+                Interlocked.CompareExchange(ref _LambdaFactories, new CacheDict<Type, LambdaFactory>(50), null);
             }
 
-            return SlowMakeLambda(nodeType, delegateType, name, body, tailCall, parameters);
-        }
-
-        private static void EnsureLambdaFastPathInitialized() {
-            // NOTE: this must be Interlocked assigment since we use _exprCtors for locking.
-            Interlocked.CompareExchange(
-                ref _exprCtors,
-                new CacheDict<Type, Func<Expression, string, IEnumerable<ParameterExpression>, LambdaExpression>>(200),
-                null
-            );
-
-            EnsureLambdaCtor();
-        }
-        
-        private static void EnsureLambdaCtor() {
-            MethodInfo[] methods = (MethodInfo[])typeof(Expression).GetMember("Lambda", MemberTypes.Method, BindingFlags.Public | BindingFlags.Static);
-            foreach (MethodInfo mi in methods) {
-                if (!mi.IsGenericMethod) {
-                    continue;
-                }
-
-                ParameterInfo[] pis = mi.GetParameters();
-                if (pis.Length == 3) {
-                    if (pis[0].ParameterType == typeof(Expression) &&
-                        pis[1].ParameterType == typeof(string) &&
-                        pis[2].ParameterType == typeof(IEnumerable<ParameterExpression>)) {
-                        _lambdaCtorMethod = mi;
-                        break;
-                    }
+            lock (_LambdaFactories) {
+                if (!_LambdaFactories.TryGetValue(delegateType, out factory)) {
+                    _LambdaFactories[delegateType] = factory = (LambdaFactory)Delegate.CreateDelegate(
+                        typeof(LambdaFactory),
+                        typeof(Expression<>).MakeGenericType(delegateType).GetMethod("Create", BindingFlags.Static | BindingFlags.NonPublic)
+                    );
                 }
             }
-            Debug.Assert(_lambdaCtorMethod != null);
-        }
 
-        private static LambdaExpression SlowMakeLambda(ExpressionType nodeType, Type delegateType, string name, Expression body, bool tailCall, ReadOnlyCollection<ParameterExpression> parameters) {
-            Type ot = typeof(Expression<>);
-            Type ct = ot.MakeGenericType(new Type[] { delegateType });
-            Type[] ctorTypes = new Type[] {
-                typeof(ExpressionType),     // nodeType,
-                typeof(string),             // name,
-                typeof(Expression),         // body,
-                typeof(bool),               // tailCall
-                typeof(ReadOnlyCollection<ParameterExpression>) // parameters) 
-            }; 
-            ConstructorInfo ctor = ct.GetConstructor(BindingFlags.NonPublic | BindingFlags.Instance, null, ctorTypes, null);
-            return (LambdaExpression)ctor.Invoke(new object[] { nodeType, name, body, tailCall, parameters });
+            return factory(body, name, tailCall, parameters);
         }
 
         /// <summary>
@@ -329,7 +307,7 @@ namespace Microsoft.Linq.Expressions {
         public static Expression<TDelegate> Lambda<TDelegate>(Expression body, String name, bool tailCall, IEnumerable<ParameterExpression> parameters) {
             var parameterList = parameters.ToReadOnly();
             ValidateLambdaArgs(typeof(TDelegate), ref body, parameterList);
-            return new Expression<TDelegate>(name, body, tailCall, parameterList);
+            return new Expression<TDelegate>(body, name, tailCall, parameterList);
         }
 
 
@@ -447,16 +425,23 @@ namespace Microsoft.Linq.Expressions {
 
             int paramCount = parameterList.Count;
             Type[] typeArgs = new Type[paramCount + 1];
-            for (int i = 0; i < paramCount; i++) {
-                ContractUtils.RequiresNotNull(parameterList[i], "parameter");
-                Type pType = parameterList[i].Type;
-                typeArgs[i] = parameterList[i].IsByRef ? pType.MakeByRefType() : pType;
+            if (paramCount > 0) {
+                var set = new Set<ParameterExpression>(parameterList.Count);
+                for (int i = 0; i < paramCount; i++) {
+                    var param = parameterList[i];
+                    ContractUtils.RequiresNotNull(param, "parameter");
+                    typeArgs[i] = param.IsByRef ? param.Type.MakeByRefType() : param.Type;
+                    if (set.Contains(param)) {
+                        throw Error.DuplicateVariable(param);
+                    }
+                    set.Add(param);
+                }
             }
             typeArgs[paramCount] = body.Type;
 
             Type delegateType = DelegateHelpers.MakeDelegateType(typeArgs);
 
-            return Lambda(ExpressionType.Lambda, delegateType, name, body, tailCall, parameterList);
+            return CreateLambda(delegateType, name, body, tailCall, parameterList);
         }
 
         /// <summary>
@@ -471,7 +456,7 @@ namespace Microsoft.Linq.Expressions {
             var paramList = parameters.ToReadOnly();
             ValidateLambdaArgs(delegateType, ref body, paramList);
 
-            return Lambda(ExpressionType.Lambda, delegateType, name, body, false, paramList);
+            return CreateLambda(delegateType, name, body, false, paramList);
         }
 
         /// <summary>
@@ -487,7 +472,7 @@ namespace Microsoft.Linq.Expressions {
             var paramList = parameters.ToReadOnly();
             ValidateLambdaArgs(delegateType, ref body, paramList);
 
-            return Lambda(ExpressionType.Lambda, delegateType, name, body, tailCall, paramList);
+            return CreateLambda(delegateType, name, body, tailCall, paramList);
         }
 
         private static void ValidateLambdaArgs(Type delegateType, ref Expression body, ReadOnlyCollection<ParameterExpression> parameters) {

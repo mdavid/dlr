@@ -42,6 +42,13 @@ namespace IronRuby.Runtime {
     }
 
     internal sealed class MissingBlockParam {
+        internal static readonly DynamicMetaObject MetaObject;
+
+        static MissingBlockParam() {
+            var value = new MissingBlockParam();
+            var constant = Ast.Constant(value);
+            MetaObject = new DynamicMetaObject(constant, BindingRestrictions.GetTypeRestriction(constant, typeof(MissingBlockParam)), value);
+        }
     }
 
     public sealed partial class BlockParam {
@@ -169,10 +176,9 @@ namespace IronRuby.Runtime {
         #region Dynamic Operations
 
         /// <summary>
-        /// OldCallAction on Proc target.
-        /// From control flow perspective it "yields" to the proc.
+        /// "yields" to the proc.
         /// </summary>
-        internal void SetCallActionRule(MetaObjectBuilder/*!*/ metaBuilder, CallArguments/*!*/ args) {
+        internal void BuildInvoke(MetaObjectBuilder/*!*/ metaBuilder, CallArguments/*!*/ args) {
             Assert.NotNull(metaBuilder, args);
             Debug.Assert(!args.Signature.HasBlock);
 

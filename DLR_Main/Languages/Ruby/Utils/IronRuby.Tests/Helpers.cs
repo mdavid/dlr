@@ -112,7 +112,7 @@ namespace IronRuby.Tests {
 
             string name = _driver.TestRuntime.TestName;
 
-            if (_driver.IsDebug) {
+            if (_driver.SaveToAssemblies) {
                 string path = Path.Combine(Snippets.Shared.SnippetsDirectory, name + ".rb");
                 Directory.CreateDirectory(Snippets.Shared.SnippetsDirectory);
                 File.WriteAllText(path, code);
@@ -121,7 +121,7 @@ namespace IronRuby.Tests {
                 source = _driver.TestRuntime.Context.CreateSnippet(code, name + ".rb", SourceCodeKind.File);
             }
 
-            ScriptCode compiledCode = source.Compile(new RubyCompilerOptions(), sink);
+            ScriptCode compiledCode = source.Compile(new RubyCompilerOptions(Context.RubyOptions), sink);
             if (compiledCode != null) {
                 compiledCode.Run(new Scope());
             }
@@ -303,6 +303,7 @@ namespace IronRuby.Tests {
         [DebuggerHiddenAttribute]
         internal void Assert(bool condition, string msg) {
             if (!condition) {
+                AssertBreak();
                 _driver.AssertionFailed(msg);
             }
         }
@@ -310,6 +311,12 @@ namespace IronRuby.Tests {
         [DebuggerHiddenAttribute]
         internal void Assert(bool condition) {
             Assert(condition, "Assertion failed");
+        }
+
+        internal void AssertBreak() {
+            if (Debugger.IsAttached) {
+                Debugger.Break();
+            }
         }
     }
 }

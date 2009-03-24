@@ -49,9 +49,9 @@ namespace IronRuby.Runtime {
         public static readonly string/*!*/ MriReleaseDate = "2008-05-28";
 
         // IronRuby:
-        public const string/*!*/ IronRubyVersionString = "1.0.0.0";
-        public static readonly Version IronRubyVersion = new Version(1, 0, 0, 0);
-        internal const string/*!*/ IronRubyDisplayName = "IronRuby 1.0 Alpha";
+        public const string/*!*/ IronRubyVersionString = "0.3.0.0";
+        public static readonly Version IronRubyVersion = new Version(0, 3, 0, 0);
+        internal const string/*!*/ IronRubyDisplayName = "IronRuby 0.3";
         internal const string/*!*/ IronRubyNames = "IronRuby;Ruby;rb";
         internal const string/*!*/ IronRubyFileExtensions = ".rb";
 
@@ -342,8 +342,12 @@ namespace IronRuby.Runtime {
             _outputSeparator = null;
             _stringSeparator = null;
             _itemSeparator = null;
-            _kcode = KCode.Default;
             _mainThread = Thread.CurrentThread;
+            
+            if (_options.KCode != null) {
+                Utils.Log("Initialized to " + _options.KCode.Name, "KCODE");
+                KCode = _options.KCode;
+            }
             
             if (_options.Verbosity <= 0) {
                 Verbose = null;
@@ -1413,66 +1417,8 @@ namespace IronRuby.Runtime {
         /// <summary>
         /// $KCODE
         /// </summary>
-        private static KCode _kcode;
-
-        public KCode KCode {
-            get { return _kcode; }
-        }
-
-        public void SetKCode(MutableString encodingName) {
-            // TODO: Ruby 1.9 reports a warning:
-
-            // we allow nil as Ruby 1.9 does (Ruby 1.8 doesn't):
-            if (encodingName == null) {
-                _kcode = KCode.Default;
-            } else if (encodingName.IsEmpty) {
-                _kcode = KCode.Binary;
-            } else {
-                switch (encodingName.GetChar(0)) {
-                    case 'E':
-                    case 'e':
-                        _kcode = KCode.Euc;
-                        break;
-
-                    case 'S':
-                    case 's':
-                        _kcode = KCode.Sjis;
-                        break;
-
-                    case 'U':
-                    case 'u':
-                        _kcode = KCode.Utf8;
-                        break;
-
-                    default:
-                        _kcode = KCode.Binary;
-                        break;
-                }
-            }
-        }
-
-        public string GetKCodeName() {
-            switch (_kcode) {
-                case KCode.Default:
-                case KCode.Binary: return "NONE";
-                case KCode.Euc: return "EUC";
-                case KCode.Sjis: return "SJIS";
-                case KCode.Utf8: return "UTF8";
-                default: throw Assert.Unreachable;
-            }
-        }
-
-        public Encoding/*!*/ GetKCodeEncoding() {
-            switch (_kcode) {
-                case KCode.Default:
-                case KCode.Binary: return BinaryEncoding.Instance;
-                case KCode.Euc: return Encoding.GetEncoding("EUC-JP");
-                case KCode.Sjis: return Encoding.GetEncoding("SJIS");
-                case KCode.Utf8: return Encoding.UTF8;
-                default: throw Assert.Unreachable;
-            }
-        }
-
+        public RubyEncoding KCode { get; internal set; }
+        
         /// <summary>
         /// $SAFE
         /// </summary>
@@ -1623,7 +1569,7 @@ namespace IronRuby.Runtime {
             }
 #endif
 
-            Expression<DlrMainCallTarget> lambda = ParseSourceCode<DlrMainCallTarget>(sourceUnit, (RubyCompilerOptions)options, errorSink);
+            var lambda = ParseSourceCode<Func<Scope, LanguageContext, object>>(sourceUnit, (RubyCompilerOptions)options, errorSink);
             if (lambda == null) {
                 return null;
             }
@@ -1631,7 +1577,7 @@ namespace IronRuby.Runtime {
             if (Options.InterpretedMode) {
                 return new InterpretedScriptCode(lambda, sourceUnit);
             } else {
-                return new LegacyScriptCode(lambda, sourceUnit);
+                return new RubyScriptCode(lambda, sourceUnit);
             }
         }
 
@@ -1696,7 +1642,7 @@ namespace IronRuby.Runtime {
 
         public override CompilerOptions/*!*/ GetCompilerOptions() {
             return new RubyCompilerOptions(_options) {
-                FactoryKind = TopScopeFactoryKind.Default
+                FactoryKind = TopScopeFactoryKind.Default,
             };
         }
 
@@ -1715,6 +1661,30 @@ namespace IronRuby.Runtime {
 
         public override ErrorSink GetCompilerErrorSink() {
             return _runtimeErrorSink;
+        }
+
+        protected override ScriptCode/*!*/ LoadCompiledCode(Delegate/*!*/ method, string path) {
+            // TODO:
+            SourceUnit su = new SourceUnit(this, NullTextContentProvider.Null, path, SourceCodeKind.File);
+            return new RubyScriptCode((Func<Scope, LanguageContext, object>)method, su);
+        }
+
+        public void CheckConstantName(string name) {
+            if (!Tokenizer.IsConstantName(name, _options.Compatibility >= RubyCompatibility.Ruby19 || KCode != null)) {
+                throw RubyExceptions.CreateNameError(String.Format("`{0}' is not allowed as a constant name", name));
+            }
+        }
+
+        public void CheckClassVariableName(string name) {
+            if (!Tokenizer.IsClassVariableName(name, _options.Compatibility >= RubyCompatibility.Ruby19 || KCode != null)) {
+                throw RubyExceptions.CreateNameError(String.Format("`{0}' is not allowed as a class variable name", name));
+            }
+        }
+
+        public void CheckInstanceVariableName(string name) {
+            if (!Tokenizer.IsInstanceVariableName(name, _options.Compatibility >= RubyCompatibility.Ruby19 || KCode != null)) {
+                throw RubyExceptions.CreateNameError(String.Format("`{0}' is not allowed as an instance variable name", name));
+            }
         }
 
         #endregion
@@ -1855,14 +1825,14 @@ namespace IronRuby.Runtime {
   parse:         {1}
   ast transform: {2}
   script code:   {3}
-  il:            {4}
+  il:            {4} (TODO)
   binding:       {5} ({6} calls)
 ",
                     _upTime.Elapsed,
                     new TimeSpan(_ParseTimeTicks),
                     new TimeSpan(_AstGenerationTimeTicks),
                     new TimeSpan(Loader._ScriptCodeGenerationTimeTicks),
-                    new TimeSpan(Loader._ILGenerationTimeTicks),
+                    new TimeSpan(), // TODO: new TimeSpan(Loader._ILGenerationTimeTicks),
 #if MEASURE
                     new TimeSpan(MetaAction.BindingTimeTicks), 
                     MetaAction.BindCallCount
@@ -2007,7 +1977,7 @@ namespace IronRuby.Runtime {
 
         private static SourceCodeReader/*!*/ GetSourceReader(Stream/*!*/ stream, Encoding/*!*/ defaultEncoding, RubyCompatibility compatibility) {
             if (compatibility <= RubyCompatibility.Ruby18) {
-                return new SourceCodeReader(new StreamReader(stream, BinaryEncoding.Instance, false), BinaryEncoding.Instance);
+                return new SourceCodeReader(new StreamReader(stream, defaultEncoding, false), defaultEncoding);
             }
 
             long initialPosition = stream.Position;
@@ -2061,28 +2031,26 @@ namespace IronRuby.Runtime {
         public override GetMemberBinder/*!*/ CreateGetMemberBinder(string/*!*/ name, bool ignoreCase) {
             // TODO:
             if (ignoreCase) {
-                throw new NotSupportedException("Ignore-case lookup not supported");
+                return base.CreateGetMemberBinder(name, ignoreCase);
             }
-            return new RubyGetMemberBinder(this, name);
+            return new InteropBinder.GetMember(this, name);
         }
 
-        public override InvokeMemberBinder/*!*/ CreateCallBinder(string name, bool ignoreCase, CallInfo callInfo) {
-            if (callInfo.ArgumentNames.Count != 0) {
+        public override InvokeMemberBinder/*!*/ CreateCallBinder(string/*!*/ name, bool ignoreCase, CallInfo/*!*/ callInfo) {
+            // TODO:
+            if (ignoreCase || callInfo.ArgumentNames.Count != 0) {
                 return base.CreateCallBinder(name, ignoreCase, callInfo);
             }
-            // TODO:
-            if (ignoreCase) {
-                throw new NotSupportedException("Ignore-case lookup not supported");
-            }
-            return new RubyInvokeMemberBinder(this, name, callInfo);
+            return new InteropBinder.InvokeMember(this, name, callInfo);
         }
 
         public override CreateInstanceBinder/*!*/ CreateCreateBinder(CallInfo /*!*/ callInfo) {
+            // TODO:
             if (callInfo.ArgumentNames.Count != 0) {
                 return base.CreateCreateBinder(callInfo);
             }
 
-            return new RubyCreateInstanceBinder(this, callInfo);
+            return new InteropBinder.CreateInstance(this, callInfo);
         }
 
         #endregion

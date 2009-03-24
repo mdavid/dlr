@@ -59,6 +59,7 @@
     <NoStdLib>true</NoStdLib>
     <SilverlightBuild>true</SilverlightBuild>
     <SilverlightSdkPath>$(ProgramFiles)\Microsoft Silverlight\2.0.31005.0</SilverlightSdkPath>
+    <NoWarn>414,219</NoWarn>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Silverlight Release|AnyCPU' ">
     <OutputPath>..\..\..\..\Bin\Silverlight Release\</OutputPath>
@@ -69,6 +70,7 @@
     <ErrorReport>prompt</ErrorReport>
     <SilverlightBuild>true</SilverlightBuild>
     <SilverlightSdkPath>$(ProgramFiles)\Microsoft Silverlight\2.0.31005.0</SilverlightSdkPath>
+    <NoWarn>414,219</NoWarn>
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="System" Condition=" '$(SilverlightBuild)' != 'true' " />
@@ -141,9 +143,13 @@
     <Compile Include="Compiler\Ast\Walkers\Walker.cs" />
     <Compile Include="Compiler\Errors.cs" />
     <Compile Include="Compiler\Parser\ParserStack.cs" />
+    <Compile Include="Compiler\Parser\StringContentBuilder.cs" />
+    <Compile Include="Runtime\BinaryContentProvider.cs" />
     <Compile Include="Runtime\Calls\ConvertToSAction.cs" />
+    <Compile Include="Runtime\Calls\InteropBinder.cs" />
     <Compile Include="Runtime\Calls\MethodResolutionResult.cs" />
     <Compile Include="Runtime\Calls\RubyLibraryMethodInfo.cs" />
+    <Compile Include="Runtime\Calls\RubyMetaBinder.cs" />
     <Compile Include="Runtime\Calls\RubyMetaObject.cs" />
     <Compile Include="Runtime\Calls\RubyMethodGroupBase.cs" />
     <Compile Include="Runtime\CheckedMonitor.cs" />
@@ -169,7 +175,6 @@
     <Compile Include="Runtime\Calls\CallArguments.cs" />
     <Compile Include="Runtime\Calls\BlockDispatcherUnsplatN.cs" />
     <Compile Include="Runtime\Calls\CallSiteTracer.cs" />
-    <Compile Include="Runtime\Calls\RubyInvokeMemberBinder.cs" />
     <Compile Include="Runtime\Calls\MetaObjectBuilder.cs" />
     <Compile Include="Runtime\Calls\ProtocolConversionAction.cs" />
     <Compile Include="Runtime\Calls\RubyCallAction.cs" />
@@ -188,7 +193,6 @@
     <Compile Include="Runtime\EqualityComparer.cs" />
     <Compile Include="Builtins\Hash.cs" />
     <Compile Include="Runtime\Globals\GlobalVariables.cs" />
-    <Compile Include="Runtime\Globals\KCode.cs" />
     <Compile Include="Runtime\Globals\ReadOnlyGlobalVariableInfo.cs" />
     <Compile Include="Runtime\Globals\GlobalVariableInfo.cs" />
     <Compile Include="Runtime\Globals\GlobalVariable.cs" />
@@ -201,6 +205,7 @@
     <Compile Include="Builtins\MutableString.cs" />
     <Compile Include="Builtins\Proc.cs" />
     <Compile Include="Builtins\Range.cs" />
+    <Compile Include="Runtime\KCoding.cs" />
     <Compile Include="Runtime\ReferenceEqualityComparer.cs" />
     <Compile Include="Compiler\Ast\Expressions\RangeExpression.cs" />
     <Compile Include="Runtime\Converter.cs" />
@@ -304,11 +309,13 @@
     <Compile Include="Builtins\RubyModule.cs" />
     <Compile Include="Builtins\RubyInputProvider.cs" />
     <Compile Include="Runtime\RubyGlobalScope.cs" />
+    <Compile Include="Runtime\RubyMethodDebugInfo.cs" />
     <Compile Include="Runtime\RubyOps.cs" />
     <Compile Include="Runtime\Calls\RubyMethodInfo.cs" />
     <Compile Include="Runtime\RubyContext.cs" />
     <Compile Include="Runtime\RubyOptions.cs" />
     <Compile Include="Runtime\RubyScope.cs" />
+    <Compile Include="Runtime\RubyScriptCode.cs" />
     <Compile Include="Runtime\RubyUtils.cs" />
     <Compile Include="Runtime\RuntimeFlowControl.cs" />
     <Compile Include="Runtime\RuntimeErrorSink.cs" />
@@ -326,8 +333,6 @@
     <Compile Include="Compiler\ReflectionCache.Generated.cs" />
     <Compile Include="RubyCompatibility.cs" />
     <Compile Include="Builtins\RubyModule.Subclass.cs" />
-    <Compile Include="Runtime\Calls\RubyCreateInstanceBinder.cs" />
-    <Compile Include="Runtime\Calls\RubyGetMemberBinder.cs" />
     <Compile Include="Runtime\IOWrapper.cs" />
     <None Include="Compiler\Parser\Parser.y" />
   </ItemGroup>

@@ -23,6 +23,7 @@ using IronRuby.Runtime;
 using IronRuby.Runtime.Calls;
 using AstUtils = Microsoft.Scripting.Ast.Utils;
 using IronRuby.Compiler;
+using System.Reflection;
 
 namespace IronRuby.Builtins {
     using Ast = Microsoft.Linq.Expressions.Expression;
@@ -32,14 +33,17 @@ namespace IronRuby.Builtins {
             return new Meta(parameter, BindingRestrictions.Empty, this);
         }
 
-        internal sealed class Meta : DynamicMetaObject {
-            public RubyMethod/*!*/ Method {
-                get { return (RubyMethod)Value; }
+        internal sealed class Meta : RubyMetaObject<RubyEvent> {
+            public override RubyContext/*!*/ Context {
+                get { return Value.Info.Context; }
+            }
+
+            protected override MethodInfo/*!*/ ContextConverter {
+                get { return Methods.GetContextFromIRubyObject; }
             }
 
             public Meta(Expression/*!*/ expression, BindingRestrictions/*!*/ restrictions, RubyEvent/*!*/ value)
                 : base(expression, restrictions, value) {
-                ContractUtils.RequiresNotNull(value, "value");
             }
 
             // TODO: +=/-=
