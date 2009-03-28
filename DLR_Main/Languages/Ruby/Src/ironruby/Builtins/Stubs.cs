@@ -12,11 +12,23 @@
  *
  *
  * ***************************************************************************/
-using System; using Microsoft;
 
+using System; using Microsoft;
+using System.Collections.Generic;
+using System.Text;
 
 namespace IronRuby.Builtins {
+    /// <summary>
+    /// Represents Kernel module mixed into Object class.
+    /// </summary>
     public static class Kernel {
+        // stub
+    }
+
+    /// <summary>
+    /// Represents a module mixed into all multi-dimensional CLR arrays.
+    /// </summary>
+    public static class MultiDimensionalArray {
         // stub
     }
 }

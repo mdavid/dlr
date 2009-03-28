@@ -329,29 +329,14 @@ namespace IronRuby.Builtins {
         #endregion
 
 
-        #region %
+        #region %, *, +
 
         [RubyMethod("%")]
-        public static MutableString/*!*/ Format(
-            ConversionStorage<IntegerValue>/*!*/ integerCast,
-            ConversionStorage<int>/*!*/ fixnumCast,
-            ConversionStorage<double>/*!*/ tofConversion, 
-            ConversionStorage<MutableString>/*!*/ tosConversion,
-            UnaryOpStorage/*!*/ inspectStorage,
-            RubyContext/*!*/ context, MutableString/*!*/ self, object arg) {
-
+        public static MutableString/*!*/ Format(StringFormatterSiteStorage/*!*/ storage, MutableString/*!*/ self, object arg) {
             IList args = arg as IList ?? new object[] { arg };
-
-            StringFormatter formatter = new StringFormatter(integerCast, fixnumCast, tofConversion, tosConversion, inspectStorage, context, 
-                self.ConvertToString(), args
-            );
-
+            StringFormatter formatter = new StringFormatter(storage, self.ConvertToString(), args);
             return formatter.Format().TaintBy(self);
         }
-
-        #endregion
-
-        #region *
 
         [RubyMethod("*")]
         public static MutableString/*!*/ Repeat(MutableString/*!*/ self, [DefaultProtocol]int times) {
@@ -367,16 +352,16 @@ namespace IronRuby.Builtins {
             return result;
         }
 
-        #endregion
-
-        #region +, <<, concat
-
         [RubyMethod("+")]
         public static MutableString/*!*/ Concatenate(MutableString/*!*/ self, [DefaultProtocol, NotNull]MutableString/*!*/ other) {
             // doesn't create a subclass:
             return MutableString.Create(self).Append(other).TaintBy(self).TaintBy(other);
         }
-        
+
+        #endregion
+
+        #region <<, concat
+
         [RubyMethod("<<")]
         [RubyMethod("concat")]
         public static MutableString/*!*/ Append(MutableString/*!*/ self, [DefaultProtocol, NotNull]MutableString/*!*/ other) {
@@ -403,18 +388,18 @@ namespace IronRuby.Builtins {
         }
 
         [RubyMethod("<=>")]
-        public static object Compare(BinaryOpStorage/*!*/ comparisonStorage, RespondToStorage/*!*/ respondToStorage, 
-            RubyContext/*!*/ context, MutableString/*!*/ self, object other) {
+        public static object Compare(BinaryOpStorage/*!*/ comparisonStorage, RespondToStorage/*!*/ respondToStorage, object/*!*/ self, object other) {
+            // Self is object so that we can reuse this method.
 
             // We test to see if other responds to to_str AND <=>
             // Ruby never attempts to convert other to a string via to_str and call Compare ... which is strange -- feels like a BUG in Ruby
 
-            if (Protocols.RespondTo(respondToStorage, context, other, "to_str") && Protocols.RespondTo(respondToStorage, context, other, "<=>")) {
+            if (Protocols.RespondTo(respondToStorage, other, "to_str") && Protocols.RespondTo(respondToStorage, other, "<=>")) {
                 var site = comparisonStorage.GetCallSite("<=>");
-                object result = Integer.TryUnaryMinus(site.Target(site, context, other, self));
+                object result = Integer.TryUnaryMinus(site.Target(site, other, self));
                 if (result == null) {
                     throw RubyExceptions.CreateTypeError(String.Format("{0} can't be coerced into Fixnum",
-                        RubyUtils.GetClassName(context, result)));
+                        RubyUtils.GetClassName(comparisonStorage.Context, result)));
                 }
 
                 return result;
@@ -432,11 +417,15 @@ namespace IronRuby.Builtins {
         [RubyMethod("==")]
         [RubyMethod("===")]
         public static bool Equals(RespondToStorage/*!*/ respondToStorage, BinaryOpStorage/*!*/ equalsStorage,
-            RubyContext/*!*/ context, MutableString/*!*/ self, object other) {
+            object/*!*/ self, object other) {
+            // Self is object so that we can reuse this method.
 
-            CallSite<Func<CallSite, RubyContext, object, object, object>> equals;
-            return Protocols.RespondTo(respondToStorage, context, other, "to_str") 
-                && Protocols.IsTrue((equals = equalsStorage.GetCallSite("==")).Target(equals, context, other, self));
+            if (!Protocols.RespondTo(respondToStorage, other, "to_str")) {
+                return false;
+            }
+
+            var equals = equalsStorage.GetCallSite("==");
+            return Protocols.IsTrue(equals.Target(equals, other, self));
         }
 
         #endregion
@@ -501,10 +490,10 @@ namespace IronRuby.Builtins {
         }
 
         [RubyMethod("slice!")]
-        public static MutableString RemoveSubstringInPlace(ConversionStorage<int>/*!*/ fixnumCast, RubyContext/*!*/ context, 
+        public static MutableString RemoveSubstringInPlace(ConversionStorage<int>/*!*/ fixnumCast, 
             MutableString/*!*/ self, [NotNull]Range/*!*/ range) {
-            int begin = Protocols.CastToFixnum(fixnumCast, context, range.Begin);
-            int end = Protocols.CastToFixnum(fixnumCast, context, range.End);
+            int begin = Protocols.CastToFixnum(fixnumCast, range.Begin);
+            int end = Protocols.CastToFixnum(fixnumCast, range.End);
 
             if (!InInclusiveRangeNormalized(self, ref begin)) {
                 return null;
@@ -591,10 +580,9 @@ namespace IronRuby.Builtins {
 
         [RubyMethod("[]")]
         [RubyMethod("slice")]
-        public static MutableString GetSubstring(ConversionStorage<int>/*!*/ fixnumCast, RubyContext/*!*/ context, MutableString/*!*/ self, 
-            [NotNull]Range/*!*/ range) {
-            int begin = Protocols.CastToFixnum(fixnumCast, context, range.Begin);
-            int end = Protocols.CastToFixnum(fixnumCast, context, range.End);
+        public static MutableString GetSubstring(ConversionStorage<int>/*!*/ fixnumCast, MutableString/*!*/ self, [NotNull]Range/*!*/ range) {
+            int begin = Protocols.CastToFixnum(fixnumCast, range.Begin);
+            int end = Protocols.CastToFixnum(fixnumCast, range.End);
 
             begin = NormalizeIndex(self, begin);
             if (begin < 0 || begin > self.Length) {
@@ -722,11 +710,11 @@ namespace IronRuby.Builtins {
         }
 
         [RubyMethod("[]=")]
-        public static MutableString/*!*/ ReplaceSubstring(ConversionStorage<int>/*!*/ fixnumCast, RubyContext/*!*/ context, MutableString/*!*/ self, 
+        public static MutableString/*!*/ ReplaceSubstring(ConversionStorage<int>/*!*/ fixnumCast, MutableString/*!*/ self, 
             [NotNull]Range/*!*/ range, [DefaultProtocol, NotNull]MutableString/*!*/ value) {
 
-            int begin = Protocols.CastToFixnum(fixnumCast, context, range.Begin);
-            int end = Protocols.CastToFixnum(fixnumCast, context, range.End);
+            int begin = Protocols.CastToFixnum(fixnumCast, range.Begin);
+            int end = Protocols.CastToFixnum(fixnumCast, range.End);
 
             begin = begin < 0 ? begin + self.Length : begin;
 
@@ -1243,7 +1231,7 @@ namespace IronRuby.Builtins {
             // resets the $~ scope variable to the last match (skipped if block jumped):
             matchScope.CurrentMatch = match;
 
-            MutableString replacement = Protocols.ConvertToString(tosConversion, scope.RubyContext, blockResult);
+            MutableString replacement = Protocols.ConvertToString(tosConversion, blockResult);
             result.TaintBy(replacement);
 
             // Note - we don't interpolate special sequences like \1 in block return value
@@ -1288,7 +1276,7 @@ namespace IronRuby.Builtins {
                 // resets the $~ scope variable to the last match (skipd if block jumped):
                 matchScope.CurrentMatch = currentMatch;
 
-                MutableString replacement = Protocols.ConvertToString(tosConversion, scope.RubyContext, blockResult);
+                MutableString replacement = Protocols.ConvertToString(tosConversion, blockResult);
                 result.TaintBy(replacement);
 
                 // prematch:
@@ -1719,7 +1707,7 @@ namespace IronRuby.Builtins {
         #endregion
 
 
-        #region delete
+        #region delete, delete!
 
         private static MutableString/*!*/ InternalDelete(MutableString/*!*/ self, MutableString[]/*!*/ ranges) {
             BitArray map = new RangeParser(ranges).Parse();
@@ -1829,10 +1817,10 @@ namespace IronRuby.Builtins {
         }
 
         [RubyMethod("=~")]
-        public static object Match(CallSiteStorage<Func<CallSite, RubyContext, object, MutableString, object>>/*!*/ storage,
+        public static object Match(CallSiteStorage<Func<CallSite, RubyScope, object, MutableString, object>>/*!*/ storage,
             RubyScope/*!*/ scope, MutableString/*!*/ self, object obj) {
-            var site = storage.GetCallSite("=~", 1);
-            return site.Target(site, scope.RubyContext, obj, self);
+            var site = storage.GetCallSite("=~", new RubyCallSignature(1, RubyCallFlags.HasScope | RubyCallFlags.HasImplicitSelf));
+            return site.Target(site, scope, obj, self);
         }
 
         [RubyMethod("match")]
@@ -2089,7 +2077,7 @@ namespace IronRuby.Builtins {
                 }
                 
                 if (defaultSeparator != null) {
-                    separator = Protocols.CastToString(stringCast, scope.RubyContext, defaultSeparator);
+                    separator = Protocols.CastToString(stringCast, defaultSeparator);
                 }
             }
 
@@ -2142,7 +2130,7 @@ namespace IronRuby.Builtins {
         #endregion
 
 
-        #region strip, lstrip, rstrip
+        #region strip, strip!, lstrip, lstrip!, rstrip, rstrip!
 
         [RubyMethod("strip")]
         public static MutableString/*!*/ Strip(RubyContext/*!*/ context, MutableString/*!*/ self) {
@@ -2256,7 +2244,7 @@ namespace IronRuby.Builtins {
         #endregion
 
 
-        #region squeeze
+        #region squeeze, squeeze!
 
         [RubyMethod("squeeze")]
         public static MutableString/*!*/ Squeeze(RubyContext/*!*/ context, MutableString/*!*/ self, 
@@ -2307,20 +2295,17 @@ namespace IronRuby.Builtins {
 
         [RubyMethod("to_i")]
         public static object/*!*/ ToInteger(MutableString/*!*/ self, [DefaultProtocol, DefaultParameterValue(10)]int @base) {
-            if (@base == 1 || @base < 0 || @base > 36) {
-                throw RubyExceptions.CreateArgumentError(String.Format("illegal radix {0}", @base));
-            }
-            return Tokenizer.ParseInteger(self.ConvertToString(), @base).ToObject();
+            return ClrString.ToInteger(self.ConvertToString(), @base);
         }
 
         [RubyMethod("hex")]
         public static object/*!*/ ToIntegerHex(MutableString/*!*/ self) {
-            return Tokenizer.ParseInteger(self.ConvertToString(), 16).ToObject();
+            return ClrString.ToIntegerHex(self.ConvertToString());
         }
 
         [RubyMethod("oct")]
         public static object/*!*/ ToIntegerOctal(MutableString/*!*/ self) {
-            return Tokenizer.ParseInteger(self.ConvertToString(), 8).ToObject();
+            return ClrString.ToIntegerOctal(self.ConvertToString());
         }
 
         #endregion
@@ -2329,9 +2314,7 @@ namespace IronRuby.Builtins {
 
         [RubyMethod("to_f")]
         public static double ToDouble(MutableString/*!*/ self) {
-            double result;
-            bool complete;
-            return Tokenizer.TryParseDouble(self.ConvertToString(), out result, out complete) ? result : 0.0;
+            return ClrString.ToDouble(self.ConvertToString());
         }
 
         [RubyMethod("to_s")]
@@ -2348,19 +2331,8 @@ namespace IronRuby.Builtins {
         
         [RubyMethod("to_sym")]
         [RubyMethod("intern")]
-        public static SymbolId ToSym(MutableString/*!*/ self) {
-            if (self.IsEmpty) {
-                throw RubyExceptions.CreateArgumentError("interning empty string");
-            }
-
-            string str = self.ConvertToString();
-
-            // Cannot convert a string that contains null to a symbol
-            if (str.IndexOf('\0') >= 0) {
-                throw RubyExceptions.CreateArgumentError("symbol string may not contain '\0'");
-            }
-
-            return SymbolTable.StringToId(str);
+        public static SymbolId ToSymbol(MutableString/*!*/ self) {
+            return ClrString.ToSymbol(self.ConvertToString());
         }
 
         #endregion
@@ -2377,9 +2349,9 @@ namespace IronRuby.Builtins {
             BinaryOpStorage/*!*/ greaterThanStorage,
             BinaryOpStorage/*!*/ equalsStorage,
             UnaryOpStorage/*!*/ succStorage,
-            RubyContext/*!*/ context, BlockParam block, MutableString/*!*/ self, [DefaultProtocol, NotNull]MutableString/*!*/ endString) {
+            BlockParam block, MutableString/*!*/ self, [DefaultProtocol, NotNull]MutableString/*!*/ endString) {
 
-            RangeOps.Each(stringCast, respondToStorage, comparisonStorage, lessThanStorage, greaterThanStorage, equalsStorage, succStorage, context, 
+            RangeOps.Each(stringCast, respondToStorage, comparisonStorage, lessThanStorage, greaterThanStorage, equalsStorage, succStorage,  
                 block, new Range(self, endString, false)
             );
 
@@ -2389,7 +2361,7 @@ namespace IronRuby.Builtins {
         #endregion
 
 
-        #region replace, reverse
+        #region replace, reverse, reverse!
 
         [RubyMethod("replace")]
         public static MutableString/*!*/ Replace(MutableString/*!*/ self, [DefaultProtocol, NotNull]MutableString/*!*/ other) {

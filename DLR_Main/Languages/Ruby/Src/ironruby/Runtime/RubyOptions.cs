@@ -16,13 +16,11 @@
 using System; using Microsoft;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
-using Microsoft.Scripting;
 using System.Threading;
-using System.Text;
 using IronRuby.Builtins;
-using IronRuby.Runtime;
+using Microsoft.Scripting;
 
-namespace IronRuby {
+namespace IronRuby.Runtime {
 
     [Serializable]
     public sealed class RubyOptions : LanguageOptions {
@@ -37,12 +35,12 @@ namespace IronRuby {
         private readonly bool _hasSearchPaths;
         private readonly bool _noAssemblyResolveHook;
         private readonly RubyCompatibility _compatibility;
-        private static bool _DefaultExceptionDetail;
         private readonly RubyEncoding _kcode = null;
 
 #if DEBUG
-        private static bool _UseThreadAbortForSyncRaise;
-        private static bool _CompileRegexps;
+        public static bool UseThreadAbortForSyncRaise;
+        public static bool CompileRegexps;
+        public static bool ShowRules;
 #endif
 
         public ReadOnlyCollection<string>/*!*/ Arguments {
@@ -93,22 +91,6 @@ namespace IronRuby {
             get { return _kcode; }
         }
 
-#if DEBUG
-        public static bool UseThreadAbortForSyncRaise {
-            get { return _UseThreadAbortForSyncRaise; }
-        }
-
-        public static bool CompileRegexps {
-            get { return _CompileRegexps; }
-        }
-#endif
-        /// <summary>
-        /// This is used when the per-engine RubyContext.Options.ExceptionDetail is not easily available
-        /// </summary>
-        public static bool DefaultExceptionDetail {
-            get { return _DefaultExceptionDetail; }
-        }
-
         public RubyOptions(IDictionary<string, object>/*!*/ options)
             : base(options) {
             _arguments = GetStringCollectionOption(options, "Arguments") ?? EmptyStringCollection;
@@ -123,16 +105,11 @@ namespace IronRuby {
             _libraryPaths = GetStringCollectionOption(options, "LibraryPaths", ';', ',') ?? new ReadOnlyCollection<string>(new[] { "." });
             _hasSearchPaths = GetOption<object>(options, "SearchPaths", null) != null;
             _compatibility = GetCompatibility(options, "Compatibility", RubyCompatibility.Default);
-            _DefaultExceptionDetail = this.ExceptionDetail;
 
 #if !SILVERLIGHT
             if (_compatibility == RubyCompatibility.Ruby18) {
                 _kcode = GetKCoding(options, "KCode", null);
             }
-#endif
-#if DEBUG
-            _UseThreadAbortForSyncRaise = GetOption(options, "UseThreadAbortForSyncRaise", false);
-            _CompileRegexps = GetOption(options, "CompileRegexps", false);
 #endif
         }
 

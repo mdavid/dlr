@@ -95,11 +95,16 @@ namespace IronRuby.Builtins {
 
         #region Dynamic Sites
 
-        private CallSite<Func<CallSite, RubyContext, object, object>> _inspectSite;
-        private CallSite<Func<CallSite, RubyContext, object, MutableString>> _stringConversionSite;
+        private CallSite<Func<CallSite, object, object>> _inspectSite;
+        private CallSite<Func<CallSite, object, MutableString>> _stringConversionSite;
 
-        public CallSite<Func<CallSite, RubyContext, object, object>> InspectSite { get { return RubyUtils.GetCallSite(ref _inspectSite, "inspect", 0); } }
-        public CallSite<Func<CallSite, RubyContext, object, MutableString>> StringConversionSite { get { return RubyUtils.GetCallSite(ref _stringConversionSite, ConvertToSAction.Instance); } }
+        public CallSite<Func<CallSite, object, object>>/*!*/ InspectSite { 
+            get { return RubyUtils.GetCallSite(ref _inspectSite, Context, "inspect", 0); } 
+        }
+
+        public CallSite<Func<CallSite, object, MutableString>>/*!*/ StringConversionSite {
+            get { return RubyUtils.GetCallSite(ref _stringConversionSite, ConvertToSAction.Make(Context)); } 
+        }
 
         #endregion
 
@@ -731,7 +736,12 @@ namespace IronRuby.Builtins {
         }
 
         private MemberInfo[]/*!*/ GetDeclaredClrMethods(Type/*!*/ type, BindingFlags bindingFlags, string/*!*/ name) {
-            return type.GetMember(name, MemberTypes.Method, bindingFlags | BindingFlags.InvokeMethod);
+            // GetMember uses prefix matching if the name ends with '*':
+            if (name.LastCharacter() != '*') {
+                return type.GetMember(name, MemberTypes.Method, bindingFlags | BindingFlags.InvokeMethod);
+            } else {
+                return new MemberInfo[0];
+            }
         }
 
         // Returns the number of methods newly added to the dictionary.
@@ -920,6 +930,9 @@ namespace IronRuby.Builtins {
                 } else if (_factories.Length != 0) {
                     constructionOverloads = (MethodBase[])ReflectionUtils.GetMethodInfos(_factories);
                     callConvention = SelfCallConvention.SelfIsParameter;
+                } else if (type.IsArray && type.GetArrayRank() == 1) {
+                    constructionOverloads = ClrVectorFactories;
+                    callConvention = SelfCallConvention.SelfIsParameter;
                 } else {
                     // TODO: handle protected constructors
                     constructionOverloads = type.GetConstructors();
@@ -955,7 +968,7 @@ namespace IronRuby.Builtins {
             } else {
                 // TODO: we need more refactoring of RubyMethodGroupInfo.BuildCall to be able to inline this:
                 metaBuilder.Result = Ast.Dynamic(
-                    RubyCallAction.Make("initialize", 
+                    RubyCallAction.Make(args.RubyContext, "initialize", 
                         new RubyCallSignature(args.Signature.ArgumentCount, args.Signature.Flags | RubyCallFlags.HasImplicitSelf)
                     ),
                     typeof(object),
@@ -1005,7 +1018,7 @@ namespace IronRuby.Builtins {
             }
 
             if ((ctor = type.GetConstructor(new[] { typeof(RubyContext) })) != null) {
-                metaBuilder.Result = Ast.New(ctor, args.ContextExpression);
+                metaBuilder.Result = Ast.New(ctor, AstUtils.Convert(args.MetaContext.Expression, typeof(RubyContext)));
                 return;
             }
 
@@ -1040,6 +1053,17 @@ namespace IronRuby.Builtins {
                 }
             }
         }
+
+        private MethodBase/*!*/[]/*!*/ ClrVectorFactories {
+            get {
+                if (_clrVectorFactories == null) {
+                    _clrVectorFactories = new[] { Methods.CreateVector, Methods.CreateVectorWithValues };
+                }
+                return _clrVectorFactories;
+            }
+        }
+
+        private static MethodBase[] _clrVectorFactories;
 
         #endregion
     }

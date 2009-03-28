@@ -96,7 +96,6 @@
       <Compile Include="Builtins\Signal.cs" />
       <Compile Include="Builtins\SingletonOps.cs" />
       <Compile Include="Builtins\StringFormatter.cs" />
-      <Compile Include="Builtins\StringOps.cs" />
       <Compile Include="Builtins\StructOps.cs" />
       <Compile Include="Builtins\SymbolOps.cs" />
       <Compile Include="Builtins\ThreadGroup.cs" />
@@ -121,10 +120,19 @@
       <!--                              -->
       <!--          Extensions          -->
       <!--                              -->
+      <Compile Include="Extensions\CharOps.cs" />
+      <Compile Include="Extensions\ClrBigInteger.cs" />
+      <Compile Include="Extensions\ClrFloat.cs" />
+      <Compile Include="Extensions\ClrInteger.cs" />
+      <Compile Include="Extensions\ClrInteger.Generated.cs" />
+      <Compile Include="Extensions\ClrStringOps.cs" />
       <Compile Include="Extensions\IComparableOps.cs" />
       <Compile Include="Extensions\IDictionaryOps.cs" />
       <Compile Include="Extensions\IEnumerableOps.cs" />
       <Compile Include="Extensions\IListOps.cs" />
+      <Compile Include="Extensions\IronRubyOps.cs" />
+      <Compile Include="Extensions\MultiDimensionalArrayOps.cs" />
+      <Compile Include="Extensions\SingleOps.cs" />
       <Compile Include="Extensions\TypeGroupOps.cs" />
       <Compile Include="Extensions\TypeOps.cs" />
       <Compile Include="Extensions\TypeTrackerOps.cs" />
@@ -140,12 +148,6 @@
       <!--          Iconv          -->
       <!--                         -->
       <Compile Include="Iconv\Iconv.cs" />
-    </ItemGroup>
-    <ItemGroup>
-      <!--                            -->
-      <!--          IronRuby          -->
-      <!--                            -->
-      <Compile Include="IronRuby\IronRubyOps.cs" />
     </ItemGroup>
     <ItemGroup>
       <!--                           -->

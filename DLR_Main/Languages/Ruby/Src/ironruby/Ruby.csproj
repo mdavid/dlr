@@ -40,6 +40,7 @@
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
     <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+    <CheckForOverflowUnderflow>true</CheckForOverflowUnderflow>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <DebugType>pdbonly</DebugType>
@@ -96,6 +97,7 @@
     </Compile>
     <Compile Include="Builtins\Binding.cs" />
     <Compile Include="Builtins\ConsoleStream.cs" />
+    <Compile Include="Builtins\MutableStringBuilder.cs" />
     <Compile Include="Builtins\RubyEvent.Meta.cs" />
     <Compile Include="Builtins\DuplexStream.cs" />
     <Compile Include="Builtins\GenericRegex.cs" />
@@ -118,7 +120,6 @@
     <Compile Include="Builtins\File.cs" />
     <Compile Include="Builtins\Glob.cs" />
     <Compile Include="Builtins\IO.cs" />
-    <Compile Include="Builtins\Kernel.cs" />
     <Compile Include="Builtins\MatchData.cs" />
     <Compile Include="Builtins\MutableStringStream.cs" />
     <Compile Include="Builtins\Proc.Meta.cs" />
@@ -126,6 +127,7 @@
     <Compile Include="Builtins\RubyModule.Meta.cs" />
     <Compile Include="Builtins\RubyRegexOptions.cs" />
     <Compile Include="Builtins\RubyStruct.cs" />
+    <Compile Include="Builtins\Stubs.cs" />
     <Compile Include="Builtins\TypeDescriptor.Generated.cs" />
     <Compile Include="Compiler\Ast\Expressions\ConditionalJumpExpression.cs" />
     <Compile Include="Compiler\Ast\Expressions\EncodingExpression.cs" />
@@ -143,13 +145,15 @@
     <Compile Include="Compiler\Ast\Walkers\Walker.cs" />
     <Compile Include="Compiler\Errors.cs" />
     <Compile Include="Compiler\Parser\ParserStack.cs" />
-    <Compile Include="Compiler\Parser\StringContentBuilder.cs" />
     <Compile Include="Runtime\BinaryContentProvider.cs" />
+    <Compile Include="Runtime\CallSiteStorages.cs" />
+    <Compile Include="Runtime\Calls\CompositeConversionAction.cs" />
     <Compile Include="Runtime\Calls\ConvertToSAction.cs" />
     <Compile Include="Runtime\Calls\InteropBinder.cs" />
     <Compile Include="Runtime\Calls\MethodResolutionResult.cs" />
     <Compile Include="Runtime\Calls\RubyLibraryMethodInfo.cs" />
     <Compile Include="Runtime\Calls\RubyMetaBinder.cs" />
+    <Compile Include="Runtime\Calls\RubyMetaBinderFactory.cs" />
     <Compile Include="Runtime\Calls\RubyMetaObject.cs" />
     <Compile Include="Runtime\Calls\RubyMethodGroupBase.cs" />
     <Compile Include="Runtime\CheckedMonitor.cs" />
@@ -320,6 +324,7 @@
     <Compile Include="Runtime\RuntimeFlowControl.cs" />
     <Compile Include="Runtime\RuntimeErrorSink.cs" />
     <Compile Include="Runtime\StackUnwinder.cs" />
+    <Compile Include="Runtime\Key.cs" />
     <Compile Include="Runtime\Union.cs" />
     <Compile Include="Runtime\Utils.cs" />
     <Compile Include="Builtins\MatchData.Subclass.cs" />

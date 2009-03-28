@@ -15,10 +15,7 @@
 using System; using Microsoft;
 
 
-using IronRuby.Builtins;
-using IronRuby.Runtime;
-
-namespace IronRuby {
+namespace IronRuby.Runtime {
     public interface IRubyObjectState {
         bool IsFrozen { get; }
         bool IsTainted { get; set; }

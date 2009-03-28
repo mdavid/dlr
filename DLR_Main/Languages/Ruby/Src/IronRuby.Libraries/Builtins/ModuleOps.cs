@@ -116,8 +116,8 @@ namespace IronRuby.Builtins {
 
         [RubyMethod("include", RubyMethodAttributes.PrivateInstance)]
         public static RubyModule/*!*/ Include(
-            CallSiteStorage<Func<CallSite, RubyContext, RubyModule, RubyModule, object>>/*!*/ appendFeaturesStorage,
-            CallSiteStorage<Func<CallSite, RubyContext, RubyModule, RubyModule, object>>/*!*/ includedStorage,
+            CallSiteStorage<Func<CallSite, RubyModule, RubyModule, object>>/*!*/ appendFeaturesStorage,
+            CallSiteStorage<Func<CallSite, RubyModule, RubyModule, object>>/*!*/ includedStorage,
             RubyModule/*!*/ self, [NotNull]params RubyModule[]/*!*/ modules) {
 
             RubyUtils.RequireMixins(self, modules);
@@ -128,8 +128,8 @@ namespace IronRuby.Builtins {
             // Kernel#append_features inserts the module at the beginning of ancestors list;
             // ancestors after include: [modules[0], modules[1], ..., modules[N-1], self, ...]
             for (int i = modules.Length - 1; i >= 0; i--) {
-                appendFeatures.Target(appendFeatures, self.Context, modules[i], self);
-                included.Target(included, self.Context, modules[i], self);
+                appendFeatures.Target(appendFeatures, modules[i], self);
+                included.Target(included, modules[i], self);
             }
 
             return self;
@@ -549,7 +549,7 @@ namespace IronRuby.Builtins {
         [RubyMethod("<=>")]
         public static object Comparison(RubyModule/*!*/ self, [NotNull]RubyModule/*!*/ module) {
             if (ReferenceEquals(self, module)) {
-                return ScriptingRuntimeHelpers.Int32ToObject(0);
+                return ClrInteger.Zero;
             }
 
             if (self.Context != module.Context) {
@@ -558,11 +558,11 @@ namespace IronRuby.Builtins {
 
             using (self.Context.ClassHierarchyLocker()) {
                 if (self.HasAncestorNoLock(module)) {
-                    return ScriptingRuntimeHelpers.Int32ToObject(-1);
+                    return ClrInteger.MinusOne;
                 }
 
                 if (module.HasAncestorNoLock(self)) {
-                    return ScriptingRuntimeHelpers.Int32ToObject(1);
+                    return ClrInteger.One;
                 }
             }
             return null;

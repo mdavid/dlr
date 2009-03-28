@@ -14,15 +14,12 @@
  * ***************************************************************************/
 
 using System; using Microsoft;
-using Microsoft.Linq.Expressions;
-using Microsoft.Scripting;
-using System.Collections.Generic;
-
-using Microsoft.Scripting.Utils;
-using Ast = Microsoft.Linq.Expressions.Expression;
 using System.Diagnostics;
-using IronRuby.Compiler.Generation;
+using Microsoft.Scripting;
+using Microsoft.Linq.Expressions;
 using IronRuby.Compiler;
+using IronRuby.Compiler.Generation;
+using Ast = Microsoft.Linq.Expressions.Expression;
 using AstUtils = Microsoft.Scripting.Ast.Utils;
 
 namespace IronRuby.Runtime.Calls {

@@ -26,31 +26,31 @@ using Microsoft.Scripting.Generation;
 using Microsoft.Scripting.Runtime;
 using IronRuby.Runtime.Calls;
 
-using EachSite = Microsoft.Func<Microsoft.Runtime.CompilerServices.CallSite, IronRuby.Runtime.RubyContext, object, IronRuby.Builtins.Proc, object>;
+using EachSite = Microsoft.Func<Microsoft.Runtime.CompilerServices.CallSite, object, IronRuby.Builtins.Proc, object>;
 
 namespace IronRuby.Builtins {
     [RubyModule("Enumerable")]
     public static class Enumerable {
-        internal static object Each(CallSiteStorage<EachSite>/*!*/ each, RubyContext/*!*/ context, object self, Proc/*!*/ block) {
+        internal static object Each(CallSiteStorage<EachSite>/*!*/ each, object self, Proc/*!*/ block) {
             var site = each.GetCallSite("each", new RubyCallSignature(0, RubyCallFlags.HasImplicitSelf | RubyCallFlags.HasBlock));
-            return site.Target(site, context, self, block);
+            return site.Target(site, self, block);
         }
 
         #region all?, any?
 
         [RubyMethod("all?")]
-        public static object TrueForAll(CallSiteStorage<EachSite>/*!*/ each, RubyContext/*!*/ context, BlockParam predicate, object self) {
-            return TrueForItems(each, context, predicate, self, true);
+        public static object TrueForAll(CallSiteStorage<EachSite>/*!*/ each, BlockParam predicate, object self) {
+            return TrueForItems(each, predicate, self, true);
         }
 
         [RubyMethod("any?")]
-        public static object TrueForAny(CallSiteStorage<EachSite>/*!*/ each, RubyContext/*!*/ context, BlockParam predicate, object self) {
-            return TrueForItems(each, context, predicate, self, false);
+        public static object TrueForAny(CallSiteStorage<EachSite>/*!*/ each, BlockParam predicate, object self) {
+            return TrueForItems(each, predicate, self, false);
         }
 
-        private static object TrueForItems(CallSiteStorage<EachSite>/*!*/ each, RubyContext/*!*/ context, BlockParam predicate, object self, bool expected) {
+        private static object TrueForItems(CallSiteStorage<EachSite>/*!*/ each, BlockParam predicate, object self, bool expected) {
             bool result = expected;
-            Each(each, context, self, Proc.Create(context, delegate(BlockParam/*!*/ selfBlock, object item) {
+            Each(each, self, Proc.Create(each.Context, delegate(BlockParam/*!*/ selfBlock, object item) {
                 if (predicate != null) {
                     if (predicate.Yield(item, out item)) {
                         return item;
@@ -75,9 +75,9 @@ namespace IronRuby.Builtins {
 
         [RubyMethod("collect")]
         [RubyMethod("map")]
-        public static RubyArray Map(CallSiteStorage<EachSite>/*!*/ each, RubyContext/*!*/ context, BlockParam collector, object self) {
+        public static RubyArray Map(CallSiteStorage<EachSite>/*!*/ each, BlockParam collector, object self) {
             RubyArray result = new RubyArray();
-            Each(each, context, self, Proc.Create(context, delegate(BlockParam/*!*/ selfBlock, object item) {
+            Each(each, self, Proc.Create(each.Context, delegate(BlockParam/*!*/ selfBlock, object item) {
                 if (collector != null) {
                     if (collector.Yield(item, out item)) {
                         return item;
@@ -95,12 +95,11 @@ namespace IronRuby.Builtins {
 
         [RubyMethod("detect")]
         [RubyMethod("find")]
-        public static object Find(CallSiteStorage<EachSite>/*!*/ each, 
-            CallSiteStorage<Func<CallSite, RubyContext, object, object>>/*!*/ callStorage,
-            RubyContext/*!*/ context, BlockParam predicate, object self, [Optional]object ifNone) {
+        public static object Find(CallSiteStorage<EachSite>/*!*/ each, CallSiteStorage<Func<CallSite, object, object>>/*!*/ callStorage,
+            BlockParam predicate, object self, [Optional]object ifNone) {
             object result = Missing.Value;
 
-            Each(each, context, self, Proc.Create(context, delegate(BlockParam/*!*/ selfBlock, object item) {
+            Each(each, self, Proc.Create(each.Context, delegate(BlockParam/*!*/ selfBlock, object item) {
                 if (predicate == null) {
                     throw RubyExceptions.NoBlockGiven();
                 }
@@ -125,7 +124,7 @@ namespace IronRuby.Builtins {
                 }
 
                 var site = callStorage.GetCallSite("call", 0);
-                result = site.Target(site, context, ifNone);
+                result = site.Target(site, ifNone);
             }
             return result;
         }
@@ -135,7 +134,7 @@ namespace IronRuby.Builtins {
         #region each_with_index
 
         [RubyMethod("each_with_index")]
-        public static object EachWithIndex(CallSiteStorage<EachSite>/*!*/ each, RubyContext/*!*/ context, BlockParam/*!*/ block, object self) {
+        public static object EachWithIndex(CallSiteStorage<EachSite>/*!*/ each, BlockParam/*!*/ block, object self) {
             // for some reason each_with_index always checks for a block, even if there's nothing to yield
             if (block == null) {
                 throw RubyExceptions.NoBlockGiven();
@@ -143,7 +142,7 @@ namespace IronRuby.Builtins {
 
             int index = 0;
 
-            Each(each, context, self, Proc.Create(context, delegate(BlockParam/*!*/ selfBlock, object item) {
+            Each(each, self, Proc.Create(each.Context, delegate(BlockParam/*!*/ selfBlock, object item) {
                 object blockResult;
                 if (block.Yield(item, index, out blockResult)) {
                     return blockResult;
@@ -161,10 +160,10 @@ namespace IronRuby.Builtins {
 
         [RubyMethod("entries")]
         [RubyMethod("to_a")]
-        public static RubyArray/*!*/ ToArray(CallSiteStorage<EachSite>/*!*/ each, RubyContext/*!*/ context, object self) {
+        public static RubyArray/*!*/ ToArray(CallSiteStorage<EachSite>/*!*/ each, object self) {
             RubyArray data = new RubyArray();
 
-            Each(each, context, self, Proc.Create(context, delegate(BlockParam/*!*/ selfBlock, object item) {
+            Each(each, self, Proc.Create(each.Context, delegate(BlockParam/*!*/ selfBlock, object item) {
                 data.Add(item);
                 return null;
             }));
@@ -178,21 +177,19 @@ namespace IronRuby.Builtins {
 
         [RubyMethod("find_all")]
         [RubyMethod("select")]
-        public static RubyArray/*!*/ Select(CallSiteStorage<EachSite>/*!*/ each, RubyContext/*!*/ context, BlockParam predicate, object self) {
-            return Filter(each, context, predicate, self, true);
+        public static RubyArray/*!*/ Select(CallSiteStorage<EachSite>/*!*/ each, BlockParam predicate, object self) {
+            return Filter(each, predicate, self, true);
         }
 
         [RubyMethod("reject")]
-        public static RubyArray/*!*/ Reject(CallSiteStorage<EachSite>/*!*/ each, RubyContext/*!*/ context, BlockParam predicate, object self) {
-            return Filter(each, context, predicate, self, false);
+        public static RubyArray/*!*/ Reject(CallSiteStorage<EachSite>/*!*/ each, BlockParam predicate, object self) {
+            return Filter(each, predicate, self, false);
         }
 
-        private static RubyArray/*!*/ Filter(CallSiteStorage<EachSite>/*!*/ each, RubyContext/*!*/ context, 
-            BlockParam predicate, object self, bool acceptingValue) {
-
+        private static RubyArray/*!*/ Filter(CallSiteStorage<EachSite>/*!*/ each, BlockParam predicate, object self, bool acceptingValue) {
             RubyArray result = new RubyArray();
 
-            Each(each, context, self, Proc.Create(context, delegate(BlockParam/*!*/ selfBlock, object item) {
+            Each(each, self, Proc.Create(each.Context, delegate(BlockParam/*!*/ selfBlock, object item) {
                 if (predicate == null) {
                     throw RubyExceptions.NoBlockGiven();
                 }
@@ -217,13 +214,14 @@ namespace IronRuby.Builtins {
         #region grep
 
         [RubyMethod("grep")]
-        public static RubyArray Grep(CallSiteStorage<EachSite>/*!*/ each, 
-            BinaryOpStorage/*!*/ caseEquals, RubyContext/*!*/ context, BlockParam action, object self, object pattern) {
+        public static RubyArray Grep(CallSiteStorage<EachSite>/*!*/ each, BinaryOpStorage/*!*/ caseEquals, 
+            BlockParam action, object self, object pattern) {
+
             RubyArray result = new RubyArray();
             var site = caseEquals.GetCallSite("===");
 
-            Each(each, context, self, Proc.Create(context, delegate(BlockParam/*!*/ selfBlock, object item) {
-                if (RubyOps.IsTrue(site.Target(site, context, pattern, item))) {
+            Each(each, self, Proc.Create(each.Context, delegate(BlockParam/*!*/ selfBlock, object item) {
+                if (RubyOps.IsTrue(site.Target(site, pattern, item))) {
                     if (action != null) {
                         if (action.Yield(item, out item)) {
                             return item;
@@ -243,12 +241,11 @@ namespace IronRuby.Builtins {
 
         [RubyMethod("include?")]
         [RubyMethod("member?")]
-        public static bool Contains(CallSiteStorage<EachSite>/*!*/ each, BinaryOpStorage/*!*/ equals, 
-            RubyContext/*!*/ context, object self, object value) {
+        public static bool Contains(CallSiteStorage<EachSite>/*!*/ each, BinaryOpStorage/*!*/ equals, object self, object value) {
             bool result = false;
 
-            Each(each, context, self, Proc.Create(context, delegate(BlockParam/*!*/ selfBlock, object item) {
-                if (Protocols.IsEqual(equals, context, item, value)) {
+            Each(each, self, Proc.Create(each.Context, delegate(BlockParam/*!*/ selfBlock, object item) {
+                if (Protocols.IsEqual(equals, item, value)) {
                     result = true;
                     return selfBlock.Break(result);
                 }
@@ -263,11 +260,10 @@ namespace IronRuby.Builtins {
         #region inject
 
         [RubyMethod("inject")]
-        public static object Inject(CallSiteStorage<EachSite>/*!*/ each, RubyContext/*!*/ context, 
-            BlockParam operation, object self, [Optional]object initial) {
+        public static object Inject(CallSiteStorage<EachSite>/*!*/ each, BlockParam operation, object self, [Optional]object initial) {
 
             object result = initial;
-            Each(each, context, self, Proc.Create(context, delegate(BlockParam/*!*/ selfBlock, object item) {
+            Each(each, self, Proc.Create(each.Context, delegate(BlockParam/*!*/ selfBlock, object item) {
                 if (result == Missing.Value) {
                     result = item;
                     return null;
@@ -297,8 +293,8 @@ namespace IronRuby.Builtins {
             BinaryOpStorage/*!*/ compareStorage,
             BinaryOpStorage/*!*/ lessThanStorage,
             BinaryOpStorage/*!*/ greaterThanStorage,
-            RubyContext/*!*/ context, BlockParam comparer, object self) {
-            return GetExtreme(each, compareStorage, lessThanStorage, greaterThanStorage, context, comparer, self, -1/*look for max*/);
+            BlockParam comparer, object self) {
+            return GetExtreme(each, compareStorage, lessThanStorage, greaterThanStorage, comparer, self, -1/*look for max*/);
         }
 
         [RubyMethod("min")]
@@ -307,8 +303,8 @@ namespace IronRuby.Builtins {
             BinaryOpStorage/*!*/ compareStorage,
             BinaryOpStorage/*!*/ lessThanStorage,
             BinaryOpStorage/*!*/ greaterThanStorage,
-            RubyContext/*!*/ context, BlockParam comparer, object self) {
-            return GetExtreme(each, compareStorage, lessThanStorage, greaterThanStorage, context, comparer, self, 1/*look for min*/);
+            BlockParam comparer, object self) {
+            return GetExtreme(each, compareStorage, lessThanStorage, greaterThanStorage, comparer, self, 1/*look for min*/);
         }
 
         private static object GetExtreme(
@@ -316,12 +312,12 @@ namespace IronRuby.Builtins {
             BinaryOpStorage/*!*/ compareStorage,
             BinaryOpStorage/*!*/ lessThanStorage,
             BinaryOpStorage/*!*/ greaterThanStorage,
-            
-            RubyContext/*!*/ context, BlockParam comparer, object self, int comparisonValue) {
+            BlockParam comparer, object self, int comparisonValue) {
+
             bool firstItem = true;
             object result = null;
 
-            Each(each, context, self, Proc.Create(context, delegate(BlockParam/*!*/ selfBlock, object item) {
+            Each(each, self, Proc.Create(each.Context, delegate(BlockParam/*!*/ selfBlock, object item) {
                 // Check for first element
                 if (firstItem) {
                     result = item;
@@ -337,12 +333,12 @@ namespace IronRuby.Builtins {
                     }
 
                     if (blockResult == null) {
-                        throw RubyExceptions.MakeComparisonError(context, result, item);
+                        throw RubyExceptions.MakeComparisonError(selfBlock.RubyContext, result, item);
                     }
 
-                    compareResult = Protocols.ConvertCompareResult(lessThanStorage, greaterThanStorage, context, blockResult);
+                    compareResult = Protocols.ConvertCompareResult(lessThanStorage, greaterThanStorage, blockResult);
                 } else {
-                    compareResult = Protocols.Compare(compareStorage, lessThanStorage, greaterThanStorage, context, result, item);
+                    compareResult = Protocols.Compare(compareStorage, lessThanStorage, greaterThanStorage, result, item);
                 }
 
                 // Check if we have found the new minimum or maximum (-1 to select max, 1 to select min)
@@ -359,11 +355,11 @@ namespace IronRuby.Builtins {
         #region partition
 
         [RubyMethod("partition")]
-        public static RubyArray/*!*/ Partition(CallSiteStorage<EachSite>/*!*/ each, RubyContext/*!*/ context, BlockParam predicate, object self) {
+        public static RubyArray/*!*/ Partition(CallSiteStorage<EachSite>/*!*/ each, BlockParam predicate, object self) {
             RubyArray trueSet = new RubyArray();
             RubyArray falseSet = new RubyArray();
 
-            Each(each, context, self, Proc.Create(context, delegate(BlockParam/*!*/ selfBlock, object item) {
+            Each(each, self, Proc.Create(each.Context, delegate(BlockParam/*!*/ selfBlock, object item) {
                 if (predicate == null) {
                     throw RubyExceptions.NoBlockGiven();
                 }
@@ -398,9 +394,9 @@ namespace IronRuby.Builtins {
             BinaryOpStorage/*!*/ comparisonStorage,
             BinaryOpStorage/*!*/ lessThanStorage,
             BinaryOpStorage/*!*/ greaterThanStorage,
-            RubyContext/*!*/ context, BlockParam keySelector, object self) {
+            BlockParam keySelector, object self) {
 
-            return ArrayOps.SortInPlace(comparisonStorage, lessThanStorage, greaterThanStorage, context, keySelector, ToArray(each, context, self));
+            return ArrayOps.SortInPlace(comparisonStorage, lessThanStorage, greaterThanStorage, keySelector, ToArray(each, self));
         }
 
         [RubyMethod("sort_by")]
@@ -409,13 +405,13 @@ namespace IronRuby.Builtins {
             BinaryOpStorage/*!*/ comparisonStorage,
             BinaryOpStorage/*!*/ lessThanStorage,
             BinaryOpStorage/*!*/ greaterThanStorage,
-            RubyContext/*!*/ context, BlockParam keySelector, object self) {
+            BlockParam keySelector, object self) {
 
             // collect key, value pairs
             List<KeyValuePair<object, object>> keyValuePairs = new List<KeyValuePair<object, object>>();
 
             // Collect the key, value pairs
-            Each(each, context, self, Proc.Create(context, delegate(BlockParam/*!*/ selfBlock, object item) {
+            Each(each, self, Proc.Create(each.Context, delegate(BlockParam/*!*/ selfBlock, object item) {
                 if (keySelector == null) {
                     throw RubyExceptions.NoBlockGiven();
                 }
@@ -431,7 +427,7 @@ namespace IronRuby.Builtins {
 
             // sort by keys
             keyValuePairs.Sort(delegate(KeyValuePair<object, object> x, KeyValuePair<object, object> y) {
-                return Protocols.Compare(comparisonStorage, lessThanStorage, greaterThanStorage, context, x.Key, y.Key);
+                return Protocols.Compare(comparisonStorage, lessThanStorage, greaterThanStorage, x.Key, y.Key);
             });
 
             // return values
@@ -448,18 +444,18 @@ namespace IronRuby.Builtins {
         #region zip
 
         [RubyMethod("zip")]
-        public static RubyArray/*!*/ Zip(CallSiteStorage<EachSite>/*!*/ each, ConversionStorage<IList>/*!*/ tryToA, RubyContext/*!*/ context, BlockParam block,
+        public static RubyArray/*!*/ Zip(CallSiteStorage<EachSite>/*!*/ each, ConversionStorage<IList>/*!*/ tryToA, BlockParam block,
             object self, [NotNull]params object[] args) {
             RubyArray results = (block == null) ? new RubyArray() : null;
 
             // Call to_a on each argument
             IList[] otherArrays = new IList[args.Length];
             for (int i = 0; i < args.Length; i++) {
-                otherArrays[i] = Protocols.TryConvertToArray(tryToA, context, args[i]);
+                otherArrays[i] = Protocols.TryConvertToArray(tryToA, args[i]);
             }
 
             int index = 0;
-            Each(each, context, self, Proc.Create(context, delegate(BlockParam/*!*/ selfBlock, object item) {
+            Each(each, self, Proc.Create(each.Context, delegate(BlockParam/*!*/ selfBlock, object item) {
                 // Collect items
                 RubyArray array = new RubyArray(otherArrays.Length + 1);
                 array.Add(item);

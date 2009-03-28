@@ -41,17 +41,17 @@ using Microsoft.Runtime.CompilerServices;
 
 namespace IronRuby.Runtime.Calls {
     public sealed class RubyBinder : DefaultBinder {
-        RubyContext/*!*/ _context;
+        private readonly RubyContext/*!*/ _context;
 
         internal RubyBinder(RubyContext/*!*/ context)
             : base(context.DomainManager) {
             _context = context;
         }
 
-        internal static readonly DynamicMetaObject NullMetaObject =
+        internal static readonly DynamicMetaObject NullMetaBlockParam =
             new DynamicMetaObject(
-                AstUtils.Constant(null, typeof(DynamicNull)),
-                BindingRestrictions.GetTypeRestriction(AstUtils.Constant(null, typeof(DynamicNull)), typeof(DynamicNull)),
+                AstUtils.Constant(null, typeof(BlockParam)),
+                BindingRestrictions.GetTypeRestriction(AstUtils.Constant(null, typeof(BlockParam)), typeof(BlockParam)),
                 null
             );
 
@@ -150,9 +150,9 @@ namespace IronRuby.Runtime.Calls {
             var i = 0;
 
             while (i < parameterInfos.Length
-                && parameterInfos[i].ParameterType.IsSubclassOf(typeof(SiteLocalStorage))) {
+                && parameterInfos[i].ParameterType.IsSubclassOf(typeof(RubyCallSiteStorage))) {
 
-                arguments.Add(new SiteLocalStorageBuilder(parameterInfos[i]));
+                arguments.Add(new RubyCallSiteStorageBuilder(parameterInfos[i]));
                 i++;
             }
 
@@ -192,6 +192,11 @@ namespace IronRuby.Runtime.Calls {
             return i;
         }
 
+        protected override bool BindSpecialParameter(ParameterInfo parameterInfo, List<ArgBuilder> arguments,
+            List<ParameterWrapper> parameters, ref int index) {
+            return false;
+        }
+
         internal static void GetParameterCount(ParameterInfo/*!*/[]/*!*/ parameterInfos, out int mandatory, out int optional, out bool acceptsBlock) {
             acceptsBlock = false;
             mandatory = 0;
@@ -219,7 +224,7 @@ namespace IronRuby.Runtime.Calls {
         internal static bool IsHiddenParameter(ParameterInfo/*!*/ parameterInfo) {
             return parameterInfo.ParameterType == typeof(RubyScope)
                 || parameterInfo.ParameterType == typeof(RubyContext)
-                || parameterInfo.ParameterType.IsSubclassOf(typeof(SiteLocalStorage));
+                || parameterInfo.ParameterType.IsSubclassOf(typeof(RubyCallSiteStorage));
         }
 
         internal sealed class RubyContextArgBuilder : ArgBuilder {
@@ -233,6 +238,20 @@ namespace IronRuby.Runtime.Calls {
 
             protected override Expression ToExpression(ParameterBinder/*!*/ parameterBinder, IList<Expression>/*!*/ parameters, bool[]/*!*/ hasBeenUsed) {
                 return ((RubyParameterBinder)parameterBinder).ContextExpression;
+            }
+        }
+
+        internal sealed class RubyCallSiteStorageBuilder : ArgBuilder {
+            public RubyCallSiteStorageBuilder(ParameterInfo/*!*/ info)
+                : base(info) {
+            }
+
+            public override int Priority {
+                get { return -1; }
+            }
+
+            protected override Expression ToExpression(ParameterBinder/*!*/ parameterBinder, IList<Expression>/*!*/ parameters, bool[]/*!*/ hasBeenUsed) {
+                return AstUtils.Constant(Activator.CreateInstance(ParameterInfo.ParameterType, ((RubyParameterBinder)parameterBinder).Context));
             }
         }
 
