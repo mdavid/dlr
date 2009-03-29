@@ -58,6 +58,7 @@
       <Compile Include="Runtime\ConstantTests.cs" />
       <Compile Include="Runtime\DeclarationTests.cs" />
       <Compile Include="Runtime\DefinedTests.cs" />
+      <Compile Include="Runtime\DlrInteropTests.cs" />
       <Compile Include="Runtime\EvalTests.cs" />
       <Compile Include="Runtime\ExceptionTests.cs" />
       <Compile Include="Runtime\HashTests.cs" />
