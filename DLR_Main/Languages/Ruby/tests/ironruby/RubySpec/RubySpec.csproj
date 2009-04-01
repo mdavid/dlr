@@ -41,7 +41,7 @@
   </Target>
   -->
   <ItemGroup>
-    <Content Include="..\..\..\..\..\External\Languages\IronRuby\mspec\ironruby-tags\critical_tags.txt">
+    <Content Include="..\..\..\..\..\External.LCA_RESTRICTED\Languages\IronRuby\mspec\ironruby-tags\critical_tags.txt">
       <Link>IronRuby-tags\critical_tags.txt</Link>
     </Content>
   </ItemGroup>
