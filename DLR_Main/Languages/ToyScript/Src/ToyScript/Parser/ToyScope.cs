@@ -29,6 +29,7 @@ namespace ToyScript.Parser {
 
         public ToyScope(ToyScope parent, string name, SymbolDocumentInfo document) {
             _block = Utils.Lambda(typeof(object), name);
+            _block.AddCodeContext = true;
             _parent = parent;
             if (parent == null) {
                 _block.Global = true;
