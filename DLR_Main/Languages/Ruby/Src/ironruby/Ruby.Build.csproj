@@ -1,12 +1,12 @@
-<Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003" ToolsVersion="dogfood">
-  <Import Project="$(_NTDRIVE)$(_NTROOT)\ndp\fx\Microsoft.Fx.Settings.targets" />
+<Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003" ToolsVersion="4.0">
+  
 
 
   <PropertyGroup>
     <OutputType>Library</OutputType>
     <RootNamespace>IronRuby</RootNamespace>
     <AssemblyName>IronRuby</AssemblyName>
-    <WarningsNotAsErrors>618,1685,688,649</WarningsNotAsErrors>
+    <WarningsNotAsErrors>618,1685,649</WarningsNotAsErrors>
     <GenerateAssemblyAttribute>false</GenerateAssemblyAttribute>
     <OutputPath>$(SuiteBinPath)\Merlin</OutputPath>
     <WarningLevel>4</WarningLevel>
@@ -17,6 +17,7 @@
     <DelaySign>true</DelaySign>
     <DefineConstants>SYSTEM_CORE;$(SignedSym)</DefineConstants>
     <BaseAddress>887095296</BaseAddress>
+<TargetFrameworkVersion>v4.0</TargetFrameworkVersion>
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="System.Core" />
@@ -357,7 +358,7 @@
       <Compile Include="Runtime\Calls\RubyMethodGroupBase.cs" />
       <Compile Include="Runtime\Calls\RubyMethodGroupInfo.cs" />
       <Compile Include="Runtime\Calls\RubyMethodInfo.cs" />
-      <Compile Include="Runtime\Calls\RubyParameterBinder.cs" />
+      <Compile Include="Runtime\Calls\RubyOverloadResolver.cs" />
       <Compile Include="Runtime\Calls\RuleGenerators.cs" />
       <Compile Include="Runtime\Calls\SuperCallAction.cs" />
     </ItemGroup>
@@ -373,9 +374,9 @@
     </ItemGroup>
   <!-- End Generated Project Items By GenerateSystemCoreCsproj.py -->
   <ItemGroup>
-    <ProjectReference Include="..\..\..\..\Runtime\Src\Microsoft.Scripting\Microsoft.Scripting.Build.csproj">
+    <ProjectReference Include="..\..\..\..\Runtime\Src\Microsoft.Scripting\Microsoft.Scripting.csproj">
       <Name>Microsoft.Scripting</Name>
     </ProjectReference>
   </ItemGroup>
-  <Import Project="$(NdpFxRoot)\Microsoft.Fx.targets" />
+  <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
 </Project>

@@ -18,6 +18,7 @@ using System.Collections.Generic;
 using Microsoft.Linq.Expressions;
 using Microsoft.Scripting.Ast;
 using AstUtils = Microsoft.Scripting.Ast.Utils;
+using Microsoft.Scripting.Runtime;
 
 namespace ToyScript.Parser {
     class ToyScope {
@@ -32,7 +33,9 @@ namespace ToyScript.Parser {
             _block.AddCodeContext = true;
             _parent = parent;
             if (parent == null) {
+#if TODO
                 _block.Global = true;
+#endif
             } else if (document == null) {
                 document = _parent.Document;
             }
@@ -107,6 +110,7 @@ namespace ToyScript.Parser {
 
         public LambdaExpression FinishScope(Expression body) {
             _block.Body = AddReturnLabel(body);
+            _block.AddParameters(Expression.Parameter(typeof(Scope), "#scope"), Expression.Parameter(typeof(LanguageContext), "#context"));
             return _block.MakeLambda();
         }
 

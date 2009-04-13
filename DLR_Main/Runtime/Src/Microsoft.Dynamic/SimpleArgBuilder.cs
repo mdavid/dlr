@@ -18,9 +18,7 @@ using System; using Microsoft;
 #if !SILVERLIGHT
 
 using System.Diagnostics;
-using System.Globalization;
 using Microsoft.Linq.Expressions;
-using Microsoft.Scripting.Utils;
 
 namespace Microsoft.Scripting {
     /// <summary>
@@ -29,10 +27,14 @@ namespace Microsoft.Scripting {
     /// methods for params arrays and param dictionary functions.
     /// </summary>
     internal class SimpleArgBuilder : ArgBuilder {
-        private Type _parameterType;
+        private readonly Type _parameterType;
 
         internal SimpleArgBuilder(Type parameterType) {
             _parameterType = parameterType;
+        }
+
+        internal Type ParameterType {
+            get { return _parameterType; }
         }
 
         internal override Expression Marshal(Expression parameter) {

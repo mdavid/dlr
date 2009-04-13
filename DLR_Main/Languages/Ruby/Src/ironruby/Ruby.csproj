@@ -59,7 +59,7 @@
     <ErrorReport>prompt</ErrorReport>
     <NoStdLib>true</NoStdLib>
     <SilverlightBuild>true</SilverlightBuild>
-    <SilverlightSdkPath>$(ProgramFiles)\Microsoft Silverlight\2.0.31005.0</SilverlightSdkPath>
+    <SilverlightSdkPath>$(ProgramFiles)\Microsoft Silverlight\2.0.40115.0</SilverlightSdkPath>
     <NoWarn>414,219</NoWarn>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Silverlight Release|AnyCPU' ">
@@ -70,7 +70,7 @@
     <PlatformTarget>AnyCPU</PlatformTarget>
     <ErrorReport>prompt</ErrorReport>
     <SilverlightBuild>true</SilverlightBuild>
-    <SilverlightSdkPath>$(ProgramFiles)\Microsoft Silverlight\2.0.31005.0</SilverlightSdkPath>
+    <SilverlightSdkPath>$(ProgramFiles)\Microsoft Silverlight\2.0.40115.0</SilverlightSdkPath>
     <NoWarn>414,219</NoWarn>
   </PropertyGroup>
   <ItemGroup>
@@ -156,6 +156,7 @@
     <Compile Include="Runtime\Calls\RubyMetaBinderFactory.cs" />
     <Compile Include="Runtime\Calls\RubyMetaObject.cs" />
     <Compile Include="Runtime\Calls\RubyMethodGroupBase.cs" />
+    <Compile Include="Runtime\Calls\RubyOverloadResolver.cs" />
     <Compile Include="Runtime\CheckedMonitor.cs" />
     <Compile Include="Runtime\CustomTypeDescHelpers.cs" />
     <Compile Include="Compiler\Generation\OverriddenMembers.cs" />
@@ -183,7 +184,6 @@
     <Compile Include="Runtime\Calls\ProtocolConversionAction.cs" />
     <Compile Include="Runtime\Calls\RubyCallAction.cs" />
     <Compile Include="Runtime\Calls\RubyCallSignature.cs" />
-    <Compile Include="Runtime\Calls\RubyParameterBinder.cs" />
     <Compile Include="Runtime\Calls\SuperCallAction.cs" />
     <Compile Include="Runtime\Calls\RubyAccessorInfo.cs" />
     <Compile Include="Runtime\Calls\BlockDispatcher.cs" />

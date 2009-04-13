@@ -57,26 +57,22 @@ namespace IronRuby.Runtime.Calls {
         }
 
         protected override DynamicMetaObject/*!*/ InteropBind(MetaObjectBuilder/*!*/ metaBuilder, CallArguments/*!*/ args) {
-            // TODO: pass block as the last parameter (before RHS arg?):
-            var normalizedArgs = RubyMethodGroupBase.NormalizeArguments(metaBuilder, args, SelfCallConvention.NoSelf, false, false);
-
-            MethodInfo postConverter;
-            ConvertBinder interopBinder = GetInteropBinder(args.RubyContext, out postConverter);
-
-            if (normalizedArgs.Length == 0) {
+            var normalizedArgs = RubyOverloadResolver.NormalizeArguments(metaBuilder, args, 0, 0);
+            if (!metaBuilder.Error) {
+                MethodInfo postConverter;
+                ConvertBinder interopBinder = GetInteropBinder(args.RubyContext, out postConverter);
+                
                 // TODO: the type of result.Expression (and LimitType) should be the type of the conversion.
-                var result = interopBinder.Bind(args.MetaTarget, normalizedArgs);
+                var result = interopBinder.Bind(args.MetaTarget, ArrayUtils.MakeArray(normalizedArgs));
                 metaBuilder.SetMetaResult(result, args);
 
                 if (postConverter != null) {
                     metaBuilder.Result = postConverter.OpCall(AstUtils.Convert(metaBuilder.Result, interopBinder.Type));
                 }
-
-            } else {
-                metaBuilder.SetWrongNumberOfArgumentsError(normalizedArgs.Length, 0);
+                return metaBuilder.CreateMetaObject(this);
             }
 
-            return metaBuilder.CreateMetaObject(interopBinder);
+            return metaBuilder.CreateMetaObject(this);
         }
 
         public static RubyConversionAction TryGetDefaultConversionAction(RubyContext/*!*/ context, Type/*!*/ parameterType) {
@@ -141,8 +137,14 @@ namespace IronRuby.Runtime.Calls {
 
         protected abstract bool TryImplicitConversion(MetaObjectBuilder/*!*/ metaBuilder, CallArguments/*!*/ args);
 
+        public override Type/*!*/ ResultType {
+            get { 
+                return (ConversionResultValidator != null) ? ConversionResultValidator.ReturnType : typeof(object); 
+            }
+        }
+
         protected override void Build(MetaObjectBuilder/*!*/ metaBuilder, CallArguments/*!*/ args) {
-            BuildConversion(metaBuilder, args, ConversionResultValidator != null ? ConversionResultValidator.ReturnType : typeof(object), this);
+            BuildConversion(metaBuilder, args, ResultType, this);
         }
 
         internal static void BuildConversion(MetaObjectBuilder/*!*/ metaBuilder, CallArguments/*!*/ args, Type/*!*/ resultType, 

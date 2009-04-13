@@ -12,11 +12,10 @@
  *
  *
  * ***************************************************************************/
-using System; using Microsoft;
-
 
 using Microsoft.Scripting;
 using System.Diagnostics;
+using System; using Microsoft;
 
 namespace IronRuby.Runtime.Calls {
     public abstract class RubyMetaBinder : DynamicMetaObjectBinder {
@@ -39,8 +38,8 @@ namespace IronRuby.Runtime.Calls {
         
         public abstract RubyCallSignature Signature { get; }
         protected abstract void Build(MetaObjectBuilder/*!*/ metaBuilder, CallArguments/*!*/ args);
-
         protected abstract DynamicMetaObject/*!*/ InteropBind(MetaObjectBuilder/*!*/ metaBuilder, CallArguments/*!*/ args);
+        public abstract Type/*!*/ ResultType { get; }
 
         public override DynamicMetaObject/*!*/ Bind(DynamicMetaObject/*!*/ scopeOrContextOrTarget, DynamicMetaObject/*!*/[]/*!*/ args) {
             var callArgs = new CallArguments(_context, scopeOrContextOrTarget, args, Signature);

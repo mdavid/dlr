@@ -34,6 +34,8 @@ namespace ToyScript.Parser.Ast {
             Expression var = tg.GetOrMakeLocal(_name);
 
             if (_value != null) {
+                throw new System.InvalidOperationException();
+#if TODO
                 return tg.AddSpan(
                     Span,
                     AstUtils.Assign(
@@ -44,6 +46,7 @@ namespace ToyScript.Parser.Ast {
                         )
                     )
                 );
+#endif
             } else {
                 return tg.AddSpan(Span, AstUtils.Empty());
             }

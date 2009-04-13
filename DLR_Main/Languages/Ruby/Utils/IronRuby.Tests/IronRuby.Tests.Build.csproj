@@ -1,5 +1,5 @@
-<Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003" ToolsVersion="dogfood">
-  <Import Project="$(_NTDRIVE)$(_NTROOT)\ndp\fx\Microsoft.Fx.Settings.targets" />
+<Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003" ToolsVersion="4.0">
+  
 
 
   <PropertyGroup>
@@ -17,6 +17,7 @@
     <SignedDir Condition="'$(SignAssembly)' == 'true'">Signed</SignedDir>
     <SignedDir Condition="$(SignAssembly) != true">Unsigned</SignedDir>
     <DelaySign>true</DelaySign>
+<TargetFrameworkVersion>v4.0</TargetFrameworkVersion>
   </PropertyGroup>
   <!-- Begin Generated Project Items By GenerateSystemCoreCsproj.py -->     <ItemGroup>
       <!--                    -->
@@ -76,6 +77,7 @@
       <Compile Include="Runtime\RegexTests.cs" />
       <Compile Include="Runtime\RubyUtilsTests.cs" />
       <Compile Include="Runtime\SingletonTests.cs" />
+      <Compile Include="Runtime\SplattingTests.cs" />
       <Compile Include="Runtime\StringTests.cs" />
       <Compile Include="Runtime\SuperTests.cs" />
       <Compile Include="Runtime\UndefTests.cs" />
@@ -89,12 +91,12 @@
     <None Include="..\..\..\..\Config\$(SignedDir)\App.config" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\..\..\..\Runtime\Src\Microsoft.Scripting\Microsoft.Scripting.Build.csproj" />
-    <ProjectReference Include="..\IronRuby\Ruby.Build.csproj" />
-    <ProjectReference Include="..\IronRuby.Libraries\IronRuby.Libraries.Build.csproj" />
+    <ProjectReference Include="..\..\..\..\Runtime\Src\Microsoft.Scripting\Microsoft.Scripting.csproj" />
+    <ProjectReference Include="..\..\src\IronRuby\Ruby.csproj" />
+    <ProjectReference Include="..\..\src\IronRuby.Libraries\IronRuby.Libraries.csproj" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="Properties\" />
   </ItemGroup>
-  <Import Project="$(NdpFxRoot)\Microsoft.Fx.targets" />
+  <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
 </Project>

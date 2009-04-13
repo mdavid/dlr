@@ -34,11 +34,13 @@ namespace ToyScript.Parser.Ast {
 
         protected internal override Expression GenerateAssign(ToyGenerator tg, Expression right) {
             Expression variable = GetVariable(tg);
-
+            throw new System.InvalidOperationException();
+#if TODO
             return AstUtils.Assign(
                 variable,
                 AstUtils.Convert(right, variable.Type)
             );
+#endif
         }
 
         private Expression GetVariable(ToyGenerator tg) {

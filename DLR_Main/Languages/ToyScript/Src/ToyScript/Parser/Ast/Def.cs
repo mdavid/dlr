@@ -50,7 +50,8 @@ namespace ToyScript.Parser.Ast {
             LambdaExpression lambda = scope.FinishScope(body, typeof(ToyCallTarget));
 
             tg.PopScope();
-
+            throw new System.InvalidOperationException();
+#if TODO
             return AstUtils.Assign(
                 tg.GetOrMakeLocal(_name),
                 Expression.Call(
@@ -60,6 +61,7 @@ namespace ToyScript.Parser.Ast {
                     lambda
                 )
             );
+#endif
         }
     }
 }

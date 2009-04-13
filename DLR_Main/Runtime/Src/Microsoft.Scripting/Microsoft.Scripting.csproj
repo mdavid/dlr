@@ -4,7 +4,7 @@
   <PropertyGroup>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
-    <ProductVersion>9.0.30729</ProductVersion>
+    <ProductVersion>9.0.21022</ProductVersion>
     <SchemaVersion>2.0</SchemaVersion>
     <ProjectGuid>{EB66B766-6354-4208-A3D4-AACBDCB5C3B3}</ProjectGuid>
     <OutputType>Library</OutputType>
@@ -68,7 +68,7 @@
     <DocumentationFile>..\..\Bin\Silverlight Debug\Microsoft.Scripting.xml</DocumentationFile>
     <NoWarn>1591,618</NoWarn>
     <SilverlightBuild>true</SilverlightBuild>
-    <SilverlightSdkPath>$(ProgramFiles)\Microsoft Silverlight\2.0.31005.0</SilverlightSdkPath>
+    <SilverlightSdkPath>$(ProgramFiles)\Microsoft Silverlight\2.0.40115.0</SilverlightSdkPath>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Silverlight Release|AnyCPU' ">
     <OutputPath>..\..\Bin\Silverlight Release\</OutputPath>
@@ -81,7 +81,7 @@
     <PlatformTarget>AnyCPU</PlatformTarget>
     <ErrorReport>prompt</ErrorReport>
     <SilverlightBuild>true</SilverlightBuild>
-    <SilverlightSdkPath>$(ProgramFiles)\Microsoft Silverlight\2.0.31005.0</SilverlightSdkPath>
+    <SilverlightSdkPath>$(ProgramFiles)\Microsoft Silverlight\2.0.40115.0</SilverlightSdkPath>
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="System" Condition=" $(SilverlightBuild) != 'true' " />
@@ -102,24 +102,27 @@
     <Compile Include="..\SilverlightVersion.cs" Condition=" '$(SilverlightBuild)' == 'true' ">
       <Link>Properties\SilverlightVersion.cs</Link>
     </Compile>
+    <Compile Include="Actions\Calls\ActualArguments.cs" />
+    <Compile Include="Actions\Calls\ApplicableCandidate.cs" />
     <Compile Include="Actions\Calls\ArgBuilder.cs" />
+    <Compile Include="Actions\Calls\ArgumentBinding.cs" />
     <Compile Include="Actions\Calls\BindingResult.cs" />
     <Compile Include="Actions\Calls\BindingTarget.cs" />
     <Compile Include="Actions\Calls\ByRefReturnBuilder.cs" />
     <Compile Include="Actions\Calls\CallFailure.cs" />
     <Compile Include="Actions\Calls\CallFailureReason.cs" />
-    <Compile Include="Actions\Calls\ContextArgBuilder.cs" />
+    <Compile Include="Actions\Calls\CandidateSet.cs" />
     <Compile Include="Actions\Calls\ConversionResult.cs" />
     <Compile Include="Actions\Calls\DefaultArgBuilder.cs" />
+    <Compile Include="Actions\Calls\DefaultOverloadResolver.cs" />
     <Compile Include="Actions\Calls\KeywordArgBuilder.cs" />
     <Compile Include="Actions\Calls\KeywordConstructorReturnBuilder.cs" />
-    <Compile Include="Actions\Calls\MethodBinder.cs" />
     <Compile Include="Actions\Calls\MethodCandidate.cs" />
-    <Compile Include="Actions\Calls\MethodTarget.cs" />
     <Compile Include="Actions\Calls\NarrowingLevel.cs" />
     <Compile Include="Actions\Calls\NullArgBuilder.cs" />
     <Compile Include="Actions\Calls\OutArgBuilder.cs" />
-    <Compile Include="Actions\Calls\ParameterBinder.cs" />
+    <Compile Include="Actions\Calls\OverloadResolver.cs" />
+    <Compile Include="Actions\Calls\OverloadResolverFactory.cs" />
     <Compile Include="Actions\Calls\ParameterWrapper.cs" />
     <Compile Include="Actions\Calls\ParamsArgBuilder.cs" />
     <Compile Include="Actions\Calls\ParamsDictArgBuilder.cs" />
@@ -128,7 +131,7 @@
     <Compile Include="Actions\Calls\ReturnBuilder.cs" />
     <Compile Include="Actions\Calls\ReturnReferenceArgBuilder.cs" />
     <Compile Include="Actions\Calls\SimpleArgBuilder.cs" />
-    <Compile Include="Actions\Calls\SiteLocalStorageBuilder.cs" />
+    <Compile Include="Actions\DefaultBinder.Operations.cs" />
     <Compile Include="Actions\Interceptor.cs" />
     <Compile Include="Actions\DynamicSiteHelper.cs" />
     <Compile Include="Actions\ExtensionBinaryOperationBinder.cs" />
@@ -182,6 +185,7 @@
     <Compile Include="Interpreter\LightCompiler.cs" />
     <Compile Include="Interpreter\RuntimeVariables.cs" />
     <Compile Include="Interpreter\StackFrame.cs" />
+    <Compile Include="Interpreter\LastFaultingLineExpression.cs" />
     <Compile Include="Runtime\BindingRestrictionsHelpers.cs" />
     <Compile Include="Runtime\DynamicNull.cs" />
     <Compile Include="Runtime\Generator.cs" />
@@ -192,7 +196,6 @@
     <Compile Include="Ast\YieldExpression.cs" />
     <Compile Include="Generation\DelegateHelpers.cs" />
     <Compile Include="Generation\DelegateHelpers.Generated.cs" />
-    <Compile Include="Actions\Calls\ParameterBinderWithCodeContext.cs" />
     <Compile Include="InvalidImplementationException.cs" />
     <Compile Include="Generation\AssemblyGen.cs" />
     <Compile Include="Generation\ConstantCheck.cs" />
@@ -209,43 +212,33 @@
     </Compile>
     <Compile Include="Actions\BinderHelper.cs" />
     <Compile Include="Actions\BinderHelpers.cs" />
-    <Compile Include="Actions\CallBinderHelper.cs" />
     <Compile Include="Actions\ComboActionRewriter.cs" />
     <Compile Include="Actions\ComboBinder.cs" />
     <Compile Include="Actions\ConditionalBuilder.cs" />
     <Compile Include="Actions\ConvertToBinderHelper.cs" />
-    <Compile Include="Actions\CreateInstanceBinderHelper.cs" />
     <Compile Include="Actions\DefaultBinder.Conversions.cs" />
-    <Compile Include="Actions\DefaultBinder.Create.cs" />
     <Compile Include="Actions\DefaultBinder.DeleteMember.cs" />
     <Compile Include="Actions\DefaultBinder.GetMember.cs" />
     <Compile Include="Actions\DefaultBinder.Invoke.cs" />
     <Compile Include="Actions\DefaultBinder.MethodCalls.cs" />
-    <Compile Include="Actions\DefaultBinder.Operations.cs" />
     <Compile Include="Actions\DefaultBinder.SetMember.cs" />
     <Compile Include="Actions\DefaultBinder.cs" />
     <Compile Include="Actions\DeleteMemberBinderHelper.cs" />
-    <Compile Include="Actions\DoOperationBinderHelper.cs" />
     <Compile Include="Actions\GetMemberBinderHelper.cs" />
     <Compile Include="Actions\MemberBinderHelper.cs" />
     <Compile Include="Actions\NoSideEffectsAttribute.cs" />
     <Compile Include="Actions\OperatorInfo.cs" />
     <Compile Include="Actions\SetMemberBinderHelper.cs" />
     <Compile Include="Hosting\ExceptionOperations.cs" />
-    <Compile Include="Ast\AssignmentExpression.cs" />
     <Compile Include="Ast\BinaryExpression.cs" />
     <Compile Include="Ast\Block.cs" />
     <Compile Include="Ast\ConstantExpression.cs" />
-    <Compile Include="Ast\DeleteStatement.cs" />
-    <Compile Include="Ast\DeleteUnboundExpression.cs" />
     <Compile Include="Ast\EmptyStatements.cs" />
     <Compile Include="Ast\LambdaBuilder.cs" />
     <Compile Include="Ast\LambdaParameterRewriter.cs" />
     <Compile Include="Ast\LoopStatement.cs" />
     <Compile Include="Ast\MethodCallExpression.cs" />
     <Compile Include="Ast\TryStatementBuilder.cs" />
-    <Compile Include="Ast\UnboundAssignment.cs" />
-    <Compile Include="Ast\UnboundExpression.cs" />
     <Compile Include="MultiRuntimeAwareAttribute.cs" />
     <Compile Include="PerfTrack.cs" />
     <Compile Include="Runtime\CompilerContext.cs" />
@@ -258,7 +251,6 @@
     <Compile Include="Runtime\TokenizerBuffer.cs" />
     <Compile Include="Runtime\TokenizerService.cs" />
     <Compile Include="Generation\MethodSignatureInfo.cs" />
-    <Compile Include="Generation\SiteLocalStorage.cs" />
     <Compile Include="Hosting\Shell\BasicConsole.cs" />
     <Compile Include="Hosting\Shell\CommandLine.cs" />
     <Compile Include="Hosting\Shell\ConsoleHost.cs" />
@@ -388,15 +380,9 @@
     <Compile Include="Actions\TypeGroup.cs" />
     <Compile Include="Actions\TypeTracker.cs" />
     <Compile Include="Ast\DebugStatement.cs" />
-    <Compile Include="Ast\GlobalVariableExpression.cs" />
     <Compile Include="Ast\IfStatementBuilder.cs" />
     <Compile Include="Ast\IfStatementTest.cs" />
     <Compile Include="Generation\CompilerHelpers.cs" />
-    <Compile Include="Generation\GlobalArrayRewriter.cs" />
-    <Compile Include="Generation\GlobalLookupRewriter.cs" />
-    <Compile Include="Generation\GlobalOptimizedRewriter.cs" />
-    <Compile Include="Generation\GlobalRewriter.cs" />
-    <Compile Include="Generation\GlobalStaticFieldRewriter.cs" />
     <Compile Include="Generation\IExpressionSerializable.cs" />
     <Compile Include="Generation\ParameterInfoWrapper.cs" />
     <Compile Include="Generation\ToDiskRewriter.cs" />

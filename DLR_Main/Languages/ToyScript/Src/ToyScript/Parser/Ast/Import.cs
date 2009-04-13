@@ -12,12 +12,11 @@
  *
  *
  * ***************************************************************************/
-using System; using Microsoft;
-
 
 using Microsoft.Linq.Expressions;
 using Microsoft.Scripting;
 using AstUtils = Microsoft.Scripting.Ast.Utils;
+using System; using Microsoft;
 
 namespace ToyScript.Parser.Ast {
     class Import : Statement {
@@ -30,6 +29,8 @@ namespace ToyScript.Parser.Ast {
 
         protected internal override Expression Generate(ToyGenerator tg) {
             Expression var = tg.GetOrMakeLocal(_name);
+            throw new InvalidOperationException();
+#if TODO
             return tg.AddSpan(
                 Span,
                 AstUtils.Assign(
@@ -41,6 +42,7 @@ namespace ToyScript.Parser.Ast {
                     )
                 )
             );
+#endif
         }
     }
 }

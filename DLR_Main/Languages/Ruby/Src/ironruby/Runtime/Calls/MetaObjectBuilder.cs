@@ -26,6 +26,7 @@ using Microsoft.Scripting.Actions;
 using Microsoft.Scripting.Utils;
 using Ast = Microsoft.Linq.Expressions.Expression;
 using AstUtils = Microsoft.Scripting.Ast.Utils;
+using System.Collections;
 
 namespace IronRuby.Runtime.Calls {
     public sealed class MetaObjectBuilder {
@@ -79,14 +80,26 @@ namespace IronRuby.Runtime.Calls {
         private static int _ruleCounter;
 #endif
 
+        internal DynamicMetaObject/*!*/ CreateMetaObject(RubyMetaBinder/*!*/ action) {
+            return CreateMetaObject(action, action.ResultType);
+        }
+
+        internal DynamicMetaObject/*!*/ CreateMetaObject(ConvertBinder/*!*/ action) {
+            return CreateMetaObject(action, action.Type);
+        }
+
         internal DynamicMetaObject/*!*/ CreateMetaObject(DynamicMetaObjectBinder/*!*/ action) {
+            return CreateMetaObject(action, typeof(object));
+        }
+
+        private DynamicMetaObject/*!*/ CreateMetaObject(DynamicMetaObjectBinder/*!*/ action, Type/*!*/ returnType) {
             Debug.Assert(ControlFlowBuilder == null, "Control flow required but not built");
 
-            var expr = _error ? Ast.Throw(_result) : _result;
+            var expr = _error ? Ast.Throw(_result, returnType) : AstUtils.Convert(_result, returnType);
 
             if (_condition != null) {
-                var deferral = action.GetUpdateExpression(typeof(object));
-                expr = Ast.Condition(_condition, AstUtils.Convert(expr, typeof(object)), deferral);
+                var deferral = action.GetUpdateExpression(returnType);
+                expr = Ast.Condition(_condition, expr, deferral);
             }
 
             if (_temps != null) {
@@ -112,11 +125,14 @@ namespace IronRuby.Runtime.Calls {
         }
 
         public ParameterExpression/*!*/ GetTemporary(Type/*!*/ type, string/*!*/ name) {
+            return AddTemporary(Ast.Variable(type, name));
+        }
+
+        private ParameterExpression/*!*/ AddTemporary(ParameterExpression/*!*/ variable) {
             if (_temps == null) {
                 _temps = new List<ParameterExpression>();
             }
 
-            var variable = Ast.Variable(type, name);
             _temps.Add(variable);
             return variable;
         }
@@ -183,6 +199,14 @@ namespace IronRuby.Runtime.Calls {
                 AddCondition(restriction);
             } else {
                 Add(BindingRestrictions.GetExpressionRestriction(restriction));
+            }
+        }
+
+        public void AddRestriction(BindingRestrictions/*!*/ restriction) {
+            if (_treatRestrictionsAsConditions) {
+                AddCondition(restriction.ToExpression());
+            } else {
+                Add(restriction);
             }
         }
 
@@ -323,13 +347,13 @@ namespace IronRuby.Runtime.Calls {
                 // test exact type:
                 AddTypeRestriction(value.GetType(), expression);
 
-                List<object> list = value as List<object>;
+                IList list = value as IList;
                 if (list != null) {
-                    Type type = typeof(List<object>);
+                    Type type = typeof(IList);
                     listLength = list.Count;
                     listVariable = GetTemporary(type, "#list");
                     AddCondition(Ast.Equal(
-                        Ast.Property(Ast.Assign(listVariable, Ast.Convert(expression, type)), type.GetProperty("Count")),
+                        Ast.Property(Ast.Assign(listVariable, Ast.Convert(expression, type)), typeof(ICollection).GetProperty("Count")),
                         AstUtils.Constant(list.Count))
                     );
                     return true;

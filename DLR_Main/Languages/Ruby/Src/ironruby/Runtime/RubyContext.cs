@@ -62,6 +62,7 @@ namespace IronRuby.Runtime {
         private readonly RubyScope/*!*/ _emptyScope;
 
         private RubyOptions/*!*/ _options;
+        private MutableString _commandLineProgramPath;
         private readonly Loader/*!*/ _loader;
         private readonly Scope/*!*/ _globalScope;
         private readonly RubyMetaBinderFactory/*!*/ _metaBinderFactory;
@@ -218,6 +219,11 @@ namespace IronRuby.Runtime {
             get { return _options; }
         }
 
+        public MutableString CommandLineProgramPath {
+            get { return _commandLineProgramPath; }
+            set { _commandLineProgramPath = value; }
+        }
+
         internal RubyBinder RubyBinder {
             get { return (RubyBinder)Binder; }
         }
@@ -340,7 +346,9 @@ namespace IronRuby.Runtime {
             _globalScope = DomainManager.Globals;
             _loader = new Loader(this);
             _emptyScope = new RubyTopLevelScope(this);
-
+            if (_options.MainFile != null) {
+                _commandLineProgramPath = MutableString.Create(_options.MainFile);
+            }
             _currentException = null;
             _currentSafeLevel = 0;
             _childProcessExitStatus = null;
@@ -400,9 +408,7 @@ namespace IronRuby.Runtime {
 
 
             // $0
-            if (_options.MainFile != null) {
-                DefineGlobalVariableNoLock(Symbols.CommandLineProgramPath, new GlobalVariableInfo(MutableString.Create(_options.MainFile)));
-            }
+            DefineGlobalVariableNoLock("PROGRAM_NAME", Runtime.GlobalVariables.CommandLineProgramPath);
 
             DefineGlobalVariableNoLock("stdin", Runtime.GlobalVariables.InputStream);
             DefineGlobalVariableNoLock("stdout", Runtime.GlobalVariables.OutputStream);
