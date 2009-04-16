@@ -1,4 +1,4 @@
-
+﻿
 Microsoft Visual Studio Solution File, Format Version 10.00
 # Visual Studio 2008
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SilverlightHostingRuby", "Hosting\Ruby\SilverlightHostingRuby.csproj", "{32E139A2-6960-4224-930E-67BCB0ECEC51}"
