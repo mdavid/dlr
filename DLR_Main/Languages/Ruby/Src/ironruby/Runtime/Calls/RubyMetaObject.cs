@@ -28,6 +28,9 @@ using AstUtils = Microsoft.Scripting.Ast.Utils;
 namespace IronRuby.Runtime.Calls {
     using Ast = Microsoft.Linq.Expressions.Expression;
 
+    interface IRubyDynamicMetaObjectProvider : IDynamicMetaObjectProvider {
+    }
+
     public abstract class RubyMetaObject : DynamicMetaObject {
         public abstract RubyContext/*!*/ Context { get; }
         public abstract Expression/*!*/ ContextExpression { get; }

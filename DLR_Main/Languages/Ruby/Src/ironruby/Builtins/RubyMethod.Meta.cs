@@ -27,8 +27,8 @@ using AstUtils = Microsoft.Scripting.Ast.Utils;
 
 namespace IronRuby.Builtins {
     using Ast = Microsoft.Linq.Expressions.Expression;
-    
-    public partial class RubyMethod : IDynamicMetaObjectProvider {
+
+    public partial class RubyMethod : IRubyDynamicMetaObjectProvider {
         public DynamicMetaObject/*!*/ GetMetaObject(Expression/*!*/ parameter) {
             return new Meta(parameter, BindingRestrictions.Empty, this);
         }

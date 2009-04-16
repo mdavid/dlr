@@ -160,6 +160,10 @@ namespace IronRuby.Builtins {
             get { return false; }
         }
 
+        public bool IsComClass {
+            get { return ReferenceEquals(this, Context.ComObjectClass); }
+        }
+
         internal virtual RubyClass GetSuperClass() {
             return null;
         }
@@ -1377,7 +1381,9 @@ namespace IronRuby.Builtins {
         /// <remarks>
         /// Not thread safe.
         /// </remarks>
-        public void ForEachMember(bool inherited, RubyMethodAttributes attributes, Action<string/*!*/, RubyMemberInfo/*!*/>/*!*/ action) {
+        public void ForEachMember(bool inherited, RubyMethodAttributes attributes, IEnumerable<string> foreignMembers, 
+            Action<string/*!*/, RubyMemberInfo/*!*/>/*!*/ action) {
+
             Context.RequiresClassHierarchyLock();
 
             var visited = new Dictionary<string, bool>();
@@ -1386,6 +1392,14 @@ namespace IronRuby.Builtins {
             // The difference is when we stop searching.
             bool instanceMethods = (attributes & RubyMethodAttributes.Instance) != 0;
             bool singletonMethods = (attributes & RubyMethodAttributes.Singleton) != 0;
+
+            // TODO: if we allow creating singletons for foreign objects we need to change this:
+            if (foreignMembers != null) {
+                foreach (var name in foreignMembers) {
+                    action(name, RubyMethodInfo.ForeignMember);
+                    visited.Add(name, true);
+                }
+            }
 
             bool stop = false;
             ForEachInstanceMethod(true, delegate(RubyModule/*!*/ module, string name, RubyMemberInfo member) {
@@ -1416,6 +1430,10 @@ namespace IronRuby.Builtins {
 
                 return false;
             });
+        }
+
+        public void ForEachMember(bool inherited, RubyMethodAttributes attributes, Action<string/*!*/, RubyMemberInfo/*!*/>/*!*/ action) {
+            ForEachMember(inherited, attributes, null, action);
         }
 
         #endregion

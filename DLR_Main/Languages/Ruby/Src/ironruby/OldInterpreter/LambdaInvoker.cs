@@ -12,8 +12,6 @@
  *
  *
  * ***************************************************************************/
-using System; using Microsoft;
-
 
 using Microsoft.Linq.Expressions;
 using System.Reflection;
@@ -23,6 +21,7 @@ using Microsoft.Runtime.CompilerServices;
 using System.Threading;
 using Microsoft.Scripting.Ast;
 using Microsoft.Scripting.Utils;
+using System; using Microsoft;
 
 namespace Microsoft.Scripting.Interpretation {
     /// <summary>
@@ -124,9 +123,10 @@ namespace Microsoft.Scripting.Interpretation {
         private readonly GeneratorExpression _generator;
         private readonly InterpreterState _state;
 
+#if OBSOLETE
         // Arbitrary constant, chosen to be different from "Finished"
         private const int InterpretingGenerator = GeneratorRewriter.Finished + 1;
-
+#endif
         internal GeneratorInvoker(GeneratorExpression generator, InterpreterState state) {
             _generator = generator;
             _state = state;
@@ -136,6 +136,8 @@ namespace Microsoft.Scripting.Interpretation {
         /// Triggers interpretation of the Lambda
         /// </summary>
         public void Invoke<T>(ref int state, ref T current) {
+            throw new NotImplementedException();
+#if OBSOLETE
             object res = Interpreter.ExecuteGenerator(_state, _generator.Body);
             ControlFlow cf = res as ControlFlow;
             if (cf != null && cf.Kind == ControlFlowKind.Yield && _state.CurrentYield != null) {
@@ -146,6 +148,7 @@ namespace Microsoft.Scripting.Interpretation {
 
             //current = default(T);
             state = GeneratorRewriter.Finished;
+#endif
         }
     }
 }

@@ -98,8 +98,8 @@ namespace IronRuby.Runtime {
         /// <summary>
         /// Convert to string using to_s protocol (<see cref="ConvertToSAction"/>).
         /// </summary>
-        public static MutableString/*!*/ ConvertToString(ConversionStorage<MutableString>/*!*/ tosStorage, object obj) {
-            var site = tosStorage.GetSite(ConvertToSAction.Make(tosStorage.Context));
+        public static MutableString/*!*/ ConvertToString(ConversionStorage<MutableString>/*!*/ tosConversion, object obj) {
+            var site = tosConversion.GetSite(ConvertToSAction.Make(tosConversion.Context));
             return site.Target(site, obj);
         }
 
@@ -154,6 +154,7 @@ namespace IronRuby.Runtime {
         /// <summary>
         /// Like CastToInteger, but converts the result to an unsigned int.
         /// </summary>
+        [CLSCompliant(false)]
         public static uint CastToUInt32Unchecked(ConversionStorage<IntegerValue>/*!*/ integerConversion, object obj) {
             if (obj == null) {
                 throw RubyExceptions.CreateTypeError("no implicit conversion from nil to integer");
@@ -174,6 +175,7 @@ namespace IronRuby.Runtime {
         /// <summary>
         /// Like CastToInteger, but converts the result to an unsigned int.
         /// </summary>
+        [CLSCompliant(false)]
         public static ulong CastToUInt64Unchecked(ConversionStorage<IntegerValue>/*!*/ integerConversion, object obj) {
             if (obj == null) {
                 throw RubyExceptions.CreateTypeError("no implicit conversion from nil to integer");

@@ -282,7 +282,7 @@ namespace IronRuby.Builtins {
 
             MutableString result = MutableString.CreateMutable();
             result.Append("#<");
-            result.Append(RubyUtils.GetClassName(context, self));
+            result.Append(context.GetClassName(self));
             result.Append(':');
             RubyUtils.AppendFormatHexObjectId(result, RubyUtils.GetObjectId(context, self));
             result.Append(' ');
@@ -620,6 +620,10 @@ namespace IronRuby.Builtins {
             }
             ThreadGroup group = Group(Thread.CurrentThread);
             Thread result = new Thread(new ThreadStart(delegate() { RubyThreadStart(startRoutine, args, group); }));
+
+            // Ruby exits when the main thread exits. So all other threads need to be marked as background threads
+            result.IsBackground = true;
+
             result.Start();
             return result;
         }

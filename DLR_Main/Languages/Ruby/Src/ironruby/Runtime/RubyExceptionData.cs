@@ -104,7 +104,7 @@ namespace IronRuby.Runtime {
 
             // we need to copy the trace since the source locations in frames above catch site could be altered by further interpretation:
             _backtrace = AddBacktrace(new RubyArray(), state, 0);
-            SetBacktraceForRaise((RubyContext)state.ScriptCode.LanguageContext, _backtrace);
+            SetBacktraceForRaise((RubyContext)state.ScriptCode.SourceUnit.LanguageContext, _backtrace);
         }
 
         /// <summary>
@@ -124,7 +124,7 @@ namespace IronRuby.Runtime {
         }
 
         public static RubyArray/*!*/ CreateBacktrace(RubyContext/*!*/ context, int skipFrames) {
-            if (context.Options.InterpretedMode) {
+            if (context.RubyOptions.InterpretedMode) {
                 var currentFrame = InterpreterState.Current.Value;
                 Debug.Assert(currentFrame != null); 
                 return AddBacktrace(new RubyArray(), currentFrame, skipFrames);
@@ -154,7 +154,7 @@ namespace IronRuby.Runtime {
                     string methodName;
 
                     // TODO: generalize for all languages
-                    if (frame.ScriptCode.LanguageContext is RubyContext) {
+                    if (frame.ScriptCode.SourceUnit.LanguageContext is RubyContext) {
                         methodName = ParseRubyMethodName(frame.Lambda.Name);
                     } else {
                         methodName = frame.Lambda.Name;
