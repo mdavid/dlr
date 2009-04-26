@@ -358,5 +358,39 @@ def test_reraise_finally():
     except:
         assert_traceback([(Line331+25, 30, 'test_traceback.py', 'test_reraise_finally'), (Line331+16, 3, 'test_traceback.py', 'g'), (Line331+22,13, 'test_traceback.py', 'f')])
 
+Line361 = 361
+def test_xafter_finally_raise():
+    def g():
+        raise Exception
+    
+    def nop(): pass
+    
+    def f():
+        try:
+            nop()
+        finally:
+            nop()
+            
+        try:
+            g()
+        except Exception, e:
+            assert_traceback([(Line361+14, 30, 'test_traceback.py', 'f'), (Line361+3, 3, 'test_traceback.py', 'g')])
+
+    f()
+
+Line381 = 381
+def test_uncaught_exception_thru_try():
+    def baz():
+        raise StopIteration
+    
+    def f():
+        try:
+            baz()
+        except TypeError:
+            pass
+    try:
+        f()
+    except:
+        assert_traceback([(Line381+11, 30, 'test_traceback.py', 'test_uncaught_exception_thru_try'), (Line381+7, 3, 'test_traceback.py', 'f'), (Line381+3, 3, 'test_traceback.py', 'baz')])
 
 run_test(__name__)

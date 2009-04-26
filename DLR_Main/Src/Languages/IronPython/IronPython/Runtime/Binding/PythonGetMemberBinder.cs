@@ -135,6 +135,10 @@ namespace IronPython.Runtime.Binding {
 
                 return Update(site, self, context);
             }
+
+            public override bool IsValid(PythonType type) {
+                return true;
+            }
         }
 
         public Func<CallSite, object, CodeContext, object> OptimizeDelegate(CallSite<Func<CallSite, object, CodeContext, object>> site, object self, CodeContext context) {
@@ -235,7 +239,8 @@ namespace IronPython.Runtime.Binding {
                     BinderState.GetBinderState(action).Binder.MakeMissingMemberError(
                         limitType,
                         name
-                    )
+                    ), 
+                    typeof(object)
                 );
         }
 
