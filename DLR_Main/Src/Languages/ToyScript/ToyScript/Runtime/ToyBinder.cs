@@ -28,6 +28,8 @@ namespace ToyScript.Runtime {
             : base(manager) {
         }
 
+#if OBSOLETE
+
         protected override void MakeRule(OldDynamicAction action, object[] args, RuleBuilder rule) {
             object[] extracted;
             CodeContext cc = ExtractCodeContext(args, out extracted);
@@ -35,12 +37,12 @@ namespace ToyScript.Runtime {
             //
             // Try IOldDynamicObject
             //
-            IOldDynamicObject ido = extracted[0] as IOldDynamicObject;
-            if (ido != null) {
-                if (ido.GetRule(action, cc, extracted, rule)) {
-                    return;
-                }
-            }
+            //IOldDynamicObject ido = extracted[0] as IOldDynamicObject;
+            //if (ido != null) {
+            //    if (ido.GetRule(action, cc, extracted, rule)) {
+            //        return;
+            //    }
+            //}
 
             //
             // Try ToyScript rules
@@ -89,6 +91,7 @@ namespace ToyScript.Runtime {
 
             return false;
         }
+#endif
 
         #region ActionBinder overrides
 
@@ -112,5 +115,6 @@ namespace ToyScript.Runtime {
         }
 
         #endregion
+
     }
 }

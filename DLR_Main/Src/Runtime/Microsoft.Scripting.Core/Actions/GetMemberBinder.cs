@@ -15,7 +15,6 @@
 using System; using Microsoft;
 
 
-using Microsoft.Contracts;
 using Microsoft.Scripting.Utils;
 
 namespace Microsoft.Scripting {
@@ -36,6 +35,13 @@ namespace Microsoft.Scripting {
 
             _name = name;
             _ignoreCase = ignoreCase;
+        }
+
+        /// <summary>
+        /// The result type of the operation.
+        /// </summary>
+        public override sealed Type ReturnType {
+            get { return typeof(object); }
         }
 
         /// <summary>
@@ -91,26 +97,6 @@ namespace Microsoft.Scripting {
             get {
                 return true;
             }
-        }
-
-        /// <summary>
-        /// Determines whether the specified <see cref="Object" /> is equal to the current object.
-        /// </summary>
-        /// <param name="obj">The <see cref="Object" /> to compare with the current object.</param>
-        /// <returns>true if the specified object is equal to the current object; otherwise false.</returns>
-        [Confined]
-        public override bool Equals(object obj) {
-            GetMemberBinder gma = obj as GetMemberBinder;
-            return gma != null && gma._name == _name && gma._ignoreCase == _ignoreCase;
-        }
-
-        /// <summary>
-        /// Returns the hash code for this instance.
-        /// </summary>
-        /// <returns>An <see cref="Int32" /> containing the hash code for this instance.</returns>
-        [Confined]
-        public override int GetHashCode() {
-            return GetMemberBinderHash ^ _name.GetHashCode() ^ (_ignoreCase ? unchecked((int)0x80000000) : 0);
         }
     }
 }

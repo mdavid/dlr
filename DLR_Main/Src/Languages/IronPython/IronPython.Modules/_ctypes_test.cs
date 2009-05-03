@@ -14,13 +14,21 @@
  * ***************************************************************************/
 
 using System; using Microsoft;
-using Microsoft.Scripting.Actions;
 
-namespace Microsoft.Scripting.Runtime {
-    /// <summary>
-    /// Old dynamic interop protocol. Will be removed soon.
-    /// </summary>
-    public interface IOldDynamicObject {
-        bool GetRule(OldDynamicAction action, CodeContext context, object[] args, RuleBuilder rule);
+using IronPython.Runtime;
+
+#if !SILVERLIGHT
+//[assembly: PythonModule("_ctypes_test", typeof(IronPython.Modules.CTypesTest))]
+namespace IronPython.Modules {
+    public static class CTypesTest {
+        // TODO: This isn't right
+        public static string __file__ = Environment.GetEnvironmentVariable("MERLIN_ROOT") + "\\..\\External.LCA_RESTRICTED\\Languages\\IronPython\\26\\DLLs\\_ctypes_test.pyd";
+
+        public static void func() {
+        }
+
+        public static void func_si(string s, int i) {
+        }
     }
 }
+#endif

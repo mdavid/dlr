@@ -16,7 +16,6 @@ using System; using Microsoft;
 
 
 using Microsoft.Scripting.Utils;
-using Microsoft.Contracts;
 
 namespace Microsoft.Scripting {
     /// <summary>
@@ -32,6 +31,13 @@ namespace Microsoft.Scripting {
         protected CreateInstanceBinder(CallInfo callInfo) {
             ContractUtils.RequiresNotNull(callInfo, "callInfo");
             _callInfo = callInfo;
+        }
+
+        /// <summary>
+        /// The result type of the operation.
+        /// </summary>
+        public override sealed Type ReturnType {
+            get { return typeof(object); }
         }
 
         /// <summary>
@@ -78,26 +84,6 @@ namespace Microsoft.Scripting {
             get {
                 return true;
             }
-        }
-
-        /// <summary>
-        /// Determines whether the specified <see cref="Object" /> is equal to the current object.
-        /// </summary>
-        /// <param name="obj">The <see cref="Object" /> to compare with the current object.</param>
-        /// <returns>true if the specified System.Object is equal to the current object; otherwise false.</returns>
-        [Confined]
-        public override bool Equals(object obj) {
-            CreateInstanceBinder ca = obj as CreateInstanceBinder;
-            return ca != null && ca._callInfo.Equals(_callInfo);
-        }
-
-        /// <summary>
-        /// Returns the hash code for this instance.
-        /// </summary>
-        /// <returns>An <see cref="Int32" /> containing the hash code for this instance.</returns>
-        [Confined]
-        public override int GetHashCode() {
-            return CreateInstanceBinderHash ^ _callInfo.GetHashCode();
         }
     }
 }

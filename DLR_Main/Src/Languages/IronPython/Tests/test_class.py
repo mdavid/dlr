@@ -1662,7 +1662,7 @@ def test_default_new_init():
             
     for x in anyInitList:
         if is_cli or is_silverlight or x!=object:
-            #http://ironpython.codeplex.com/WorkItem/View.aspx?WorkItemId=21906
+            #http://ironpython.codeplex.com/WorkItem/View.aspx?WorkItemId=19585
             x().__init__(1,2,3)
         else:
             AssertError(TypeError, x().__init__, x, 1, 2, 3)
@@ -1874,6 +1874,18 @@ def test_dictproxy_access():
     AreEqual(set(KNew.__dict__.iteritems()), set(dict(KNew.__dict__).iteritems()))
     AreEqual(set(KNew.__dict__.iterkeys()), set(dict(KNew.__dict__).iterkeys()))
     AreEqual(set(KNew.__dict__.itervalues()), set(dict(KNew.__dict__).itervalues()))
+    
+    for value in [None, 'abc', 1, object(), KNew(), KOld(), KNew, KOld, property(lambda x: x)]:
+        class KNew(object):
+            abc = value
+            
+        AreEqual(KNew.__dict__['abc'], value)
+        AreEqual(KNew.__dict__.get('abc'), value)
+        AreEqual(KNew.__dict__.get('abc', value), value)
+        for items in KNew.__dict__.iteritems(), KNew.__dict__.items(), zip(KNew.__dict__.keys(), KNew.__dict__.values()):
+            for k, v in items:
+                if k == 'abc':
+                    AreEqual(v, value)
 
 # tests w/ special requirements that can't be run in methods..
 #Testing the class attributes backed by globals

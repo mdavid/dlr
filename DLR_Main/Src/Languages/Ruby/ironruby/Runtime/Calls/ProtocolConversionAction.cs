@@ -114,7 +114,7 @@ namespace IronRuby.Runtime.Calls {
 
         protected abstract bool TryImplicitConversion(MetaObjectBuilder/*!*/ metaBuilder, CallArguments/*!*/ args);
 
-        public override Type/*!*/ ResultType {
+        public override Type/*!*/ ReturnType {
             get { 
                 return (ConversionResultValidator != null) ? ConversionResultValidator.ReturnType : typeof(object); 
             }
@@ -122,7 +122,7 @@ namespace IronRuby.Runtime.Calls {
 
         protected override bool Build(MetaObjectBuilder/*!*/ metaBuilder, CallArguments/*!*/ args, bool defaultFallback) {
             Debug.Assert(defaultFallback, "custom fallback not supported");
-            BuildConversion(metaBuilder, args, ResultType, this);
+            BuildConversion(metaBuilder, args, ReturnType, this);
             return true;
         }
 

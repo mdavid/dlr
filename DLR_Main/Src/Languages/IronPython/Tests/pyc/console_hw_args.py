@@ -13,5 +13,7 @@
 #
 #####################################################################################
 
-from iptest.cominterop_util import run_pkg_helper
-run_pkg_helper(__file__, __name__)
+if True:
+    import sys
+    print "(Compiled) Hello World", sys.argv
+    
