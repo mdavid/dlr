@@ -18,6 +18,7 @@ using System.Collections.Generic;
 using System.Text;
 using Microsoft.Scripting.Utils;
 using IronRuby.Runtime;
+using System.IO;
 
 namespace IronRuby.Builtins {
     public partial class MutableString {
@@ -31,13 +32,23 @@ namespace IronRuby.Builtins {
                 _data = data;
             }
 
-            protected virtual BinaryContent/*!*/ SwitchToBinary() {
+            internal BinaryContent/*!*/ SwitchToBinary() {
                 var bytes = DataToBytes();
                 return WrapContent(bytes, bytes.Length);
             }
 
+            internal BinaryContent/*!*/ SwitchToBinary(int additionalCapacity) {
+                // TODO:
+                return SwitchToBinary();
+            }
+
             private CharArrayContent/*!*/ SwitchToMutable() {
                 return WrapContent(_data.ToCharArray(), _data.Length);
+            }
+
+            private CharArrayContent/*!*/ SwitchToMutable(int additionalCapacity) {
+                // TODO:
+                return SwitchToMutable();
             }
 
             protected byte[]/*!*/ DataToBytes() {
@@ -58,7 +69,7 @@ namespace IronRuby.Builtins {
                 get { return false; }
             }
 
-            public override int Length {
+            public override int Count {
                 get { return _data.Length; }
             }
 
@@ -76,6 +87,21 @@ namespace IronRuby.Builtins {
 
             public override Content/*!*/ Clone() {
                 return new StringContent(_data, _owner);
+            }
+
+            public override void TrimExcess() {
+                // nop
+            }
+
+            public override int GetCapacity() {
+                return _data.Length;
+            }
+
+            public override void SetCapacity(int capacity) {
+                if (capacity < _data.Length) {
+                    throw new InvalidOperationException();
+                }
+                SwitchToMutable(capacity - _data.Length);
             }
 
             #endregion
@@ -98,6 +124,18 @@ namespace IronRuby.Builtins {
 
             public override byte[]/*!*/ ToByteArray() {
                 return DataToBytes();
+            }
+
+            internal override byte[]/*!*/ GetByteArray() {
+                return SwitchToBinary().GetByteArray();
+            }
+
+            public override void SwitchToBinaryContent() {
+                SwitchToBinary();
+            }
+
+            public override void SwitchToStringContent() {
+                // nop
             }
 
             public override GenericRegex/*!*/ ToRegularExpression(RubyRegexOptions options) {
@@ -203,23 +241,28 @@ namespace IronRuby.Builtins {
             #region Append
 
             public override Content/*!*/ Append(char c, int repeatCount) {
-                return SwitchToMutable().Append(c, repeatCount);
+                return SwitchToMutable(repeatCount).Append(c, repeatCount);
             }
 
             public override Content/*!*/ Append(byte b, int repeatCount) {
-                return SwitchToBinary().Append(b, repeatCount);
+                return SwitchToBinary(repeatCount).Append(b, repeatCount);
             }
 
             public override Content/*!*/ Append(string/*!*/ str, int start, int count) {
-                return SwitchToMutable().Append(str, start, count);
+                return SwitchToMutable(count).Append(str, start, count);
             }
 
             public override Content/*!*/ Append(char[]/*!*/ chars, int start, int count) {
-                return SwitchToMutable().Append(chars, start, count);
+                return SwitchToMutable(count).Append(chars, start, count);
             }
 
             public override Content/*!*/ Append(byte[]/*!*/ bytes, int start, int count) {
-                return SwitchToBinary().Append(bytes, start, count);
+                return SwitchToBinary(count).Append(bytes, start, count);
+            }
+
+            public override Content/*!*/ Append(Stream/*!*/ stream, int count) {
+                SwitchToBinary(count).Append(stream, count);
+                return this;
             }
 
             public override Content/*!*/ AppendFormat(IFormatProvider provider, string/*!*/ format, object[]/*!*/ args) {

@@ -23,7 +23,6 @@ using System.Text;
 using System.Threading;
 using Microsoft.Scripting;
 using Microsoft.Scripting.Actions;
-using Microsoft.Scripting.Interpretation;
 using Microsoft.Scripting.Runtime;
 using Microsoft.Scripting.Utils;
 using IronRuby.Builtins;
@@ -315,7 +314,7 @@ namespace IronRuby.Runtime {
             }
 
             globalScope.Context.CheckConstantName(name);
-            return owner.Context.ConstantMissing(owner, name);
+            return owner.ConstantMissing(name);
         }
 
         public static void SetConstant(RubyModule/*!*/ owner, string/*!*/ name, object value) {
@@ -599,25 +598,14 @@ namespace IronRuby.Runtime {
                 targetScope = CreateModuleEvalScope(targetScope, self, module);
             }
 
-            if (context.RubyOptions.InterpretedMode) {
-                return Interpreter.TopLevelExecute(new RubyScriptCode.Evaled(lambda, source),
-                    targetScope,
-                    self,
-                    module,
-                    blockParameter,
-                    methodDefinition,
-                    targetScope.RuntimeFlowControl
-                );
-            } else {
-                return RubyScriptCode.CompileLambda(lambda, context.DomainManager.Configuration.DebugMode)(
-                    targetScope,
-                    self,
-                    module,
-                    blockParameter,
-                    methodDefinition,
-                    targetScope.RuntimeFlowControl
-                );
-            }
+            return RubyScriptCode.CompileLambda(lambda, context.DomainManager.Configuration.DebugMode)(
+                targetScope,
+                self,
+                module,
+                blockParameter,
+                methodDefinition,
+                targetScope.RuntimeFlowControl
+            );
         }
 
         private static RubyModuleScope/*!*/ CreateModuleEvalScope(RubyScope/*!*/ parent, object self, RubyModule module) {

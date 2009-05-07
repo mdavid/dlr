@@ -42,6 +42,7 @@ namespace IronRuby.Runtime.Calls {
         }
         
         public abstract RubyCallSignature Signature { get; }
+
         protected abstract bool Build(MetaObjectBuilder/*!*/ metaBuilder, CallArguments/*!*/ args, bool defaultFallback);
 
         protected virtual DynamicMetaObjectBinder GetInteropBinder(RubyContext/*!*/ context, IList<DynamicMetaObject/*!*/>/*!*/ args, 
@@ -52,6 +53,8 @@ namespace IronRuby.Runtime.Calls {
         }
 
         public override DynamicMetaObject/*!*/ Bind(DynamicMetaObject/*!*/ scopeOrContextOrTarget, DynamicMetaObject/*!*/[]/*!*/ args) {
+            PerfTrack.NoteEvent(PerfTrack.Categories.Binding, "Ruby: " + GetType().Name + Signature.ToString() + ": Bind");
+
             var callArgs = new CallArguments(_context, scopeOrContextOrTarget, args, Signature);
             var metaBuilder = new MetaObjectBuilder(this, args);
 

@@ -102,6 +102,43 @@ namespace IronRuby.Builtins {
 
         #endregion
 
+        #region Dynamic Sites
+
+        // RubyModule, SymbolId -> object
+        private CallSite<Func<CallSite, object, object, object>> _constantMissingCallbackSite;
+        private CallSite<Func<CallSite, object, object, object>> _methodAddedCallbackSite;
+        private CallSite<Func<CallSite, object, object, object>> _methodRemovedCallbackSite;
+        private CallSite<Func<CallSite, object, object, object>> _methodUndefinedCallbackSite;
+
+        internal object ConstantMissing(string/*!*/ name) {
+            return Context.Send(ref _constantMissingCallbackSite, "const_missing", this, name);
+        }
+
+        // Ruby 1.8: called after method is added, except for alias_method which calls it before
+        // Ruby 1.9: called before method is added
+        public virtual void MethodAdded(string/*!*/ name) {
+            Assert.NotNull(name);
+            Debug.Assert(!IsSingletonClass);
+
+            Context.Send(ref _methodAddedCallbackSite, Symbols.MethodAdded, this, name);
+        }
+
+        internal virtual void MethodRemoved(string/*!*/ name) {
+            Assert.NotNull(name);
+            Debug.Assert(!IsSingletonClass);
+
+            Context.Send(ref _methodRemovedCallbackSite, Symbols.MethodRemoved, this, name);
+        }
+
+        internal virtual void MethodUndefined(string/*!*/ name) {
+            Assert.NotNull(name);
+            Debug.Assert(!IsSingletonClass);
+
+            Context.Send(ref _methodUndefinedCallbackSite, Symbols.MethodUndefined, this, name);
+        }
+
+        #endregion
+
         public TypeTracker Tracker {
             get { return _tracker; }
         }
@@ -538,6 +575,7 @@ namespace IronRuby.Builtins {
             RubyClass result = new RubyClass(Context, null, null, this, trait, null, null, superClass, null, tracker, null, false, true);
 #if DEBUG
             result.DebugName = "S(" + DebugName + ")";
+            result.Version.SetName(result.DebugName);
 #endif
             result._singletonClass = result;
             return result;
@@ -958,7 +996,7 @@ namespace IronRuby.Builtins {
                 SetMethodNoEventNoLock(Context, newName, method);
             }
 
-            Context.MethodAdded(this, newName);
+            MethodAdded(newName);
         }
 
         // Module#define_method:
@@ -991,7 +1029,7 @@ namespace IronRuby.Builtins {
             Assert.NotNull(name, method);
 
             SetMethodNoEvent(callerContext, name, method);
-            _context.MethodAdded(this, name);
+            MethodAdded(name);
         }
 
         // thread-safe:
@@ -1089,7 +1127,7 @@ namespace IronRuby.Builtins {
         // thread-safe:
         public bool RemoveMethod(string/*!*/ name) {
             if (RemoveMethodNoEvent(name)) {
-                _context.MethodRemoved(this, name);
+                MethodRemoved(name);
                 return true;
             }
             return false;
@@ -1139,7 +1177,7 @@ namespace IronRuby.Builtins {
         // thread-safe:
         public void UndefineMethod(string/*!*/ name) {
             UndefineMethodNoEvent(name);
-            _context.MethodUndefined(this, name);
+            MethodUndefined(name);
         }
 
         // thread-safe:

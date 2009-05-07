@@ -19,6 +19,7 @@ using Microsoft.Scripting.Utils;
 using System.Text;
 using IronRuby.Runtime;
 using System.Diagnostics;
+using System.IO;
 
 namespace IronRuby.Builtins {
     public partial class MutableString {
@@ -91,7 +92,7 @@ namespace IronRuby.Builtins {
                 get { return _count; }
             }
 
-            public override int Length {
+            public override int Count {
                 get { return _count; }
             }
 
@@ -107,8 +108,31 @@ namespace IronRuby.Builtins {
                 return (IsBinaryEncoded) ? _count : (_count == 0) ? 0 : SwitchToBinary().GetByteCount();
             }
 
+            public override void SwitchToBinaryContent() {
+                SwitchToBinary();
+            }
+
+            public override void SwitchToStringContent() {
+                // nop
+            }
+
             public override Content/*!*/ Clone() {
                 return new CharArrayContent(Utils.GetSlice(_data, 0, _count), _owner);
+            }
+
+            public override void TrimExcess() {
+                Utils.TrimExcess(ref _data, _count);
+            }
+
+            public override int GetCapacity() {
+                return _count;
+            }
+
+            public override void SetCapacity(int capacity) {
+                if (capacity < _count) {
+                    throw new InvalidOperationException();
+                }
+                Array.Resize(ref _data, capacity);
             }
 
             #endregion
@@ -130,6 +154,10 @@ namespace IronRuby.Builtins {
 
             public override byte[]/*!*/ ToByteArray() {
                 return DataToBytes(0);
+            }
+
+            internal override byte[]/*!*/ GetByteArray() {
+                return SwitchToBinary().GetByteArray();
             }
 
             public override GenericRegex/*!*/ ToRegularExpression(RubyRegexOptions options) {
@@ -267,6 +295,11 @@ namespace IronRuby.Builtins {
 
             public override Content/*!*/ Append(byte[]/*!*/ bytes, int start, int count) {
                 return SwitchToBinary(count).Append(bytes, start, count);
+            }
+
+            public override Content/*!*/ Append(Stream/*!*/ stream, int count) {
+                SwitchToBinary(count).Append(stream, count);
+                return this;
             }
 
             public override Content/*!*/ AppendFormat(IFormatProvider provider, string/*!*/ format, object[]/*!*/ args) {

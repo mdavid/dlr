@@ -20,6 +20,7 @@ using System.Text;
 using IronRuby.Compiler;
 using IronRuby.Runtime;
 using System.Diagnostics;
+using System.IO;
 
 namespace IronRuby.Builtins {
     public partial class MutableString {
@@ -88,7 +89,7 @@ namespace IronRuby.Builtins {
                 return GetHashCode();
             }
 
-            public override int Length {
+            public override int Count {
                 get { return _count; }
             }
 
@@ -106,6 +107,21 @@ namespace IronRuby.Builtins {
 
             public override Content/*!*/ Clone() {
                 return new BinaryContent(ToByteArray(), _owner);
+            }
+
+            public override void TrimExcess() {
+                Utils.TrimExcess(ref _data, _count);
+            }
+
+            public override int GetCapacity() {
+                return _count;
+            }
+
+            public override void SetCapacity(int capacity) {
+                if (capacity < _count) {
+                    throw new InvalidOperationException();
+                }
+                Array.Resize(ref _data, capacity);
             }
 
             #endregion
@@ -127,6 +143,18 @@ namespace IronRuby.Builtins {
 
             public override byte[]/*!*/ ToByteArray() {
                 return _data.GetSlice(0, _count);
+            }
+
+            internal override byte[]/*!*/ GetByteArray() {
+                return _data;
+            }
+
+            public override void SwitchToBinaryContent() {
+                // nop
+            }
+
+            public override void SwitchToStringContent() {
+                SwitchToChars();
             }
 
             public override GenericRegex/*!*/ ToRegularExpression(RubyRegexOptions options) {
@@ -250,6 +278,12 @@ namespace IronRuby.Builtins {
 
             public override Content/*!*/ Append(byte[]/*!*/ bytes, int start, int count) {
                 _count = Utils.Append(ref _data, _count, bytes, start, count);
+                return this;
+            }
+
+            public override Content/*!*/ Append(Stream/*!*/ stream, int count) {
+                Utils.Resize(ref _data, _count + count);
+                _count += stream.Read(_data, _count, count);
                 return this;
             }
 

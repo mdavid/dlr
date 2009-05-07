@@ -46,7 +46,7 @@ namespace IronPython.Runtime {
     public delegate void CommandDispatcher(Delegate command);
 
     public sealed class PythonContext : LanguageContext {
-        internal const string/*!*/ IronPythonDisplayName = "IronPython 2.6 Alpha";
+        internal const string/*!*/ IronPythonDisplayName = "IronPython 2.6 Beta";
         internal const string/*!*/ IronPythonNames = "IronPython;Python;py";
         internal const string/*!*/ IronPythonFileExtensions = ".py";
 
@@ -141,6 +141,7 @@ namespace IronPython.Runtime {
 
         private Dictionary<Type, PythonSiteCache> _systemSiteCache;
         private Dictionary<object, Delegate> _optimizedDelegates;
+        internal static object _syntaxErrorNoCaret = new object();
 
         /// <summary>
         /// Creates a new PythonContext not bound to Engine.
@@ -643,41 +644,56 @@ namespace IronPython.Runtime {
             return new OnDiskScriptCode((Func<Scope, LanguageContext, object>)method, su, customData);
         }
 
-        public override SourceCodeReader/*!*/ GetSourceReader(Stream/*!*/ stream, Encoding/*!*/ defaultEncoding) {
+        public override SourceCodeReader/*!*/ GetSourceReader(Stream/*!*/ stream, Encoding/*!*/ defaultEncoding, string path) {
             ContractUtils.RequiresNotNull(stream, "stream");
             ContractUtils.RequiresNotNull(defaultEncoding, "defaultEncoding");
             ContractUtils.Requires(stream.CanSeek && stream.CanRead, "stream", "The stream must support seeking and reading");
 
             // we choose ASCII by default, if the file has a Unicode pheader though
             // we'll automatically get it as unicode.
-            Encoding encoding = PythonAsciiEncoding.Instance;
+            Encoding encoding = PythonAsciiEncoding.SourceEncoding;
 
             long startPosition = stream.Position;
 
-            StreamReader sr = new StreamReader(stream, PythonAsciiEncoding.Instance);
-
-            int bytesRead = 0;
-            string line;
-            line = ReadOneLine(sr, ref bytesRead);
-
-            //string line = sr.ReadLine();
-            bool gotEncoding = false;
-
-            // magic encoding must be on line 1 or 2
-            if (line != null && !(gotEncoding = Tokenizer.TryGetEncoding(defaultEncoding, line, ref encoding))) {
-                line = ReadOneLine(sr, ref bytesRead);
-
-                if (line != null) {
-                    gotEncoding = Tokenizer.TryGetEncoding(defaultEncoding, line, ref encoding);
+            StreamReader sr = new StreamReader(stream, PythonAsciiEncoding.SourceEncoding);
+            byte[] bomBuffer = new byte[3];
+            int bomRead = stream.Read(bomBuffer, 0, 3);
+            bool isUtf8 = false;
+            if (bomRead == 3) {
+                if (bomBuffer[0] == 0xef && bomBuffer[1] == 0xbb && bomBuffer[2] == 0xbf) {
+                    isUtf8 = true;
+                } else {
+                    stream.Seek(0, SeekOrigin.Begin);
                 }
             }
 
-            if (gotEncoding && sr.CurrentEncoding != PythonAsciiEncoding.Instance && encoding != sr.CurrentEncoding) {
-                // we have both a BOM & an encoding type, throw an error
-                throw new IOException("file has both Unicode marker and PEP-263 file encoding");
+            int bytesRead = 0;
+            string line;
+            try {
+                line = ReadOneLine(sr, ref bytesRead);
+            } catch (BadSourceException) {
+                throw ReportEncodingError(stream, path);                
             }
 
-            if (encoding == null) {
+            bool gotEncoding = false;
+            string encodingName = null;
+            // magic encoding must be on line 1 or 2
+            if (line != null && !(gotEncoding = Tokenizer.TryGetEncoding(defaultEncoding, line, ref encoding, out encodingName))) {
+                try {
+                    line = ReadOneLine(sr, ref bytesRead);
+                } catch (BadSourceException) {
+                    throw ReportEncodingError(stream, path);
+                }
+
+                if (line != null) {
+                    gotEncoding = Tokenizer.TryGetEncoding(defaultEncoding, line, ref encoding, out encodingName);
+                }
+            }
+
+            if (gotEncoding && isUtf8 && encodingName != "utf-8") {
+                // we have both a BOM & an encoding type, throw an error
+                throw new IOException("file has both Unicode marker and PEP-263 file encoding.  You can only use \"utf-8\" as the encoding name when a BOM is present.");
+            } else if (encoding == null) {
                 throw new IOException("unknown encoding type");
             }
 
@@ -694,13 +710,44 @@ namespace IronPython.Runtime {
             return new SourceCodeReader(new StreamReader(stream, encoding), encoding);
         }
 
+        internal static Exception ReportEncodingError(Stream stream, string path) {
+            stream.Seek(0, SeekOrigin.Begin);
+            byte[] buffer = new byte[1024];
+            int bytesRead = 0;
+            int curLine = 1, curOffset = 1, index = 0;
+            while ((bytesRead = stream.Read(buffer, 0, buffer.Length)) != -1) {
+                for (int i = 0; i < bytesRead; i++) {
+                    if (buffer[i] > 0x7f) {
+                        return PythonOps.BadSourceError(
+                            buffer[i], 
+                            new SourceSpan(
+                                new SourceLocation(index, curLine, curOffset),
+                                new SourceLocation(index, curLine, curOffset)
+                            ), 
+                            path
+                        );
+                    } else if (buffer[i] == '\n') {
+                        curLine++;
+                        curOffset = 1;
+                    } else {
+                        curOffset++;
+                    }
+
+                    index++;
+                }
+            }
+
+            return new InvalidOperationException();
+        }
+
         /// <summary>
         /// Reads one line keeping track of the # of bytes read
         /// </summary>
-        private static string ReadOneLine(StreamReader sr, ref int totalRead) {
-            char[] buffer = new char[256];
+        private static string ReadOneLine(StreamReader reader, ref int totalRead) {
+            Stream sr = reader.BaseStream;
+            byte[] buffer = new byte[256];
             StringBuilder builder = null;
-
+            
             int bytesRead = sr.Read(buffer, 0, buffer.Length);
 
             while (bytesRead > 0) {
@@ -712,34 +759,34 @@ namespace IronPython.Runtime {
                         if (i + 1 < bytesRead) {
                             if (buffer[i + 1] == '\n') {
                                 totalRead -= (bytesRead - (i + 2));   // skip cr/lf
-                                sr.BaseStream.Seek(i + 1, SeekOrigin.Begin);
-                                sr.DiscardBufferedData();
+                                sr.Seek(i + 2, SeekOrigin.Begin);
+                                reader.DiscardBufferedData();
                                 foundEnd = true;
                             }
                         } else {
                             totalRead -= (bytesRead - (i + 1)); // skip cr
-                            sr.BaseStream.Seek(i, SeekOrigin.Begin);
-                            sr.DiscardBufferedData();
+                            sr.Seek(i + 1, SeekOrigin.Begin);
+                            reader.DiscardBufferedData();
                             foundEnd = true;
                         }
                     } else if (buffer[i] == '\n') {
                         totalRead -= (bytesRead - (i + 1)); // skip lf
-                        sr.BaseStream.Seek(i + 1, SeekOrigin.Begin);
-                        sr.DiscardBufferedData();
+                        sr.Seek(i + 1, SeekOrigin.Begin);
+                        reader.DiscardBufferedData();
                         foundEnd = true;
                     }
 
                     if (foundEnd) {
                         if (builder != null) {
-                            builder.Append(buffer, 0, i);
+                            builder.Append(buffer.MakeString(), 0, i);
                             return builder.ToString();
                         }
-                        return new string(buffer, 0, i);
+                        return buffer.MakeString().Substring(0, i);
                     }
                 }
 
                 if (builder == null) builder = new StringBuilder();
-                builder.Append(buffer, 0, bytesRead);
+                builder.Append(buffer.MakeString(), 0, bytesRead);
                 bytesRead = sr.Read(buffer, 0, buffer.Length);
             }
 
@@ -1115,17 +1162,27 @@ namespace IronPython.Runtime {
         internal static string FormatPythonSyntaxError(SyntaxErrorException e) {
             string sourceLine = GetSourceLine(e);
 
+            if (!e.Data.Contains(_syntaxErrorNoCaret)) {
+                return String.Format(
+                    "  File \"{1}\", line {2}{0}" +
+                    "    {3}{0}" +
+                    "    {4}^{0}" +
+                    "{5}: {6}{0}",
+                    Environment.NewLine,
+                    e.GetSymbolDocumentName(),
+                    e.Line > 0 ? e.Line.ToString() : "?",
+                    (sourceLine != null) ? sourceLine.Replace('\t', ' ') : null,
+                    new String(' ', e.Column != 0 ? e.Column - 1 : 0),
+                    GetPythonExceptionClassName(PythonExceptions.ToPython(e)), e.Message);
+            }
+
             return String.Format(
-                "  File \"{1}\", line {2}{0}" +
-                "    {3}{0}" +
-                "    {4}^{0}" +
-                "{5}: {6}{0}",
-                Environment.NewLine,
-                e.GetSymbolDocumentName(),
-                e.Line > 0 ? e.Line.ToString() : "?",
-                (sourceLine != null) ? sourceLine.Replace('\t', ' ') : null,
-                new String(' ', e.Column != 0 ? e.Column - 1 : 0),
-                GetPythonExceptionClassName(PythonExceptions.ToPython(e)), e.Message);
+                    "  File \"{1}\", line {2}{0}" +
+                    "{3}: {4}{0}",
+                    Environment.NewLine,
+                    e.GetSymbolDocumentName(),
+                    new String(' ', e.Column != 0 ? e.Column - 1 : 0),
+                    GetPythonExceptionClassName(PythonExceptions.ToPython(e)), e.Message);
         }
 
         internal static string GetSourceLine(SyntaxErrorException e) {
@@ -2360,19 +2417,19 @@ namespace IronPython.Runtime {
         }
 
         internal bool GreaterThan(object self, object other) {
-            return Comparison(self, other, PythonOperationKind.GreaterThan, ref _greaterThanSite);
+            return Comparison(self, other, ExpressionType.GreaterThan, ref _greaterThanSite);
         }
 
         internal bool LessThan(object self, object other) {
-            return Comparison(self, other, PythonOperationKind.LessThan, ref _lessThanSite);
+            return Comparison(self, other, ExpressionType.LessThan, ref _lessThanSite);
         }
 
         internal bool GreaterThanOrEqual(object self, object other) {
-            return Comparison(self, other, PythonOperationKind.GreaterThanOrEqual, ref _greaterThanEqualSite);
+            return Comparison(self, other, ExpressionType.GreaterThanOrEqual, ref _greaterThanEqualSite);
         }
 
         internal bool LessThanOrEqual(object self, object other) {
-            return Comparison(self, other, PythonOperationKind.LessThanOrEqual, ref _lessThanEqualSite);
+            return Comparison(self, other, ExpressionType.LessThanOrEqual, ref _lessThanEqualSite);
         }
 
         internal bool Contains(object self, object other) {
@@ -2385,6 +2442,27 @@ namespace IronPython.Runtime {
 
         internal bool NotEqual(object self, object other) {
             return !Equal(self, other);
+        }
+
+        private bool Comparison(object self, object other, ExpressionType operation, ref CallSite<Func<CallSite, object, object, bool>> comparisonSite) {
+            if (comparisonSite == null) {
+                Interlocked.CompareExchange(
+                    ref comparisonSite,
+                    CreateComparisonSite(operation),
+                    null
+                );
+            }
+
+            return comparisonSite.Target(comparisonSite, self, other);
+        }
+
+        internal CallSite<Func<CallSite, object, object, bool>> CreateComparisonSite(ExpressionType op) {
+            return CallSite<Func<CallSite, object, object, bool>>.Create(
+                DefaultBinderState.BinaryOperationRetType(
+                    DefaultBinderState.BinaryOperation(op),
+                    DefaultBinderState.Convert(typeof(bool), ConversionResultKind.ExplicitCast)
+                )
+            );
         }
 
         private bool Comparison(object self, object other, PythonOperationKind operation, ref CallSite<Func<CallSite, object, object, bool>> comparisonSite) {
@@ -2401,9 +2479,9 @@ namespace IronPython.Runtime {
 
         internal CallSite<Func<CallSite, object, object, bool>> CreateComparisonSite(PythonOperationKind op) {
             return CallSite<Func<CallSite, object, object, bool>>.Create(
-                Binders.BinaryOperationRetBool(
-                    DefaultBinderState,
-                    op
+                DefaultBinderState.OperationRetType(
+                    DefaultBinderState.Operation(op),
+                    DefaultBinderState.Convert(typeof(bool), ConversionResultKind.ExplicitCast)
                 )
             );
         }
@@ -2790,11 +2868,7 @@ namespace IronPython.Runtime {
 
         private static CallSite<Func<CallSite, CodeContext, T, object, object, int>> MakeCompareSite<T>(PythonContext context) {
             return CallSite<Func<CallSite, CodeContext, T, object, object, int>>.Create(
-                Binders.InvokeAndConvert(
-                    context.DefaultBinderState,
-                    2,
-                    typeof(int)
-                )
+                context.DefaultBinderState.InvokeTwoConvertToInt
             );
         }
 
@@ -2891,13 +2965,7 @@ namespace IronPython.Runtime {
         }
 
         internal CallSite<Func<CallSite, object, object, bool>> MakeEqualSite() {
-            return CallSite<Func<CallSite, object, object, bool>>.Create(
-                Binders.BinaryOperationRetType(
-                    DefaultBinderState,
-                    PythonOperationKind.Equal,
-                    typeof(bool)
-                )
-            );
+            return CreateComparisonSite(ExpressionType.Equal);
         }
 
         internal CallSite<Func<CallSite, object, int>> GetHashSite(PythonType/*!*/ type) {

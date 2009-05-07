@@ -22,6 +22,7 @@ using System.Text;
 using IronRuby.Runtime;
 using Microsoft.Scripting.Runtime;
 using IronRuby.Compiler;
+using System.IO;
 
 namespace IronRuby.Builtins {
 
@@ -158,7 +159,7 @@ namespace IronRuby.Builtins {
         }
 
         public static MutableString/*!*/ CreateBinary() {
-            return new MutableString(RubyEncoding.Binary);
+            return new MutableString(new byte[Utils.MinBufferSize], 0, RubyEncoding.Binary);
         }
 
         public static MutableString/*!*/ CreateBinary(int capacity) {
@@ -401,6 +402,14 @@ namespace IronRuby.Builtins {
             return _content.ConvertToBytes();
         }
 
+        public void SwitchToBinary() {
+            _content.SwitchToBinaryContent();
+        }
+
+        public void SwitchToString() {
+            _content.SwitchToStringContent();
+        }
+
         // used by auto-conversions
         [Obsolete("Do not use in code")]
         public static implicit operator string(MutableString/*!*/ self) {
@@ -461,11 +470,11 @@ namespace IronRuby.Builtins {
         // TODO: replace by CharCount, ByteCount
         //[Obsolete("Use GetCharCount(), GetByteCount()")]
         public int Length {
-            get { return _content.Length; }
+            get { return _content.Count; }
         }
         
         public int GetLength() {
-            return _content.Length;
+            return _content.Count;
         }
 
         public int GetCharCount() {
@@ -474,6 +483,25 @@ namespace IronRuby.Builtins {
 
         public int GetByteCount() {
             return _content.GetByteCount();
+        }
+
+        public MutableString/*!*/ TrimExcess() {
+            _content.TrimExcess();
+            return this;
+        }
+
+        public int Capacity { 
+            get {
+                return _content.GetCapacity();
+            } set {
+                _content.SetCapacity(value);
+            }
+        }
+
+        public void EnsureCapacity(int minCapacity) {
+            if (_content.GetCapacity() < minCapacity) {
+                _content.SetCapacity(minCapacity);
+            }
         }
 
         #endregion
@@ -505,7 +533,7 @@ namespace IronRuby.Builtins {
 
         // returns -1 if the string is empty
         public int GetLastChar() {
-            return (_content.IsEmpty) ? -1 : _content.GetChar(_content.Length - 1); 
+            return (_content.IsEmpty) ? -1 : _content.GetChar(_content.GetCharCount() - 1); 
         }
 
         // returns -1 if the string is empty
@@ -517,7 +545,7 @@ namespace IronRuby.Builtins {
         /// Returns a new mutable string containing a substring of the current one.
         /// </summary>
         public MutableString/*!*/ GetSlice(int start) {
-            return GetSlice(start, _content.Length - start);
+            return GetSlice(start, _content.Count - start);
         }
 
         public MutableString/*!*/ GetSlice(int start, int count) {
@@ -618,7 +646,7 @@ namespace IronRuby.Builtins {
         }
 
         public int IndexOf(MutableString/*!*/ value, int start) {
-            return IndexOf(value, start, _content.Length - start);
+            return IndexOf(value, start, _content.Count - start);
         }
 
         public int IndexOf(MutableString/*!*/ value, int start, int count) {
@@ -693,7 +721,7 @@ namespace IronRuby.Builtins {
         }
 
         public int LastIndexOf(MutableString/*!*/ value) {
-            int length = _content.Length;
+            int length = _content.Count;
             return LastIndexOf(value, length - 1, length);
         }
 
@@ -778,10 +806,22 @@ namespace IronRuby.Builtins {
             return this;
         }
 
+        /// <summary>
+        /// Reads "count" bytes from "source" stream and appends them to this string.
+        /// </summary>
+        public MutableString/*!*/ Append(Stream/*!*/ stream, int count) {
+            ContractUtils.RequiresNotNull(stream, "stream");
+            ContractUtils.Requires(count >= 0, "count");
+
+            Mutate();
+            _content.Append(stream, count);
+            return this;
+        }
+
         public MutableString/*!*/ Append(MutableString/*!*/ value) {
             if (value != null) {
                 Mutate();
-                value._content.AppendTo(_content, 0, value._content.Length);
+                value._content.AppendTo(_content, 0, value._content.Count);
             }
             return this;
         }
@@ -880,7 +920,7 @@ namespace IronRuby.Builtins {
             //RequiresArrayInsertIndex(index);
             if (value != null) {
                 Mutate();
-                value._content.InsertTo(_content, index, 0, value._content.Length);
+                value._content.InsertTo(_content, index, 0, value._content.Count);
             }
             return this;
         }
@@ -904,7 +944,7 @@ namespace IronRuby.Builtins {
 
             // TODO:
             if (IsBinary) {
-                int length = _content.Length;
+                int length = _content.Count;
                 for (int i = 0; i < length / 2; i++) {
                     byte a = GetByte(i);
                     byte b = GetByte(length - i - 1);
@@ -912,7 +952,7 @@ namespace IronRuby.Builtins {
                     SetByte(length - i - 1, a);
                 }
             } else {
-                int length = _content.Length;
+                int length = _content.Count;
                 for (int i = 0; i < length / 2; i++) {
                     char a = GetChar(i);
                     char b = GetChar(length - i - 1);
@@ -936,6 +976,13 @@ namespace IronRuby.Builtins {
             return Remove(start, count).Insert(start, value);
         }
 
+        public MutableString/*!*/ Remove(int start) {
+            //RequiresArrayRange(start, count);
+            Mutate();
+            _content.Remove(start, _content.Count - start);
+            return this;
+        }
+
         public MutableString/*!*/ Remove(int start, int count) {
             //RequiresArrayRange(start, count);
             Mutate();
@@ -954,7 +1001,6 @@ namespace IronRuby.Builtins {
             _content = _content.GetSlice(0, 0);
             return this;
         }
-
 
         #endregion
 
@@ -1227,6 +1273,14 @@ namespace IronRuby.Builtins {
             } else {
                 return "String (binary)";
             }
+        }
+
+        #endregion
+
+        #region Internal Helpers
+
+        internal byte[]/*!*/ GetByteArray() {
+            return _content.GetByteArray();
         }
 
         #endregion

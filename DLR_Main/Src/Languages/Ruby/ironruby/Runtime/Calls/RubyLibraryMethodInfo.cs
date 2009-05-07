@@ -40,7 +40,7 @@ namespace IronRuby.Runtime.Calls {
     /// Currently this is used for all builtin libary methods and interop calls to CLR methods
     /// </summary>
     public sealed class RubyLibraryMethodInfo : RubyMethodGroupBase {
-        private readonly Delegate/*!*/[] _overloads;
+        private readonly Delegate/*!*/[]/*!*/ _overloads;
 
         /// <summary>
         /// Creates a Ruby method implemented by a method group of CLR methods.
@@ -59,6 +59,10 @@ namespace IronRuby.Runtime.Calls {
 
         internal override bool IsRemovable {
             get { return true; }
+        }
+
+        internal Delegate/*!*/[]/*!*/ Overloads {
+            get { return _overloads; }
         }
 
         internal override SelfCallConvention CallConvention {

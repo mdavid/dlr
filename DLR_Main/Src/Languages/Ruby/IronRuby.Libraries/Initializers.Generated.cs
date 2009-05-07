@@ -480,8 +480,8 @@ namespace IronRuby.Builtins {
             module.UndefineMethodNoEvent("module_function");
             module.DefineRuleGenerator("allocate", 0x51, IronRuby.Builtins.ClassOps.GetInstanceAllocator());
             
-            module.DefineLibraryMethod("inherited", 0x52, 
-                new Action<IronRuby.Builtins.RubyClass, System.Object>(IronRuby.Builtins.ClassOps.Inherited)
+            module.DefineLibraryMethod("inherited", 0x5a, 
+                new Action<System.Object, System.Object>(IronRuby.Builtins.ClassOps.Inherited)
             );
             
             module.DefineLibraryMethod("initialize", 0x52, 
@@ -2807,15 +2807,15 @@ namespace IronRuby.Builtins {
                 new Func<IronRuby.Runtime.RubyContext, System.Object, IronRuby.Builtins.Proc, IronRuby.Builtins.Proc>(IronRuby.Builtins.KernelOps.SetTraceListener)
             );
             
-            module.DefineLibraryMethod("singleton_method_added", 0x52, 
+            module.DefineLibraryMethod("singleton_method_added", 0x5a, 
                 new Action<System.Object, System.Object>(IronRuby.Builtins.KernelOps.MethodAdded)
             );
             
-            module.DefineLibraryMethod("singleton_method_removed", 0x52, 
+            module.DefineLibraryMethod("singleton_method_removed", 0x5a, 
                 new Action<System.Object, System.Object>(IronRuby.Builtins.KernelOps.MethodRemoved)
             );
             
-            module.DefineLibraryMethod("singleton_method_undefined", 0x52, 
+            module.DefineLibraryMethod("singleton_method_undefined", 0x5a, 
                 new Action<System.Object, System.Object>(IronRuby.Builtins.KernelOps.MethodUndefined)
             );
             
@@ -3426,7 +3426,7 @@ namespace IronRuby.Builtins {
             );
             
             module.DefineLibraryMethod("to_proc", 0x51, 
-                new Func<IronRuby.Runtime.RubyContext, IronRuby.Builtins.RubyMethod, IronRuby.Builtins.Proc>(IronRuby.Builtins.MethodOps.ToProc)
+                new Func<IronRuby.Runtime.RubyScope, IronRuby.Builtins.RubyMethod, IronRuby.Builtins.Proc>(IronRuby.Builtins.MethodOps.ToProc)
             );
             
             module.DefineLibraryMethod("to_s", 0x51, 
@@ -3646,20 +3646,20 @@ namespace IronRuby.Builtins {
                 new Func<IronRuby.Builtins.RubyModule, System.Boolean, IronRuby.Builtins.RubyArray>(IronRuby.Builtins.ModuleOps.GetInstanceMethods)
             );
             
-            module.DefineLibraryMethod("method_added", 0x52, 
-                new Action<IronRuby.Builtins.RubyModule, System.Object>(IronRuby.Builtins.ModuleOps.MethodAdded)
+            module.DefineLibraryMethod("method_added", 0x5a, 
+                new Action<System.Object, System.Object>(IronRuby.Builtins.ModuleOps.MethodAdded)
             );
             
             module.DefineLibraryMethod("method_defined?", 0x51, 
                 new Func<IronRuby.Builtins.RubyModule, System.String, System.Boolean>(IronRuby.Builtins.ModuleOps.MethodDefined)
             );
             
-            module.DefineLibraryMethod("method_removed", 0x52, 
-                new Action<IronRuby.Builtins.RubyModule, System.Object>(IronRuby.Builtins.ModuleOps.MethodRemoved)
+            module.DefineLibraryMethod("method_removed", 0x5a, 
+                new Action<System.Object, System.Object>(IronRuby.Builtins.ModuleOps.MethodRemoved)
             );
             
-            module.DefineLibraryMethod("method_undefined", 0x52, 
-                new Action<IronRuby.Builtins.RubyModule, System.Object>(IronRuby.Builtins.ModuleOps.MethodUndefined)
+            module.DefineLibraryMethod("method_undefined", 0x5a, 
+                new Action<System.Object, System.Object>(IronRuby.Builtins.ModuleOps.MethodUndefined)
             );
             
             module.DefineLibraryMethod("module_eval", 0x51, 
