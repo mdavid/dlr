@@ -494,12 +494,6 @@ namespace IronRuby.Runtime {
 
             SetGlobalConstant("ARGV", _inputProvider.CommandLineArguments);
 
-            // File object
-            //_objectClass.SetConstant("DATA", null);
-
-            // Binding 
-            // TOPLEVEL_BINDING
-
             // Hash
             // SCRIPT_LINES__
         }

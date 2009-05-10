@@ -61,8 +61,8 @@ namespace IronRuby.Builtins {
                 return _data.GetValueHashCode(out binarySum);
             }
 
-            public override int GetBinaryHashCode() {
-                return IsBinaryEncoded ? GetHashCode() : SwitchToBinary().GetBinaryHashCode();
+            public override int GetBinaryHashCode(out int binarySum) {
+                return IsBinaryEncoded ? GetHashCode(out binarySum) : SwitchToBinary().GetBinaryHashCode(out binarySum);
             }
 
             public override bool IsBinary {
@@ -240,81 +240,80 @@ namespace IronRuby.Builtins {
 
             #region Append
 
-            public override Content/*!*/ Append(char c, int repeatCount) {
-                return SwitchToMutable(repeatCount).Append(c, repeatCount);
+            public override void Append(char c, int repeatCount) {
+                SwitchToMutable(repeatCount).Append(c, repeatCount);
             }
 
-            public override Content/*!*/ Append(byte b, int repeatCount) {
-                return SwitchToBinary(repeatCount).Append(b, repeatCount);
+            public override void Append(byte b, int repeatCount) {
+                SwitchToBinary(repeatCount).Append(b, repeatCount);
             }
 
-            public override Content/*!*/ Append(string/*!*/ str, int start, int count) {
-                return SwitchToMutable(count).Append(str, start, count);
+            public override void Append(string/*!*/ str, int start, int count) {
+                SwitchToMutable(count).Append(str, start, count);
             }
 
-            public override Content/*!*/ Append(char[]/*!*/ chars, int start, int count) {
-                return SwitchToMutable(count).Append(chars, start, count);
+            public override void Append(char[]/*!*/ chars, int start, int count) {
+                SwitchToMutable(count).Append(chars, start, count);
             }
 
-            public override Content/*!*/ Append(byte[]/*!*/ bytes, int start, int count) {
-                return SwitchToBinary(count).Append(bytes, start, count);
+            public override void Append(byte[]/*!*/ bytes, int start, int count) {
+                SwitchToBinary(count).Append(bytes, start, count);
             }
 
-            public override Content/*!*/ Append(Stream/*!*/ stream, int count) {
+            public override void Append(Stream/*!*/ stream, int count) {
                 SwitchToBinary(count).Append(stream, count);
-                return this;
             }
 
-            public override Content/*!*/ AppendFormat(IFormatProvider provider, string/*!*/ format, object[]/*!*/ args) {
-                return SwitchToMutable().AppendFormat(provider, format, args);
+            public override void AppendFormat(IFormatProvider provider, string/*!*/ format, object[]/*!*/ args) {
+                SwitchToMutable().AppendFormat(provider, format, args);
             }
 
-            public override Content/*!*/ AppendTo(Content/*!*/ str, int start, int count) {
-                return str.Append(_data, start, count);
+            public override void AppendTo(Content/*!*/ str, int start, int count) {
+                str.Append(_data, start, count);
             }
 
             #endregion
 
             #region Insert
 
-            public override Content/*!*/ Insert(int index, char c) {
-                return SwitchToMutable().Insert(index, c);
+            public override void Insert(int index, char c) {
+                SwitchToMutable().Insert(index, c);
             }
 
-            public override Content/*!*/ Insert(int index, byte b) {
-                return SwitchToBinary().Insert(index, b);
+            public override void Insert(int index, byte b) {
+                SwitchToBinary().Insert(index, b);
             }
 
-            public override Content/*!*/ Insert(int index, string/*!*/ str, int start, int count) {
-                return SwitchToMutable().Insert(index, str, start, count);
+            public override void Insert(int index, string/*!*/ str, int start, int count) {
+                SwitchToMutable().Insert(index, str, start, count);
             }
 
-            public override Content/*!*/ Insert(int index, char[]/*!*/ chars, int start, int count) {
-                return SwitchToMutable().Insert(index, chars, start, count);
+            public override void Insert(int index, char[]/*!*/ chars, int start, int count) {
+                SwitchToMutable().Insert(index, chars, start, count);
             }
 
-            public override Content/*!*/ Insert(int index, byte[]/*!*/ bytes, int start, int count) {
-                return SwitchToBinary().Insert(index, bytes, start, count);
+            public override void Insert(int index, byte[]/*!*/ bytes, int start, int count) {
+                SwitchToBinary().Insert(index, bytes, start, count);
             }
 
-            public override Content/*!*/ InsertTo(Content/*!*/ str, int index, int start, int count) {
-                return str.Insert(index, _data, start, count);
+            public override void InsertTo(Content/*!*/ str, int index, int start, int count) {
+                str.Insert(index, _data, start, count);
             }
 
-            public override Content/*!*/ SetItem(int index, byte b) {
-                return SwitchToBinary().SetItem(index, b);
+            public override void SetItem(int index, byte b) {
+                SwitchToBinary().SetItem(index, b);
             }
 
-            public override Content/*!*/ SetItem(int index, char c) {
-                return SwitchToMutable().DataSetChar(index, c);
+            public override void SetItem(int index, char c) {
+                SwitchToMutable().DataSetChar(index, c);
             }
 
             #endregion
 
             #region Remove
 
-            public override Content/*!*/ Remove(int start, int count) {
-                return SwitchToMutable().Remove(start, count);
+            public override void Remove(int start, int count) {
+                SwitchToMutable().Remove(start, count);
             }
 
             #endregion

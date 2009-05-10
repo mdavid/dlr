@@ -55,17 +55,6 @@ namespace IronRuby.Builtins {
                 get { return _owner._encoding == RubyEncoding.Binary; }
             }
 
-            public override int GetHashCode() {
-                int binarySum;
-                int hash = GetHashCode(out binarySum);
-
-                // xor with the encoding if there are any non-ASCII characters in the string:
-                if (binarySum >= 0x0080) {
-                    hash ^= _owner.Encoding.GetHashCode();
-                }
-                return hash;
-            }
-
             #endregion
 
             public abstract string/*!*/ ConvertToString();
@@ -84,7 +73,7 @@ namespace IronRuby.Builtins {
             public abstract bool IsBinary { get; }
             public abstract bool IsEmpty { get; }
             public abstract int Count { get; }
-            public abstract int GetBinaryHashCode();
+            public abstract int GetBinaryHashCode(out int binarySum);
             public abstract int GetHashCode(out int binarySum);
             public abstract int GetCharCount();
             public abstract int GetByteCount();
@@ -118,27 +107,27 @@ namespace IronRuby.Builtins {
             public abstract int LastIndexIn(Content/*!*/ str, int start, int count);
 
             // write:
-            public abstract Content/*!*/ Append(char c, int repeatCount);
-            public abstract Content/*!*/ Append(byte b, int repeatCount);
-            public abstract Content/*!*/ Append(string/*!*/ str, int start, int count);
-            public abstract Content/*!*/ Append(char[]/*!*/ chars, int start, int count);
-            public abstract Content/*!*/ Append(byte[]/*!*/ bytes, int start, int count);
-            public abstract Content/*!*/ Append(Stream/*!*/ stream, int count);
-            public abstract Content/*!*/ AppendTo(Content/*!*/ str, int start, int count);
+            public abstract void Append(char c, int repeatCount);
+            public abstract void Append(byte b, int repeatCount);
+            public abstract void Append(string/*!*/ str, int start, int count);
+            public abstract void Append(char[]/*!*/ chars, int start, int count);
+            public abstract void Append(byte[]/*!*/ bytes, int start, int count);
+            public abstract void Append(Stream/*!*/ stream, int count);
+            public abstract void AppendTo(Content/*!*/ str, int start, int count);
 
-            public abstract Content/*!*/ AppendFormat(IFormatProvider provider, string/*!*/ format, object[]/*!*/ args);
+            public abstract void AppendFormat(IFormatProvider provider, string/*!*/ format, object[]/*!*/ args);
             
-            public abstract Content/*!*/ Insert(int index, char c);
-            public abstract Content/*!*/ Insert(int index, byte b);
-            public abstract Content/*!*/ Insert(int index, string/*!*/ str, int start, int count);
-            public abstract Content/*!*/ Insert(int index, char[]/*!*/ chars, int start, int count);
-            public abstract Content/*!*/ Insert(int index, byte[]/*!*/ bytes, int start, int count);
-            public abstract Content/*!*/ InsertTo(Content/*!*/ str, int index, int start, int count);
+            public abstract void Insert(int index, char c);
+            public abstract void Insert(int index, byte b);
+            public abstract void Insert(int index, string/*!*/ str, int start, int count);
+            public abstract void Insert(int index, char[]/*!*/ chars, int start, int count);
+            public abstract void Insert(int index, byte[]/*!*/ bytes, int start, int count);
+            public abstract void InsertTo(Content/*!*/ str, int index, int start, int count);
 
-            public abstract Content/*!*/ SetItem(int index, byte b);
-            public abstract Content/*!*/ SetItem(int index, char c);
+            public abstract void SetItem(int index, byte b);
+            public abstract void SetItem(int index, char c);
 
-            public abstract Content/*!*/ Remove(int start, int count);
+            public abstract void Remove(int start, int count);
         }
     }
 }

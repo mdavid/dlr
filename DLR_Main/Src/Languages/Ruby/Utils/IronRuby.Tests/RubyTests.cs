@@ -75,6 +75,7 @@ namespace IronRuby.Tests {
                 Encoding1,
                 Encoding2,
                 Encoding3,
+                Encoding4,
                 Encoding_Host1,
                 Encoding_Host2,
 

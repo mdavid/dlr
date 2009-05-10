@@ -80,8 +80,8 @@ namespace IronRuby.Builtins {
                 return _data.GetValueHashCode(_count, out binarySum);
             }
 
-            public override int GetBinaryHashCode() {
-                return IsBinaryEncoded ? GetHashCode() : SwitchToBinary().GetBinaryHashCode();
+            public override int GetBinaryHashCode(out int binarySum) {
+                return IsBinaryEncoded ? GetHashCode(out binarySum) : SwitchToBinary().GetBinaryHashCode(out binarySum);
             }
 
             public override bool IsBinary {
@@ -125,7 +125,7 @@ namespace IronRuby.Builtins {
             }
 
             public override int GetCapacity() {
-                return _count;
+                return _data.Length;
             }
 
             public override void SetCapacity(int capacity) {
@@ -274,90 +274,81 @@ namespace IronRuby.Builtins {
 
             #region Append
 
-            public override Content/*!*/ Append(char c, int repeatCount) {
+            public override void Append(char c, int repeatCount) {
                 _count = Utils.Append(ref _data, _count, c, repeatCount);
-                return this;
             }
 
-            public override Content/*!*/ Append(byte b, int repeatCount) {
-                return SwitchToBinary(repeatCount).Append(b, repeatCount);
+            public override void Append(byte b, int repeatCount) {
+                SwitchToBinary(repeatCount).Append(b, repeatCount);
             }
 
-            public override Content/*!*/ Append(string/*!*/ str, int start, int count) {
+            public override void Append(string/*!*/ str, int start, int count) {
                 _count = Utils.Append(ref _data, _count, str, start, count);
-                return this;
             }
 
-            public override Content/*!*/ Append(char[]/*!*/ chars, int start, int count) {
+            public override void Append(char[]/*!*/ chars, int start, int count) {
                 _count = Utils.Append(ref _data, _count, chars, start, count);
-                return this;
             }
 
-            public override Content/*!*/ Append(byte[]/*!*/ bytes, int start, int count) {
-                return SwitchToBinary(count).Append(bytes, start, count);
+            public override void Append(byte[]/*!*/ bytes, int start, int count) {
+                SwitchToBinary(count).Append(bytes, start, count);
             }
 
-            public override Content/*!*/ Append(Stream/*!*/ stream, int count) {
+            public override void Append(Stream/*!*/ stream, int count) {
                 SwitchToBinary(count).Append(stream, count);
-                return this;
             }
 
-            public override Content/*!*/ AppendFormat(IFormatProvider provider, string/*!*/ format, object[]/*!*/ args) {
+            public override void AppendFormat(IFormatProvider provider, string/*!*/ format, object[]/*!*/ args) {
                 var formatted = String.Format(provider, format, args);
                 Append(formatted, 0, formatted.Length);
-                return this;
             }
 
-            public override Content/*!*/ AppendTo(Content/*!*/ str, int start, int count) {
-                return str.Append(_data, start, count);
+            public override void AppendTo(Content/*!*/ str, int start, int count) {
+                str.Append(_data, start, count);
             }
 
             #endregion
 
             #region Insert
 
-            public override Content/*!*/ Insert(int index, char c) {
+            public override void Insert(int index, char c) {
                 _count = Utils.InsertAt(ref _data, _count, index, c, 1);
-                return this;
             }
 
-            public override Content/*!*/ Insert(int index, byte b) {
-                return SwitchToBinary(1).Insert(index, b);
+            public override void Insert(int index, byte b) {
+                SwitchToBinary(1).Insert(index, b);
             }
 
-            public override Content/*!*/ Insert(int index, string/*!*/ str, int start, int count) {
+            public override void Insert(int index, string/*!*/ str, int start, int count) {
                 _count = Utils.InsertAt(ref _data, _count, index, str, start, count);
-                return this;
             }
 
-            public override Content/*!*/ Insert(int index, char[]/*!*/ chars, int start, int count) {
+            public override void Insert(int index, char[]/*!*/ chars, int start, int count) {
                 _count = Utils.InsertAt(ref _data, _count, index, chars, start, count);
-                return this;
             }
 
-            public override Content/*!*/ Insert(int index, byte[]/*!*/ bytes, int start, int count) {
-                return SwitchToBinary(count).Insert(index, bytes, start, count);
+            public override void Insert(int index, byte[]/*!*/ bytes, int start, int count) {
+                SwitchToBinary(count).Insert(index, bytes, start, count);
             }
 
-            public override Content/*!*/ InsertTo(Content/*!*/ str, int index, int start, int count) {
-                return str.Insert(index, _data, start, count);
+            public override void InsertTo(Content/*!*/ str, int index, int start, int count) {
+                str.Insert(index, _data, start, count);
             }
 
-            public override Content/*!*/ SetItem(int index, byte b) {
-                return SwitchToBinary().SetItem(index, b);
+            public override void SetItem(int index, byte b) {
+                SwitchToBinary().SetItem(index, b);
             }
 
-            public override Content/*!*/ SetItem(int index, char c) {
-                return DataSetChar(index, c);
+            public override void SetItem(int index, char c) {
+                DataSetChar(index, c);
             }
 
             #endregion
 
             #region Remove
 
-            public override Content/*!*/ Remove(int start, int count) {
+            public override void Remove(int start, int count) {
                 _count = Utils.Remove(ref _data, _count, start, count);
-                return this;
             }
 
             #endregion

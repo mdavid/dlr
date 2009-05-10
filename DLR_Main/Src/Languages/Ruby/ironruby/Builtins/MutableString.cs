@@ -40,6 +40,7 @@ namespace IronRuby.Builtins {
         private RubyEncoding/*!*/ _encoding;
         
         // The lowest bit is tainted flag.
+        // The second lowest bit is "is-ascii" flag - valid iff _hashCode is valid.
         // The version is set to FrozenVersion when the string is frozen. FrozenVersion is the maximum version, so any update to the version 
         // triggers an OverflowException, which we convert to InvalidOperationException.
         private uint _versionAndFlags;
@@ -48,7 +49,8 @@ namespace IronRuby.Builtins {
         private int _hashCode = Utils.ReservedHashCode;
 
         private const uint IsTaintedFlag = 1;
-        private const int FlagCount = 1;
+        private const uint IsAsciiFlag = 2;
+        private const int FlagCount = 2;
         private const uint FlagsMask = (1U << FlagCount) - 1;
         private const uint VersionMask = ~FlagsMask;
         private const uint FrozenVersion = VersionMask;
@@ -268,13 +270,95 @@ namespace IronRuby.Builtins {
             _hashCode = Utils.ReservedHashCode;
         }
 
-        public override int GetHashCode() {
-            if (_hashCode != Utils.ReservedHashCode) {
-                return _hashCode;
+        /// <summary>
+        /// Prepares the string for mutation that combines its content with content of another mutable string.
+        /// </summary>
+        private void Mutate(MutableString/*!*/ other) {
+            if (_encoding == other.Encoding) {
+                Mutate();
+                return;
             }
 
-            // 1.8 strings don't know encodings => if 2 strings are binary equivalent they have the same hash:
-            return _hashCode = (_encoding.IsKCoding) ? _content.GetBinaryHashCode() : _content.GetHashCode();
+            if (_encoding.IsKCoding || other.Encoding.IsKCoding) {
+                Mutate();
+
+                SwitchToBinary();
+                other.SwitchToBinary();
+
+                if (IsBinaryEncoded) {
+                    // binary + kcoding -> change encoding to the other:
+                    _encoding = other.Encoding;
+                } else if (!_encoding.IsKCoding || !other.IsBinaryEncoded && !other.Encoding.IsKCoding) {
+                    // kcoding + non-binary encoding and vice versa:
+                    throw RubyExceptions.CreateEncodingCompatibilityError(_encoding, other.Encoding);
+                }
+
+                return;
+            }
+
+            // MRI implicitly changes encoding of a string that contains ascii bytes/characters only.
+            if (other.IsAscii()) {
+                if (IsBinaryEncoded && IsAscii()) {
+                    Mutate();
+
+                    // we can safely change encoding since the string contains ascii bytes/characters only:
+                    _encoding = other.Encoding;
+                } else {
+                    Mutate();
+                }
+                return;
+            }
+
+            if (IsAscii()) {
+                Mutate();
+
+                // we can safely change encoding since the string contains ascii bytes/characters only:
+                _encoding = other.Encoding;
+                return;
+            }
+
+            throw RubyExceptions.CreateEncodingCompatibilityError(_encoding, other.Encoding);
+        }
+
+        public override int GetHashCode() {
+            if (_hashCode == Utils.ReservedHashCode) {
+                UpdateHashCode();
+            }
+
+            return _hashCode;
+        }
+
+        public bool IsAscii() {
+            if (_hashCode == Utils.ReservedHashCode) {
+                UpdateHashCode();
+            }
+
+            return (_versionAndFlags & IsAsciiFlag) != 0;
+        }
+
+        private void UpdateHashCode() {
+            int hash;
+            int binarySum;
+
+            if (_encoding.IsKCoding) {
+                // 1.8 strings don't know encodings => if 2 strings are binary equivalent they have the same hash:
+                hash = _content.GetBinaryHashCode(out binarySum);
+            } else {
+                hash = _content.GetHashCode(out binarySum);
+
+                // xor with the encoding if there are any non-ASCII characters in the string:
+                if (binarySum >= 0x0080) {
+                    hash ^= _encoding.GetHashCode();
+                }
+            }
+
+            if (binarySum >= 0x0080) {
+                _versionAndFlags &= ~IsAsciiFlag;
+            } else {
+                _versionAndFlags |= IsAsciiFlag;
+            }
+
+            _hashCode = hash;
         }
 
         public bool IsBinary {
@@ -402,12 +486,14 @@ namespace IronRuby.Builtins {
             return _content.ConvertToBytes();
         }
 
-        public void SwitchToBinary() {
+        public MutableString/*!*/ SwitchToBinary() {
             _content.SwitchToBinaryContent();
+            return this;
         }
 
-        public void SwitchToString() {
+        public MutableString/*!*/ SwitchToString() {
             _content.SwitchToStringContent();
+            return this;
         }
 
         // used by auto-conversions
@@ -818,20 +904,33 @@ namespace IronRuby.Builtins {
             return this;
         }
 
-        public MutableString/*!*/ Append(MutableString/*!*/ value) {
+        public MutableString/*!*/ Append(MutableString value) {
             if (value != null) {
-                Mutate();
+                Mutate(value);
                 value._content.AppendTo(_content, 0, value._content.Count);
             }
             return this;
         }
 
-        public MutableString/*!*/ Append(MutableString/*!*/ str, int start, int count) {
-            ContractUtils.RequiresNotNull(str, "str");
+        public MutableString/*!*/ Append(MutableString/*!*/ value, int start, int count) {
+            ContractUtils.RequiresNotNull(value, "value");
             //RequiresArrayRange(start, count);
 
-            Mutate();
-            str._content.AppendTo(_content, start, count);
+            Mutate(value);
+            value._content.AppendTo(_content, start, count);
+            return this;
+        }
+
+        public MutableString/*!*/ AppendMultiple(MutableString/*!*/ value, int repeatCount) {
+            ContractUtils.RequiresNotNull(value, "value");
+            Mutate(value);
+
+            // TODO: we can do better here (double the amount of copied bytes/chars in each iteration)
+            var other = value._content;
+            EnsureCapacity(other.Count * repeatCount);
+            while (repeatCount-- > 0) {
+                other.AppendTo(_content, 0, other.Count);
+            }
             return this;
         }
 
@@ -919,7 +1018,7 @@ namespace IronRuby.Builtins {
         public MutableString/*!*/ Insert(int index, MutableString value) {
             //RequiresArrayInsertIndex(index);
             if (value != null) {
-                Mutate();
+                Mutate(value);
                 value._content.InsertTo(_content, index, 0, value._content.Count);
             }
             return this;
@@ -930,7 +1029,7 @@ namespace IronRuby.Builtins {
             ContractUtils.RequiresNotNull(value, "value");
             //value.RequiresArrayRange(start, count);
 
-            Mutate();
+            Mutate(value);
             value._content.InsertTo(_content, index, start, count);
             return this;
         }
@@ -972,7 +1071,7 @@ namespace IronRuby.Builtins {
             //RequiresArrayRange(start, count);
 
             // TODO:
-            Mutate();
+            Mutate(value);
             return Remove(start, count).Insert(start, value);
         }
 
@@ -1162,7 +1261,7 @@ namespace IronRuby.Builtins {
             } else if (currentChar < 0x0080) {
                 AppendBinaryCharRepresentation(result, currentChar, nextChar, false, false, quote);
             } else if (forceEscapes) {
-                if (Char.IsSurrogatePair((char)currentChar, (char)nextChar)) {
+                if (nextChar != -1 && Char.IsSurrogatePair((char)currentChar, (char)nextChar)) {
                     currentChar = Tokenizer.ToCodePoint(currentChar, nextChar);
                     inc = 2;
                 }
