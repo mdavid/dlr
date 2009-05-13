@@ -18,7 +18,7 @@ namespace SymplSample
             string dllPath = typeof(object).Assembly.Location;
             Assembly asm = Assembly.LoadFile(dllPath);
 
-            string filename = @"..\..\Languages\sympl\examples\test.sympl";
+            string filename = @"..\..\Src\Languages\sympl\examples\test.sympl";
             var s = new Sympl(new Assembly[] { asm });
             var feo = s.ExecuteFile(filename);
 
