@@ -18,26 +18,22 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics;
 using Microsoft.Scripting;
+using System.IO;
 using Microsoft.Linq.Expressions;
 using System.Reflection;
 using System.Runtime.CompilerServices;
 using Microsoft.Runtime.CompilerServices;
 
 using System.Runtime.Serialization;
-using System.Text;
 using System.Threading;
 using IronRuby.Builtins;
 using IronRuby.Compiler;
 using IronRuby.Compiler.Generation;
 using IronRuby.Runtime.Calls;
-using Microsoft.Scripting.Actions;
+using Microsoft.Scripting.Interpreter;
 using Microsoft.Scripting.Math;
 using Microsoft.Scripting.Runtime;
 using Microsoft.Scripting.Utils;
-using System.IO;
-using System.Runtime.InteropServices;
-using Microsoft.Scripting.Generation;
-using Microsoft.Scripting.Interpreter;
 
 namespace IronRuby.Runtime {
     public static partial class RubyOps {
@@ -1302,6 +1298,11 @@ namespace IronRuby.Runtime {
         [Emitted]
         public static Exception/*!*/ MakeAllocatorUndefinedError(RubyClass/*!*/ classObj) {
             return RubyExceptions.CreateAllocatorUndefinedError(classObj);
+        }
+
+        [Emitted]
+        public static Exception/*!*/ MakeMissingDefaultConstructorError(RubyClass/*!*/ classObj, string/*!*/ initializerOwnerName) {
+            return RubyExceptions.CreateMissingDefaultConstructorError(classObj, initializerOwnerName);
         }
 
         [Emitted]

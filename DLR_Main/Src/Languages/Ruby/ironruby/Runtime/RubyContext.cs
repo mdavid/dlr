@@ -503,7 +503,7 @@ namespace IronRuby.Runtime {
         }
 
         internal bool TryGetGlobalConstant(string/*!*/ name, out object value) {
-            return _globalScope.TryLookupName(SymbolTable.StringToId(name), out value);
+            return _globalScope.TryGetName(SymbolTable.StringToId(name), out value);
         }
 
         private void InitializeFileDescriptors(SharedIO/*!*/ io) {
@@ -682,7 +682,7 @@ namespace IronRuby.Runtime {
             }
 
             TypeTracker tracker = (TypeTracker)TypeTracker.FromMemberInfo(interfaceType);
-            result = CreateModule(RubyUtils.GetQualifiedName(interfaceType), null, null, null, null, null, tracker);
+            result = CreateModule(RubyUtils.GetQualifiedName(interfaceType, false), null, null, null, null, null, tracker);
             _moduleCache[interfaceType] = result;
             return result;
         }
@@ -708,7 +708,7 @@ namespace IronRuby.Runtime {
                 expandedMixins = RubyModule.EmptyArray;
             }
 
-            result = CreateClass(RubyUtils.GetQualifiedName(type), type, null, null, null, null, null, baseClass, expandedMixins, tracker, null, false, false);
+            result = CreateClass(RubyUtils.GetQualifiedName(type, false), type, null, null, null, null, null, baseClass, expandedMixins, tracker, null, false, false);
 
             if (Utils.IsComObjectType(type)) {
                 _comObjectClass = result;
@@ -849,7 +849,7 @@ namespace IronRuby.Runtime {
         internal RubyClass/*!*/ DefineClass(RubyModule/*!*/ owner, string name, RubyClass/*!*/ superClass, RubyStruct.Info structInfo) {
             Assert.NotNull(owner, superClass);
 
-            if (superClass.Tracker != null && superClass.Tracker.Type.ContainsGenericParameters) {
+            if (superClass.TypeTracker != null && superClass.TypeTracker.Type.ContainsGenericParameters) {
                 throw RubyExceptions.CreateTypeError(String.Format(
                     "{0}: cannot inherit from open generic instantiation {1}. Only closed instantiations are supported.",
                     name, superClass.Name
@@ -885,14 +885,17 @@ namespace IronRuby.Runtime {
             lock (ModuleCacheLock) {
                 if (!(exists = TryGetModuleNoLock(type, out result))) {
                     if (name == null) {
-                        name = RubyUtils.GetQualifiedName(type);
+                        name = RubyUtils.GetQualifiedName(type, false);
                     }
 
                     // Setting tracker on the module makes CLR methods visible.
                     // Hide CLR methods if the type itself defines RubyMethods and is not an extension of another type.
                     TypeTracker tracker = isSelfContained ? null : ReflectionCache.GetTypeTracker(type);
 
-                    result = CreateModule(name, instanceTrait, classTrait, constantsInitializer, expandedMixins, null, tracker);
+                    // Use empty constant initializer rather than null so that we don't try to initialize nested types.
+                    result = CreateModule(
+                        name, instanceTrait, classTrait, constantsInitializer ?? RubyModule.EmptyInitializer, expandedMixins, null, tracker
+                    );
 
                     AddModuleToCacheNoLock(type, result);
                 }
@@ -922,7 +925,7 @@ namespace IronRuby.Runtime {
             lock (ModuleCacheLock) {
                 if (!(exists = TryGetClassNoLock(type, out result))) {
                     if (name == null) {
-                        name = RubyUtils.GetQualifiedName(type);
+                        name = RubyUtils.GetQualifiedName(type, false);
                     }
 
                     if (super == null) {
@@ -933,7 +936,9 @@ namespace IronRuby.Runtime {
                     // Hide CLR methods if the type itself defines RubyMethods and is not an extension of another type.
                     TypeTracker tracker = isSelfContained ? null : ReflectionCache.GetTypeTracker(type);
 
-                    result = CreateClass(name, type, null, instanceTrait, classTrait, constantsInitializer, factories, 
+                    // Use empty constant initializer rather than null so that we don't try to initialize nested types.
+                    result = CreateClass(
+                        name, type, null, instanceTrait, classTrait, constantsInitializer ?? RubyModule.EmptyInitializer, factories, 
                         super, expandedMixins, tracker, null, false, false
                     );
 
@@ -1077,15 +1082,35 @@ namespace IronRuby.Runtime {
             return false;
         }
 
-        public string/*!*/ GetTypeName(Type/*!*/ type) {
+        public string/*!*/ GetTypeName(Type/*!*/ type, bool display) {
             RubyModule module;
-            return TryGetModule(type, out module) ? module.Name : RubyUtils.GetQualifiedName(type);
+            if (TryGetModule(type, out module)) {
+                if (display) {
+                    return module.GetDisplayName(this, false).ToString();
+                } else {
+                    return module.Name;
+                }
+            } else {
+                return RubyUtils.GetQualifiedName(type, display);
+            }
         }
 
         /// <summary>
         /// Gets the Ruby name of the class of the given object.
         /// </summary>
         public string/*!*/ GetClassName(object obj) {
+            return GetClassName(obj, false);
+        }
+
+        /// <summary>
+        /// Gets the display name of the class of the given object.
+        /// Might include characters that are not valid in a Ruby constant name.
+        /// </summary>
+        public string/*!*/ GetClassDisplayName(object obj) {
+            return GetClassName(obj, true);
+        }
+
+        private string/*!*/ GetClassName(object obj, bool display) {
             // doesn't create a RubyClass for .NET types
 
             RubyClass cls = TryGetClassOfRubyObject(obj);
@@ -1093,7 +1118,7 @@ namespace IronRuby.Runtime {
                 return cls.Name;
             }
 
-            return GetTypeName(obj.GetType());
+            return GetTypeName(obj.GetType(), display);
         }
 
         #endregion

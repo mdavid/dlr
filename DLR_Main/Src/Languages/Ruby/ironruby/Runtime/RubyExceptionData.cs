@@ -32,6 +32,7 @@ using System.Runtime.CompilerServices;
 using Microsoft.Runtime.CompilerServices;
 
 using Microsoft.Scripting.Interpreter;
+using Microsoft.Scripting.Generation;
 
 namespace IronRuby.Runtime {
     /// <summary>
@@ -265,11 +266,13 @@ namespace IronRuby.Runtime {
         }
 
         private const string RubyMethodPrefix = "\u2111\u211c;";
+        private static int _Id = 0;
 
         internal static string/*!*/ EncodeMethodName(SourceUnit/*!*/ sourceUnit, string/*!*/ methodName, SourceSpan location) {
             // encodes line number, file name into the method name
             string fileName = sourceUnit.HasPath ? Path.GetFileName(sourceUnit.Path) : String.Empty;
-            return String.Format(RubyMethodPrefix + "{0};{1};{2};", methodName, fileName, location.IsValid ? location.Start.Line : 0);
+            return String.Format(RubyMethodPrefix + "{0};{1};{2};{3}", methodName, fileName, location.IsValid ? location.Start.Line : 0,
+                Interlocked.Increment(ref _Id));
         }
 
         // \u2111\u211c;{method-name};{file-name};{line-number};{dlr-suffix}

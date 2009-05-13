@@ -181,7 +181,7 @@ namespace IronRuby.StandardLibrary.BigDecimal {
         [RubyMethod("limit", RubyMethodAttributes.PublicSingleton)]
         public static int Limit(RubyContext/*!*/ context, RubyClass/*!*/ self, [Optional]object n) {
             if (!(n is Missing)) {
-                throw RubyExceptions.CreateTypeError("wrong argument type " + self.Context.GetClassName(n) + " (expected Fixnum)");
+                throw RubyExceptions.CreateUnexpectedTypeError(context, n, "Fixnum");
             }
             return GetConfig(context).Limit;
         }
@@ -210,7 +210,7 @@ namespace IronRuby.StandardLibrary.BigDecimal {
 
         [RubyMethod("induced_from", RubyMethodAttributes.PublicSingleton)]
         public static BigDecimal InducedFrom(RubyClass/*!*/ self, object value) {
-            throw RubyExceptions.CreateTypeConversionError(self.Context.GetClassName(value), self.Name);
+            throw RubyExceptions.CreateTypeConversionError(self.Context.GetClassDisplayName(value), self.Name);
         }
 
         #endregion
@@ -677,7 +677,7 @@ namespace IronRuby.StandardLibrary.BigDecimal {
 
         [RubyMethod("sqrt")]
         public static object SquareRoot(RubyContext/*!*/ context, BigDecimal/*!*/ self, object n) {
-            throw RubyExceptions.CreateTypeError("wrong argument type " + context.GetClassName(n) + " (expected Fixnum)");
+            throw RubyExceptions.CreateUnexpectedTypeError(context, n, "Fixnum");
         }
 
         #endregion

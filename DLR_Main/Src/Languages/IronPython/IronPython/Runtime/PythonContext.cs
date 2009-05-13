@@ -915,6 +915,7 @@ namespace IronPython.Runtime {
 
             PythonModule mod = CreateModule(null, new Scope(dict), null, options);
             mod.Scope.SetName(Symbols.Name, moduleName);
+            mod.Scope.SetName(Symbols.Package, null);
             return mod;
         }
 
@@ -942,6 +943,10 @@ namespace IronPython.Runtime {
 
             if ((options & ModuleOptions.Initialize) != 0) {
                 scriptCode.Run(module.Scope);
+                
+                if (!scope.ContainsName(Symbols.Package)) {
+                    scope.SetName(Symbols.Package, null);
+                }
             }
 
             return module;
@@ -1004,6 +1009,19 @@ namespace IronPython.Runtime {
 
         #endregion
 
+        public object GetWarningsModule() {
+            object warnings = null;
+            try {
+                if (!_importWarningThrows) {
+                    warnings = Importer.ImportModule(SharedContext, new PythonDictionary(), "warnings", false, -1);
+                }
+            } catch {
+                // don't repeatedly import after it fails
+                _importWarningThrows = true;
+            }
+            return warnings;
+        }
+
         /// <summary>
         /// Python's global scope includes looking at built-ins.  First check built-ins, and if
         /// not there then fallback to any DLR globals.
@@ -1032,7 +1050,7 @@ namespace IronPython.Runtime {
         internal ModuleGlobalCache GetModuleGlobalCache(SymbolId name) {
             ModuleGlobalCache res;
             if (!TryGetModuleGlobalCache(name, out res)) {
-                res = base.GetModuleCache(name);
+                res = ModuleGlobalCache.NoCache;
             }
 
             return res;

@@ -979,26 +979,26 @@ class C(object):
 
 AssertError(NameError, C().test)
 
-if not is_interpreted():
-    try:
-        del __builtin__.pow
-        AssertError(NameError, lambda: pow)
-        AssertError(AttributeError, lambda: __builtin__.pow)
-    finally:
-        reload(__builtin__)
-        # make sure we still have access to __builtin__'s after reloading
-        # AreEqual(pow(2,2), 4) # bug 359890
-        dir('abc')
+try:
+    del __builtin__.pow
+    AssertError(NameError, lambda: pow)
+    AssertError(AttributeError, lambda: __builtin__.pow)
+finally:
+    reload(__builtin__)
+    # make sure we still have access to __builtin__'s after reloading
+    # AreEqual(pow(2,2), 4) # bug 359890
+    dir('abc')
 
 ## Overriding __builtin__ method inconsistent with -X:LightweightScopes flag
 import __builtin__
 __builtin__.help = 10
 AssertErrorWithPartialMessage(TypeError, "is not callable", lambda: help(dir))
 
+#CodePlex 20956
 # Test that run time name lookup skips over class scopes
 # (because class variables aren't implicitly accessible inside member functions)
 a = 123
-class C:
+class C(object):
     a = 456
     def foo(self):
         # this exec statement is here to cause the "a" in the next statement
@@ -1007,6 +1007,19 @@ class C:
         return a  # a should bind to the global a, not C.a
 
 AreEqual(C().foo(), 123)
+
+#CodePlex 20956
+class C:
+    codeplex_20956 = 3
+    def foo(self):
+        return codeplex_20956
+
+if is_cpython:
+    AssertErrorWithMessage(NameError, "global name 'codeplex_20956' is not defined",
+                           C().foo)
+else:
+    AssertErrorWithMessage(NameError, "name 'codeplex_20956' is not defined",
+                           C().foo)
 
 class ImportAsInClass:
     import sys as sys_in_class
