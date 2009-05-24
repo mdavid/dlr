@@ -158,19 +158,7 @@ namespace IronRuby.Runtime {
 
         private static string/*!*/ FormatMethodMissingMessage(RubyContext/*!*/ context, object self, string/*!*/ name, string/*!*/ message) {
             Assert.NotNull(name);
-            string strObject;
-
-            if (self == null) {
-                strObject = "nil:NilClass";
-            } else {
-                var site = context.StringConversionSite;
-                strObject = (site.Target(site, self) as MutableString ?? RubyUtils.ObjectToMutableString(context, self)).ConvertToString();
-
-                if (!strObject.StartsWith("#")) {
-                    strObject += ":" + context.GetClassName(self);
-                }
-            }
-
+            string strObject = context.InspectEnsuringClassName(self);
             return String.Format(message, name, strObject);
         }
 
@@ -187,7 +175,8 @@ namespace IronRuby.Runtime {
         }
 
         public static Exception/*!*/ CreateEncodingCompatibilityError(RubyEncoding/*!*/ encoding1, RubyEncoding/*!*/ encoding2) {
-            return new EncodingCompatibilityError(String.Format("incompatible character encodings: {0} and {1}", encoding1.Name, encoding2.Name));
+            return new EncodingCompatibilityError(String.Format("incompatible character encodings: {0}{1} and {2}{3}",
+                encoding1.Name, encoding1.IsKCoding ? " (KCODE)" : null, encoding2.Name, encoding2.IsKCoding ? " (KCODE)" : null));
         }
     }
 }

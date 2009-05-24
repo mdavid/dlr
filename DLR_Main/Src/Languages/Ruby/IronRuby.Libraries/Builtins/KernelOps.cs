@@ -251,7 +251,7 @@ namespace IronRuby.Builtins {
 
         [RubyMethod("abort", RubyMethodAttributes.PrivateInstance)]
         [RubyMethod("abort", RubyMethodAttributes.PublicSingleton)]
-        public static void Abort(BinaryOpStorage/*!*/ writeStorage, object/*!*/ self, [NotNull]MutableString/*!*/ message) {
+        public static void Abort(BinaryOpStorage/*!*/ writeStorage, object/*!*/ self, [DefaultProtocol, NotNull]MutableString/*!*/ message) {
             var site = writeStorage.GetCallSite("write", 1);
             site.Target(site, writeStorage.Context.StandardErrorOutput, message);
 
@@ -998,7 +998,14 @@ namespace IronRuby.Builtins {
 
         [RubyMethod("==")]
         [RubyMethod("eql?")]
+        public static bool ValueEquals(IRubyObject self, object other) {
+            return object.ReferenceEquals(self, other);
+        }
+
+        [RubyMethod("==")]
+        [RubyMethod("eql?")]
         public static bool ValueEquals(object self, object other) {
+            Debug.Assert(self == null || !(self is IRubyObject));
             return RubyUtils.ValueEquals(self, other);
         }
 
@@ -1015,7 +1022,13 @@ namespace IronRuby.Builtins {
         }
 
         [RubyMethod("hash")]
+        public static int Hash(IRubyObject self) {
+            return self == null ? RubyUtils.NilObjectId : RuntimeHelpers.GetHashCode(self);
+        }
+
+        [RubyMethod("hash")]
         public static int Hash(object self) {
+            Debug.Assert(self == null || !(self is IRubyObject));
             return RubyUtils.GetHashCode(self);
         }
 
@@ -1209,7 +1222,7 @@ namespace IronRuby.Builtins {
         [RubyMethod("kind_of?")]
         public static bool IsKindOf(object self, RubyModule/*!*/ other) {
             ContractUtils.RequiresNotNull(other, "other");
-            return other.Context.GetImmediateClassOf(self).HasAncestor(other);
+            return other.Context.IsKindOf(self, other);
         }
 
         // thread-safe:
@@ -1281,9 +1294,9 @@ namespace IronRuby.Builtins {
 
         [RubyMethod("respond_to?")]
         public static bool RespondTo(RubyContext/*!*/ context, object self, 
-            [DefaultProtocol, NotNull]string/*!*/ methodName, [DefaultParameterValue(null)]object includePrivate) {
+            [DefaultProtocol, NotNull]string/*!*/ methodName, [Optional]bool includePrivate) {
 
-            return context.ResolveMethod(self, methodName, Protocols.IsTrue(includePrivate)).Found;
+            return context.ResolveMethod(self, methodName, includePrivate).Found;
         }
 
         #region __send__, send

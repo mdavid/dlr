@@ -48,8 +48,8 @@ namespace IronRuby.Runtime {
         public static readonly string/*!*/ MriReleaseDate = "2008-05-28";
 
         // IronRuby:
-        public const string/*!*/ IronRubyVersionString = "0.4.0.0";
-        public static readonly Version IronRubyVersion = new Version(0, 4, 0, 0);
+        public const string/*!*/ IronRubyVersionString = "0.5.0.0";
+        public static readonly Version IronRubyVersion = new Version(0, 5, 0, 0);
         internal const string/*!*/ IronRubyDisplayName = "IronRuby";
         internal const string/*!*/ IronRubyNames = "IronRuby;Ruby;rb";
         internal const string/*!*/ IronRubyFileExtensions = ".rb";
@@ -1032,6 +1032,10 @@ namespace IronRuby.Runtime {
             return GetClassOf(obj, data);
         }
 
+        public bool IsKindOf(object obj, RubyModule/*!*/ m) {
+            return GetImmediateClassOf(obj).HasAncestor(m);
+        }
+
         private RubyClass TryGetInstanceSingletonOf(object obj, out RubyInstanceData data) {
             //^ ensures return != null ==> return.IsSingletonClass
             Debug.Assert(!(obj is RubyModule));
@@ -1367,6 +1371,19 @@ namespace IronRuby.Runtime {
 
         #endregion
 
+        internal string InspectEnsuringClassName(object self) {
+            if (self == null) {
+                return "nil:NilClass";
+            } else {
+                string strObject = Inspect(self).ConvertToString();
+                if (!strObject.StartsWith("#")) {
+                    strObject += ":" + GetClassName(self);
+                }
+                return strObject;
+            }
+        }
+
+
         #region Global Variables: General access (thread-safe)
 
         public object GetGlobalVariable(string/*!*/ name) {
@@ -1655,7 +1672,7 @@ namespace IronRuby.Runtime {
 #if DEBUG
             if (RubyOptions.LoadFromDisk) {
                 string code;
-                Utils.Log(String.Format("{0} {1}", RubyOptions.InterpretedMode ? "interpreting" : "compiling", sourceUnit.Path ??
+                Utils.Log(String.Format("compiling {0}", sourceUnit.Path ??
                     ((code = sourceUnit.GetCode()).Length < 100 ? code : code.Substring(0, 100))
                     .Replace('\r', ' ').Replace('\n', ' ')
                 ), "COMPILER");

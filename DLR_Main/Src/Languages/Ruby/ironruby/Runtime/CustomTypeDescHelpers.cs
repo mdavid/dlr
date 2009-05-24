@@ -62,7 +62,7 @@ namespace IronRuby.Runtime {
 
         [Emitted]
         public static TypeConverter GetConverter(object self) {
-            return new TypeConv(self);
+            return new TypeConverter();
         }
 
         [Emitted]
@@ -298,6 +298,7 @@ namespace IronRuby.Runtime {
             }
         }
 
+#if TODO
         private class TypeConv : TypeConverter {
             object convObj;
 
@@ -313,7 +314,7 @@ namespace IronRuby.Runtime {
             }
 
             public override bool CanConvertFrom(ITypeDescriptorContext context, Type sourceType) {
-                return Converter.CanConvertFrom(sourceType, convObj.GetType(), NarrowingLevel.All);
+                return Converter.CanConvertFrom(sourceType, convObj.GetType(), NarrowingLevel.All, true);
             }
 
             public override object ConvertFrom(ITypeDescriptorContext context, System.Globalization.CultureInfo culture, object value) {
@@ -343,6 +344,7 @@ namespace IronRuby.Runtime {
 
             #endregion
         }
+#endif
     }
 }
 

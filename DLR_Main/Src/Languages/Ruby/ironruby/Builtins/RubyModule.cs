@@ -1454,7 +1454,7 @@ namespace IronRuby.Builtins {
 
             // Skip hidden CLR overloads.
             // Skip lookup on types that are not visible or interfaces.
-            if (!skipHidden && _typeTracker != null && _typeTracker.Type.IsVisible && !_typeTracker.Type.IsInterface) {
+            if (!skipHidden && _typeTracker != null && !_typeTracker.Type.IsInterface) {
                 if (TryGetClrMember(_typeTracker.Type, name, out method)) {
                     _methods.Add(name, method);
                     return true;
@@ -1854,7 +1854,7 @@ namespace IronRuby.Builtins {
                 return result.Append('>', nestings);
             } else if (_name == null) {
                 if (showEmptyName) {
-                    return MutableString.Empty;
+                    return MutableString.FrozenEmpty;
                 } else {
                     MutableString result = MutableString.CreateMutable();
                     result.Append("#<");
