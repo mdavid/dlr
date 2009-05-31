@@ -584,6 +584,7 @@ def test_import_relative_error():
     def f():  exec 'from . import *'
     AssertError(ValueError, f)
 
+@skip("silverlight") #No access to CPython stdlib
 def test_import_hooks_import_precence():
     """__import__ takes precedence over import hooks"""
     global myimpCalled
@@ -596,9 +597,8 @@ def test_import_hooks_import_precence():
     def myimport(*args):
         return 'myimport'
 
-    #TODO: use some other module for this instead of iptest
-    import iptest
-    import iptest.misc_util
+    import idlelib
+    import idlelib.idlever
     mi = myimp()
     sys.meta_path.append(mi)
     builtinimp = get_builtins_dict()['__import__']
@@ -610,12 +610,12 @@ def test_import_hooks_import_precence():
         AreEqual(myimpCalled, None)
                 
         # reload on a built-in hits the loader protocol
-        reload(iptest)
-        AreEqual(myimpCalled, ('iptest', None))
+        reload(idlelib)
+        AreEqual(myimpCalled, ('idlelib', None))
         
-        reload(iptest.misc_util)
-        AreEqual(myimpCalled[0], 'iptest.misc_util')
-        AreEqual(myimpCalled[1][0][-6:], 'iptest')
+        reload(idlelib.idlever)
+        AreEqual(myimpCalled[0], 'idlelib.idlever')
+        AreEqual(myimpCalled[1][0][-7:], 'idlelib')
     finally:
         get_builtins_dict()['__import__'] = builtinimp
         sys.meta_path.remove(mi)
@@ -1115,6 +1115,52 @@ sys.modules['y'] = newmod
     finally:
         nt.unlink(_x_mod)
         nt.unlink(_y_mod)
+
+@skip("silverlight", "win32")
+def test_imp_load_source():
+    import nt
+    try:
+        _x_mod = path_combine(testpath.public_testdir, "x.py")
+        write_to_file(_x_mod, """
+'''some pydoc'''
+X = 3.14
+""")
+        with open(_x_mod, "r") as f:
+            x = imp.load_source("test_imp_load_source_x",
+                                _x_mod,
+                                f)
+        AreEqual(x.__name__, "test_imp_load_source_x")
+        AreEqual(x.X, 3.14)
+        AreEqual(x.__doc__, '''some pydoc''')
+    finally:
+        nt.unlink(_x_mod)
+
+@skip("silverlight")        
+def test_imp_load_compiled():
+    #http://ironpython.codeplex.com/WorkItem/View.aspx?WorkItemId=17459
+    if not is_cpython:
+        AreEqual(imp.load_compiled("", ""), None)
+        try:
+            _x_mod = path_combine(testpath.public_testdir, "x.py")
+            write_to_file(_x_mod, "")
+            with open(_x_mod, "r") as f:
+                AreEqual(imp.load_compiled("", "", f), None)
+        finally:
+            nt.unlink(_x_mod)
+
+@skip("silverlight") 
+def test_imp_load_dynamic():
+    #http://ironpython.codeplex.com/WorkItem/View.aspx?WorkItemId=17459
+    if not is_cpython:
+        AreEqual(imp.load_dynamic("", ""), None)
+        try:
+            _x_mod = path_combine(testpath.public_testdir, "x.py")
+            write_to_file(_x_mod, "")
+            with open(_x_mod, "r") as f:
+                AreEqual(imp.load_dynamic("", "", f), None)
+        finally:
+            nt.unlink(_x_mod)        
+
     
 #------------------------------------------------------------------------------
 run_test(__name__)

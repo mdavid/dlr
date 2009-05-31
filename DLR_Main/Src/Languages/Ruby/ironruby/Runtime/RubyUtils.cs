@@ -764,10 +764,6 @@ namespace IronRuby.Runtime {
             return site;
         }
 
-        public static bool MethodNotFound(object siteResult) {
-            return siteResult == RubyOps.MethodNotFound;
-        }
-
         #endregion
 
         #region Exceptions

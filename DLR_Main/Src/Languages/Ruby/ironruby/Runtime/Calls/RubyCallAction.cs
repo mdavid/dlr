@@ -14,23 +14,19 @@
  * ***************************************************************************/
 
 using System; using Microsoft;
-using Microsoft.Linq.Expressions;
-using Microsoft.Scripting;
-
-using Microsoft.Scripting.Utils;
-using Microsoft.Scripting.Runtime;
-
-using IronRuby.Builtins;
-using IronRuby.Compiler;
-
-using Ast = Microsoft.Linq.Expressions.Expression;
-using AstUtils = Microsoft.Scripting.Ast.Utils;
-using IronRuby.Compiler.Generation;
 using System.Collections.Generic;
+using Microsoft.Scripting;
+using Microsoft.Linq.Expressions;
 using System.Reflection;
 using System.Runtime.CompilerServices;
 using Microsoft.Runtime.CompilerServices;
 
+using IronRuby.Builtins;
+using IronRuby.Compiler;
+using IronRuby.Compiler.Generation;
+using Microsoft.Scripting.Utils;
+using Ast = Microsoft.Linq.Expressions.Expression;
+using AstUtils = Microsoft.Scripting.Ast.Utils;
 using System.Diagnostics;
 
 namespace IronRuby.Runtime.Calls {
@@ -196,6 +192,11 @@ namespace IronRuby.Runtime.Calls {
                     return false;
                 }
 
+                if (args.Signature.IsVirtualCall && !method.Info.IsRubyMember) {
+                    metaBuilder.Result = Ast.Field(null, Fields.RubyOps_ForwardToBase);
+                    return true;
+                }
+
                 method.Info.BuildCall(metaBuilder, args, methodName);
                 return true;
             } else {
@@ -240,19 +241,13 @@ namespace IronRuby.Runtime.Calls {
             out RubyMemberInfo methodMissing) {
 
             MethodResolutionResult method;
-            RubyClass targetClass = args.RubyContext.GetImmediateClassOf(args.Target);
+            RubyClass targetClass = args.TargetClass;
             using (targetClass.Context.ClassHierarchyLocker()) {
                 metaBuilder.AddTargetTypeTest(args.Target, targetClass, args.TargetExpression, args.MetaContext);
 
-                method = targetClass.ResolveMethodForSiteNoLock(methodName, GetVisibilityContext(args.Signature, args.Scope));
+                method = targetClass.ResolveMethodForSiteNoLock(methodName, GetVisibilityContext(args.Signature, args.Scope), args.Signature.IsVirtualCall);
                 if (!method.Found) {
-                    if (args.Signature.IsTryCall) {
-                        // TODO: this shouldn't throw. We need to fix caching of non-existing methods.
-                        throw new MissingMethodException();
-                        // metaBuilder.Result = AstUtils.Constant(Fields.RubyOps_MethodNotFound);
-                    } else {
-                        methodMissing = targetClass.ResolveMethodMissingForSite(methodName, method.IncompatibleVisibility);
-                    }
+                    methodMissing = targetClass.ResolveMethodMissingForSite(methodName, method.IncompatibleVisibility);
                 } else {
                     methodMissing = null;
                 }
@@ -261,7 +256,7 @@ namespace IronRuby.Runtime.Calls {
             // Whenever the current self's class changes we need to invalidate the rule, if a protected method is being called.
             if (method.Info != null && method.Info.IsProtected && !args.Signature.HasImplicitSelf) {
                 // We don't need to compare versions, just the class objects (super-class relationship cannot be changed).
-                // Since we don't want to hold on a class object (to make it collectible) we compare references to the version boxes.
+                // Since we don't want to hold on a class object (to make it collectible) we compare references to the version handlers.
                 metaBuilder.AddCondition(Ast.Equal(
                     Methods.GetSelfClassVersionHandle.OpCall(AstUtils.Convert(args.MetaScope.Expression, typeof(RubyScope))),
                     Ast.Constant(args.Scope.SelfImmediateClass.Version)

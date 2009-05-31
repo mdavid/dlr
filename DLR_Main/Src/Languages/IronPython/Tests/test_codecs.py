@@ -50,34 +50,57 @@ def test_escape_decode():
     AreEqual(value, '\x07')
     AreEqual(length, 2)
     
-    #BUG
-    #value, length = codecs.escape_decode("\\\a")
-    #AreEqual(value, '\\\x07')
-    #AreEqual(length, 2)
+    
+    value, length = codecs.escape_decode("ab\a\b\t\n\r\f\vbaab\\a\\b\\t\\n\\r\\f\\vbaab\\\a\\\b\\\t\\\n\\\r\\\f\\\vba")
+    if is_cpython:
+        AreEqual(value, 'ab\x07\x08\t\n\r\x0c\x0bbaab\x07\x08\t\n\r\x0c\x0bbaab\\\x07\\\x08\\\t\\\r\\\x0c\\\x0bba')
+    else:
+        #http://ironpython.codeplex.com/WorkItem/View.aspx?WorkItemId=22743
+        AreEqual(value, 'ab\x07\x08\t\n\r\x0c\x0bbaab\x07\x08\t\n\r\x0c\x0bbaab\\\\\\\\\\\\\\\\\\\\\\\\\\\\ba')
+    AreEqual(length, 47)
+    
+    value, length = codecs.escape_decode("\\\a")
+    if is_cpython:
+        AreEqual(value, '\\\x07')
+    else:
+        #http://ironpython.codeplex.com/WorkItem/View.aspx?WorkItemId=22743
+        AreEqual(value, '\\\\')
+    AreEqual(length, 2)
 
-    #BUG
-    #AreEqual("abc", codecs.escape_decode("abc", None)[0])
+    if is_cpython:
+        AreEqual("abc", codecs.escape_decode("abc", None)[0])
+    else:
+        #http://ironpython.codeplex.com/WorkItem/View.aspx?WorkItemId=22742
+        AssertError(TypeError, codecs.escape_decode, "abc", None)
     
 def test_escape_encode():
     '''
     '''
     #sanity checks
-
-    #this function is totally broken
-    #BUG
-    #value, length = codecs.escape_encode("abba")
-    #AreEqual(value, "abba")
-    #AreEqual(length, 4)
+    if is_cpython:
+        value, length = codecs.escape_encode("abba")
+        AreEqual(value, "abba")
+        AreEqual(length, 4)
     
-    #BUG
-    #value, length = codecs.escape_encode("ab\a\b\t\n\r\f\vba")
-    #AreEqual(value, 'ab\\x07\\x08\\t\\n\\r\\x0c\\x0bba')
-    #AreEqual(length, 26)
+        value, length = codecs.escape_encode("ab\a\b\t\n\r\f\vba")
+        AreEqual(value, 'ab\\x07\\x08\\t\\n\\r\\x0c\\x0bba')
+        AreEqual(length, 26)
     
-    #BUG
-    #value, length = codecs.escape_encode("\\a")
-    #AreEqual(value, "\\\\a")
-    #AreEqual(length, 3)
+        value, length = codecs.escape_encode("\\a")
+        AreEqual(value, "\\\\a")
+        AreEqual(length, 3)
+    
+    else:
+        #http://ironpython.codeplex.com/WorkItem/View.aspx?WorkItemId=4566
+        value = codecs.escape_encode("abba")
+        AreEqual(value, "abba")
+        
+        value = codecs.escape_encode("ab\a\b\t\n\r\f\vba")
+        #We get this wrong too.
+        #AreEqual(value, 'ab\\x07\\x08\\t\\n\\r\\x0c\\x0bba')
+        
+        value = codecs.escape_encode("\\a")
+        AreEqual(value, "\\\\a")
 
 @skip('silverlight')
 def test_register_error():
@@ -107,25 +130,42 @@ def test_utf_16_ex_decode():
 def test_charmap_decode():
     '''
     '''
+    #Sanity
     new_str, size = codecs.charmap_decode("abc")
     AreEqual(new_str, u'abc')
     AreEqual(size, 3)
     
+    if is_cpython:
+        AreEqual(codecs.charmap_decode(""),
+                 (u'', 0))
+    else:
+        #http://ironpython.codeplex.com/WorkItem/View.aspx?WorkItemId=22744
+        AreEqual(codecs.charmap_decode(""),
+                 '')
+    
+    #Negative
+    if is_cpython:
+        AssertError(UnicodeDecodeError, codecs.charmap_decode, "a", "strict", {})
+    else:
+        #http://ironpython.codeplex.com/WorkItem/View.aspx?WorkItemId=22741
+        AssertError(LookupError, codecs.charmap_decode, "a", "strict", {})
+    
+@skip("silverlight") # no std lib
 def test_decode():
     '''
     '''
     #sanity
-    #BUG - LookupError: unknown encoding: us_ascii
-    #new_str = codecs.decode("abc")
-    #AreEqual(new_str, u'abc')
+    new_str = codecs.decode("abc")
+    AreEqual(new_str, u'abc')
+        
     
+@skip("silverlight") # no std lib
 def test_encode():
     '''
     '''
     #sanity
-    #BUG - LookupError: unknown encoding: us_ascii
-    #new_str = codecs.encode("abc")
-    #AreEqual(new_str, 'abc')
+    new_str = codecs.encode("abc")
+    AreEqual(new_str, 'abc')
 
 def test_raw_unicode_escape_decode():
     '''
@@ -316,44 +356,81 @@ def test_utf_8_encode():
 def test_charbuffer_encode():
     '''
     '''
-    #BUG - function takes one parameter, not 0
-    #if is_cli:
-    #    AssertError(NotImplementedError, codecs.charbuffer_encode, "abc")
+    #function takes one parameter, not 0
+    if is_cli:
+        #http://ironpython.codeplex.com/WorkItem/View.aspx?WorkItemId=4563
+        #AssertError(NotImplementedError, codecs.charbuffer_encode, "abc")
+        AssertError(NotImplementedError, codecs.charbuffer_encode)
+
+def test_charmap_encode():
+    #Sanity
+    if is_cpython:
+        #http://ironpython.codeplex.com/WorkItem/View.aspx?WorkItemId=22738
+        AreEqual(codecs.charmap_encode("abc"), 
+                 ('abc', 3))
+        AreEqual(codecs.charmap_encode("abc", "strict"), 
+                 ('abc', 3))
+    
+    if is_cpython:
+        AreEqual(codecs.charmap_encode("", "strict", {}),
+                 ('', 0))
+    else:
+        #http://ironpython.codeplex.com/WorkItem/View.aspx?WorkItemId=22740
+        AreEqual(codecs.charmap_encode("", "strict", {}),
+                 '')
+                 
+    #Sanity Negative
+    if is_cpython:
+        AssertError(UnicodeEncodeError, codecs.charmap_encode, "abc", "strict", {})
+    else:
+        #http://ironpython.codeplex.com/WorkItem/View.aspx?WorkItemId=22741
+        AssertError(LookupError, codecs.charmap_encode, "abc", "strict", {})
+
 
 def test_mbcs_decode():
     '''
     '''
-    #BUG - function takes one parameter, not 0
-    #if is_cli:
-    #    AssertError(NotImplementedError, codecs.mbcs_decode, "abc")
+    #http://ironpython.codeplex.com/WorkItem/View.aspx?WorkItemId=4563
+    if is_cli:
+        #AssertError(NotImplementedError, codecs.mbcs_decode, "abc")
+        AssertError(NotImplementedError, codecs.mbcs_decode)
 
 def test_mbcs_encode():
     '''
     '''
-    #BUG - function takes one parameter, not 0
-    #if is_cli:
-    #    AssertError(NotImplementedError, codecs.mbcs_encode, "abc")
+    #http://ironpython.codeplex.com/WorkItem/View.aspx?WorkItemId=4563
+    if is_cli:
+        #AssertError(NotImplementedError, codecs.mbcs_encode, "abc")
+        AssertError(NotImplementedError, codecs.mbcs_encode)
 
 def test_readbuffer_encode():
     '''
     '''
-    #BUG - function takes one parameter, not 0
-    #if is_cli:
-    #    AssertError(NotImplementedError, codecs.readbuffer_encode, "abc")
+    #http://ironpython.codeplex.com/WorkItem/View.aspx?WorkItemId=4563
+    if is_cli:
+        #AssertError(NotImplementedError, codecs.readbuffer_encode, "abc")
+        AssertError(NotImplementedError, codecs.readbuffer_encode)
 
 def test_unicode_escape_decode():
     '''
     '''
-    #BUG - function takes one parameter
-    #if is_cli:
-    #    AssertError(NotImplementedError, codecs.unicode_escape_decode, "abc")
+    #http://ironpython.codeplex.com/WorkItem/View.aspx?WorkItemId=4563
+    if is_cli:
+        #AssertError(NotImplementedError, codecs.unicode_escape_decode, "abc")
+        AssertError(NotImplementedError, codecs.unicode_escape_decode)
 
 def test_unicode_escape_encode():
     '''
     '''
-    #BUG - function takes one parameter, not 0
-    #if is_cli:
-    #    AssertError(NotImplementedError, codecs.unicode_escape_encode, "abc")
+    #http://ironpython.codeplex.com/WorkItem/View.aspx?WorkItemId=4563
+    if is_cli:
+        #AssertError(NotImplementedError, codecs.unicode_escape_encode, "abc")
+        AssertError(NotImplementedError, codecs.unicode_escape_encode)
+
+def test_utf_16_encode():
+    #Sanity
+    AreEqual(codecs.utf_16_encode("abc"), ('\xff\xfea\x00b\x00c\x00', 3))
+
 
 def test_misc_encodings():
     if not is_silverlight:
@@ -459,5 +536,36 @@ def test_cp1214():
     AreEqual('7FF80000000000007FF0000000000000'.decode('hex'),
              '\x7f\xf8\x00\x00\x00\x00\x00\x00\x7f\xf0\x00\x00\x00\x00\x00\x00')
 
+
+def test_codecs_lookup():
+    l = []
+    def my_func(encoding, cache = l):
+        l.append(encoding)
     
+    codecs.register(my_func)
+    allchars = ''.join([chr(i) for i in xrange(1, 256)])
+    try:
+        codecs.lookup(allchars)
+        AssertUnreachable()
+    except LookupError:
+        pass
+        
+    lowerchars = allchars.lower().replace(' ', '-')
+    for i in xrange(1, 255):
+        if l[0][i] != lowerchars[i]:
+            Assert(False, 'bad chars at index %d: %r %r' % (i, l[0][i], lowerchars[i]))
+            
+    AssertError(TypeError, codecs.lookup, '\0')
+    AssertError(TypeError, codecs.lookup, 'abc\0')
+    AreEqual(len(l), 1)
+
+
+def test_lookup_encodings():
+    try:
+        AreEqual('07FF'.decode('hex')  , '\x07\xff')
+    except LookupError:
+        # if we don't have encodings then this will fail so
+        # make sure we're failing because we don't have encodings
+        AssertError(ImportError, __import__, 'encodings')
+        
 run_test(__name__)

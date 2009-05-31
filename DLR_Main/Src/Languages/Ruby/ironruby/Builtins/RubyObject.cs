@@ -32,7 +32,7 @@ namespace IronRuby.Builtins {
     /// Note that for classes that inherit from some other class, RubyTypeDispenser gets used
     /// </summary>
     [DebuggerDisplay("{Inspect().ConvertToString()}")]
-    public partial class RubyObject : IRubyObject, IRubyObjectState, IDuplicable, ISerializable {
+    public partial class RubyObject : IRubyObject, IDuplicable, ISerializable {
         internal const string ClassPropertyName = "Class";
 
         private RubyInstanceData _instanceData;
@@ -75,7 +75,7 @@ namespace IronRuby.Builtins {
         }
 
         public MutableString/*!*/ ToMutableString() {
-            return RubyUtils.FormatObject(_class.Name, GetInstanceData().ObjectId, ((IRubyObjectState)this).IsTainted);
+            return RubyUtils.FormatObject(_class.Name, GetInstanceData().ObjectId, IsTainted);
         }
 
         public MutableString/*!*/ Inspect() {
@@ -93,23 +93,14 @@ namespace IronRuby.Builtins {
         }
 #endif
 
-        [Emitted]
-        public RubyClass/*!*/ Class {
-            get { return _class; }
-        }
-
         public RubyClass/*!*/ ImmediateClass {
             get {
                 return (_instanceData == null) ? _class : (_instanceData.ImmediateClass ?? _class);
             }
         }
 
-        public RubyInstanceData/*!*/ GetInstanceData() {
-            return RubyOps.GetInstanceData(ref _instanceData);
-        }
-
-        public RubyInstanceData TryGetInstanceData() {
-            return _instanceData;
+        protected virtual RubyObject/*!*/ CreateInstance() {
+            return new RubyObject(_class);
         }
 
         private void CopyInstanceDataFrom(IRubyObject/*!*/ source, bool copyFrozenState) {
@@ -121,14 +112,10 @@ namespace IronRuby.Builtins {
             }
 
             // copy flags:
-            SetTaint(this, IsTainted(source));
-            if (copyFrozenState && IsFrozen(source)) {
-                Freeze(this);
+            IsTainted = source.IsTainted;
+            if (copyFrozenState && source.IsFrozen) {
+                Freeze();
             }
-        }
-
-        protected virtual RubyObject/*!*/ CreateInstance() {
-            return new RubyObject(_class);
         }
 
         object IDuplicable.Duplicate(RubyContext/*!*/ context, bool copySingletonMembers) {
@@ -137,37 +124,32 @@ namespace IronRuby.Builtins {
             return result;
         }
 
-        #region IRubyObjectState Members
+        #region IRubyObject
 
-        bool IRubyObjectState.IsFrozen {
+        [Emitted]
+        public RubyClass/*!*/ Class {
+            get { return _class; }
+        }
+
+        public RubyInstanceData/*!*/ GetInstanceData() {
+            return RubyOps.GetInstanceData(ref _instanceData);
+        }
+
+        public RubyInstanceData TryGetInstanceData() {
+            return _instanceData;
+        }
+
+        public bool IsFrozen {
             get { return _instanceData != null && _instanceData.Frozen; }
         }
 
-        bool IRubyObjectState.IsTainted {
+        public bool IsTainted {
             get { return _instanceData != null && _instanceData.Tainted; }
             set { GetInstanceData().Tainted = value; }
         }
 
-        void IRubyObjectState.Freeze() {
+        public void Freeze() {
             GetInstanceData().Freeze();
-        }
-
-        public static bool IsFrozen(IRubyObject/*!*/ obj) {
-            var instanceData = obj.TryGetInstanceData();
-            return instanceData != null && instanceData.Frozen;
-        }
-
-        public static bool IsTainted(IRubyObject/*!*/ obj) {
-            var instanceData = obj.TryGetInstanceData();
-            return instanceData != null && instanceData.Tainted;
-        }
-
-        public static void Freeze(IRubyObject/*!*/ obj) {
-            obj.GetInstanceData().Freeze();
-        }
-
-        public static void SetTaint(IRubyObject/*!*/ obj, bool value) {
-            obj.GetInstanceData().Tainted = value;
         }
 
         #endregion

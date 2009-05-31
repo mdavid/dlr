@@ -221,27 +221,19 @@ namespace IronRuby.Builtins {
             get { return !IsSingletonClass && (_underlyingSystemType == null); }
         }
 
-#if FALSE
-        private Type _extensionType;
-
-        /// <summary>
-        /// Holds on to the type with extension members, if any
-        /// Used by the DLR action binder & binder helpers.
-        /// See RubyActionBinder.GetExtensionTypes
-        /// </summary>
-        public Type ExtensionType {
-            get { return _extensionType; }
-            internal set { _extensionType = value; }
-        }
-#endif
-
         public override Type/*!*/ GetUnderlyingSystemType() {
             if (_isSingletonClass) {
                 throw new InvalidOperationException("Singleton class doesn't have underlying system type.");
             }
 
             if (_underlyingSystemType == null) {
-                Interlocked.Exchange(ref _underlyingSystemType, RubyTypeDispenser.GetOrCreateType(_superClass.GetUnderlyingSystemType(), GetClrInterfaces()));
+                Interlocked.Exchange(ref _underlyingSystemType, 
+                    RubyTypeDispenser.GetOrCreateType(
+                        _superClass.GetUnderlyingSystemType(), 
+                        GetClrInterfaces(),
+                        _superClass != null && (_superClass.Restrictions & ModuleRestrictions.NoOverrides) != 0
+                    )
+                );
             }
 
             Debug.Assert(_underlyingSystemType != null);
@@ -250,7 +242,7 @@ namespace IronRuby.Builtins {
 
         // default allocator:
         public RubyClass(RubyClass/*!*/ rubyClass)
-            : this(rubyClass.Context, null, null, null, null, null, null, rubyClass.Context.ObjectClass, null, null, null, true, false) {
+            : this(rubyClass.Context, null, null, null, null, null, null, rubyClass.Context.ObjectClass, null, null, null, true, false, ModuleRestrictions.None) {
             
             // all modules need a singleton (see RubyContext.CreateModule):
             InitializeDummySingletonClass(rubyClass, null);
@@ -260,9 +252,9 @@ namespace IronRuby.Builtins {
         // tracker: non-null => show members declared on the tracker
         internal RubyClass(RubyContext/*!*/ context, string name, Type type, object singletonClassOf,
             Action<RubyModule> methodsInitializer, Action<RubyModule> constantsInitializer, Delegate/*!*/[] factories, RubyClass superClass, 
-            RubyModule/*!*/[] expandedMixins, TypeTracker tracker, RubyStruct.Info structInfo, 
-            bool isRubyClass, bool isSingletonClass)
-            : base(context, name, methodsInitializer, constantsInitializer, expandedMixins, null, tracker) {
+            RubyModule/*!*/[] expandedMixins, TypeTracker tracker, RubyStruct.Info structInfo,
+            bool isRubyClass, bool isSingletonClass, ModuleRestrictions restrictions)
+            : base(context, name, methodsInitializer, constantsInitializer, expandedMixins, null, tracker, restrictions) {
 
             Debug.Assert((superClass == null) == (type == typeof(object)), "All classes have a superclass, except for Object");
             Debug.Assert(superClass != null || structInfo == null, "Object is not a struct");
@@ -521,7 +513,7 @@ namespace IronRuby.Builtins {
             }
 
             RubyClass result = Context.CreateClass(Name, type, singletonClassOf, null, null, null, _factories, 
-                _superClass ?? Context.ObjectClass, null, null, _structInfo, isRubyClass, IsSingletonClass
+                _superClass ?? Context.ObjectClass, null, null, _structInfo, isRubyClass, IsSingletonClass, ModuleRestrictions.None
             );
 
             if (!IsSingletonClass) {
@@ -536,7 +528,6 @@ namespace IronRuby.Builtins {
             return result;
         }
 
-        // TODO: public due to partial trust
         // implements Class#new
         public static object CreateAnonymousClass(RubyScope/*!*/ scope, BlockParam body, RubyClass/*!*/ self, [Optional]RubyClass superClass) {
             RubyContext context = scope.RubyContext;
@@ -606,33 +597,14 @@ namespace IronRuby.Builtins {
         /// Stores unsucessfull look-ups of CLR type members.
         /// Reflection is not efficient at caching look-ups and we do multiple of them (due to mangling) each time a method is being resolved.
         /// </summary>
-        private static Dictionary<MemberLookupCacheEntry, bool> _clrFailedMemberLookupCache
-            = new Dictionary<MemberLookupCacheEntry, bool>();
-
-        private struct MemberLookupCacheEntry : IEquatable<MemberLookupCacheEntry> {
-            private readonly Type/*!*/ _type;
-            private readonly string/*!*/ _methodName;
-
-            public MemberLookupCacheEntry(Type/*!*/ type, string/*!*/ methodName) {
-                _type = type;
-                _methodName = methodName;
-            }
-
-            public override int GetHashCode() {
-                return _type.GetHashCode() ^ _methodName.GetHashCode();
-            }
-
-            public bool Equals(MemberLookupCacheEntry other) {
-                return _type == other._type && _methodName == other._methodName;
-            }
-        }
+        private static Dictionary<Key<Type, string>, bool> _clrFailedMemberLookupCache = new Dictionary<Key<Type, string>, bool>();
 
         private static bool IsFailureCached(Type/*!*/ type, string/*!*/ methodName) {
             // check for cached lookup failure (if the cache is available):
             bool result = false;
             var cache = Interlocked.Exchange(ref _clrFailedMemberLookupCache, null);
             if (cache != null) {
-                result = cache.ContainsKey(new MemberLookupCacheEntry(type, methodName));
+                result = cache.ContainsKey(Key.Create(type, methodName));
                 Interlocked.Exchange(ref _clrFailedMemberLookupCache, cache);
             }
 
@@ -646,14 +618,12 @@ namespace IronRuby.Builtins {
             // store failure to the cache if the cache is not owned by another thread:
             var cache = Interlocked.Exchange(ref _clrFailedMemberLookupCache, null);
             if (cache != null) {
-                cache[new MemberLookupCacheEntry(type, methodName)] = true;
+                cache[Key.Create(type, methodName)] = true;
                 Interlocked.Exchange(ref _clrFailedMemberLookupCache, cache);
             }
         }
 
-        protected override bool TryGetClrMember(Type/*!*/ type, string/*!*/ name, out RubyMemberInfo method) {
-            string unmangled;
-
+        protected override bool TryGetClrMember(Type/*!*/ type, string/*!*/ name, bool tryUnmangle, out RubyMemberInfo method) {
             if (IsFailureCached(type, name)) {
                 method = null;
                 return false;
@@ -663,10 +633,15 @@ namespace IronRuby.Builtins {
             BindingFlags basicBindingFlags = BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.DeclaredOnly;
             BindingFlags bindingFlags = basicBindingFlags | ((_isSingletonClass) ? BindingFlags.Static : BindingFlags.Instance);
 
+            // instance methods on Object are also available in static context:
+            if (type == typeof(Object)) {
+                bindingFlags |= BindingFlags.Instance;
+            }
+
             string operatorName;
             if (!_isSingletonClass && (operatorName = MapOperator(name)) != null) {
                 // instance invocation of an operator:
-                if (TryGetClrMethod(type, basicBindingFlags | BindingFlags.Static, true, name, operatorName, out method)) {
+                if (TryGetClrMethod(type, basicBindingFlags | BindingFlags.Static, true, name, null, operatorName, null, out method)) {
                     return true;
                 }
             } else if (name == "[]" || name == "[]=") {
@@ -674,38 +649,33 @@ namespace IronRuby.Builtins {
                 if (attrs.Length == 1) {
                     // default indexer accessor:
                     bool isSetter = name.Length == 3;
-                    if (TryGetClrProperty(type, bindingFlags, name, ((DefaultMemberAttribute)attrs[0]).MemberName, isSetter, out method)) {
+                    if (TryGetClrProperty(type, bindingFlags, isSetter, name, ((DefaultMemberAttribute)attrs[0]).MemberName, null, out method)) {
                         return true;
                     }
                 }
             } else if (name.LastCharacter() == '=') {
                 string propertyName = name.Substring(0, name.Length - 1);
+                string altName = tryUnmangle ? RubyUtils.TryUnmangleName(propertyName) : null;
                 
                 // property setter:
-                if (TryGetClrProperty(type, bindingFlags, name, propertyName, true, out method)) return true;
-                unmangled = RubyUtils.TryUnmangleName(propertyName);
-                if (unmangled != null && TryGetClrProperty(type, bindingFlags, name, unmangled, true, out method)) return true;
+                if (TryGetClrProperty(type, bindingFlags, true, name, propertyName, altName, out method)) return true;
 
                 // writeable field:
-                if (TryGetClrField(type, bindingFlags, propertyName, true, out method)) return true;
-                if (unmangled != null && TryGetClrField(type, bindingFlags, unmangled, true, out method)) return true;
+                if (TryGetClrField(type, bindingFlags, true, propertyName, altName, out method)) return true;
             } else {
-                // method:
-                if (TryGetClrMethod(type, bindingFlags, false, name, name, out method)) return true;
-                unmangled = RubyUtils.TryUnmangleName(name);
-                if (unmangled != null && TryGetClrMethod(type, bindingFlags, false, name, unmangled, out method)) return true;
+                string altName = tryUnmangle ? RubyUtils.TryUnmangleName(name) : null;
 
+                // method:
+                if (TryGetClrMethod(type, bindingFlags, false, name, null, name, altName, out method)) return true;
+                
                 // getter:
-                if (TryGetClrProperty(type, bindingFlags, name, name, false, out method)) return true;
-                if (unmangled != null && TryGetClrProperty(type, bindingFlags, name, unmangled, false, out method)) return true;
+                if (TryGetClrProperty(type, bindingFlags, false, name, name, altName, out method)) return true;
 
                 // event:
-                if (TryGetClrEvent(type, bindingFlags, name, out method)) return true;
-                if (unmangled != null && TryGetClrEvent(type, bindingFlags, unmangled, out method)) return true;
+                if (TryGetClrEvent(type, bindingFlags, name, altName, out method)) return true;
 
                 // field:
-                if (TryGetClrField(type, bindingFlags, name, false, out method)) return true;
-                if (unmangled != null && TryGetClrField(type, bindingFlags, unmangled, false, out method)) return true;
+                if (TryGetClrField(type, bindingFlags, false, name, altName, out method)) return true;
             }
 
             CacheFailure(type, name);
@@ -829,14 +799,17 @@ namespace IronRuby.Builtins {
         ///        2) C.HidesInheritedOverloads == false
         ///           All overloads of the method we look for are in [type..C) and in the RubyMemberInfo.
         /// </summary>
-        private bool TryGetClrMethod(Type/*!*/ type, BindingFlags bindingFlags, bool specialNameOnly, string/*!*/ name, string/*!*/ clrName, 
-            out RubyMemberInfo method) {
+        private bool TryGetClrMethod(Type/*!*/ type, BindingFlags bindingFlags, bool specialNameOnly, 
+            string/*!*/ name, string clrNamePrefix, string/*!*/ clrName, string altClrName, out RubyMemberInfo method) {
 
             // declared only:
-            MemberInfo[] initialMembers = GetDeclaredClrMethods(type, bindingFlags, clrName);
+            MemberInfo[] initialMembers = GetDeclaredClrMethods(type, bindingFlags, clrNamePrefix, clrName, altClrName);
             int initialVisibleMemberCount = GetVisibleMethodCount(initialMembers, specialNameOnly);
             if (initialVisibleMemberCount == 0) {
                 // case [1]
+                //
+                // Note: This failure might be cached (see CacheFailure) based on the type and name, 
+                // therefore it must not depend on any other mutable state:
                 method = null;
                 return false;
             }
@@ -864,10 +837,13 @@ namespace IronRuby.Builtins {
                 return false;
             });
 
-            Dictionary<ValueArray<Type>, ClrOverloadInfo> allMethods = null;
+            // (method clr name, parameter types) => (overload, owner)
+            Dictionary<Key<string, ValueArray<Type>>, ClrOverloadInfo> allMethods = null;
+
             if (inheritedRubyMember != null) {
                 // case [2.2.2]: add CLR methods from the Ruby member:
                 var inheritedGroup = inheritedRubyMember as RubyMethodGroupInfo;
+
                 if (inheritedGroup != null) {
                     AddMethodsOverwriteExisting(ref allMethods, inheritedGroup.MethodBases, inheritedGroup.OverloadOwners, specialNameOnly);
                 }
@@ -875,7 +851,7 @@ namespace IronRuby.Builtins {
 
             // populate classes in (type..Kernel] or (type..C) with method groups:
             for (int i = ancestors.Count - 1; i >= 0; i--) {
-                var declared = GetDeclaredClrMethods(ancestors[i].TypeTracker.Type, bindingFlags, clrName);
+                var declared = GetDeclaredClrMethods(ancestors[i].TypeTracker.Type, bindingFlags, clrNamePrefix, clrName, altClrName);
                 if (declared.Length != 0 && AddMethodsOverwriteExisting(ref allMethods, declared, null, specialNameOnly)) {
                     // There is no cached method that needs to be invalidated.
                     //
@@ -886,7 +862,7 @@ namespace IronRuby.Builtins {
                     // and store to method tables all method groups in between the target class and the owner of the cached method, including the 
                     // one that contain overloads of ancestors[i]. But no module below inheritedRubyMember contains a method group of the name 
                     // being currently resolved.
-                    ancestors[i].AddMethodNoCacheInvalidation(name, ancestors[i].MakeGroup(allMethods));
+                    ancestors[i].AddMethodNoCacheInvalidation(name, ancestors[i].MakeGroup(allMethods.Values));
                 }
             }
 
@@ -895,7 +871,7 @@ namespace IronRuby.Builtins {
                 AddMethodsOverwriteExisting(ref allMethods, initialMembers, null, specialNameOnly);
 
                 // return the group, it will be stored in the method table by the caller:
-                method = MakeGroup(allMethods);
+                method = MakeGroup(allMethods.Values);
             } else {
                 method = MakeGroup(initialMembers, initialVisibleMemberCount, specialNameOnly);
             }
@@ -903,25 +879,36 @@ namespace IronRuby.Builtins {
             return true;
         }
 
+        private MemberInfo[]/*!*/ GetDeclaredClrMethods(Type/*!*/ type, BindingFlags bindingFlags, string prefix, string/*!*/ name, string altName) {
+            MemberInfo[] result = GetDeclaredClrMethods(type, bindingFlags, prefix + name);
+            if (altName == null) {
+                return result;
+            }
+
+            MemberInfo[] altResult = GetDeclaredClrMethods(type, bindingFlags, prefix + altName);
+            return ArrayUtils.AppendRange(result, altResult);
+        }
+
         private MemberInfo[]/*!*/ GetDeclaredClrMethods(Type/*!*/ type, BindingFlags bindingFlags, string/*!*/ name) {
             // GetMember uses prefix matching if the name ends with '*', add another * to match the original name:
             if (name.LastCharacter() == '*') {
                 name += "*";
             }
+
             return type.GetMember(name, MemberTypes.Method, bindingFlags | BindingFlags.InvokeMethod);
         }
 
         // Returns the number of methods newly added to the dictionary.
-        private bool AddMethodsOverwriteExisting(ref Dictionary<ValueArray<Type>, ClrOverloadInfo> methods,
+        private bool AddMethodsOverwriteExisting(ref Dictionary<Key<string, ValueArray<Type>>, ClrOverloadInfo> methods,
             MemberInfo/*!*/[]/*!*/ newOverloads, RubyMethodGroupInfo/*!*/[] overloadOwners, bool specialNameOnly) {
 
             bool anyChange = false;
             for (int i = 0; i < newOverloads.Length; i++) {
                 var method = (MethodBase)newOverloads[i];
                 if (IsVisible(method, specialNameOnly)) {
-                    var paramTypes = new ValueArray<Type>(ReflectionUtils.GetParameterTypes(method.GetParameters()));
+                    var paramTypes = Key.Create(method.Name, new ValueArray<Type>(ReflectionUtils.GetParameterTypes(method.GetParameters())));
                     if (methods == null) {
-                        methods = new Dictionary<ValueArray<Type>, ClrOverloadInfo>();
+                        methods = new Dictionary<Key<string, ValueArray<Type>>, ClrOverloadInfo>();
                     }
 
                     methods[paramTypes] = new ClrOverloadInfo {
@@ -975,11 +962,11 @@ namespace IronRuby.Builtins {
             return count;
         }
 
-        private RubyMethodGroupInfo/*!*/ MakeGroup(Dictionary<ValueArray<Type>, ClrOverloadInfo>/*!*/ allMethods) {
+        private RubyMethodGroupInfo/*!*/ MakeGroup(ICollection<ClrOverloadInfo>/*!*/ allMethods) {
             var overloads = new MethodBase[allMethods.Count];
             var overloadOwners = new RubyMethodGroupInfo[overloads.Length];
             int i = 0;
-            foreach (var entry in allMethods.Values) {
+            foreach (var entry in allMethods) {
                 overloads[i] = entry.Overload;
                 overloadOwners[i] = entry.Owner;
                 i++;
@@ -988,7 +975,7 @@ namespace IronRuby.Builtins {
             var result = new RubyMethodGroupInfo(overloads, this, overloadOwners, _isSingletonClass);
             
             // update ownership of overloads owned by the new group:
-            foreach (var entry in allMethods.Values) {
+            foreach (var entry in allMethods) {
                 if (entry.Owner != null) {
                     entry.Owner.CachedInGroup(result);
                 } else {
@@ -1029,13 +1016,19 @@ namespace IronRuby.Builtins {
         //    return false;
         //}
 
-        private bool TryGetClrProperty(Type/*!*/ type, BindingFlags bindingFlags, string/*!*/ name, string/*!*/ clrName, bool isWrite, out RubyMemberInfo method) {
-            return TryGetClrMethod(type, bindingFlags, true, name, (isWrite ? "set_" : "get_") + clrName, out method);
+        private bool TryGetClrProperty(Type/*!*/ type, BindingFlags bindingFlags, bool isWrite, 
+            string/*!*/ name, string/*!*/ clrName, string altClrName, out RubyMemberInfo method) {
+
+            return TryGetClrMethod(type, bindingFlags, true, name, isWrite ? "set_" : "get_", clrName, altClrName, out method);
         }
 
-        private bool TryGetClrField(Type/*!*/ type, BindingFlags bindingFlags, string/*!*/ name, bool isWrite, out RubyMemberInfo method) {
-            Assert.NotNull(type, name);
+        private bool TryGetClrField(Type/*!*/ type, BindingFlags bindingFlags, bool isWrite, string/*!*/ name, string altName, out RubyMemberInfo method) {
+            return
+                TryGetClrField(type, bindingFlags, isWrite, name, out method) ? true :
+                altName != null && TryGetClrField(type, bindingFlags, isWrite, altName, out method);
+        }
 
+        private bool TryGetClrField(Type/*!*/ type, BindingFlags bindingFlags, bool isWrite, string/*!*/ name, out RubyMemberInfo method) {
             FieldInfo fieldInfo = type.GetField(name, bindingFlags);
             if (fieldInfo != null && !fieldInfo.IsPrivate && (!isWrite || !fieldInfo.IsInitOnly && !fieldInfo.IsLiteral)) {
                 method = new RubyFieldInfo(fieldInfo, RubyMemberFlags.Public, this, isWrite);
@@ -1044,6 +1037,12 @@ namespace IronRuby.Builtins {
 
             method = null;
             return false;
+        }
+
+        private bool TryGetClrEvent(Type/*!*/ type, BindingFlags bindingFlags, string/*!*/ name, string altName, out RubyMemberInfo method) {
+            return
+                TryGetClrEvent(type, bindingFlags, name, out method) ? true :
+                altName != null && TryGetClrEvent(type, bindingFlags, altName, out method);
         }
 
         private bool TryGetClrEvent(Type/*!*/ type, BindingFlags bindingFlags, string/*!*/ name, out RubyMemberInfo method) {

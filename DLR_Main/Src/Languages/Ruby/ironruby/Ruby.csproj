@@ -114,6 +114,7 @@
     </Compile>
     <Compile Include="Builtins\Binding.cs" />
     <Compile Include="Builtins\ConsoleStream.cs" />
+    <None Include="Builtins\Subclasses.Generator.rb" />
     <Compile Include="Builtins\RubyErrno.cs" />
     <Compile Include="Builtins\MutableStringBuilder.cs" />
     <Compile Include="Builtins\RubyEvent.Meta.cs" />
@@ -146,6 +147,7 @@
     <Compile Include="Builtins\RubyRegexOptions.cs" />
     <Compile Include="Builtins\RubyStruct.cs" />
     <Compile Include="Builtins\Stubs.cs" />
+    <Compile Include="Builtins\Subclasses.Generated.cs" />
     <Compile Include="Builtins\TypeDescriptor.Generated.cs" />
     <Compile Include="Compiler\Ast\Expressions\ConditionalJumpExpression.cs" />
     <Compile Include="Compiler\Ast\Expressions\EncodingExpression.cs" />

@@ -211,10 +211,9 @@ def test_struct_uint_bad_value_cp20039():
     AreEqual(_struct.Struct('L').pack(4294967296), '\x00\x00\x00\x00')
     AreEqual(_struct.Struct('L').pack(-1), '\x00\x00\x00\x00')
     AreEqual(_struct.Struct('L').pack('abc'), '\x00\x00\x00\x00')
-    if not is_cli: #CodePlex 20039
-        AreEqual(_struct.Struct('I').pack(4294967296), '\x00\x00\x00\x00')
-        AreEqual(_struct.Struct('I').pack(-1), '\x00\x00\x00\x00')
-        AreEqual(_struct.Struct('I').pack('abc'), '\x00\x00\x00\x00')
+    AreEqual(_struct.Struct('I').pack(4294967296), '\x00\x00\x00\x00')
+    AreEqual(_struct.Struct('I').pack(-1), '\x00\x00\x00\x00')
+    AreEqual(_struct.Struct('I').pack('abc'), '\x00\x00\x00\x00')
 
 def test_reraise_backtrace_cp20051():
     def foo():
@@ -359,6 +358,28 @@ def test_type_delegate_conversion():
     ctor = System.Func[object](x)
     AreEqual(type(ctor()), x)
 
+
+def test_module_alias_cp19656():
+    stuff_mod = path_combine(testpath.public_testdir, "stuff.py")
+    check_mod = path_combine(testpath.public_testdir, "check.py")
+    
+    try:
+        write_to_file(stuff_mod, "Keys = 3")
+        write_to_file(check_mod, "def check(module):\n    return module.Keys")
+        import stuff
+        from check import check
+        AreEqual(check(stuff), 3)
+    finally:
+        import nt
+        nt.unlink(stuff_mod)
+        nt.unlink(check_mod)
+
+#------------------------------------------------------------------------------
+#--General coverage.  These need to be extended.
+def test_xxsubtype_bench():
+    import xxsubtype
+    AreEqual(type(xxsubtype.bench(xxsubtype, "bench")),
+             float)
     
 #------------------------------------------------------------------------------
 #--Main

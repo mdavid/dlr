@@ -586,8 +586,16 @@ def test_areraise():
     superConsole.SendKeys('def foo{(}{)}:{ENTER}{TAB}some(){ENTER}{ENTER}try:{ENTER}{TAB}foo{(}{)}{ENTER}{BACKSPACE}{BACKSPACE}{BACKSPACE}{BACKSPACE}except:{ENTER}{TAB}raise{ENTER}{ENTER}')
     superConsole.SendKeys('outputRedirectStop{(}{)}{ENTER}')
     lines = getTestOutput()[1]
-    AreEqual(lines, ['Traceback (most recent call last):\r\n', '  File "<stdin>", line 2, in <module>\r\n', '  File "<stdin>", line 2, in foo\r\n', "NameError: name 'some' is not defined\r\n"])
+    AreEqual(lines, ['Traceback (most recent call last):\r\n', '  File "<stdin>", line 2, in <module>\r\n', '  File "<stdin>", line 2, in foo\r\n', "NameError: global name 'some' is not defined\r\n"])
 
+
+def test_syntax_errors():
+    superConsole.SendKeys('outputRedirectStart{(}{)}{ENTER}')
+    superConsole.SendKeys('def foo{(}{(}1{)}{)}: pass{ENTER}')
+    superConsole.SendKeys('outputRedirectStop{(}{)}{ENTER}')
+    lines = getTestOutput()[1]
+    AreEqual(lines, ['  File "<stdin>", line 1\r\n', '    def foo((1)): pass\n', '\r\n', '             ^\r\n', "SyntaxError: unexpected token '1'\r\n", '\r\n'])
+    
 #------------------------------------------------------------------------------
 #--__main__
 

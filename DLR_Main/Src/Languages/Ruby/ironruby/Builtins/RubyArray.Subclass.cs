@@ -21,7 +21,7 @@ using IronRuby.Compiler.Generation;
 
 namespace IronRuby.Builtins {
     public partial class RubyArray {
-        public sealed class Subclass : RubyArray, IRubyObject {
+        public sealed partial class Subclass : RubyArray, IRubyObject {
             private readonly RubyClass/*!*/ _class;
             private RubyInstanceData _instanceData;
 
@@ -43,23 +43,6 @@ namespace IronRuby.Builtins {
             public override RubyArray/*!*/ CreateInstance() {
                 return new Subclass(_class);
             }
-
-            #region IRubyObject Members
-
-            [Emitted]
-            public RubyClass/*!*/ Class {
-                get { return _class; }
-            }
-
-            public RubyInstanceData/*!*/ GetInstanceData() {
-                return RubyOps.GetInstanceData(ref _instanceData);
-            }
-
-            public RubyInstanceData TryGetInstanceData() {
-                return _instanceData;
-            }
-
-            #endregion
         }
     }
 }
