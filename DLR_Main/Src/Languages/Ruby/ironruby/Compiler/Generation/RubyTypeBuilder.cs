@@ -98,7 +98,7 @@ namespace IronRuby.Compiler.Generation {
         private static readonly Type/*!*/[]/*!*/ _exceptionMessageSignature = new Type[] { typeof(string) };
 
         private static bool IsAvailable(MethodBase/*!*/ method) {
-            return method != null && !method.IsPrivate && !method.IsFamilyAndAssembly;
+            return method != null && !method.IsPrivate && !method.IsAssembly && !method.IsFamilyAndAssembly;
         }
 
         private enum SignatureAdjustment {
@@ -125,7 +125,7 @@ namespace IronRuby.Compiler.Generation {
             var ctors = new List<ConstructorBuilderInfo>();
 
             foreach (var baseCtor in _tb.BaseType.GetConstructors(bindingFlags)) {
-                if (!baseCtor.IsPublic && !baseCtor.IsFamily) {
+                if (!baseCtor.IsPublic && !baseCtor.IsProtected()) {
                     continue;
                 }
 
@@ -219,6 +219,12 @@ namespace IronRuby.Compiler.Generation {
                 int paramIndex = 0;
                 int argIndex = 0;
 
+                // We need to initialize before calling base ctor since the ctor can call virtual methods.
+                // _class = class:
+                il.EmitLoadArg(0);
+                il.EmitLoadArg(1 + ctor.ClassParamIndex);
+                il.EmitFieldSet(_classField);
+
                 // base ctor call:
                 il.EmitLoadArg(0);
 
@@ -249,10 +255,6 @@ namespace IronRuby.Compiler.Generation {
                     il.Emit(OpCodes.Call, ctor.BaseCtor);
                 }
 
-                // _class = class:
-                il.EmitLoadArg(0);
-                il.EmitLoadArg(1 + ctor.ClassParamIndex);
-                il.EmitFieldSet(_classField);
                 il.Emit(OpCodes.Ret);
             }
         }

@@ -388,7 +388,7 @@ namespace IronRuby.Builtins {
                 }
 
                 // If the overridden method is not a group the groups below were already updated.
-                RubyMethodGroupInfo overriddenGroup = overriddenMethod as RubyMethodGroupInfo;
+                RubyOverloadGroupInfo overriddenGroup = overriddenMethod as RubyOverloadGroupInfo;
                 if (overriddenGroup != null) {
                     // It suffice to compare the level of the overridden group.
                     // Reason: If there was any overload visible to a group below updatedLevel it would be visible to the overriddenGroup as well. 
@@ -451,7 +451,7 @@ namespace IronRuby.Builtins {
 
             RubyMemberInfo method;
             if (TryGetDefinedMethod(methodName, out method)) {
-                var group = method as RubyMethodGroupInfo;
+                var group = method as RubyOverloadGroupInfo;
                 if (group != null) {
                     // version of the class has already been increased:
                     RemoveMethodNoCacheInvalidation(methodName);
@@ -577,11 +577,6 @@ namespace IronRuby.Builtins {
             return result;
         }
 
-        public override MethodResolutionResult ResolveMethodFallbackToObjectNoLock(string/*!*/ name, RubyClass visibilityContext) {
-            // Note: all classes include Object in ancestors, so we don't need to search there.
-            return ResolveMethodNoLock(name, visibilityContext);
-        }
-
         internal RubyMemberInfo ResolveMethodMissingForSite(string/*!*/ name, RubyMethodVisibility incompatibleVisibility) {
             Context.RequiresClassHierarchyLock();
             var methodMissing = ResolveMethodForSiteNoLock(Symbols.MethodMissing, null);
@@ -623,14 +618,55 @@ namespace IronRuby.Builtins {
             }
         }
 
+        // thread safe: doesn't need any lock since it only accesses immutable state
+        public bool TryGetClrMember(string/*!*/ name, out RubyMemberInfo method) {
+            // Get the first class in hierarchy that represents CLR type - worse case we end up with Object.
+            // Ruby classes don't represent a CLR type and hence expose no CLR members.
+            RubyClass cls = this;
+            while (cls.TypeTracker == null) {
+                cls = cls.SuperClass;
+            }
+
+            Debug.Assert(!cls.TypeTracker.Type.IsInterface);
+
+            // Note: We don't cache failures as this API is not used so frequently (e.g. for regular method dispatch) that we would need caching.
+            method = null;
+            return cls.TryGetClrMember(cls.TypeTracker.Type, name, true, 0, out method);
+        }
+
+        // thread safe: doesn't need any lock since it only accesses immutable state
+        public bool TryGetClrConstructor(out RubyMemberInfo method) {
+            ConstructorInfo[] ctors;
+            if (TypeTracker != null && !TypeTracker.Type.IsInterface && (ctors = TypeTracker.Type.GetConstructors()) != null && ctors.Length > 0) {
+                method = new RubyMethodGroupInfo(ctors, this, true);
+                return true;
+            }
+
+            method = null;
+            return false;
+        }
+
         protected override bool TryGetClrMember(Type/*!*/ type, string/*!*/ name, bool tryUnmangle, out RubyMemberInfo method) {
+            Context.RequiresClassHierarchyLock();
+
             if (IsFailureCached(type, name)) {
                 method = null;
                 return false;
             }
 
+            if (TryGetClrMember(type, name, tryUnmangle, BindingFlags.DeclaredOnly, out method)) {
+                return true;
+            }
+
+            CacheFailure(type, name);
+            method = null;
+            return false;
+        }
+
+        private bool TryGetClrMember(Type/*!*/ type, string/*!*/ name, bool tryUnmangle, BindingFlags basicBindingFlags, out RubyMemberInfo method) {
+            basicBindingFlags |= BindingFlags.Public | BindingFlags.NonPublic;
+
             // We look only for members directly declared on the type and handle method overloads inheritance manually.  
-            BindingFlags basicBindingFlags = BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.DeclaredOnly;
             BindingFlags bindingFlags = basicBindingFlags | ((_isSingletonClass) ? BindingFlags.Static : BindingFlags.Instance);
 
             // instance methods on Object are also available in static context:
@@ -677,8 +713,6 @@ namespace IronRuby.Builtins {
                 // field:
                 if (TryGetClrField(type, bindingFlags, false, name, altName, out method)) return true;
             }
-
-            CacheFailure(type, name);
 
             method = null;
             return false;
@@ -782,7 +816,7 @@ namespace IronRuby.Builtins {
 
         private sealed class ClrOverloadInfo {
             public MethodBase Overload { get; set; }
-            public RubyMethodGroupInfo Owner { get; set; }
+            public RubyOverloadGroupInfo Owner { get; set; }
         }
 
         /// <summary>
@@ -814,6 +848,14 @@ namespace IronRuby.Builtins {
                 return false;
             }
 
+            // if all CLR inherited members are to be returned we are done:
+            if ((bindingFlags & BindingFlags.DeclaredOnly) == 0) {
+                method = MakeGroup(initialMembers, initialVisibleMemberCount, specialNameOnly, true);
+                return true;
+            }
+
+            Context.RequiresClassHierarchyLock();
+
             // inherited overloads:
             List<RubyClass> ancestors = new List<RubyClass>();
             RubyMemberInfo inheritedRubyMember = null;
@@ -842,7 +884,7 @@ namespace IronRuby.Builtins {
 
             if (inheritedRubyMember != null) {
                 // case [2.2.2]: add CLR methods from the Ruby member:
-                var inheritedGroup = inheritedRubyMember as RubyMethodGroupInfo;
+                var inheritedGroup = inheritedRubyMember as RubyOverloadGroupInfo;
 
                 if (inheritedGroup != null) {
                     AddMethodsOverwriteExisting(ref allMethods, inheritedGroup.MethodBases, inheritedGroup.OverloadOwners, specialNameOnly);
@@ -873,13 +915,13 @@ namespace IronRuby.Builtins {
                 // return the group, it will be stored in the method table by the caller:
                 method = MakeGroup(allMethods.Values);
             } else {
-                method = MakeGroup(initialMembers, initialVisibleMemberCount, specialNameOnly);
+                method = MakeGroup(initialMembers, initialVisibleMemberCount, specialNameOnly, false);
             }
 
             return true;
         }
 
-        private MemberInfo[]/*!*/ GetDeclaredClrMethods(Type/*!*/ type, BindingFlags bindingFlags, string prefix, string/*!*/ name, string altName) {
+        private static MemberInfo/*!*/[]/*!*/ GetDeclaredClrMethods(Type/*!*/ type, BindingFlags bindingFlags, string prefix, string/*!*/ name, string altName) {
             MemberInfo[] result = GetDeclaredClrMethods(type, bindingFlags, prefix + name);
             if (altName == null) {
                 return result;
@@ -889,7 +931,7 @@ namespace IronRuby.Builtins {
             return ArrayUtils.AppendRange(result, altResult);
         }
 
-        private MemberInfo[]/*!*/ GetDeclaredClrMethods(Type/*!*/ type, BindingFlags bindingFlags, string/*!*/ name) {
+        private static MemberInfo/*!*/[]/*!*/ GetDeclaredClrMethods(Type/*!*/ type, BindingFlags bindingFlags, string/*!*/ name) {
             // GetMember uses prefix matching if the name ends with '*', add another * to match the original name:
             if (name.LastCharacter() == '*') {
                 name += "*";
@@ -900,7 +942,7 @@ namespace IronRuby.Builtins {
 
         // Returns the number of methods newly added to the dictionary.
         private bool AddMethodsOverwriteExisting(ref Dictionary<Key<string, ValueArray<Type>>, ClrOverloadInfo> methods,
-            MemberInfo/*!*/[]/*!*/ newOverloads, RubyMethodGroupInfo/*!*/[] overloadOwners, bool specialNameOnly) {
+            MemberInfo/*!*/[]/*!*/ newOverloads, RubyOverloadGroupInfo/*!*/[] overloadOwners, bool specialNameOnly) {
 
             bool anyChange = false;
             for (int i = 0; i < newOverloads.Length; i++) {
@@ -945,7 +987,7 @@ namespace IronRuby.Builtins {
                 return false;
             }
 
-            if (method.IsFamily || method.IsFamilyOrAssembly) {
+            if (method.IsProtected()) {
                 return method.DeclaringType != null && method.DeclaringType.IsVisible && !method.DeclaringType.IsSealed;
             }
 
@@ -962,9 +1004,9 @@ namespace IronRuby.Builtins {
             return count;
         }
 
-        private RubyMethodGroupInfo/*!*/ MakeGroup(ICollection<ClrOverloadInfo>/*!*/ allMethods) {
+        private RubyOverloadGroupInfo/*!*/ MakeGroup(ICollection<ClrOverloadInfo>/*!*/ allMethods) {
             var overloads = new MethodBase[allMethods.Count];
-            var overloadOwners = new RubyMethodGroupInfo[overloads.Length];
+            var overloadOwners = new RubyOverloadGroupInfo[overloads.Length];
             int i = 0;
             foreach (var entry in allMethods) {
                 overloads[i] = entry.Overload;
@@ -972,7 +1014,7 @@ namespace IronRuby.Builtins {
                 i++;
             }
 
-            var result = new RubyMethodGroupInfo(overloads, this, overloadOwners, _isSingletonClass);
+            var result = new RubyOverloadGroupInfo(overloads, this, overloadOwners, _isSingletonClass);
             
             // update ownership of overloads owned by the new group:
             foreach (var entry in allMethods) {
@@ -986,7 +1028,7 @@ namespace IronRuby.Builtins {
             return result;
         }
 
-        private RubyMethodGroupInfo/*!*/ MakeGroup(MemberInfo[]/*!*/ members, int visibleMemberCount, bool specialNameOnly) {
+        private RubyMethodGroupInfo/*!*/ MakeGroup(MemberInfo[]/*!*/ members, int visibleMemberCount, bool specialNameOnly, bool isDetached) {
             var allMethods = new MethodBase[visibleMemberCount];
             for (int i = 0, j = 0; i < members.Length; i++) {
                 var method = (MethodBase)members[i];
@@ -995,7 +1037,9 @@ namespace IronRuby.Builtins {
                 }
             }
 
-            return new RubyMethodGroupInfo(allMethods, this, null, _isSingletonClass);
+            return isDetached ? 
+                new RubyMethodGroupInfo(allMethods, this, _isSingletonClass) :
+                new RubyOverloadGroupInfo(allMethods, this, null, _isSingletonClass);
         }
 
         // TODO: Indexers can be overloaded:
@@ -1085,6 +1129,20 @@ namespace IronRuby.Builtins {
             metaBuilder.BuildControlFlow(args);
         }
 
+        /// <summary>
+        /// Implements Class#clr_new feature.
+        /// </summary>
+        public void BuildClrObjectConstruction(MetaObjectBuilder/*!*/ metaBuilder, CallArguments/*!*/ args, string/*!*/ methodName) {
+            ConstructorInfo[] ctors;
+            if (TypeTracker == null) {
+                metaBuilder.SetError(Methods.MakeNotClrTypeError.OpCall(Ast.Convert(args.TargetExpression, typeof(RubyClass))));
+            } else if ((ctors = TypeTracker.Type.GetConstructors()) == null || ctors.Length == 0) {
+                metaBuilder.SetError(Methods.MakeConstructorUndefinedError.OpCall(Ast.Convert(args.TargetExpression, typeof(RubyClass))));
+            } else {
+                RubyMethodGroupInfo.BuildCallNoFlow(metaBuilder, args, methodName, ctors, SelfCallConvention.NoSelf, true);
+            }
+        }
+
         public void BuildObjectConstructionNoFlow(MetaObjectBuilder/*!*/ metaBuilder, CallArguments/*!*/ args, string/*!*/ methodName) {
             Debug.Assert(!IsSingletonClass, "Cannot instantiate singletons");
 
@@ -1092,6 +1150,7 @@ namespace IronRuby.Builtins {
 
             RubyMemberInfo initializer;
             using (Context.ClassHierarchyLocker()) {
+                // check version of the class so that we invalidate the rule whenever the initializer changes:
                 metaBuilder.AddVersionTest(this);
 
                 initializer = ResolveMethodForSiteNoLock(Symbols.Initialize, IgnoreVisibility).Info;
@@ -1232,15 +1291,12 @@ namespace IronRuby.Builtins {
 
         private void BuildDelegateConstructorCall(MetaObjectBuilder/*!*/ metaBuilder, CallArguments/*!*/ args, Type/*!*/ type) {
             if (args.Signature.HasBlock) {
-                if (args.ExplicitArgumentCount == 2) {
+                var actualArgs = RubyOverloadResolver.NormalizeArguments(metaBuilder, args, 0, 0);
+                if (!metaBuilder.Error) {
                     metaBuilder.Result = Methods.CreateDelegateFromProc.OpCall(
                         AstUtils.Constant(type),
                         AstUtils.Convert(args.GetBlockExpression(), typeof(Proc))
                     );
-                } else {
-                    metaBuilder.SetError(Methods.MakeWrongNumberOfArgumentsError.OpCall(
-                        AstUtils.Constant(args.ExplicitArgumentCount - 1), AstUtils.Constant(0)
-                    ));
                 }
             } else {
                 var actualArgs = RubyOverloadResolver.NormalizeArguments(metaBuilder, args, 1, 1);

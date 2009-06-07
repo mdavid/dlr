@@ -475,13 +475,24 @@ namespace IronRuby.Builtins {
         }
         
         private static void LoadBignum_Class(IronRuby.Builtins.RubyModule/*!*/ module) {
+            module.UndefineMethodNoEvent("new");
         }
         
         private static void LoadClass_Instance(IronRuby.Builtins.RubyModule/*!*/ module) {
             module.UndefineMethodNoEvent("append_features");
             module.UndefineMethodNoEvent("extend_object");
             module.UndefineMethodNoEvent("module_function");
-            module.DefineRuleGenerator("allocate", 0x51, IronRuby.Builtins.ClassOps.GetInstanceAllocator());
+            module.DefineRuleGenerator("allocate", 0x51, IronRuby.Builtins.ClassOps.Allocate());
+            
+            module.DefineLibraryMethod("clr_constructor", 0x51, 
+                new Func<IronRuby.Builtins.RubyClass, IronRuby.Builtins.RubyMethod>(IronRuby.Builtins.ClassOps.GetClrConstructor)
+            );
+            
+            module.DefineLibraryMethod("clr_ctor", 0x51, 
+                new Func<IronRuby.Builtins.RubyClass, IronRuby.Builtins.RubyMethod>(IronRuby.Builtins.ClassOps.GetClrConstructor)
+            );
+            
+            module.DefineRuleGenerator("clr_new", 0x51, IronRuby.Builtins.ClassOps.ClrNew());
             
             module.DefineLibraryMethod("inherited", 0x5a, 
                 new Action<System.Object, System.Object>(IronRuby.Builtins.ClassOps.Inherited)
@@ -495,7 +506,7 @@ namespace IronRuby.Builtins {
                 new Action<IronRuby.Builtins.RubyClass, IronRuby.Builtins.RubyClass>(IronRuby.Builtins.ClassOps.InitializeCopy)
             );
             
-            module.DefineRuleGenerator("new", 0x51, IronRuby.Builtins.ClassOps.GetInstanceConstructor());
+            module.DefineRuleGenerator("new", 0x51, IronRuby.Builtins.ClassOps.New());
             
             module.DefineLibraryMethod("superclass", 0x51, 
                 new Func<IronRuby.Builtins.RubyClass, IronRuby.Builtins.RubyClass>(IronRuby.Builtins.ClassOps.GetSuperclass)
@@ -2543,6 +2554,10 @@ namespace IronRuby.Builtins {
                 new Func<IronRuby.Runtime.CallSiteStorage<Func<Microsoft.Runtime.CompilerServices.CallSite, System.Object, System.Object, System.Object>>, IronRuby.Runtime.CallSiteStorage<Func<Microsoft.Runtime.CompilerServices.CallSite, IronRuby.Builtins.RubyClass, System.Object>>, System.Object, System.Object>(IronRuby.Builtins.KernelOps.Clone)
             );
             
+            module.DefineLibraryMethod("clr_member", 0x51, 
+                new Func<IronRuby.Runtime.RubyContext, System.Object, System.String, IronRuby.Builtins.RubyMethod>(IronRuby.Builtins.KernelOps.GetClrMember)
+            );
+            
             module.DefineLibraryMethod("display", 0x51, 
                 new Action<IronRuby.Runtime.RubyContext, System.Object>(IronRuby.Builtins.KernelOps.Display)
             );
@@ -3460,6 +3475,19 @@ namespace IronRuby.Builtins {
                 new Func<IronRuby.Runtime.RubyContext, Microsoft.Scripting.Actions.TypeGroup, System.Object[], IronRuby.Builtins.RubyModule>(IronRuby.Builtins.TypeGroupOps.Of)
             );
             
+            module.DefineLibraryMethod("clr_constructor", 0x51, 
+                new Func<IronRuby.Runtime.RubyContext, Microsoft.Scripting.Actions.TypeGroup, IronRuby.Builtins.RubyMethod>(IronRuby.Builtins.TypeGroupOps.GetClrConstructor)
+            );
+            
+            module.DefineLibraryMethod("clr_ctor", 0x51, 
+                new Func<IronRuby.Runtime.RubyContext, Microsoft.Scripting.Actions.TypeGroup, IronRuby.Builtins.RubyMethod>(IronRuby.Builtins.TypeGroupOps.GetClrConstructor)
+            );
+            
+            module.DefineLibraryMethod("clr_new", 0x51, 
+                new Func<IronRuby.Runtime.CallSiteStorage<Func<Microsoft.Runtime.CompilerServices.CallSite, System.Object, System.Object, System.Object>>, Microsoft.Scripting.Actions.TypeGroup, System.Object[], System.Object>(IronRuby.Builtins.TypeGroupOps.ClrNew), 
+                new Func<IronRuby.Runtime.CallSiteStorage<Func<Microsoft.Runtime.CompilerServices.CallSite, System.Object, System.Object, System.Object, System.Object>>, IronRuby.Runtime.BlockParam, Microsoft.Scripting.Actions.TypeGroup, System.Object[], System.Object>(IronRuby.Builtins.TypeGroupOps.ClrNew)
+            );
+            
             module.DefineLibraryMethod("each", 0x51, 
                 new Func<IronRuby.Runtime.RubyContext, IronRuby.Runtime.BlockParam, Microsoft.Scripting.Actions.TypeGroup, System.Object>(IronRuby.Builtins.TypeGroupOps.EachType)
             );
@@ -3472,10 +3500,17 @@ namespace IronRuby.Builtins {
                 new Func<Microsoft.Scripting.Actions.TypeGroup, IronRuby.Builtins.MutableString>(IronRuby.Builtins.TypeGroupOps.GetName)
             );
             
-            module.DefineRuleGenerator("new", 0x51, IronRuby.Builtins.TypeGroupOps.GetInstanceConstructor());
+            module.DefineLibraryMethod("new", 0x51, 
+                new Func<IronRuby.Runtime.CallSiteStorage<Func<Microsoft.Runtime.CompilerServices.CallSite, System.Object, System.Object, System.Object>>, Microsoft.Scripting.Actions.TypeGroup, System.Object[], System.Object>(IronRuby.Builtins.TypeGroupOps.New), 
+                new Func<IronRuby.Runtime.CallSiteStorage<Func<Microsoft.Runtime.CompilerServices.CallSite, System.Object, System.Object, System.Object, System.Object>>, IronRuby.Runtime.BlockParam, Microsoft.Scripting.Actions.TypeGroup, System.Object[], System.Object>(IronRuby.Builtins.TypeGroupOps.New)
+            );
             
             module.DefineLibraryMethod("of", 0x51, 
                 new Func<IronRuby.Runtime.RubyContext, Microsoft.Scripting.Actions.TypeGroup, System.Object[], IronRuby.Builtins.RubyModule>(IronRuby.Builtins.TypeGroupOps.Of)
+            );
+            
+            module.DefineLibraryMethod("superclass", 0x51, 
+                new Func<IronRuby.Runtime.RubyContext, Microsoft.Scripting.Actions.TypeGroup, IronRuby.Builtins.RubyClass>(IronRuby.Builtins.TypeGroupOps.GetSuperclass)
             );
             
             module.DefineLibraryMethod("to_s", 0x51, 
@@ -4016,6 +4051,10 @@ namespace IronRuby.Builtins {
             
             module.DefineLibraryMethod("to_proc", 0x51, 
                 new Func<IronRuby.Builtins.Proc, IronRuby.Builtins.Proc>(IronRuby.Builtins.ProcOps.ToProc)
+            );
+            
+            module.DefineLibraryMethod("to_s", 0x51, 
+                new Func<IronRuby.Builtins.Proc, IronRuby.Builtins.MutableString>(IronRuby.Builtins.ProcOps.ToS)
             );
             
         }
@@ -5037,10 +5076,6 @@ namespace IronRuby.Builtins {
         private static void LoadSystem__Collections__IEnumerable_Instance(IronRuby.Builtins.RubyModule/*!*/ module) {
             module.DefineLibraryMethod("each", 0x51, 
                 new Func<IronRuby.Runtime.BlockParam, System.Collections.IEnumerable, System.Object>(IronRuby.Builtins.IEnumerableOps.Each)
-            );
-            
-            module.DefineLibraryMethod("GetEnumerator", 0x51, 
-                new Func<System.Collections.IEnumerable, System.Collections.IEnumerator>(IronRuby.Builtins.IEnumerableOps.GetEnumerator)
             );
             
         }

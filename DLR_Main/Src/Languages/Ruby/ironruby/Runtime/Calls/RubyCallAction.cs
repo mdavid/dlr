@@ -152,7 +152,7 @@ namespace IronRuby.Runtime.Calls {
                 RubyLibraryMethodInfo lib;
                 if ((ruby = memberInfo as RubyMethodInfo) != null) {
                     if (!ruby.HasUnsplatParameter && ruby.OptionalParamCount == 0) {
-                        d = ruby.Method;
+                        d = ruby.GetDelegate();
                         mandatoryParamCount = ruby.MandatoryParamCount;
                         return true;
                     }
@@ -245,7 +245,8 @@ namespace IronRuby.Runtime.Calls {
             using (targetClass.Context.ClassHierarchyLocker()) {
                 metaBuilder.AddTargetTypeTest(args.Target, targetClass, args.TargetExpression, args.MetaContext);
 
-                method = targetClass.ResolveMethodForSiteNoLock(methodName, GetVisibilityContext(args.Signature, args.Scope), args.Signature.IsVirtualCall);
+                var options = args.Signature.IsVirtualCall ? MethodLookup.Virtual : MethodLookup.Default;
+                method = targetClass.ResolveMethodForSiteNoLock(methodName, GetVisibilityContext(args.Signature, args.Scope), options);
                 if (!method.Found) {
                     methodMissing = targetClass.ResolveMethodMissingForSite(methodName, method.IncompatibleVisibility);
                 } else {

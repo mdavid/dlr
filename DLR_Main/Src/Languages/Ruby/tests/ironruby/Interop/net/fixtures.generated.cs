@@ -37,9 +37,67 @@ public class IComparableConsumer {
   public class IComparableProvider {
   
   }
+#line 5 "./bcl/numerics/byte_spec.rb"
+public partial class NumericHelper {
+    public static int SizeOfByte() {
+      return sizeof(Byte);
+    }
+  }
 #line 4 "./bcl/numerics/decimal_spec.rb"
 public partial class Klass {
     public decimal MyDecimal {get; set;}
+  }
+#line 5 "./bcl/numerics/int16_spec.rb"
+public partial class NumericHelper {
+    public static int SizeOfInt16() {
+      return sizeof(Int16);
+    }
+  }
+#line 5 "./bcl/numerics/int32_spec.rb"
+public partial class NumericHelper {
+    public static int SizeOfInt32() {
+      return sizeof(Int32);
+    }
+  }
+#line 5 "./bcl/numerics/int64_spec.rb"
+public partial class NumericHelper {
+    public static int SizeOfInt64() {
+      return sizeof(Int64);
+    }
+  }
+#line 5 "./bcl/numerics/sbyte_spec.rb"
+public partial class NumericHelper {
+    public static int SizeOfSByte() {
+      return sizeof(SByte);
+    }
+  }
+#line 5 "./bcl/numerics/uint16_spec.rb"
+public partial class NumericHelper {
+    public static int SizeOfUInt16() {
+      return sizeof(UInt16);
+    }
+  }
+#line 5 "./bcl/numerics/uint32_spec.rb"
+public partial class NumericHelper {
+    public static int SizeOfUInt32() {
+      return sizeof(UInt32);
+    }
+  }
+#line 5 "./bcl/numerics/uint64_spec.rb"
+public partial class NumericHelper {
+    public static int SizeOfUInt64() {
+      return sizeof(UInt64);
+    }
+  }
+#line 25 "./bcl/string/construction_spec.rb"
+public partial class Klass {
+    public string A(){
+      return "a";
+    }
+
+    public string Aa(){
+      return "aa";
+    }
   }
 #line 5 "./class/derivation/attribute_spec.rb"
 #line 9 "./class/derivation/attribute_spec.rb"
