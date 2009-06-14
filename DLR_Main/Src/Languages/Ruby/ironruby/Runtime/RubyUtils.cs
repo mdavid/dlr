@@ -168,7 +168,7 @@ namespace IronRuby.Runtime {
             if (clonable != null) {
                 copy = clonable.Duplicate(context, cloneSemantics);
             } else {
-                // .NET classes and library clases that doesn't implement IDuplicable:
+                // .NET and library classes that don't implement IDuplicable:
                 var allocateSite = allocateStorage.GetCallSite("allocate", 0);
                 copy = allocateSite.Target(allocateSite, context.GetClassOf(obj));
 
@@ -239,7 +239,7 @@ namespace IronRuby.Runtime {
             return sb.ToString();
         }
 
-        internal static string/*!*/ MangleName(string/*!*/ name) {
+        public static string/*!*/ MangleName(string/*!*/ name) {
             Assert.NotNull(name);
 
             if (name.ToUpper().Equals("INITIALIZE")) {
@@ -265,7 +265,7 @@ namespace IronRuby.Runtime {
 
         #endregion
 
-        #region Constants, Methods
+        #region Constants
 
         // thread-safe:
         public static object GetConstant(RubyGlobalScope/*!*/ globalScope, RubyModule/*!*/ owner, string/*!*/ name, bool lookupObject) {
@@ -301,8 +301,109 @@ namespace IronRuby.Runtime {
             }
         }
 
+        #endregion
+
+        #region Methods
+
         public static RubyMethodVisibility GetSpecialMethodVisibility(RubyMethodVisibility/*!*/ visibility, string/*!*/ methodName) {
             return (methodName == Symbols.Initialize || methodName == Symbols.InitializeCopy) ? RubyMethodVisibility.Private : visibility;
+        }
+
+        internal static string MapOperator(string/*!*/ name) {
+            switch (name) {
+                case "+": return "op_Addition";
+                case "-": return "op_Subtraction";
+                case "/": return "op_Division";
+                case "*": return "op_Multiply";
+                case "%": return "op_Modulus";
+                case "==": return "op_Equality";
+                case "!=": return "op_Inequality";
+                case ">": return "op_GreaterThan";
+                case ">=": return "op_GreaterThanOrEqual";
+                case "<": return "op_LessThan";
+                case "<=": return "op_LessThanOrEqual";
+                case "-@": return "op_UnaryNegation";
+                case "+@": return "op_UnaryPlus";
+
+                case "**": return "Power";
+                case "<<": return "LeftShift";
+                case ">>": return "RightShift";
+                case "&": return "BitwiseAnd";
+                case "|": return "BitwiseOr";
+                case "^": return "ExclusiveOr";
+                case "<=>": return "Compare";
+                case "~": return "OnesComplement";
+
+                default:
+                    return null;
+            }
+        }
+
+        internal static string MapOperator(MethodBase/*!*/ method) {
+            if (!method.IsStatic || !method.IsSpecialName) {
+                return null;
+            }
+
+            switch (method.Name) {
+                case "op_Addition": return "+";
+                case "op_Subtraction": return "-";
+                case "op_Division": return "/";
+                case "op_Multiply": return "*";
+                case "op_Modulus": return "%";
+                case "op_Equality": return "==";
+                case "op_Inequality": return "!=";
+                case "op_GreaterThan": return ">";
+                case "op_GreaterThanOrEqual": return ">=";
+                case "op_LessThan": return "<";
+                case "op_LessThanOrEqual": return "<=";
+                case "op_UnaryNegation": return "-@";
+                case "op_UnaryPlus": return "+@";
+
+                case "Power": return "**";
+                case "LeftShift": return "<<";
+                case "RightShift": return ">>";
+                case "BitwiseAnd": return "&";
+                case "BitwiseOr": return "|";
+                case "ExclusiveOr": return "^";
+                case "Compare": return "<=>";
+                case "OnesComplement": return "~";
+
+                default:
+                    return null;
+            }
+        }
+
+        internal static bool IsOperator(MethodBase/*!*/ method) {
+            return MapOperator(method) != null;
+        }
+
+        internal static string MapOperator(ExpressionType/*!*/ op) {
+            switch (op) {
+                case ExpressionType.Add: return "+";
+                case ExpressionType.Subtract: return "-";
+                case ExpressionType.Divide: return "/";
+                case ExpressionType.Multiply: return "*";
+                case ExpressionType.Modulo: return "%";
+                case ExpressionType.Equal: return "==";
+                case ExpressionType.NotEqual: return "!=";
+                case ExpressionType.GreaterThan: return ">";
+                case ExpressionType.GreaterThanOrEqual: return ">=";
+                case ExpressionType.LessThan: return "<";
+                case ExpressionType.LessThanOrEqual: return "<=";
+                case ExpressionType.Negate: return "-@";
+                case ExpressionType.UnaryPlus: return "+@";
+
+                case ExpressionType.Power: return "**";
+                case ExpressionType.LeftShift: return "<<";
+                case ExpressionType.RightShift: return ">>";
+                case ExpressionType.And: return "&";
+                case ExpressionType.Or: return "|";
+                case ExpressionType.ExclusiveOr: return "^";
+                case ExpressionType.OnesComplement: return "~";
+
+                default:
+                    return null;
+            }
         }
 
         #endregion
@@ -616,6 +717,8 @@ namespace IronRuby.Runtime {
         private static readonly Type[] _serializableTypeSignature = new Type[] { typeof(SerializationInfo), typeof(StreamingContext) };
 #endif
 
+        public static readonly string SerializationInfoClassKey = "#immediateClass";
+
         public static object/*!*/ CreateObject(RubyClass/*!*/ theclass, Hash/*!*/ attributes, bool decorate) {
             Assert.NotNull(theclass, attributes);
 
@@ -632,7 +735,7 @@ namespace IronRuby.Runtime {
 #if !SILVERLIGHT
                 }
                 SerializationInfo info = new SerializationInfo(baseType, new FormatterConverter());
-                info.AddValue("#class", theclass);
+                info.AddValue(SerializationInfoClassKey, theclass);
                 foreach (KeyValuePair<object, object> pair in attributes) {
                     string key = pair.Key.ToString();
                     key = decorate ? "@" + key : key;

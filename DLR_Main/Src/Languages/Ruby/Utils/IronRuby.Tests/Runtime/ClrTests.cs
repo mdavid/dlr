@@ -455,16 +455,60 @@ Hidden: 1, 2
 ");
         }
 
+        /// <summary>
+        /// No CLR names should be returned for builtin types and singletons.
+        /// </summary>
         public void ClrMethodEnumeration1() {
-            // TODO:
-//            Context.ObjectClass.SetConstant("Obj", Context.GetClass(typeof(OverloadInheritance1.B)));
+            // built-ins:
+            var irModules = new[] { "IronRuby" };
 
-//            Context.GetClass(typeof(OverloadInheritance1.B)).HideMethod("hidden");
+            using (Context.ClassHierarchyLocker()) {
+                Context.ObjectClass.EnumerateConstants((module, name, value) => {
+                    RubyModule m = value as RubyModule;
+                    if (m != null && Array.IndexOf(irModules, m.Name) == -1) {
+                        AssertNoClrNames(ModuleOps.GetInstanceMethods(m, true), m.Name);
+                        AssertNoClrNames(ModuleOps.GetPrivateInstanceMethods(m, true), m.Name);
+                        AssertNoClrNames(ModuleOps.GetInstanceMethods(m.SingletonClass, true), m.Name);
+                        AssertNoClrNames(ModuleOps.GetPrivateInstanceMethods(m.SingletonClass, true), m.Name);
+                    }
+                    return false;
+                });
+            }
 
-//            XAssertOutput(() => CompilerTest(@"
-//p Obj.instance_methods(false)
-//"), @"
-//");
+            // singletons:
+            AssertNoClrNames(Engine.Execute(@"class << self; instance_methods + private_instance_methods; end"), null);
+            AssertNoClrNames(Engine.Execute(@"class << self; class << self; instance_methods + private_instance_methods; end; end"), null);
+            AssertNoClrNames(Engine.Execute(@"class << Class; instance_methods + private_instance_methods; end"), null);
+        }
+
+        public void ClrMethodEnumeration2() {
+            TestOutput(@"
+class System::Decimal
+  instance_methods(false).each do |name|
+    mangled = '__' + name
+    
+    alias_method(mangled, name)
+    private mangled
+    
+    define_method(name) do |*args|
+      puts ""method called: #{name}""
+      send mangled, *args
+    end
+  end
+end
+x, y = System::Decimal.new(1), System::Decimal.new(2)
+x + y       
+x.CompareTo(y)
+", @"
+method called: +
+method called: compare_to
+");
+        }
+
+        private void AssertNoClrNames(object/*!*/ methods, string moduleName) {
+            var array = (RubyArray)methods;
+            int idx = array.FindIndex((name) => name is ClrName);
+            Assert(idx == -1, moduleName + "::" + (idx == -1 ? null : ((ClrName)array[idx]).ActualName));
         }
 
         public static class OverloadInheritance2 {
@@ -1606,6 +1650,32 @@ end
 p D.new.virtual_method
 ", @"
 1
+");
+        }
+
+        /// <summary>
+        /// Super call in an override.
+        /// </summary>
+        public void ClrOverride4() {
+            Context.ObjectClass.SetConstant("C", Context.GetClass(typeof(ClassCallingVirtualInCtor1)));
+            TestOutput(@"
+class D < C
+  def virtual_method 
+    10 + super
+  end
+end
+
+class E < C
+  def VirtualMethod 
+    20 + super
+  end
+end
+
+p D.new.VirtualMethod
+p E.new.virtual_method
+", @"
+11
+21
 ");
         }
 

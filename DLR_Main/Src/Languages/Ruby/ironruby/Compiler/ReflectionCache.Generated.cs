@@ -18,6 +18,7 @@ using System; using Microsoft;
 using System.Reflection;
 using System.Diagnostics;
 using IronRuby.Runtime;
+using IronRuby.Builtins;
 using Microsoft.Scripting.Utils;
 
 namespace IronRuby.Compiler {
@@ -80,6 +81,8 @@ namespace IronRuby.Compiler {
         private static MethodInfo _CreateBoundMember;
         public static MethodInfo/*!*/ CreateBoundMissingMember { get { return _CreateBoundMissingMember ?? (_CreateBoundMissingMember = GetMethod(typeof(RubyOps), "CreateBoundMissingMember")); } }
         private static MethodInfo _CreateBoundMissingMember;
+        public static MethodInfo/*!*/ CreateDefaultInstance { get { return _CreateDefaultInstance ?? (_CreateDefaultInstance = GetMethod(typeof(RubyOps), "CreateDefaultInstance")); } }
+        private static MethodInfo _CreateDefaultInstance;
         public static MethodInfo/*!*/ CreateDelegateFromMethod { get { return _CreateDelegateFromMethod ?? (_CreateDelegateFromMethod = GetMethod(typeof(RubyOps), "CreateDelegateFromMethod")); } }
         private static MethodInfo _CreateDelegateFromMethod;
         public static MethodInfo/*!*/ CreateDelegateFromProc { get { return _CreateDelegateFromProc ?? (_CreateDelegateFromProc = GetMethod(typeof(RubyOps), "CreateDelegateFromProc")); } }
@@ -252,6 +255,26 @@ namespace IronRuby.Compiler {
         private static MethodInfo _InitializeScope;
         public static MethodInfo/*!*/ InitializeScopeNoLocals { get { return _InitializeScopeNoLocals ?? (_InitializeScopeNoLocals = GetMethod(typeof(RubyOps), "InitializeScopeNoLocals")); } }
         private static MethodInfo _InitializeScopeNoLocals;
+        public static MethodInfo/*!*/ IRubyObject_get_ImmediateClass { get { return _IRubyObject_get_ImmediateClass ?? (_IRubyObject_get_ImmediateClass = GetMethod(typeof(IRubyObject), "get_ImmediateClass")); } }
+        private static MethodInfo _IRubyObject_get_ImmediateClass;
+        public static MethodInfo/*!*/ IRubyObject_GetInstanceData { get { return _IRubyObject_GetInstanceData ?? (_IRubyObject_GetInstanceData = GetMethod(typeof(IRubyObject), "GetInstanceData")); } }
+        private static MethodInfo _IRubyObject_GetInstanceData;
+        public static MethodInfo/*!*/ IRubyObject_set_ImmediateClass { get { return _IRubyObject_set_ImmediateClass ?? (_IRubyObject_set_ImmediateClass = GetMethod(typeof(IRubyObject), "set_ImmediateClass")); } }
+        private static MethodInfo _IRubyObject_set_ImmediateClass;
+        public static MethodInfo/*!*/ IRubyObject_TryGetInstanceData { get { return _IRubyObject_TryGetInstanceData ?? (_IRubyObject_TryGetInstanceData = GetMethod(typeof(IRubyObject), "TryGetInstanceData")); } }
+        private static MethodInfo _IRubyObject_TryGetInstanceData;
+        public static MethodInfo/*!*/ IRubyObjectState_Freeze { get { return _IRubyObjectState_Freeze ?? (_IRubyObjectState_Freeze = GetMethod(typeof(IRubyObjectState), "Freeze")); } }
+        private static MethodInfo _IRubyObjectState_Freeze;
+        public static MethodInfo/*!*/ IRubyObjectState_get_IsFrozen { get { return _IRubyObjectState_get_IsFrozen ?? (_IRubyObjectState_get_IsFrozen = GetMethod(typeof(IRubyObjectState), "get_IsFrozen")); } }
+        private static MethodInfo _IRubyObjectState_get_IsFrozen;
+        public static MethodInfo/*!*/ IRubyObjectState_get_IsTainted { get { return _IRubyObjectState_get_IsTainted ?? (_IRubyObjectState_get_IsTainted = GetMethod(typeof(IRubyObjectState), "get_IsTainted")); } }
+        private static MethodInfo _IRubyObjectState_get_IsTainted;
+        public static MethodInfo/*!*/ IRubyObjectState_set_IsTainted { get { return _IRubyObjectState_set_IsTainted ?? (_IRubyObjectState_set_IsTainted = GetMethod(typeof(IRubyObjectState), "set_IsTainted")); } }
+        private static MethodInfo _IRubyObjectState_set_IsTainted;
+        public static MethodInfo/*!*/ IsClrNonSingletonRuleValid { get { return _IsClrNonSingletonRuleValid ?? (_IsClrNonSingletonRuleValid = GetMethod(typeof(RubyOps), "IsClrNonSingletonRuleValid")); } }
+        private static MethodInfo _IsClrNonSingletonRuleValid;
+        public static MethodInfo/*!*/ IsClrSingletonRuleValid { get { return _IsClrSingletonRuleValid ?? (_IsClrSingletonRuleValid = GetMethod(typeof(RubyOps), "IsClrSingletonRuleValid")); } }
+        private static MethodInfo _IsClrSingletonRuleValid;
         public static MethodInfo/*!*/ IsDefinedClassVariable { get { return _IsDefinedClassVariable ?? (_IsDefinedClassVariable = GetMethod(typeof(RubyOps), "IsDefinedClassVariable")); } }
         private static MethodInfo _IsDefinedClassVariable;
         public static MethodInfo/*!*/ IsDefinedGlobalConstant { get { return _IsDefinedGlobalConstant ?? (_IsDefinedGlobalConstant = GetMethod(typeof(RubyOps), "IsDefinedGlobalConstant")); } }
@@ -344,8 +367,6 @@ namespace IronRuby.Compiler {
         private static MethodInfo _MatchString;
         public static MethodInfo/*!*/ MethodBreak { get { return _MethodBreak ?? (_MethodBreak = GetMethod(typeof(RubyOps), "MethodBreak")); } }
         private static MethodInfo _MethodBreak;
-        public static MethodInfo/*!*/ MethodDefined { get { return _MethodDefined ?? (_MethodDefined = GetMethod(typeof(RubyOps), "MethodDefined")); } }
-        private static MethodInfo _MethodDefined;
         public static MethodInfo/*!*/ MethodNext { get { return _MethodNext ?? (_MethodNext = GetMethod(typeof(RubyOps), "MethodNext")); } }
         private static MethodInfo _MethodNext;
         public static MethodInfo/*!*/ MethodProcCall { get { return _MethodProcCall ?? (_MethodProcCall = GetMethod(typeof(RubyOps), "MethodProcCall")); } }
@@ -362,6 +383,10 @@ namespace IronRuby.Compiler {
         private static MethodInfo _PrintInteractiveResult;
         public static MethodInfo/*!*/ PropagateRetrySingleton { get { return _PropagateRetrySingleton ?? (_PropagateRetrySingleton = GetMethod(typeof(RubyOps), "PropagateRetrySingleton")); } }
         private static MethodInfo _PropagateRetrySingleton;
+        public static MethodInfo/*!*/ RubyStruct_GetValue { get { return _RubyStruct_GetValue ?? (_RubyStruct_GetValue = GetMethod(typeof(RubyStruct), "GetValue")); } }
+        private static MethodInfo _RubyStruct_GetValue;
+        public static MethodInfo/*!*/ RubyStruct_SetValue { get { return _RubyStruct_SetValue ?? (_RubyStruct_SetValue = GetMethod(typeof(RubyStruct), "SetValue")); } }
+        private static MethodInfo _RubyStruct_SetValue;
         public static MethodInfo/*!*/ SerializeObject { get { return _SerializeObject ?? (_SerializeObject = GetMethod(typeof(RubyOps), "SerializeObject")); } }
         private static MethodInfo _SerializeObject;
         public static MethodInfo/*!*/ SetClassVariable { get { return _SetClassVariable ?? (_SetClassVariable = GetMethod(typeof(RubyOps), "SetClassVariable")); } }

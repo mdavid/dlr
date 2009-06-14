@@ -186,6 +186,7 @@
     <Compile Include="Runtime\Calls\SuperForwarderInfo.cs" />
     <Compile Include="Runtime\Calls\VersionHandle.cs" />
     <Compile Include="Runtime\CheckedMonitor.cs" />
+    <Compile Include="Runtime\ClrName.cs" />
     <Compile Include="Runtime\CustomTypeDescHelpers.cs" />
     <Compile Include="Compiler\Generation\OverriddenMembers.cs" />
     <Compile Include="Compiler\Generation\RubyTypeDispenser.cs" />
@@ -231,7 +232,7 @@
     <Compile Include="Runtime\Globals\SpecialGlobalVariableInfo.cs" />
     <Compile Include="Runtime\IDuplicable.cs" />
     <Compile Include="Runtime\IRubyObject.cs" />
-    <Compile Include="Runtime\InstanceData.cs" />
+    <Compile Include="Runtime\RubyInstanceData.cs" />
     <Compile Include="Runtime\InstanceDataWeakTable.cs" />
     <Compile Include="Builtins\Exceptions.cs" />
     <Compile Include="Builtins\MutableString.cs" />
@@ -366,7 +367,6 @@
     <Compile Include="Compiler\ReflectionCache.cs" />
     <Compile Include="Compiler\ReflectionCache.Generated.cs" />
     <Compile Include="RubyCompatibility.cs" />
-    <Compile Include="Builtins\RubyModule.Subclass.cs" />
     <Compile Include="Runtime\IOWrapper.cs" />
     <None Include="Compiler\Parser\Parser.y" />
     <None Include="Runtime\Calls\MethodDispatcher.Generator.rb" />

@@ -18,6 +18,7 @@ using System; using Microsoft;
 using IronRuby.Compiler.Generation;
 
 namespace IronRuby.Runtime {
+    [ReflectionCached]
     public interface IRubyObjectState {
         [Emitted]
         bool IsFrozen { get; }

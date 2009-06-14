@@ -129,6 +129,7 @@ namespace IronRuby.Tests {
                 Send1,
                 Send2,
                 MethodCallCaching7,
+                MethodCallCaching8,
                 
                 AttributeAccessors1,
                 AttributeAccessors2,
@@ -364,6 +365,7 @@ namespace IronRuby.Tests {
                 ClrOverloadInheritance5,
                 ClrOverloadInheritance6,
                 ClrMethodEnumeration1,
+                ClrMethodEnumeration2,
                 ClrIndexers1,
                 ClrGenericMethods1,
                 ClrOverloadSelection1,
@@ -386,6 +388,7 @@ namespace IronRuby.Tests {
                 ClrOverride1,
                 ClrOverride2,
                 ClrOverride3,
+                ClrOverride4,
                 ClrConstructor1,
                 ClrConstructor2,
                 ClrConstructor3,
@@ -469,12 +472,18 @@ namespace IronRuby.Tests {
                 MethodDefinitionInModuleEval1A,
                 MethodDefinitionInModuleEval1B,
 
-                Scenario_Singletons1,
-                Scenario_Singletons2,
-                Scenario_Singletons3,
-                Scenario_Singletons4,
-                Scenario_Singletons5,
+                MainSingleton1,
+                MainSingleton2,
+                Singletons1A,
+                Singletons1B,
+                Singletons1C,
+                Singletons1D,
+                Singletons2,
+                Singletons3,
                 SingletonCaching1,
+                SingletonCaching2A,
+                SingletonCaching2B,
+                SingletonCaching2C,
                 Scenario_ClassVariables_Singletons,
                 AllowedSingletons1,
 
@@ -534,7 +543,9 @@ namespace IronRuby.Tests {
                 MetaModules1,
                 MetaModulesDuplication1,
                 Autoload1,
-  
+                ModuleFreezing1,
+                ModuleFreezing2,
+
                 // eval, binding:
                 Eval1,
                 Eval2,
