@@ -13,10 +13,16 @@
  *
  * ***************************************************************************/
 
+#if CODEPLEX_40
+using System;
+#else
 using System; using Microsoft;
+#endif
 using System.Reflection;
 using System.Runtime.CompilerServices;
+#if !CODEPLEX_40
 using Microsoft.Runtime.CompilerServices;
+#endif
 
 using System.Runtime.InteropServices;
 using System.Security;
@@ -57,6 +63,9 @@ using System.Security;
 [assembly: AssemblyFileVersion("1.0.0.00")]
 [assembly: AssemblyInformationalVersion("1.0")]
 [assembly: AllowPartiallyTrustedCallers]
+#if CODEPLEX_40
+[assembly: SecurityRules(SecurityRuleSet.Level1)]
+#endif
 
 #else
 

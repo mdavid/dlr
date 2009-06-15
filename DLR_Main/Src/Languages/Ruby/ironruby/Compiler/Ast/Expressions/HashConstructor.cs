@@ -18,10 +18,18 @@ using System; using Microsoft;
 using System.Collections.Generic;
 using Microsoft.Scripting;
 using Microsoft.Scripting.Utils;
+#if CODEPLEX_40
+using MSA = System.Linq.Expressions;
+#else
 using MSA = Microsoft.Linq.Expressions;
+#endif
 
 namespace IronRuby.Compiler.Ast {
+#if CODEPLEX_40
+    using Ast = System.Linq.Expressions.Expression;
+#else
     using Ast = Microsoft.Linq.Expressions.Expression;
+#endif
 
     public partial class HashConstructor : Expression {
         // { key1 => value1, key2 => value2, ... }

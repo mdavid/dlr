@@ -16,9 +16,17 @@
 using System; using Microsoft;
 
 
+#if CODEPLEX_40
+using System.Linq.Expressions;
+#else
 using Microsoft.Linq.Expressions;
+#endif
 
+#if CODEPLEX_40
+namespace System.Dynamic {
+#else
 namespace Microsoft.Scripting {
+#endif
 
     // Miscellaneous helpers that don't belong anywhere else
     internal static class Helpers {

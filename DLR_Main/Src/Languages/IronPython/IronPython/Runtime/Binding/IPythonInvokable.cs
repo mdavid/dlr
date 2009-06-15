@@ -13,9 +13,15 @@
  *
  * ***************************************************************************/
 
+#if CODEPLEX_40
+using System;
+using System.Dynamic;
+using System.Linq.Expressions;
+#else
 using System; using Microsoft;
 using Microsoft.Scripting;
 using Microsoft.Linq.Expressions;
+#endif
 
 namespace IronPython.Runtime.Binding {
     /// <summary>

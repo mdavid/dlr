@@ -13,20 +13,33 @@
  *
  * ***************************************************************************/
 
+#if CODEPLEX_40
+using System;
+#else
 using System; using Microsoft;
+#endif
 using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics;
-using Microsoft.Scripting;
+#if CODEPLEX_40
+using System.Dynamic;
+using System.Linq.Expressions;
+#else
 using Microsoft.Linq.Expressions;
+#endif
 using System.Reflection;
 using IronRuby.Builtins;
 using IronRuby.Compiler;
 using IronRuby.Compiler.Generation;
+using Microsoft.Scripting;
 using Microsoft.Scripting.Math;
 using Microsoft.Scripting.Runtime;
 using Microsoft.Scripting.Utils;
+#if CODEPLEX_40
+using Ast = System.Linq.Expressions.Expression;
+#else
 using Ast = Microsoft.Linq.Expressions.Expression;
+#endif
 using AstFactory = IronRuby.Compiler.Ast.AstFactory;
 using AstUtils = Microsoft.Scripting.Ast.Utils;
 using Microsoft.Scripting.Generation;
@@ -52,7 +65,11 @@ namespace IronRuby.Runtime.Calls {
             return GetType().Name + (Context != null ? " @" + Context.RuntimeId.ToString() : null);
         }
 
+#if CODEPLEX_40
+        public override T BindDelegate<T>(System.Runtime.CompilerServices.CallSite<T> site, object[] args) {
+#else
         public override T BindDelegate<T>(Microsoft.Runtime.CompilerServices.CallSite<T> site, object[] args) {
+#endif
             PerfTrack.NoteEvent(PerfTrack.Categories.Binding, "Ruby: " + GetType().Name + ": BindDelegate");
             return base.BindDelegate<T>(site, args);
         }

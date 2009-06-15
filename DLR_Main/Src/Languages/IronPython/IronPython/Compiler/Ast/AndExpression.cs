@@ -13,15 +13,27 @@
  *
  * ***************************************************************************/
 
+#if CODEPLEX_40
+using System;
+#else
 using System; using Microsoft;
+#endif
 using IronPython.Runtime.Binding;
 using Microsoft.Scripting.Actions;
 using Microsoft.Scripting.Utils;
 using AstUtils = Microsoft.Scripting.Ast.Utils;
+#if CODEPLEX_40
+using MSAst = System.Linq.Expressions;
+#else
 using MSAst = Microsoft.Linq.Expressions;
+#endif
 
 namespace IronPython.Compiler.Ast {
+#if CODEPLEX_40
+    using Ast = System.Linq.Expressions.Expression;
+#else
     using Ast = Microsoft.Linq.Expressions.Expression;
+#endif
 
     public class AndExpression : Expression {
         private readonly Expression _left, _right;

@@ -13,11 +13,19 @@
  *
  * ***************************************************************************/
 
+#if CODEPLEX_40
+using System;
+#else
 using System; using Microsoft;
+#endif
 using System.Collections.Generic;
 using System.Diagnostics;
-using Microsoft.Scripting;
+#if CODEPLEX_40
+using System.Dynamic;
+#else
+#endif
 using System.Text;
+using Microsoft.Scripting;
 using Microsoft.Scripting.Runtime;
 using Microsoft.Scripting.Utils;
 using IronRuby.Compiler.Ast;

@@ -15,8 +15,12 @@
 using System; using Microsoft;
 
 
-using Microsoft.Scripting;
+#if CODEPLEX_40
+using System.Dynamic;
+#else
+#endif
 using IronPython.Runtime.Operations;
+using Microsoft.Scripting;
 
 namespace IronPython.Runtime {
     internal class ThrowingErrorSink : ErrorSink {
@@ -27,7 +31,7 @@ namespace IronPython.Runtime {
 
         public override void Add(SourceUnit sourceUnit, string message, SourceSpan span, int errorCode, Severity severity) {
             if (severity == Severity.Warning) {
-                throw PythonOps.SyntaxWarning(message, sourceUnit, span, errorCode);
+                PythonOps.SyntaxWarning(message, sourceUnit, span, errorCode);
             } else {
                 throw PythonOps.SyntaxError(message, sourceUnit, span, errorCode);
             }

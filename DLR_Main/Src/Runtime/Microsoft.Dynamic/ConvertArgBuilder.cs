@@ -17,9 +17,17 @@ using System; using Microsoft;
 
 #if !SILVERLIGHT
 
+#if CODEPLEX_40
+using System.Linq.Expressions;
+#else
 using Microsoft.Linq.Expressions;
+#endif
 
+#if CODEPLEX_40
+namespace System.Dynamic {
+#else
 namespace Microsoft.Scripting {
+#endif
     internal class ConvertArgBuilder : SimpleArgBuilder {
         private readonly Type _marshalType;
 

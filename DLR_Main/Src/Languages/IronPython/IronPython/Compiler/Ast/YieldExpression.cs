@@ -13,15 +13,27 @@
  *
  * ***************************************************************************/
 
+#if CODEPLEX_40
+using System;
+#else
 using System; using Microsoft;
+#endif
 using System.Diagnostics;
 using Microsoft.Scripting;
 using IronPython.Runtime.Operations;
 using AstUtils = Microsoft.Scripting.Ast.Utils;
+#if CODEPLEX_40
+using MSAst = System.Linq.Expressions;
+#else
 using MSAst = Microsoft.Linq.Expressions;
+#endif
 
 namespace IronPython.Compiler.Ast {
+#if CODEPLEX_40
+    using Ast = System.Linq.Expressions.Expression;
+#else
     using Ast = Microsoft.Linq.Expressions.Expression;
+#endif
 
     // New in Pep342 for Python 2.5. Yield is an expression with a return value.
     //    x = yield z

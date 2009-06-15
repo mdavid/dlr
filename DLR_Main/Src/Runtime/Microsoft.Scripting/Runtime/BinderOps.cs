@@ -13,11 +13,19 @@
  *
  * ***************************************************************************/
 
+#if CODEPLEX_40
+using System;
+#else
 using System; using Microsoft;
+#endif
 using System.Collections;
 using System.Collections.Generic;
 using System.Reflection;
+#if CODEPLEX_40
+using System.Dynamic;
+#else
 using Microsoft.Scripting;
+#endif
 using System.Text;
 using Microsoft.Scripting.Actions;
 using Microsoft.Scripting.Generation;

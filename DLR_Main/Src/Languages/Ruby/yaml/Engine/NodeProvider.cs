@@ -13,7 +13,11 @@
  *
  * ***************************************************************************/
 
+#if CODEPLEX_40
+using System;
+#else
 using System; using Microsoft;
+#endif
 using IronRuby.StandardLibrary.Yaml;
 using System.Collections.Generic;
 

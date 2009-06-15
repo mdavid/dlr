@@ -16,12 +16,22 @@ using System; using Microsoft;
 
 
 using System.Collections.Generic;
+#if CODEPLEX_40
+using System.Dynamic.Utils;
+#else
 using Microsoft.Scripting.Utils;
+#endif
 using System.Runtime.CompilerServices;
+#if !CODEPLEX_40
 using Microsoft.Runtime.CompilerServices;
+#endif
 
 
+#if CODEPLEX_40
+namespace System.Linq.Expressions {
+#else
 namespace Microsoft.Linq.Expressions {
+#endif
 
     internal enum TreeCompareResult {
         Incompatible,

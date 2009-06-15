@@ -18,11 +18,21 @@ using System; using Microsoft;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Diagnostics;
+#if CODEPLEX_40
+using System.Dynamic.Utils;
+using System.Linq.Expressions;
+using System.Linq.Expressions.Compiler;
+#else
 using Microsoft.Scripting.Utils;
 using Microsoft.Linq.Expressions;
 using Microsoft.Linq.Expressions.Compiler;
+#endif
 
+#if CODEPLEX_40
+namespace System.Runtime.CompilerServices {
+#else
 namespace Microsoft.Runtime.CompilerServices {
+#endif
     public partial class RuntimeOps {
         /// <summary>
         /// Quotes the provided expression tree.

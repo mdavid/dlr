@@ -13,7 +13,11 @@
  *
  * ***************************************************************************/
 
+#if CODEPLEX_40
+using System;
+#else
 using System; using Microsoft;
+#endif
 using System.Collections.Generic;
 
 using Microsoft.Scripting;
@@ -22,10 +26,18 @@ using Microsoft.Scripting.Runtime;
 
 using IronPython.Runtime.Operations;
 
+#if CODEPLEX_40
+using MSAst = System.Linq.Expressions;
+#else
 using MSAst = Microsoft.Linq.Expressions;
+#endif
 
 namespace IronPython.Compiler.Ast {
+#if CODEPLEX_40
+    using Ast = System.Linq.Expressions.Expression;
+#else
     using Ast = Microsoft.Linq.Expressions.Expression;
+#endif
 
     class SavableGlobalAllocator : ArrayGlobalAllocator {
         private readonly List<MSAst.Expression/*!*/>/*!*/ _constants;
@@ -35,11 +47,19 @@ namespace IronPython.Compiler.Ast {
             _constants = new List<MSAst.Expression>();
         }
 
+#if CODEPLEX_40
+        public override System.Linq.Expressions.Expression GetConstant(object value) {
+#else
         public override Microsoft.Linq.Expressions.Expression GetConstant(object value) {
+#endif
             return Utils.Constant(value);
         }
 
+#if CODEPLEX_40
+        public override System.Linq.Expressions.Expression[] PrepareScope(AstGenerator gen) {
+#else
         public override Microsoft.Linq.Expressions.Expression[] PrepareScope(AstGenerator gen) {
+#endif
             gen.AddHiddenVariable(GlobalArray);
             return new MSAst.Expression[] {
                 Ast.Assign(

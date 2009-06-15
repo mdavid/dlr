@@ -16,9 +16,17 @@ using System; using Microsoft;
 
 
 using System.Diagnostics;
+#if CODEPLEX_40
+using System.Dynamic.Utils;
+#else
 using Microsoft.Scripting.Utils;
+#endif
 
+#if CODEPLEX_40
+namespace System.Linq.Expressions {
+#else
 namespace Microsoft.Linq.Expressions {
+#endif
     /// <summary>
     /// Represents an infinite loop. It can be exited with "break".
     /// </summary>

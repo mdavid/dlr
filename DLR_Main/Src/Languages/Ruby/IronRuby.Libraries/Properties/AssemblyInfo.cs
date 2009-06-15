@@ -17,7 +17,9 @@ using System; using Microsoft;
 
 using System.Reflection;
 using System.Runtime.CompilerServices;
+#if !CODEPLEX_40
 using Microsoft.Runtime.CompilerServices;
+#endif
 
 using System.Runtime.InteropServices;
 using IronRuby.Hosting;
@@ -40,5 +42,8 @@ using System.Security;
 [assembly: AssemblyVersion(RubyContext.IronRubyVersionString)]
 [assembly: AssemblyFileVersion(RubyContext.IronRubyVersionString)]
 [assembly: AllowPartiallyTrustedCallers]
+#if CODEPLEX_40
+[assembly: SecurityRules(SecurityRuleSet.Level1)]
+#endif
 [assembly: SecurityTransparent]
 #endif

@@ -15,9 +15,15 @@
 using System; using Microsoft;
 
 
+#if CODEPLEX_40
+using System.Linq.Expressions;
+#else
 using Microsoft.Linq.Expressions;
+#endif
 using System.Runtime.CompilerServices;
+#if !CODEPLEX_40
 using Microsoft.Runtime.CompilerServices;
+#endif
 
 using Microsoft.Contracts;
 using Microsoft.Scripting.Runtime;

@@ -13,10 +13,19 @@
  *
  * ***************************************************************************/
 
+#if CODEPLEX_40
+using System;
+using System.Linq.Expressions;
+#else
 using System; using Microsoft;
 using Microsoft.Linq.Expressions;
+#endif
 using System.Reflection;
+#if CODEPLEX_40
+using System.Dynamic;
+#else
 using Microsoft.Scripting;
+#endif
 using Microsoft.Scripting.Generation;
 using Microsoft.Scripting.Runtime;
 

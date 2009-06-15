@@ -15,7 +15,11 @@
 using System; using Microsoft;
 
 
+#if CODEPLEX_40
+namespace System.Linq.Expressions {
+#else
 namespace Microsoft.Linq.Expressions {
+#endif
 
     /// <summary>
     /// Describes the node types for the nodes of an expression tree.

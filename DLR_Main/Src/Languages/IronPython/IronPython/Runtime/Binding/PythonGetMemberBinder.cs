@@ -13,16 +13,27 @@
  *
  * ***************************************************************************/
 
+#if CODEPLEX_40
+using System;
+#else
 using System; using Microsoft;
+#endif
 using System.Diagnostics;
-using Microsoft.Scripting;
+#if CODEPLEX_40
+using System.Dynamic;
+using System.Linq.Expressions;
+#else
 using Microsoft.Linq.Expressions;
+#endif
 using System.Reflection;
 using System.Runtime.CompilerServices;
+#if !CODEPLEX_40
 using Microsoft.Runtime.CompilerServices;
+#endif
 
 using System.Text;
 
+using Microsoft.Scripting;
 using Microsoft.Scripting.Actions;
 using Microsoft.Scripting.Generation;
 using Microsoft.Scripting.Runtime;
@@ -31,7 +42,11 @@ using Microsoft.Scripting.Utils;
 using IronPython.Runtime.Operations;
 using IronPython.Runtime.Types;
 
+#if CODEPLEX_40
+using Ast = System.Linq.Expressions.Expression;
+#else
 using Ast = Microsoft.Linq.Expressions.Expression;
+#endif
 using AstUtils = Microsoft.Scripting.Ast.Utils;
 
 namespace IronPython.Runtime.Binding {
@@ -677,7 +692,11 @@ namespace IronPython.Runtime.Binding {
         public override DynamicMetaObject FallbackGetMember(DynamicMetaObject self, DynamicMetaObject errorSuggestion) {
 #if !SILVERLIGHT
             DynamicMetaObject com;
+#if CODEPLEX_40
+            if (System.Dynamic.ComBinder.TryBindGetMember(this, self, out com, true)) {
+#else
             if (Microsoft.Scripting.ComBinder.TryBindGetMember(this, self, out com, true)) {
+#endif
                 return com;
             }
 #endif

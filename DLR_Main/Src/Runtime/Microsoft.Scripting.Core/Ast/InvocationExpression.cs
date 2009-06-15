@@ -18,10 +18,18 @@ using System; using Microsoft;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Diagnostics;
+#if CODEPLEX_40
+using System.Dynamic.Utils;
+#else
 using Microsoft.Scripting.Utils;
+#endif
 using System.Reflection;
 
+#if CODEPLEX_40
+namespace System.Linq.Expressions {
+#else
 namespace Microsoft.Linq.Expressions {
+#endif
     /// <summary>
     /// Represents an expression that applies a delegate or lambda expression to a list of argument expressions.
     /// </summary>

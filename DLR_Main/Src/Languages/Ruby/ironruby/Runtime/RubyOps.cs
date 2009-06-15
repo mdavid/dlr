@@ -13,15 +13,24 @@
  *
  * ***************************************************************************/
 
+#if CODEPLEX_40
+using System;
+#else
 using System; using Microsoft;
+#endif
 using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics;
-using Microsoft.Scripting;
+#if CODEPLEX_40
+using System.Dynamic;
+#else
+#endif
 using System.IO;
 using System.Reflection;
 using System.Runtime.CompilerServices;
+#if !CODEPLEX_40
 using Microsoft.Runtime.CompilerServices;
+#endif
 
 using System.Runtime.Serialization;
 using System.Threading;
@@ -29,12 +38,17 @@ using IronRuby.Builtins;
 using IronRuby.Compiler;
 using IronRuby.Compiler.Generation;
 using IronRuby.Runtime.Calls;
+using Microsoft.Scripting;
 using Microsoft.Scripting.Interpreter;
 using Microsoft.Scripting.Math;
 using Microsoft.Scripting.Runtime;
 using Microsoft.Scripting.Utils;
 using IronRuby.Compiler.Ast;
+#if CODEPLEX_40
+using MSA = System.Linq.Expressions;
+#else
 using MSA = Microsoft.Linq.Expressions;
+#endif
 
 namespace IronRuby.Runtime {
     [ReflectionCached, CLSCompliant(false)]

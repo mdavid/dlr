@@ -16,7 +16,11 @@ using System; using Microsoft;
 
 
 using System.CodeDom;
+#if CODEPLEX_40
+using System.Dynamic;
+#else
 using Microsoft.Scripting;
+#endif
 using Microsoft.Scripting.Utils;
 
 #if !SILVERLIGHT // CodeDom objects are not available in Silverlight

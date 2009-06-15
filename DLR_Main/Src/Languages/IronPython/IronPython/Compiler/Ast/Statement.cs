@@ -15,7 +15,11 @@
 using System; using Microsoft;
 
 
+#if CODEPLEX_40
+using MSAst = System.Linq.Expressions;
+#else
 using MSAst = Microsoft.Linq.Expressions;
+#endif
 
 namespace IronPython.Compiler.Ast {
     public abstract class Statement : Node {

@@ -1,4 +1,8 @@
+#if CODEPLEX_40
+using System;
+#else
 using System; using Microsoft;
+#endif
 using System.Collections.Generic;
 using System.Text;
 
@@ -8,12 +12,6 @@ namespace IronPython.Runtime.Binding {
     /// </summary>
     internal enum PythonOperationKind {
         None,
-        /// <summary>
-        /// Unary operator.
-        /// 
-        /// Gets the list of members that belong to the current object returned as an IList of string
-        /// </summary>
-        MemberNames,
         /// <summary>
         /// Unary operator.
         /// 

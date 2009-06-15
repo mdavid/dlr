@@ -15,7 +15,11 @@
 
 #if !SPECSHARP
 
+#if CODEPLEX_40
+using System;
+#else
 using System; using Microsoft;
+#endif
 using System.Diagnostics;
 using Microsoft.Scripting.Utils;
 

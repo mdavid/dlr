@@ -22,7 +22,11 @@ using System.Diagnostics;
 using System.Reflection;
 using System.Runtime.InteropServices;
 
+#if CODEPLEX_40
+namespace System.Dynamic {
+#else
 namespace Microsoft.Scripting {
+#endif
     /// <summary>
     /// If a managed user type (as opposed to a primitive type or a COM object) is passed as an argument to a COM call, we need
     /// to determine the VarEnum type we will marshal it as. We have the following options:

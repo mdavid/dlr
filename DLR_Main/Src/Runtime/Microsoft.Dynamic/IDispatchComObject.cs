@@ -21,14 +21,22 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Globalization;
+#if CODEPLEX_40
+using System.Linq.Expressions;
+#else
 using Microsoft.Linq.Expressions;
+#endif
 using System.Reflection;
 using System.Runtime.InteropServices;
 using System.Security;
 using System.Security.Permissions;
 using ComTypes = System.Runtime.InteropServices.ComTypes;
 
+#if CODEPLEX_40
+namespace System.Dynamic {
+#else
 namespace Microsoft.Scripting {
+#endif
 
     /// <summary>
     /// An object that implements IDispatch

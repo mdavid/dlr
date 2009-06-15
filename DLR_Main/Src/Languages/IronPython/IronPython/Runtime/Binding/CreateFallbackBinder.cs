@@ -13,12 +13,21 @@
  *
  * ***************************************************************************/
 
+#if CODEPLEX_40
+using System;
+#else
 using System; using Microsoft;
+#endif
 using System.Collections.Generic;
 using System.Diagnostics;
+#if CODEPLEX_40
+using System.Linq.Expressions;
+using System.Dynamic;
+#else
 using Microsoft.Linq.Expressions;
-using Microsoft.Scripting;
+#endif
 using IronPython.Runtime.Operations;
+using Microsoft.Scripting;
 using Microsoft.Scripting.Actions;
 using Microsoft.Scripting.Runtime;
 using Microsoft.Scripting.Utils;

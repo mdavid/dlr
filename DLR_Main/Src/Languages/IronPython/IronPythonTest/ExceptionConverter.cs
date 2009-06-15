@@ -13,7 +13,11 @@
  *
  * ***************************************************************************/
 
+#if CODEPLEX_40
+using System;
+#else
 using System; using Microsoft;
+#endif
 
 namespace IronPythonTest {
     public class CLRException1 : Exception {

@@ -13,7 +13,11 @@
  *
  * ***************************************************************************/
 
+#if CODEPLEX_40
+using System;
+#else
 using System; using Microsoft;
+#endif
 
 namespace IronRuby.Runtime {
     public static class Key {

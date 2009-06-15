@@ -17,7 +17,9 @@ using System; using Microsoft;
 
 using System.Collections;
 using System.Runtime.CompilerServices;
+#if !CODEPLEX_40
 using Microsoft.Runtime.CompilerServices;
+#endif
 
 using IronPython.Runtime.Types;
 using Microsoft.Scripting.Actions;

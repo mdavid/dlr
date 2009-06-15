@@ -13,9 +13,17 @@
  *
  * ***************************************************************************/
 
+#if CODEPLEX_40
+using System;
+#else
 using System; using Microsoft;
+#endif
 using System.Reflection;
+#if CODEPLEX_40
+using System.Linq.Expressions;
+#else
 using Microsoft.Linq.Expressions;
+#endif
 using Microsoft.Scripting.Actions;
 using Microsoft.Scripting.Runtime;
 using Microsoft.Scripting.Utils;
@@ -24,7 +32,11 @@ using IronRuby.Compiler;
 using AstUtils = Microsoft.Scripting.Ast.Utils;
 
 namespace IronRuby.Runtime.Calls {
+#if CODEPLEX_40
+    using Ast = System.Linq.Expressions.Expression;
+#else
     using Ast = Microsoft.Linq.Expressions.Expression;
+#endif
 
     internal class RubyFieldInfo : RubyMemberInfo {
         private readonly FieldInfo/*!*/ _fieldInfo;

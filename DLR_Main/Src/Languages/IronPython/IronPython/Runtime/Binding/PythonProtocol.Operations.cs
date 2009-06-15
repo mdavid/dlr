@@ -13,15 +13,24 @@
  *
  * ***************************************************************************/
 
+#if CODEPLEX_40
+using System;
+#else
 using System; using Microsoft;
+#endif
 using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics;
-using Microsoft.Scripting;
+#if CODEPLEX_40
+using System.Dynamic;
+using System.Linq.Expressions;
+#else
 using Microsoft.Linq.Expressions;
+#endif
 using System.Reflection;
 using System.Text;
 
+using Microsoft.Scripting;
 using Microsoft.Scripting.Actions;
 using Microsoft.Scripting.Actions.Calls;
 using Microsoft.Scripting.Ast;
@@ -34,7 +43,11 @@ using IronPython.Runtime.Operations;
 using IronPython.Runtime.Types;
 
 namespace IronPython.Runtime.Binding {
+#if CODEPLEX_40
+    using Ast = System.Linq.Expressions.Expression;
+#else
     using Ast = Microsoft.Linq.Expressions.Expression;
+#endif
     using AstUtils = Microsoft.Scripting.Ast.Utils;
 
     static partial class PythonProtocol {
@@ -175,10 +188,6 @@ namespace IronPython.Runtime.Binding {
             switch (NormalizeOperator(operation.Operation)) {
                 case PythonOperationKind.Documentation:
                     res = BindingHelpers.AddPythonBoxing(MakeDocumentationOperation(operation, args));
-                    break;
-                case PythonOperationKind.MemberNames:
-                    deferType = typeof(IList<string>);
-                    res = MakeMemberNamesOperation(operation, args);
                     break;
                 case PythonOperationKind.CallSignatures:
                     res = BindingHelpers.AddPythonBoxing(MakeCallSignatureOperation(args[0], CompilerHelpers.GetMethodTargets(args[0].Value)));

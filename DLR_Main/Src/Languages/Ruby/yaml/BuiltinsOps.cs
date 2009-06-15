@@ -13,13 +13,23 @@
  *
  * ***************************************************************************/
 
+#if CODEPLEX_40
+using System;
+#else
 using System; using Microsoft;
+#endif
 using System.Runtime.CompilerServices;
+#if !CODEPLEX_40
 using Microsoft.Runtime.CompilerServices;
+#endif
 
-using Microsoft.Scripting;
+#if CODEPLEX_40
+using System.Dynamic;
+#else
+#endif
 using IronRuby.Builtins;
 using IronRuby.Runtime;
+using Microsoft.Scripting;
 using Microsoft.Scripting.Math;
 using Microsoft.Scripting.Runtime;
 using System.Runtime.InteropServices;

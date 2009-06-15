@@ -21,7 +21,11 @@ using System.Reflection;
 using System.Reflection.Emit;
 using System.Diagnostics.SymbolStore;
 
+#if CODEPLEX_40
+namespace System.Linq.Expressions.Compiler {
+#else
 namespace Microsoft.Linq.Expressions.Compiler {
+#endif
     /// <summary>
     /// Wraps ILGenerator with code that tracks the current IL offset as instructions are emitted into the IL stream.
     /// We can conditionally compile this for non-Dev10 release only (using #ifdef MICROSOFT_SCRIPTING) 

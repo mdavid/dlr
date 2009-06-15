@@ -1,7 +1,16 @@
+#if CODEPLEX_40
+using System;
+using System.Dynamic;
+#else
 using System; using Microsoft;
 using Microsoft.Scripting;
+#endif
 using Microsoft.Scripting.Runtime;
+#if CODEPLEX_40
+using System.Linq.Expressions;
+#else
 using Microsoft.Linq.Expressions;
+#endif
 
 namespace Microsoft.Scripting.Runtime {
     public static class BindingRestrictionsHelpers {

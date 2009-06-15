@@ -21,7 +21,11 @@ using System.Collections.Generic;
 using System.Security;
 using ComTypes = System.Runtime.InteropServices.ComTypes;
 
+#if CODEPLEX_40
+namespace System.Dynamic {
+#else
 namespace Microsoft.Scripting {
+#endif
 
     internal sealed class ComTypeClassDesc : ComTypeDesc {
         private LinkedList<string> _itfs; // implemented interfaces

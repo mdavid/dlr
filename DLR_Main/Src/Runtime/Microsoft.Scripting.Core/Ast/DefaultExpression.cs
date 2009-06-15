@@ -17,7 +17,11 @@ using System; using Microsoft;
 
 using System.Diagnostics;
 
+#if CODEPLEX_40
+namespace System.Linq.Expressions {
+#else
 namespace Microsoft.Linq.Expressions {
+#endif
     /// <summary>
     /// Represents the default value of a type or an empty expression.
     /// </summary>

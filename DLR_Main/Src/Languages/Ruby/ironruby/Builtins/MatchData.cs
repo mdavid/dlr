@@ -16,7 +16,11 @@
 using Microsoft.Scripting.Utils;
 using System.Text.RegularExpressions;
 using IronRuby.Runtime;
+#if CODEPLEX_40
+using System;
+#else
 using System; using Microsoft;
+#endif
 
 namespace IronRuby.Builtins {
     // TODO: taint from OriginalString, copy original string?

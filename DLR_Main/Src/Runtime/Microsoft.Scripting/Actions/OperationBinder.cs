@@ -13,10 +13,18 @@
  *
  * ***************************************************************************/
 
+#if CODEPLEX_40
+using System.Dynamic;
+#else
 using Microsoft.Scripting;
+#endif
 using Microsoft.Contracts;
 using Microsoft.Scripting.Utils;
+#if CODEPLEX_40
+using System;
+#else
 using System; using Microsoft;
+#endif
 
 namespace Microsoft.Scripting.Actions {
     [Obsolete("Use ExtensionBinaryOperationBinder or ExtensionUnaryOperationBinder")]

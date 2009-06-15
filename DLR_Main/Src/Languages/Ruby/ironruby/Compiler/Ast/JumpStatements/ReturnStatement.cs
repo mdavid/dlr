@@ -16,10 +16,18 @@ using System; using Microsoft;
 
 
 using Microsoft.Scripting;
+#if CODEPLEX_40
+using MSA = System.Linq.Expressions;
+#else
 using MSA = Microsoft.Linq.Expressions;
+#endif
 
 namespace IronRuby.Compiler.Ast {
+#if CODEPLEX_40
+    using Ast = System.Linq.Expressions.Expression;
+#else
     using Ast = Microsoft.Linq.Expressions.Expression;
+#endif
 
     public partial class ReturnStatement : JumpStatement {
         public ReturnStatement(Arguments arguments, SourceSpan location)

@@ -13,8 +13,13 @@
  *
  * ***************************************************************************/
 
+#if CODEPLEX_40
+using System;
+using System.Dynamic;
+#else
 using System; using Microsoft;
 using Microsoft.Scripting;
+#endif
 using Microsoft.Contracts; 
 
 namespace Microsoft.Scripting {

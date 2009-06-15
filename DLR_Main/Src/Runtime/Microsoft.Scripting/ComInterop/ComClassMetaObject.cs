@@ -17,8 +17,13 @@ using System; using Microsoft;
 
 #if !SILVERLIGHT // ComObject
 
+#if CODEPLEX_40
+using System.Linq.Expressions;
+using System.Dynamic;
+#else
 using Microsoft.Linq.Expressions;
 using Microsoft.Scripting;
+#endif
 using AstUtils = Microsoft.Scripting.Ast.Utils;
 
 namespace Microsoft.Scripting.ComInterop {

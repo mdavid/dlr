@@ -13,13 +13,21 @@
  *
  * ***************************************************************************/
 
+#if CODEPLEX_40
+using System;
+#else
 using System; using Microsoft;
+#endif
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Reflection;
-using Microsoft.Scripting;
+#if CODEPLEX_40
+using System.Dynamic;
+#else
+#endif
 using IronPython.Runtime.Binding;
 using IronPython.Runtime.Types;
+using Microsoft.Scripting;
 using Microsoft.Scripting.Actions;
 using Microsoft.Scripting.Generation;
 using Microsoft.Scripting.Runtime;
@@ -176,9 +184,17 @@ namespace IronPython.Runtime.Operations {
             if (assembly == typeof(PythonOps).Assembly || // IronPython.dll
                 assembly == typeof(Microsoft.Scripting.Math.BigInteger).Assembly || // Microsoft.Scripting.dll
 #if !SILVERLIGHT
+#if CODEPLEX_40
+                assembly == typeof(System.Dynamic.ComBinder).Assembly || // Microsoft.Dynamic.ComInterop.dll
+#else
                 assembly == typeof(Microsoft.Scripting.ComBinder).Assembly || // Microsoft.Dynamic.ComInterop.dll
+#endif
 #endif                
+#if CODEPLEX_40
+                assembly == typeof(System.Linq.Expressions.Expression).Assembly) {  // Microsoft.Scripting.Core.dll
+#else
                 assembly == typeof(Microsoft.Linq.Expressions.Expression).Assembly) {  // Microsoft.Scripting.Core.dll
+#endif
                 return true;
             }
 
@@ -529,6 +545,13 @@ namespace IronPython.Runtime.Operations {
                 // methods for two different types - for example object.MemberwiseClone for
                 // ExtensibleInt & object.  We need to reset our type to the common base type.
                 type = GetCommonBaseType(x.DeclaringType, y.DeclaringType) ?? typeof(object);
+
+                // generic type definitions will have a null name.
+                if (x.DeclaringType.FullName == null) {
+                    return -1;
+                } else if (y.DeclaringType.FullName == null) {
+                    return 1;
+                }
                 return x.DeclaringType.FullName.CompareTo(y.DeclaringType.FullName);
             });
 

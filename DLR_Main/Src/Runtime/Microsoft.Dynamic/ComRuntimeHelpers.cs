@@ -26,7 +26,11 @@ using System.Security;
 using System.Security.Permissions;
 using ComTypes = System.Runtime.InteropServices.ComTypes;
 
+#if CODEPLEX_40
+namespace System.Dynamic {
+#else
 namespace Microsoft.Scripting {
+#endif
 
     internal static class ComRuntimeHelpers {
 

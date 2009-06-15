@@ -20,10 +20,18 @@ using Microsoft.Scripting;
 using IronRuby.Builtins;
 using IronRuby.Runtime;
 using AstUtils = Microsoft.Scripting.Ast.Utils;
+#if CODEPLEX_40
+using MSA = System.Linq.Expressions;
+#else
 using MSA = Microsoft.Linq.Expressions;
+#endif
 
 namespace IronRuby.Compiler.Ast {
+#if CODEPLEX_40
+    using Ast = System.Linq.Expressions.Expression;
+#else
     using Ast = Microsoft.Linq.Expressions.Expression;
+#endif
 
     /// <summary>
     /// yield(args)

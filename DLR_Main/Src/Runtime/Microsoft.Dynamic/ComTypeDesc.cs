@@ -24,7 +24,11 @@ using System.Security;
 using System.Threading;
 using ComTypes = System.Runtime.InteropServices.ComTypes;
 
+#if CODEPLEX_40
+namespace System.Dynamic {
+#else
 namespace Microsoft.Scripting {
+#endif
 
     internal class ComTypeDesc {
         private string _typeName;

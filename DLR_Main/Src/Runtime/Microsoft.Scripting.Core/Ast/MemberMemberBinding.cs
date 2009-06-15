@@ -17,10 +17,18 @@ using System; using Microsoft;
 
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+#if CODEPLEX_40
+using System.Dynamic.Utils;
+#else
 using Microsoft.Scripting.Utils;
+#endif
 using System.Reflection;
 
+#if CODEPLEX_40
+namespace System.Linq.Expressions {
+#else
 namespace Microsoft.Linq.Expressions {
+#endif
     /// <summary>
     /// Represents initializing members of a member of a newly created object.
     /// </summary>

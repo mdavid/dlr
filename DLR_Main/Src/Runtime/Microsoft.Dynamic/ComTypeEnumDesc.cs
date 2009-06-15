@@ -17,13 +17,25 @@ using System; using Microsoft;
 
 #if !SILVERLIGHT // ComObject
 
+#if CODEPLEX_40
+using System.Linq.Expressions;
+#else
 using Microsoft.Linq.Expressions;
+#endif
 using System.Runtime.InteropServices;
+#if CODEPLEX_40
+using System.Dynamic;
+#else
 using Microsoft.Scripting;
+#endif
 using System.Globalization;
 using ComTypes = System.Runtime.InteropServices.ComTypes;
 
+#if CODEPLEX_40
+namespace System.Dynamic {
+#else
 namespace Microsoft.Scripting {
+#endif
     internal sealed class ComTypeEnumDesc : ComTypeDesc {
         public override string ToString() {
             return String.Format(CultureInfo.CurrentCulture, "<enum '{0}'>", TypeName);

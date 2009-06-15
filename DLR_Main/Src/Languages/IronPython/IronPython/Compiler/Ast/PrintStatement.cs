@@ -16,10 +16,18 @@ using System; using Microsoft;
 
 
 using System.Collections.Generic;
+#if CODEPLEX_40
+using MSAst = System.Linq.Expressions;
+#else
 using MSAst = Microsoft.Linq.Expressions;
+#endif
 
 namespace IronPython.Compiler.Ast {
+#if CODEPLEX_40
+    using Ast = System.Linq.Expressions.Expression;
+#else
     using Ast = Microsoft.Linq.Expressions.Expression;
+#endif
     using AstUtils = Microsoft.Scripting.Ast.Utils;
 
     public class PrintStatement : Statement {

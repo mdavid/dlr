@@ -16,7 +16,11 @@ using System; using Microsoft;
 
 
 using Microsoft.Scripting.Utils;
+#if CODEPLEX_40
+using MSA = System.Linq.Expressions;
+#else
 using MSA = Microsoft.Linq.Expressions;
+#endif
 
 namespace IronRuby.Compiler {
 

@@ -19,10 +19,16 @@ using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Diagnostics;
 using System.Runtime.CompilerServices;
+#if !CODEPLEX_40
 using Microsoft.Runtime.CompilerServices;
+#endif
 
 
+#if CODEPLEX_40
+namespace System.Dynamic.Utils {
+#else
 namespace Microsoft.Scripting.Utils {
+#endif
     internal static class CollectionExtensions {
         /// <summary>
         /// Wraps the provided enumerable into a ReadOnlyCollection{T}

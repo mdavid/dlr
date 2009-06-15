@@ -17,17 +17,28 @@ using System; using Microsoft;
 
 using System.Collections.Generic;
 using System.Diagnostics;
+#if CODEPLEX_40
+using System.Dynamic;
+using System.Dynamic.Utils;
+#else
 using Microsoft.Scripting;
 using Microsoft.Scripting.Utils;
+#endif
 using System.Globalization;
 using System.IO;
 using System.Reflection;
 using System.Runtime.CompilerServices;
+#if !CODEPLEX_40
 using Microsoft.Runtime.CompilerServices;
+#endif
 
 using System.Collections.ObjectModel;
 
+#if CODEPLEX_40
+namespace System.Linq.Expressions {
+#else
 namespace Microsoft.Linq.Expressions {
+#endif
     [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Maintainability", "CA1506:AvoidExcessiveClassCoupling")]
     internal sealed class DebugViewWriter : ExpressionVisitor {
         [Flags]

@@ -15,7 +15,11 @@
 using System; using Microsoft;
 
 
+#if CODEPLEX_40
+namespace System.Linq.Expressions {
+#else
 namespace Microsoft.Linq.Expressions {
+#endif
 
     internal static partial class Strings {
         private static string FormatString(string format, params object[] args) {

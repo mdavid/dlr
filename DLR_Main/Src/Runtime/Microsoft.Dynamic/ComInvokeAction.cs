@@ -19,12 +19,22 @@ using System; using Microsoft;
 
 using System.Collections.ObjectModel;
 using System.Diagnostics;
+#if CODEPLEX_40
+using System.Linq.Expressions;
+#else
 using Microsoft.Linq.Expressions;
+#endif
 using System.Runtime.CompilerServices;
+#if !CODEPLEX_40
 using Microsoft.Runtime.CompilerServices;
+#endif
 
 
+#if CODEPLEX_40
+namespace System.Dynamic {
+#else
 namespace Microsoft.Scripting {
+#endif
     /// <summary>
     /// Invokes the object. If it falls back, just produce an error.
     /// </summary>

@@ -16,7 +16,11 @@ using System; using Microsoft;
 
 
 using System.Collections.Generic;
+#if CODEPLEX_40
+using System.Dynamic.Utils;
+#else
 using Microsoft.Scripting.Utils;
+#endif
 using System.IO;
 using System.Reflection;
 using System.Reflection.Emit;
@@ -24,7 +28,11 @@ using System.Security;
 using System.Text;
 using System.Threading;
 
+#if CODEPLEX_40
+namespace System.Linq.Expressions.Compiler {
+#else
 namespace Microsoft.Linq.Expressions.Compiler {
+#endif
     internal sealed class AssemblyGen {
         private static AssemblyGen _assembly;
 

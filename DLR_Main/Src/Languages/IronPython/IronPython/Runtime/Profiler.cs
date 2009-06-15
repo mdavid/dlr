@@ -13,7 +13,11 @@
  *
  * ***************************************************************************/
 
+#if CODEPLEX_40
+using System;
+#else
 using System; using Microsoft;
+#endif
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Reflection;
@@ -26,9 +30,17 @@ using Microsoft.Scripting.Actions.Calls;
 
 using IronPython.Compiler;
 
+#if CODEPLEX_40
+using Ast = System.Linq.Expressions.Expression;
+#else
 using Ast = Microsoft.Linq.Expressions.Expression;
+#endif
 using AstUtils = Microsoft.Scripting.Ast.Utils;
+#if CODEPLEX_40
+using MSAst = System.Linq.Expressions;
+#else
 using MSAst = Microsoft.Linq.Expressions;
+#endif
 
 namespace IronPython.Runtime {
 
@@ -317,7 +329,11 @@ namespace IronPython.Runtime {
                 return base.VisitExtension(node);
             }
 
+#if CODEPLEX_40
+            protected override System.Linq.Expressions.Expression VisitMethodCall(MSAst.MethodCallExpression node) {
+#else
             protected override Microsoft.Linq.Expressions.Expression VisitMethodCall(MSAst.MethodCallExpression node) {
+#endif
                 var result = base.VisitMethodCall(node);
                 if (IgnoreMethod(node.Method)) {
                     // To ignore the called method, we need to prevent its time from being added to the current method's total
@@ -326,7 +342,11 @@ namespace IronPython.Runtime {
                 return result;
             }
 
+#if CODEPLEX_40
+            protected override System.Linq.Expressions.Expression VisitLambda<T>(MSAst.Expression<T> node) {
+#else
             protected override Microsoft.Linq.Expressions.Expression VisitLambda<T>(MSAst.Expression<T> node) {
+#endif
                 // Don't trace into embedded function
                 return node;
             }

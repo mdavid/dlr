@@ -13,9 +13,17 @@
  *
  * ***************************************************************************/
 
+#if CODEPLEX_40
+using System;
+#else
 using System; using Microsoft;
+#endif
 using System.Collections.ObjectModel;
+#if CODEPLEX_40
+using System.Linq.Expressions;
+#else
 using Microsoft.Linq.Expressions;
+#endif
 using Microsoft.Contracts;
 using Microsoft.Scripting.Runtime;
 using Microsoft.Scripting.Utils;

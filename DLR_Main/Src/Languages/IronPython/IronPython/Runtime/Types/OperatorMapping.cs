@@ -1,4 +1,8 @@
+#if CODEPLEX_40
+using System;
+#else
 using System; using Microsoft;
+#endif
 using System.Collections.Generic;
 using System.Text;
 using IronPython.Runtime.Binding;
@@ -113,7 +117,6 @@ namespace IronPython.Runtime.Types {
             // DLR Extended operators:
             res.Add(new OperatorMapping(PythonOperationKind.Compare, "op_Compare", "Compare"));        // not defined
 
-            res.Add(new OperatorMapping(PythonOperationKind.MemberNames, "GetMemberNames", null));
             res.Add(new OperatorMapping(PythonOperationKind.CallSignatures, "GetCallSignatures", null));
             res.Add(new OperatorMapping(PythonOperationKind.Documentation, "GetDocumentation", null));
             res.Add(new OperatorMapping(PythonOperationKind.IsCallable, "IsCallable", null));

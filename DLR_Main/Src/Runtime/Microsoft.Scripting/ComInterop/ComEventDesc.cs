@@ -15,7 +15,11 @@
 
 #if !SILVERLIGHT // ComObject
 
+#if CODEPLEX_40
+using System;
+#else
 using System; using Microsoft;
+#endif
 
 namespace Microsoft.Scripting.ComInterop {
     internal class ComEventDesc {

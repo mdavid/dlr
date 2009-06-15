@@ -17,11 +17,20 @@ using System; using Microsoft;
 
 #if !SILVERLIGHT // ComObject
 
+#if CODEPLEX_40
+using System.Linq.Expressions;
+using System.Dynamic;
+#else
 using Microsoft.Linq.Expressions;
 using Microsoft.Scripting;
+#endif
 using System.Globalization;
 
+#if CODEPLEX_40
+namespace System.Dynamic {
+#else
 namespace Microsoft.Scripting {
+#endif
 
     /// <summary>
     /// This represents a bound dispmember on a IDispatch object.

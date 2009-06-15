@@ -18,10 +18,16 @@ using System; using Microsoft;
 using System.Reflection;
 using System.Reflection.Emit;
 using System.Runtime.CompilerServices;
+#if !CODEPLEX_40
 using Microsoft.Runtime.CompilerServices;
+#endif
 
 
+#if CODEPLEX_40
+namespace System.Linq.Expressions.Compiler {
+#else
 namespace Microsoft.Linq.Expressions.Compiler {
+#endif
 
     internal sealed partial class CompilerScope {
 

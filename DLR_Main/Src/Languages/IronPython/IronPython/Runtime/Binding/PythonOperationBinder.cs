@@ -13,13 +13,24 @@
  *
  * ***************************************************************************/
 
+#if CODEPLEX_40
+using System;
+#else
 using System; using Microsoft;
+#endif
 using System.Collections;
 using System.Collections.Generic;
+#if CODEPLEX_40
+using System.Dynamic;
+using System.Linq.Expressions;
+#else
 using Microsoft.Scripting;
 using Microsoft.Linq.Expressions;
+#endif
 using System.Runtime.CompilerServices;
+#if !CODEPLEX_40
 using Microsoft.Runtime.CompilerServices;
+#endif
 
 
 using Microsoft.Scripting.Generation;
@@ -32,7 +43,11 @@ using IronPython.Runtime.Types;
 using AstUtils = Microsoft.Scripting.Ast.Utils;
 
 namespace IronPython.Runtime.Binding {
+#if CODEPLEX_40
+    using Ast = System.Linq.Expressions.Expression;
+#else
     using Ast = Microsoft.Linq.Expressions.Expression;
+#endif
 
     class PythonOperationBinder : DynamicMetaObjectBinder, IPythonSite, IExpressionSerializable {
         private readonly PythonContext/*!*/ _context;
@@ -333,7 +348,6 @@ namespace IronPython.Runtime.Binding {
             get {
                 switch (Operation & (~PythonOperationKind.DisableCoerce)) {
                     case PythonOperationKind.Compare: return typeof(int);
-                    case PythonOperationKind.MemberNames: return typeof(IList<string>);
                     case PythonOperationKind.IsCallable: return typeof(bool);
                     case PythonOperationKind.Hash: return typeof(int);
                     case PythonOperationKind.Contains: return typeof(bool);
@@ -395,7 +409,11 @@ namespace IronPython.Runtime.Binding {
             public override DynamicMetaObject FallbackSetIndex(DynamicMetaObject target, DynamicMetaObject[] indexes, DynamicMetaObject value, DynamicMetaObject errorSuggestion) {
 #if !SILVERLIGHT
                 DynamicMetaObject com;
+#if CODEPLEX_40
+                if (System.Dynamic.ComBinder.TryBindSetIndex(this, target, indexes, value, out com)) {
+#else
                 if (Microsoft.Scripting.ComBinder.TryBindSetIndex(this, target, indexes, value, out com)) {
+#endif
                     return com;
                 }
 #endif
@@ -423,7 +441,11 @@ namespace IronPython.Runtime.Binding {
             public override DynamicMetaObject FallbackGetIndex(DynamicMetaObject target, DynamicMetaObject[] indexes, DynamicMetaObject errorSuggestion) {
 #if !SILVERLIGHT
                 DynamicMetaObject com;
+#if CODEPLEX_40
+                if (System.Dynamic.ComBinder.TryBindGetIndex(this, target, indexes, out com)) {
+#else
                 if (Microsoft.Scripting.ComBinder.TryBindGetIndex(this, target, indexes, out com)) {
+#endif
                     return com;
                 }
 #endif

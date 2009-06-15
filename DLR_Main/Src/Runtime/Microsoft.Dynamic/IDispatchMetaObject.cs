@@ -18,9 +18,17 @@ using System; using Microsoft;
 #if !SILVERLIGHT // ComObject
 
 using System.Diagnostics;
+#if CODEPLEX_40
+using System.Linq.Expressions;
+#else
 using Microsoft.Linq.Expressions;
+#endif
 
+#if CODEPLEX_40
+namespace System.Dynamic {
+#else
 namespace Microsoft.Scripting {
+#endif
 
     internal sealed class IDispatchMetaObject : ComFallbackMetaObject {
         private readonly IDispatchComObject _self;

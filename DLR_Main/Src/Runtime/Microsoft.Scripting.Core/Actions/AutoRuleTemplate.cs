@@ -16,13 +16,24 @@ using System; using Microsoft;
 
 
 using System.Collections.Generic;
+#if CODEPLEX_40
+using System.Dynamic.Utils;
+using System.Linq.Expressions;
+#else
 using Microsoft.Scripting.Utils;
 using Microsoft.Linq.Expressions;
+#endif
 using System.Runtime.CompilerServices;
+#if !CODEPLEX_40
 using Microsoft.Runtime.CompilerServices;
+#endif
 
 
+#if CODEPLEX_40
+namespace System.Dynamic {
+#else
 namespace Microsoft.Scripting {
+#endif
     /// <summary>
     /// Handles auto-templating of rules.  There are three important actions this performs:
     ///     1. Detects if templating is possible between two rules

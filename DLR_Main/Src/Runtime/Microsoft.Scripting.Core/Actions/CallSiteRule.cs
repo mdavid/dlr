@@ -18,13 +18,26 @@ using System; using Microsoft;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Diagnostics;
+#if CODEPLEX_40
+using System.Dynamic;
+using System.Dynamic.Utils;
+#else
 using Microsoft.Scripting;
 using Microsoft.Scripting.Utils;
+#endif
 using System.Globalization;
+#if CODEPLEX_40
+using System.Linq.Expressions;
+#else
 using Microsoft.Linq.Expressions;
+#endif
 using System.Reflection;
 
+#if CODEPLEX_40
+namespace System.Runtime.CompilerServices {
+#else
 namespace Microsoft.Runtime.CompilerServices {
+#endif
     /// <summary>
     /// This API supports the .NET Framework infrastructure and is not intended to be used directly from your code.
     /// Represents a runtime binding at a call site.

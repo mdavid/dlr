@@ -15,10 +15,18 @@
 using System; using Microsoft;
 
 
+#if CODEPLEX_40
+using System.Dynamic.Utils;
+#else
 using Microsoft.Scripting.Utils;
+#endif
 using System.Diagnostics;
 
+#if CODEPLEX_40
+namespace System.Linq.Expressions {
+#else
 namespace Microsoft.Linq.Expressions {
+#endif
 
     /// <summary>
     /// Represents an expression that has a conditional operator.

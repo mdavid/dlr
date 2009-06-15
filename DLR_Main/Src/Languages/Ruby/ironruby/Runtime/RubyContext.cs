@@ -13,14 +13,23 @@
  *
  * ***************************************************************************/
 
+#if CODEPLEX_40
+using System;
+#else
 using System; using Microsoft;
+#endif
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Runtime.CompilerServices;
+#if !CODEPLEX_40
 using Microsoft.Runtime.CompilerServices;
+#endif
 
-using Microsoft.Scripting;
+#if CODEPLEX_40
+using System.Dynamic;
+#else
+#endif
 using System.Security;
 using System.Text;
 using System.Threading;
@@ -28,12 +37,17 @@ using IronRuby.Builtins;
 using IronRuby.Compiler;
 using IronRuby.Compiler.Generation;
 using IronRuby.Runtime.Calls;
+using Microsoft.Scripting;
 using Microsoft.Scripting.Actions;
 using Microsoft.Scripting.Generation;
 using Microsoft.Scripting.Runtime;
 using Microsoft.Scripting.Utils;
 using IronRuby.Compiler.Ast;
+#if CODEPLEX_40
+using MSA = System.Linq.Expressions;
+#else
 using MSA = Microsoft.Linq.Expressions;
+#endif
 
 namespace IronRuby.Runtime {
     /// <summary>
@@ -1800,8 +1814,13 @@ namespace IronRuby.Runtime {
             MSA.Expression<T> lambda;
 #if MEASURE_AST
             lock (_TransformationLock) {
+#if CODEPLEX_40
+                var oldHistogram = System.Linq.Expressions.Expression.Histogram;
+                System.Linq.Expressions.Expression.Histogram = _TransformationHistogram;
+#else
                 var oldHistogram = Microsoft.Linq.Expressions.Expression.Histogram;
                 Microsoft.Linq.Expressions.Expression.Histogram = _TransformationHistogram;
+#endif
                 try {
 #endif
             ts1 = Stopwatch.GetTimestamp();
@@ -1811,7 +1830,11 @@ namespace IronRuby.Runtime {
 
 #if MEASURE_AST
                 } finally {
+#if CODEPLEX_40
+                    System.Linq.Expressions.Expression.Histogram = oldHistogram;
+#else
                     Microsoft.Linq.Expressions.Expression.Histogram = oldHistogram;
+#endif
                 }
             }
 #endif
@@ -2270,7 +2293,11 @@ namespace IronRuby.Runtime {
             }
 #if !SILVERLIGHT
             if (Utils.IsComObject(obj)) {
+#if CODEPLEX_40
+                return new List<string>(System.Dynamic.ComBinder.GetDynamicMemberNames(obj));
+#else
                 return new List<string>(Microsoft.Scripting.ComBinder.GetDynamicMemberNames(obj));
+#endif
             }
 #endif
             return GetMemberNames(obj);

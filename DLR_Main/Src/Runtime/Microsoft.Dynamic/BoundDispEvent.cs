@@ -17,14 +17,24 @@ using System; using Microsoft;
 
 #if !SILVERLIGHT // ComObject
 
+#if CODEPLEX_40
+using System.Linq.Expressions;
+#else
 using Microsoft.Linq.Expressions;
+#endif
 using System.Runtime.CompilerServices;
+#if !CODEPLEX_40
 using Microsoft.Runtime.CompilerServices;
+#endif
 
 using System.Security;
 using System.Security.Permissions;
 
+#if CODEPLEX_40
+namespace System.Dynamic {
+#else
 namespace Microsoft.Scripting {
+#endif
     internal sealed class BoundDispEvent : DynamicObject {
         private object _rcw;
         private Guid _sourceIid;

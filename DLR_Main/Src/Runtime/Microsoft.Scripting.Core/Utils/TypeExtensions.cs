@@ -20,7 +20,11 @@ using System.Reflection;
 using System.Reflection.Emit;
 using System.Text;
 
+#if CODEPLEX_40
+namespace System.Dynamic.Utils {
+#else
 namespace Microsoft.Scripting.Utils {
+#endif
 
     // Extensions on System.Type and friends
     internal static class TypeExtensions {

@@ -18,10 +18,18 @@ using System; using Microsoft;
 using System.Diagnostics;
 using Microsoft.Scripting;
 using AstUtils = Microsoft.Scripting.Ast.Utils;
+#if CODEPLEX_40
+using MSAst = System.Linq.Expressions;
+#else
 using MSAst = Microsoft.Linq.Expressions;
+#endif
 
 namespace IronPython.Compiler.Ast {
+#if CODEPLEX_40
+    using Ast = System.Linq.Expressions.Expression;
+#else
     using Ast = Microsoft.Linq.Expressions.Expression;
+#endif
 
     public class ExecStatement : Statement {
         private readonly Expression _code, _locals, _globals;

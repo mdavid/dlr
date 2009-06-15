@@ -13,15 +13,26 @@
  *
  * ***************************************************************************/
 
+#if CODEPLEX_40
+using System;
+#else
 using System; using Microsoft;
+#endif
 using System.Diagnostics;
+#if CODEPLEX_40
+using System.Linq.Expressions;
+using System.Dynamic;
+#else
 using Microsoft.Linq.Expressions;
-using Microsoft.Scripting;
+#endif
 using System.Reflection;
 using System.Runtime.CompilerServices;
+#if !CODEPLEX_40
 using Microsoft.Runtime.CompilerServices;
+#endif
 
 
+using Microsoft.Scripting;
 using Microsoft.Scripting.Actions;
 using Microsoft.Scripting.Runtime;
 using AstUtils = Microsoft.Scripting.Ast.Utils;
@@ -29,7 +40,11 @@ using AstUtils = Microsoft.Scripting.Ast.Utils;
 using IronPython.Runtime.Operations;
 using IronPython.Runtime.Binding;
 
+#if CODEPLEX_40
+using Ast = System.Linq.Expressions.Expression;
+#else
 using Ast = Microsoft.Linq.Expressions.Expression;
+#endif
 
 namespace IronPython.Runtime.Types {
     [PythonType("field#")]

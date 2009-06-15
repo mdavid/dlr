@@ -13,13 +13,25 @@
  *
  * ***************************************************************************/
 
+#if CODEPLEX_40
+using System;
+#else
 using System; using Microsoft;
+#endif
 using IronPython.Runtime;
+#if CODEPLEX_40
+using MSAst = System.Linq.Expressions;
+#else
 using MSAst = Microsoft.Linq.Expressions;
+#endif
 using AstUtils = Microsoft.Scripting.Ast.Utils;
 
 namespace IronPython.Compiler.Ast {
+#if CODEPLEX_40
+    using Ast = System.Linq.Expressions.Expression;
+#else
     using Ast = Microsoft.Linq.Expressions.Expression;
+#endif
     using IronPython.Runtime.Operations;
 
     public class DictionaryExpression : Expression {
@@ -51,7 +63,11 @@ namespace IronPython.Compiler.Ast {
                     MSAst.Expression key = parts[index * 2 + 1] = ag.TransformOrConstantNull(slice.SliceStart, typeof(object));
 
                     Type newType;
+#if CODEPLEX_40
+                    if (key.NodeType == System.Linq.Expressions.ExpressionType.Convert) {
+#else
                     if (key.NodeType == Microsoft.Linq.Expressions.ExpressionType.Convert) {
+#endif
                         newType = ((MSAst.UnaryExpression)key).Operand.Type;
                     } else {
                         newType = key.Type;

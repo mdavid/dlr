@@ -13,11 +13,21 @@
  *
  * ***************************************************************************/
 
+#if CODEPLEX_40
+using System;
+#else
 using System; using Microsoft;
+#endif
 using System.Diagnostics;
+#if CODEPLEX_40
+using System.Dynamic;
+using System.Dynamic.Utils;
+using System.Linq.Expressions;
+#else
 using Microsoft.Scripting;
-using Microsoft.Scripting.Utils;
 using Microsoft.Linq.Expressions;
+#endif
+using Microsoft.Scripting.Utils;
 using Microsoft.Scripting.Runtime;
 using IronRuby.Runtime;
 using IronRuby.Runtime.Calls;
@@ -26,7 +36,11 @@ using IronRuby.Compiler;
 using System.Reflection;
 
 namespace IronRuby.Builtins {
+#if CODEPLEX_40
+    using Ast = System.Linq.Expressions.Expression;
+#else
     using Ast = Microsoft.Linq.Expressions.Expression;
+#endif
 
     public partial class RubyEvent : IRubyDynamicMetaObjectProvider {
         public DynamicMetaObject/*!*/ GetMetaObject(Expression/*!*/ parameter) {

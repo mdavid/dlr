@@ -13,20 +13,32 @@
  *
  * ***************************************************************************/
 
+#if CODEPLEX_40
+using System;
+#else
 using System; using Microsoft;
+#endif
 using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics;
+#if CODEPLEX_40
+using System.Dynamic;
+using System.Linq.Expressions;
+#else
+using Microsoft.Linq.Expressions;
+#endif
 using System.Reflection;
 using System.Runtime.CompilerServices;
+#if !CODEPLEX_40
 using Microsoft.Runtime.CompilerServices;
+#endif
 
-using System.Runtime.InteropServices;
-using IronPython.Runtime.Types;
+
 using Microsoft.Scripting;
-using Microsoft.Scripting.Generation;
 using Microsoft.Scripting.Runtime;
 using Microsoft.Scripting.Utils;
+
+using IronPython.Runtime.Types;
 
 namespace IronPython.Runtime.Operations {
     /// <summary>
@@ -187,6 +199,24 @@ namespace IronPython.Runtime.Operations {
             IEnumerator i = (IEnumerator)self;
             if (i.MoveNext()) return i.Current;
             throw PythonOps.StopIteration();
+        }
+
+        /// <summary>
+        /// __dir__(self) -> Returns the list of members defined on a foreign IDynamicMetaObjectProvider.
+        /// </summary>
+        public static List DynamicDir(CodeContext/*!*/ context, IDynamicMetaObjectProvider self) {
+            List res = new List(self.GetMetaObject(Expression.Parameter(typeof(object))).GetDynamicMemberNames());
+            
+            // add in the non-dynamic members from the dynamic objects base class.
+            Type t = self.GetType();
+            while (typeof(IDynamicMetaObjectProvider).IsAssignableFrom(t)) {
+                t = t.BaseType;
+            }
+
+            res.extend(DynamicHelpers.GetPythonTypeFromType(t).GetMemberNames(context));
+
+            res.sort(context);
+            return res;
         }
 
         public static int LengthMethod(ICollection self) {

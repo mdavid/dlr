@@ -13,10 +13,18 @@
  *
  * ***************************************************************************/
 
+#if CODEPLEX_40
+using System;
+#else
 using System; using Microsoft;
+#endif
 using System.Diagnostics;
 using System.Reflection;
+#if CODEPLEX_40
+using System.Dynamic;
+#else
 using Microsoft.Scripting;
+#endif
 
 namespace Microsoft.Scripting.Utils {
     #region Generated Reflected Caller

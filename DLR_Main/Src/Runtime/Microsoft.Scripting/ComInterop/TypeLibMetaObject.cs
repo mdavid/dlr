@@ -18,8 +18,13 @@ using System; using Microsoft;
 #if !SILVERLIGHT
 
 using System.Collections.Generic;
+#if CODEPLEX_40
+using System.Dynamic;
+using System.Linq.Expressions;
+#else
 using Microsoft.Scripting;
 using Microsoft.Linq.Expressions;
+#endif
 using AstUtils = Microsoft.Scripting.Ast.Utils;
 
 namespace Microsoft.Scripting.ComInterop {

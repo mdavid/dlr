@@ -24,7 +24,11 @@ using System.Runtime.InteropServices;
 using System.Security;
 using System.Security.Permissions;
 
+#if CODEPLEX_40
+namespace System.Dynamic {
+#else
 namespace Microsoft.Scripting {
+#endif
 
     /// <summary>
     /// Variant is the basic COM type for late-binding. It can contain any other COM data type.

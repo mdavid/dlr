@@ -16,7 +16,9 @@ using System; using Microsoft;
 
 
 using System.Runtime.CompilerServices;
+#if !CODEPLEX_40
 using Microsoft.Runtime.CompilerServices;
+#endif
 
 using System.Windows;
 using System.Windows.Browser;

@@ -15,7 +15,11 @@
 
 #if !SILVERLIGHT // TypeDescriptor, COM
 
+#if CODEPLEX_40
+using System;
+#else
 using System; using Microsoft;
+#endif
 using System.Collections;
 using System.ComponentModel;
 using System.Runtime.InteropServices;

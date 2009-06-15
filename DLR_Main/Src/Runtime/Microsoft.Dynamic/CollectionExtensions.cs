@@ -19,7 +19,11 @@ using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Diagnostics;
 
+#if CODEPLEX_40
+namespace System.Dynamic {
+#else
 namespace Microsoft.Scripting {
+#endif
     internal static class CollectionExtensions { 
 
         internal static T[] RemoveFirst<T>(this T[] array) {

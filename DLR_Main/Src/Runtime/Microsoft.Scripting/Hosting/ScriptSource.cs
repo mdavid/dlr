@@ -13,11 +13,19 @@
  *
  * ***************************************************************************/
 
+#if CODEPLEX_40
+using System;
+#else
 using System; using Microsoft;
+#endif
 using System.IO;
 using System.Diagnostics;
 using System.Runtime.Remoting;
+#if CODEPLEX_40
+using System.Dynamic;
+#else
 using Microsoft.Scripting;
+#endif
 using System.Security.Permissions;
 using System.Text;
 using Microsoft.Scripting.Utils;

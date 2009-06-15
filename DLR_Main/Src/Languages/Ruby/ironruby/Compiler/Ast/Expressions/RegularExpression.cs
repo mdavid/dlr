@@ -20,13 +20,20 @@ using Microsoft.Scripting;
 using Microsoft.Scripting.Utils;
 using IronRuby.Builtins;
 using System.Runtime.CompilerServices;
+#if !CODEPLEX_40
 using Microsoft.Runtime.CompilerServices;
+#endif
 
 using AstUtils = Microsoft.Scripting.Ast.Utils;
 
 namespace IronRuby.Compiler.Ast {
+#if CODEPLEX_40
+    using Ast = System.Linq.Expressions.Expression;
+    using MSA = System.Linq.Expressions;
+#else
     using Ast = Microsoft.Linq.Expressions.Expression;
     using MSA = Microsoft.Linq.Expressions;
+#endif
 
     // /pattern/options
     public partial class RegularExpression : Expression {

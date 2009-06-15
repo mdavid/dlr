@@ -1,26 +1,46 @@
 
 import clr
-clr.AddReference("Microsoft.Scripting.Core")
-import System.Linq.Expressions as Exprs
+if clr.use35:
+    clr.AddReference("Microsoft.Dynamic")  ## For ComBinder only.
+    clr.AddReference("Microsoft.Scripting.Core")
+    
+    import Microsoft.Linq.Expressions as Exprs
+    
+    from Microsoft.Scripting import (ExpandoObject, InvokeBinder, DynamicMetaObject,
+                                GetMemberBinder, SetMemberBinder, CallInfo,
+                                BindingRestrictions, IDynamicMetaObjectProvider,
+                                InvokeMemberBinder, CreateInstanceBinder,
+                                GetIndexBinder, SetIndexBinder, 
+                                BinaryOperationBinder, UnaryOperationBinder,
+                                ComBinder)
+    
+    from Microsoft.Runtime.CompilerServices import CallSite
+    
+    from Microsoft import (Action, Func)
+else:
+    clr.AddReference("System.Dynamic")  ## For ComBinder only.
+    clr.AddReference("System.Core")
+    
+    import System.Linq.Expressions as Exprs
+    
+    from System.Dynamic import (ExpandoObject, InvokeBinder, DynamicMetaObject,
+                                GetMemberBinder, SetMemberBinder, CallInfo,
+                                BindingRestrictions, IDynamicMetaObjectProvider,
+                                InvokeMemberBinder, CreateInstanceBinder,
+                                GetIndexBinder, SetIndexBinder, 
+                                BinaryOperationBinder, UnaryOperationBinder,
+                                ComBinder)
+    
+    from System.Runtime.CompilerServices import CallSite
+    
+    from System import (Action, Func)
 
-clr.AddReference("Microsoft.Dynamic")  ## For ComBinder only.
-
-from Microsoft.Scripting import (ExpandoObject, InvokeBinder, DynamicMetaObject,
-                            GetMemberBinder, SetMemberBinder, CallInfo,
-                            BindingRestrictions, IDynamicMetaObjectProvider,
-                            InvokeMemberBinder, CreateInstanceBinder,
-                            GetIndexBinder, SetIndexBinder, 
-                            BinaryOperationBinder, UnaryOperationBinder,
-                            ComBinder)
-
-from System.Runtime.CompilerServices import CallSite
+from System import (MissingMemberException,
+                    InvalidOperationException, Boolean, MissingMemberException,
+                    Type, Array, Delegate, Void)
 
 import System.Reflection as refl
 
-from System import (Action, Func, MissingMemberException, #ArgumentException,
-                    InvalidOperationException, Boolean, MissingMemberException,
-                    Type, Array, Delegate, Void)
-#import System.String as String
 from System.IO import Path, File
 
 
@@ -624,8 +644,15 @@ class DynamicObjectHelpers (object):
     def GetMember (dynObj, name):
         if not isinstance(dynObj, IDynamicMetaObjectProvider):
             raise Exception("DynamicObjectHelpers only works on IDOs for now.")
-        site = CallSite[Func[CallSite, object, object]].Create(
-                   DOHelpersGetMemberBinder(name))
+        ## Work around an IronPython 4.0 issue:
+        ## http://ironpython.codeplex.com/WorkItem/View.aspx?WorkItemId=22735
+        if clr.use35:
+            site = CallSite[Func[CallSite, object, object]].Create(
+                       DOHelpersGetMemberBinder(name))
+        else:
+            fixedFunc = clr.GetPythonType(Type.GetType("System.Func`3"))
+            site = CallSite[fixedFunc[CallSite, object, object]].Create(
+                       DOHelpersGetMemberBinder(name))
         return site.Target(site, dynObj)
 
     @staticmethod
@@ -640,8 +667,16 @@ class DynamicObjectHelpers (object):
         if not isinstance(dynObj, IDynamicMetaObjectProvider):
             raise Exception("DynamicObjectHelpers only works on IDOs for now.")
         ## For general usage ExpandoObject type param could be object.
-        site = CallSite[Action[CallSite, ExpandoObject, object]].Create(
-                  DOHelpersSetMemberBinder(name))
+
+        ## Work around an IronPython 4.0 issue:
+        ## http://ironpython.codeplex.com/WorkItem/View.aspx?WorkItemId=22735
+        if clr.use35:
+            site = CallSite[Action[CallSite, ExpandoObject, object]].Create(
+                      DOHelpersSetMemberBinder(name))
+        else:
+            fixedAction = clr.GetPythonType(Type.GetType("System.Action`3"))
+            site = CallSite[fixedAction[CallSite, ExpandoObject, object]].Create(
+                      DOHelpersSetMemberBinder(name))
         site.Target(site, dynObj, value)
 
 
@@ -960,7 +995,6 @@ class SymplInvokeBinder (InvokeBinder):
                                Exprs.Expression.Convert(targetMO.Expression,
                                                         targetMO.LimitType),
                                ConvertArguments(argMOs, params))
-                debugprint(expression.DebugView)
                 return DynamicMetaObject(
                            EnsureObjectResult(expression),
                            BindingRestrictions.GetTypeRestriction(

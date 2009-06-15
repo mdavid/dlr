@@ -13,21 +13,36 @@
  *
  * ***************************************************************************/
 
+#if CODEPLEX_40
+using System;
+#else
 using System; using Microsoft;
+#endif
 using System.Collections.Generic;
+#if CODEPLEX_40
+using System.Dynamic;
+using System.Linq.Expressions;
+#else
 using Microsoft.Scripting;
 using Microsoft.Linq.Expressions;
+#endif
 using System.Reflection;
 using System.Reflection.Emit;
 using System.Runtime.CompilerServices;
+#if !CODEPLEX_40
 using Microsoft.Runtime.CompilerServices;
+#endif
 
 using Microsoft.Contracts;
 using Microsoft.Scripting.Actions;
 using Microsoft.Scripting.Runtime;
 using Microsoft.Scripting.Utils;
 using Microsoft.Scripting.Interpreter;
+#if CODEPLEX_40
+using System.Linq.Expressions.Compiler;
+#else
 using Microsoft.Linq.Expressions.Compiler;
+#endif
 using AstUtils = Microsoft.Scripting.Ast.Utils;
 using System.Collections;
 using System.Diagnostics;

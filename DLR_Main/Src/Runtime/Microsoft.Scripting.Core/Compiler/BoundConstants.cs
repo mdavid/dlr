@@ -19,11 +19,21 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Reflection.Emit;
 using System.Runtime.CompilerServices;
+#if !CODEPLEX_40
 using Microsoft.Runtime.CompilerServices;
+#endif
 
+#if CODEPLEX_40
+using System.Dynamic.Utils;
+#else
 using Microsoft.Scripting.Utils;
+#endif
 
+#if CODEPLEX_40
+namespace System.Linq.Expressions.Compiler {
+#else
 namespace Microsoft.Linq.Expressions.Compiler {
+#endif
     /// <summary>
     /// This type tracks "runtime" constants--live objects that appear in
     /// ConstantExpression nodes and must be bound to the delegate.

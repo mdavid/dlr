@@ -18,10 +18,19 @@ using System; using Microsoft;
 #if !SILVERLIGHT
 
 using System.Globalization;
+#if CODEPLEX_40
+using System.Linq.Expressions;
+using System.Dynamic.Utils;
+#else
 using Microsoft.Linq.Expressions;
 using Microsoft.Scripting.Utils;
+#endif
 
+#if CODEPLEX_40
+namespace System.Dynamic {
+#else
 namespace Microsoft.Scripting {
+#endif
 
     internal class ConvertibleArgBuilder : ArgBuilder {
         internal ConvertibleArgBuilder() {

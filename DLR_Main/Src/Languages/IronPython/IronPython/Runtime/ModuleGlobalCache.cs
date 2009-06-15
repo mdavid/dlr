@@ -15,8 +15,13 @@
 
 using System.Diagnostics;
 using Microsoft.Scripting.Utils;
+#if CODEPLEX_40
+using System.Linq.Expressions;
+using System;
+#else
 using Microsoft.Linq.Expressions;
 using System; using Microsoft;
+#endif
 
 namespace Microsoft.Scripting.Runtime {
     /// <summary>

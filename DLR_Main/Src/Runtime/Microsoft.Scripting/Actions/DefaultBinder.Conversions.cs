@@ -13,16 +13,29 @@
  *
  * ***************************************************************************/
 
+#if CODEPLEX_40
+using System;
+using System.Linq.Expressions;
+#else
 using System; using Microsoft;
 using Microsoft.Linq.Expressions;
+#endif
 using System.Reflection;
+#if CODEPLEX_40
+using System.Dynamic;
+#else
 using Microsoft.Scripting;
+#endif
 using Microsoft.Scripting.Generation;
 using Microsoft.Scripting.Runtime;
 using Microsoft.Scripting.Utils;
 
 namespace Microsoft.Scripting.Actions {
+#if CODEPLEX_40
+    using Ast = System.Linq.Expressions.Expression;
+#else
     using Ast = Microsoft.Linq.Expressions.Expression;
+#endif
     using AstUtils = Microsoft.Scripting.Ast.Utils;
 
     public partial class DefaultBinder : ActionBinder {

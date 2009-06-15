@@ -15,10 +15,18 @@
 
 using IronRuby.Runtime;
 using Microsoft.Scripting.Interpreter;
+#if CODEPLEX_40
+using MSA = System.Linq.Expressions;
+#else
 using MSA = Microsoft.Linq.Expressions;
+#endif
 using Microsoft.Scripting.Utils;
 using System.Diagnostics;
+#if CODEPLEX_40
+using System;
+#else
 using System; using Microsoft;
+#endif
 
 namespace IronRuby.Compiler.Ast {
     

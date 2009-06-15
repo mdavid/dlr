@@ -15,7 +15,11 @@
 
 #if !SILVERLIGHT // System.NET
 
+#if CODEPLEX_40
+using System;
+#else
 using System; using Microsoft;
+#endif
 using System.IO;
 using System.Net.Sockets;
 using System.Net.Security;
@@ -28,7 +32,9 @@ using IronPython.Runtime.Operations;
 using IronPython.Runtime.Types;
 using Microsoft.Scripting;
 using System.Runtime.CompilerServices;
+#if !CODEPLEX_40
 using Microsoft.Runtime.CompilerServices;
+#endif
 
 
 /* [assembly: PythonModule("_ssl", typeof(IronPython.Modules.PythonSsl))] */

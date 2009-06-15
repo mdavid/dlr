@@ -18,7 +18,11 @@ using System; using Microsoft;
 using IronPython.Runtime;
 using Microsoft.Scripting;
 using Microsoft.Scripting.Actions;
+#if CODEPLEX_40
+using MSAst = System.Linq.Expressions;
+#else
 using MSAst = Microsoft.Linq.Expressions;
+#endif
 
 namespace IronPython.Compiler.Ast {
     public class Arg : Node {

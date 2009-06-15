@@ -19,13 +19,25 @@ using System; using Microsoft;
 
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
+#if CODEPLEX_40
+using System.Linq.Expressions;
+#else
 using Microsoft.Linq.Expressions;
+#endif
 using System.Security;
 using System.Security.Permissions;
 
+#if CODEPLEX_40
+[assembly: SuppressMessage("Microsoft.Design", "CA1020:AvoidNamespacesWithFewTypes", Scope = "namespace", Target = "System.Dynamic")]
+#else
 [assembly: SuppressMessage("Microsoft.Design", "CA1020:AvoidNamespacesWithFewTypes", Scope = "namespace", Target = "Microsoft.Scripting")]
+#endif
 
+#if CODEPLEX_40
+namespace System.Dynamic {
+#else
 namespace Microsoft.Scripting {
+#endif
 
     /// <summary>
     /// Provides helper methods to bind COM objects dynamically.

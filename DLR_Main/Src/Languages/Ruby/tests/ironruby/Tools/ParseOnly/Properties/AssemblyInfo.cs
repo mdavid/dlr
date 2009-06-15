@@ -17,7 +17,9 @@ using System; using Microsoft;
 
 using System.Reflection;
 using System.Runtime.CompilerServices;
+#if !CODEPLEX_40
 using Microsoft.Runtime.CompilerServices;
+#endif
 
 using System.Runtime.InteropServices;
 using Ruby.Runtime;

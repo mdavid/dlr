@@ -16,9 +16,17 @@ using System; using Microsoft;
 
 
 using System.Diagnostics;
+#if CODEPLEX_40
+using System.Dynamic.Utils;
+#else
 using Microsoft.Scripting.Utils;
+#endif
 
+#if CODEPLEX_40
+namespace System.Linq.Expressions {
+#else
 namespace Microsoft.Linq.Expressions {
+#endif
     /// <summary>
     /// Emits or clears a sequence point for debug information.
     /// 

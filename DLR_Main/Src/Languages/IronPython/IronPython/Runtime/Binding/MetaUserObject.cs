@@ -13,12 +13,21 @@
  *
  * ***************************************************************************/
 
+#if CODEPLEX_40
+using System;
+#else
 using System; using Microsoft;
+#endif
 using System.Collections;
 using System.Collections.Generic;
-using Microsoft.Scripting;
+#if CODEPLEX_40
+using System.Dynamic;
+using System.Linq.Expressions;
+#else
 using Microsoft.Linq.Expressions;
+#endif
 
+using Microsoft.Scripting;
 using Microsoft.Scripting.Actions;
 using Microsoft.Scripting.Math;
 using Microsoft.Scripting.Runtime;
@@ -28,7 +37,11 @@ using IronPython.Runtime.Operations;
 using IronPython.Runtime.Types;
 
 namespace IronPython.Runtime.Binding {
+#if CODEPLEX_40
+    using Ast = System.Linq.Expressions.Expression;
+#else
     using Ast = Microsoft.Linq.Expressions.Expression;
+#endif
     using AstUtils = Microsoft.Scripting.Ast.Utils;
 
     partial class MetaUserObject : MetaPythonObject, IPythonInvokable, IPythonConvertible {
@@ -141,7 +154,7 @@ namespace IronPython.Runtime.Binding {
                     return _baseMetaObject.BindInvoke(ib, args);
                 }
 
-                return ib.FallbackInvoke(this, args);
+                return ib.FallbackInvoke(this.Restrict(this.GetLimitType()), args);
             }
 
             PythonInvokeBinder pib = action as PythonInvokeBinder;

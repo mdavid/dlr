@@ -17,7 +17,11 @@ using System; using Microsoft;
 
 using System.Diagnostics;
 
+#if CODEPLEX_40
+namespace System.Linq.Expressions {
+#else
 namespace Microsoft.Linq.Expressions {
+#endif
     /// <summary>
     /// Represents a label, which can be placed in any <see cref="Expression"/> context. If
     /// it is jumped to, it will get the value provided by the corresponding

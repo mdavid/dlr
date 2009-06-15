@@ -13,18 +13,34 @@
  *
  * ***************************************************************************/
 
+#if CODEPLEX_40
+using ILGenerator = System.Linq.Expressions.Compiler.OffsetTrackingILGenerator;
+#else
 using ILGenerator = Microsoft.Linq.Expressions.Compiler.OffsetTrackingILGenerator;
+#endif
 
+#if CODEPLEX_40
+using System;
+#else
 using System; using Microsoft;
+#endif
 using System.Collections.Generic;
 using System.Text;
 using System.Reflection.Emit;
 using System.Diagnostics;
 using System.Diagnostics.SymbolStore;
 using System.Reflection;
+#if CODEPLEX_40
+using System.Linq.Expressions;
+#else
 using Microsoft.Linq.Expressions;
+#endif
 
+#if CODEPLEX_40
+namespace System.Runtime.CompilerServices {
+#else
 namespace Microsoft.Runtime.CompilerServices {
+#endif
     /// <summary>
     /// Generates debug information for lambdas in an expression tree.
     /// </summary>

@@ -13,7 +13,11 @@
  *
  * ***************************************************************************/
 
+#if CODEPLEX_40
+using System;
+#else
 using System; using Microsoft;
+#endif
 using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -23,13 +27,20 @@ using Microsoft.Scripting.Runtime;
 using IronRuby.Runtime;
 using IronRuby.Builtins;
 using System.IO;
+#if CODEPLEX_40
+using System.Linq.Expressions;
+using System.Dynamic;
+#else
 using Microsoft.Linq.Expressions;
-using Microsoft.Scripting;
+#endif
 using Microsoft.Scripting.Utils;
 using Microsoft.Scripting.Hosting;
 using System.Runtime.CompilerServices;
+#if !CODEPLEX_40
 using Microsoft.Runtime.CompilerServices;
+#endif
 
+using Microsoft.Scripting;
 
 namespace IronRuby.Tests {
     #region Custom binders

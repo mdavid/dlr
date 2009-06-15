@@ -13,7 +13,11 @@
  *
  * ***************************************************************************/
 
+#if CODEPLEX_40
+using System;
+#else
 using System; using Microsoft;
+#endif
 using System.Collections.Generic;
 using System.Diagnostics;
 
@@ -23,7 +27,11 @@ using Microsoft.Scripting.Runtime;
 using IronPython.Runtime;
 using IronPython.Runtime.Operations;
 
+#if CODEPLEX_40
+using MSAst = System.Linq.Expressions;
+#else
 using MSAst = Microsoft.Linq.Expressions;
+#endif
 
 namespace IronPython.Compiler.Ast {
 
@@ -227,7 +235,11 @@ namespace IronPython.Compiler.Ast {
             }
         }
 
+#if CODEPLEX_40
+        private MSAst.Expression EnsureLocalTuple(AstGenerator ag, List<System.Linq.Expressions.Expression> init, MSAst.Expression localTuple, Type tupleType) {
+#else
         private MSAst.Expression EnsureLocalTuple(AstGenerator ag, List<Microsoft.Linq.Expressions.Expression> init, MSAst.Expression localTuple, Type tupleType) {
+#endif
             if (localTuple == null) {
                 // pull the tuple from the context once
                 localTuple = ag.HiddenVariable(tupleType, "$closureTuple");

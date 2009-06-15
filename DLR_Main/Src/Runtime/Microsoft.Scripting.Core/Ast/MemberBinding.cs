@@ -17,7 +17,11 @@ using System; using Microsoft;
 
 using System.Reflection;
 
+#if CODEPLEX_40
+namespace System.Linq.Expressions {
+#else
 namespace Microsoft.Linq.Expressions {
+#endif
     /// <summary>
     /// Describes the binding types that are used in MemberInitExpression objects.
     /// </summary>

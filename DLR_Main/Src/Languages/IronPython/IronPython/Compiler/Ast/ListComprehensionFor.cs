@@ -17,7 +17,11 @@ using System; using Microsoft;
 
 using System.Collections;
 using Microsoft.Scripting;
+#if CODEPLEX_40
+using MSAst = System.Linq.Expressions;
+#else
 using MSAst = Microsoft.Linq.Expressions;
+#endif
 
 namespace IronPython.Compiler.Ast {
     public class ListComprehensionFor : ListComprehensionIterator {

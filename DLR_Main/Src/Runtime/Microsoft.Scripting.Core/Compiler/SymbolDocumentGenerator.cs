@@ -18,13 +18,26 @@ using System; using Microsoft;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Diagnostics.SymbolStore;
+#if CODEPLEX_40
+using System.Linq.Expressions;
+using System.Linq.Expressions.Compiler;
+#else
 using Microsoft.Linq.Expressions;
 using Microsoft.Linq.Expressions.Compiler;
+#endif
 using System.Reflection;
 using System.Reflection.Emit;
+#if CODEPLEX_40
+using ILGenerator = System.Linq.Expressions.Compiler.OffsetTrackingILGenerator;
+#else
 using ILGenerator = Microsoft.Linq.Expressions.Compiler.OffsetTrackingILGenerator;
+#endif
 
+#if CODEPLEX_40
+namespace System.Runtime.CompilerServices {
+#else
 namespace Microsoft.Runtime.CompilerServices {
+#endif
     /// <summary>
     /// Generator of PDB debugging information for expression trees.
     /// </summary>

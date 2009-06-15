@@ -13,13 +13,26 @@
  *
  * ***************************************************************************/
 
+#if CODEPLEX_40
+using System;
+#else
 using System; using Microsoft;
+#endif
 using System.Collections.Generic;
 using System.Text;
+#if CODEPLEX_40
+using System.Linq.Expressions;
+using System.Dynamic.Utils;
+#else
 using Microsoft.Linq.Expressions;
 using Microsoft.Scripting.Utils;
+#endif
 
+#if CODEPLEX_40
+namespace System.Linq.Expressions {
+#else
 namespace Microsoft.Linq.Expressions {
+#endif
     /// <summary>
     /// Provides a wrapper around an IArgumentProvider which exposes the argument providers
     /// members out as an IList of Expression.  This is used to avoid allocating an array

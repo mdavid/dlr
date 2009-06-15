@@ -15,6 +15,10 @@
 using System; using Microsoft;
 
 
+#if CODEPLEX_40
+using System.Dynamic;
+#else
+#endif
 using Microsoft.Scripting;
 
 namespace IronRuby.Compiler.Ast {

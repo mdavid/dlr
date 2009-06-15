@@ -13,26 +13,44 @@
  *
  * ***************************************************************************/
 
+#if CODEPLEX_40
+using ScriptCodeFunc = System.Func<
+#else
 using ScriptCodeFunc = Microsoft.Func<
+#endif
     IronRuby.Runtime.RubyScope, 
     IronRuby.Runtime.RuntimeFlowControl,
     object, 
     object
 >;
 
+#if CODEPLEX_40
+using System;
+#else
 using System; using Microsoft;
+#endif
 using System.Collections.Generic;
 using System.Text;
 using Microsoft.Scripting;
+#if CODEPLEX_40
+using System.Linq.Expressions;
+#else
 using Microsoft.Linq.Expressions;
+#endif
 using Microsoft.Scripting.Runtime;
 using Microsoft.Scripting.Generation;
 using System.Threading;
+#if CODEPLEX_40
+using System.Linq.Expressions.Compiler;
+#else
 using Microsoft.Linq.Expressions.Compiler;
+#endif
 using System.Reflection;
 using Microsoft.Scripting.Utils;
 using System.Runtime.CompilerServices;
+#if !CODEPLEX_40
 using Microsoft.Runtime.CompilerServices;
+#endif
 
 using System.Security;
 using IronRuby.Compiler;

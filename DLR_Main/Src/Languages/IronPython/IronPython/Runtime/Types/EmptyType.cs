@@ -15,7 +15,11 @@
 using System; using Microsoft;
 
 
+#if CODEPLEX_40
+using System.Dynamic;
+#else
 using Microsoft.Scripting;
+#endif
 using System.Threading;
 using Microsoft.Scripting.Runtime;
 

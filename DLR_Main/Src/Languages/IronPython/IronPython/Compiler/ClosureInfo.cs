@@ -13,13 +13,21 @@
  *
  * ***************************************************************************/
 
+#if CODEPLEX_40
+using System;
+#else
 using System; using Microsoft;
+#endif
 
 using Microsoft.Scripting;
 
 using IronPython.Compiler.Ast;
 
+#if CODEPLEX_40
+using MSAst = System.Linq.Expressions;
+#else
 using MSAst = Microsoft.Linq.Expressions;
+#endif
 using Microsoft.Scripting.Utils;
 
 namespace IronPython.Compiler {

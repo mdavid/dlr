@@ -16,9 +16,17 @@ using System; using Microsoft;
 
 
 using System.Collections.Generic;
+#if CODEPLEX_40
+using System.Linq.Expressions;
+#else
 using Microsoft.Linq.Expressions;
+#endif
 
+#if CODEPLEX_40
+namespace System.Linq.Expressions.Compiler {
+#else
 namespace Microsoft.Linq.Expressions.Compiler {
+#endif
     
     /// <summary>
     /// A simple dictionary of queues, keyed off a particular type

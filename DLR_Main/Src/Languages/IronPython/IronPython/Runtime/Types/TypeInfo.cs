@@ -13,14 +13,22 @@
  *
  * ***************************************************************************/
 
+#if CODEPLEX_40
+using System;
+#else
 using System; using Microsoft;
+#endif
 using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Reflection;
-using Microsoft.Scripting;
+#if CODEPLEX_40
+using System.Dynamic;
+#else
+#endif
 using System.Threading;
 
+using Microsoft.Scripting;
 using Microsoft.Scripting.Actions;
 using Microsoft.Scripting.Generation;
 using Microsoft.Scripting.Math;
@@ -872,7 +880,14 @@ namespace IronPython.Runtime.Types {
         }
 
         private static MemberGroup/*!*/ DirResolver(MemberBinder/*!*/ binder, Type/*!*/ type) {
-            return binder.GetMember(type, "GetMemberNames");
+            MemberGroup res = binder.GetMember(type, "GetMemberNames");
+            if (res == MemberGroup.EmptyGroup && 
+                !typeof(IPythonObject).IsAssignableFrom(type) &&
+                typeof(IDynamicMetaObjectProvider).IsAssignableFrom(type)) {
+                res = GetInstanceOpsMethod(type, "DynamicDir");
+            }
+
+            return res;
         }
 
         class DocumentationDescriptor : PythonTypeSlot {

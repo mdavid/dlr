@@ -13,22 +13,36 @@
  *
  * ***************************************************************************/
 
+#if CODEPLEX_40
+using System;
+#else
 using System; using Microsoft;
+#endif
 using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics;
-using Microsoft.Scripting;
+#if CODEPLEX_40
+using System.Dynamic;
+#else
+#endif
 using System.Globalization;
 using System.IO;
+#if CODEPLEX_40
+using System.Linq.Expressions;
+#else
 using Microsoft.Linq.Expressions;
+#endif
 using System.Reflection;
 using System.Runtime.CompilerServices;
+#if !CODEPLEX_40
 using Microsoft.Runtime.CompilerServices;
+#endif
 
 using System.Security;
 using System.Text;
 using System.Threading;
 
+using Microsoft.Scripting;
 using Microsoft.Scripting.Actions;
 using Microsoft.Scripting.Generation;
 using Microsoft.Scripting.Runtime;
@@ -94,8 +108,6 @@ namespace IronPython.Runtime {
         private CallSite<Func<CallSite, CodeContext, object, string, object>> _writeSite;
         private CallSite<Func<CallSite, object, object, object>> _getIndexSite, _equalSite;
         private CallSite<Action<CallSite, object, object>> _delIndexSite;
-        private CallSite<Func<CallSite, CodeContext, object, IList<string>>> _memberNamesSite;
-        private CallSite<Func<CallSite, object, IList<string>>> _getMemberNamesSite;
         private CallSite<Func<CallSite, CodeContext, object, object>> _finalizerSite;
         private CallSite<Func<CallSite, CodeContext, PythonFunction, object>> _functionCallSite;
         private CallSite<Func<CallSite, object, object, bool>> _greaterThanSite, _lessThanSite, _greaterThanEqualSite, _lessThanEqualSite, _containsSite;
@@ -1712,11 +1724,13 @@ namespace IronPython.Runtime {
         /// TODO: Move "GetMemberNames" functionality into MetaObject implementations
         /// </summary>
         protected override IList<string> GetMemberNames(object obj) {
-            IList<string> result = base.GetMemberNames(obj);
-            if (result.Count == 0) {
-                result = GetMemberNamesSite.Target(GetMemberNamesSite, obj);
+            List<string> res = new List<string>();
+            foreach (object o in PythonOps.GetAttrNames(SharedContext, obj)) {
+                if (o is string) {
+                    res.Add((string)o);
+                }
             }
-            return result;
+            return res;
         }
 
         protected override string/*!*/ FormatObject(DynamicOperations/*!*/ operations, object obj) {
@@ -2194,39 +2208,7 @@ namespace IronPython.Runtime {
                 return _equalSite;
             }
         }
-
-        internal CallSite<Func<CallSite, CodeContext, object, IList<string>>> MemberNamesSite {
-            get {
-                if (_memberNamesSite == null) {
-                    Interlocked.CompareExchange(
-                        ref _memberNamesSite,
-                        CallSite<Func<CallSite, CodeContext, object, IList<string>>>.Create(
-                            Operation(PythonOperationKind.MemberNames)
-                        ),
-                        null
-                    );
-                }
-
-                return _memberNamesSite;
-            }
-        }
-
-        internal CallSite<Func<CallSite, object, IList<string>>> GetMemberNamesSite {
-            get {
-                if (_getMemberNamesSite == null) {
-                    Interlocked.CompareExchange(
-                        ref _getMemberNamesSite,
-                        CallSite<Func<CallSite, object, IList<string>>>.Create(
-                            Binders.UnaryOperationBinder(this, PythonOperationKind.MemberNames)
-                        ),
-                        null
-                    );
-                }
-
-                return _getMemberNamesSite;
-            }
-        }
-
+       
         internal CallSite<Func<CallSite, CodeContext, object, object>> FinalizerSite {
             get {
                 if (_finalizerSite == null) {

@@ -15,10 +15,19 @@
 using System; using Microsoft;
 
 
+#if CODEPLEX_40
+using System.Dynamic.Utils;
+using System.Linq.Expressions;
+#else
 using Microsoft.Scripting.Utils;
 using Microsoft.Linq.Expressions;
+#endif
 
+#if CODEPLEX_40
+namespace System.Dynamic {
+#else
 namespace Microsoft.Scripting {
+#endif
     /// <summary>
     /// Represents the unary dynamic operation at the call site, providing the binding semantic and the details about the operation.
     /// </summary>

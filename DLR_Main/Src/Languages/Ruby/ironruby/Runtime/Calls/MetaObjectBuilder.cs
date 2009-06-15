@@ -13,18 +13,31 @@
  *
  * ***************************************************************************/
 
+#if CODEPLEX_40
+using System;
+#else
 using System; using Microsoft;
+#endif
 using System.Collections.Generic;
 using System.Diagnostics;
+#if CODEPLEX_40
+using System.Dynamic;
+using System.Linq.Expressions;
+#else
 using Microsoft.Scripting;
 using Microsoft.Linq.Expressions;
+#endif
 using System.Reflection;
 using System.Threading;
 using IronRuby.Builtins;
 using IronRuby.Compiler;
 using Microsoft.Scripting.Actions;
 using Microsoft.Scripting.Utils;
+#if CODEPLEX_40
+using Ast = System.Linq.Expressions.Expression;
+#else
 using Ast = Microsoft.Linq.Expressions.Expression;
+#endif
 using AstUtils = Microsoft.Scripting.Ast.Utils;
 using System.Collections;
 

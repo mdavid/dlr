@@ -13,7 +13,11 @@
  *
  * ***************************************************************************/
 
+#if CODEPLEX_40
+using System;
+#else
 using System; using Microsoft;
+#endif
 using System.Collections.Generic;
 using System.Collections;
 using System.Text;
@@ -27,12 +31,18 @@ using Microsoft.Scripting.Utils;
 
 using AstUtils = Microsoft.Scripting.Ast.Utils;
 using AstFactory = IronRuby.Compiler.Ast.AstFactory;
+#if CODEPLEX_40
+using MSA = System.Linq.Expressions;
+#else
 using MSA = Microsoft.Linq.Expressions;
+#endif
 using IronRuby.Runtime.Calls;
 using System.Collections.ObjectModel;
 using Microsoft.Scripting.Runtime;
 using System.Runtime.CompilerServices;
+#if !CODEPLEX_40
 using Microsoft.Runtime.CompilerServices;
+#endif
 
 
 namespace IronRuby.Compiler {

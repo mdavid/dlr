@@ -3,9 +3,12 @@ import lexer
 
 ### Only needed for _getOpKind
 import clr
-clr.AddReference("Microsoft.Scripting.Core")
-from System.Linq.Expressions import ExpressionType
-
+if clr.use35:
+    clr.AddReference("Microsoft.Scripting.Core")
+    from Microsoft.Linq.Expressions import ExpressionType
+else:
+    clr.AddReference("System.Core")
+    from System.Linq.Expressions import ExpressionType
 
 class Parser (object):
     pass

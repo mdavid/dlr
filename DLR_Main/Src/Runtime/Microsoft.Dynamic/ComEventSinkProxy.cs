@@ -26,7 +26,11 @@ using System.Runtime.Remoting.Proxies;
 using System.Security;
 using System.Security.Permissions;
 
+#if CODEPLEX_40
+namespace System.Dynamic {
+#else
 namespace Microsoft.Scripting {
+#endif
     /// <summary>
     /// ComEventSinkProxy class is responsible for handling QIs for sourceIid 
     /// on instances of ComEventSink.

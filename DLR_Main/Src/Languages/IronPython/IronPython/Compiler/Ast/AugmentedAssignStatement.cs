@@ -16,7 +16,11 @@ using System; using Microsoft;
 
 
 using System.Diagnostics;
+#if CODEPLEX_40
+using MSAst = System.Linq.Expressions;
+#else
 using MSAst = Microsoft.Linq.Expressions;
+#endif
 using IronPython.Runtime.Binding;
 
 namespace IronPython.Compiler.Ast {

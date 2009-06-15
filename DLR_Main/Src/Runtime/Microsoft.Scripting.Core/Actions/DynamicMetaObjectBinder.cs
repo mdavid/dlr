@@ -17,15 +17,27 @@ using System; using Microsoft;
 
 using System.Collections.ObjectModel;
 using System.Diagnostics;
+#if CODEPLEX_40
+using System.Dynamic.Utils;
+using System.Linq.Expressions;
+using System.Linq.Expressions.Compiler;
+#else
 using Microsoft.Scripting.Utils;
 using Microsoft.Linq.Expressions;
 using Microsoft.Linq.Expressions.Compiler;
+#endif
 using System.Runtime.CompilerServices;
+#if !CODEPLEX_40
 using Microsoft.Runtime.CompilerServices;
+#endif
 
 using System.Runtime.Remoting;
 
+#if CODEPLEX_40
+namespace System.Dynamic {
+#else
 namespace Microsoft.Scripting {
+#endif
     /// <summary>
     /// The dynamic call site binder that participates in the <see cref="DynamicMetaObject"/> binding protocol.
     /// </summary>

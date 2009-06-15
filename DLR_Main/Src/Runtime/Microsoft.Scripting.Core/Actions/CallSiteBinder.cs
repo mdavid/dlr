@@ -18,12 +18,22 @@ using System; using Microsoft;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Diagnostics;
+#if CODEPLEX_40
+using System.Dynamic;
+using System.Dynamic.Utils;
+using System.Linq.Expressions;
+#else
 using Microsoft.Scripting;
 using Microsoft.Scripting.Utils;
 using Microsoft.Linq.Expressions;
+#endif
 using System.Threading;
 
+#if CODEPLEX_40
+namespace System.Runtime.CompilerServices {
+#else
 namespace Microsoft.Runtime.CompilerServices {
+#endif
     /// <summary>
     /// Class responsible for runtime binding of the dynamic operations on the dynamic call site.
     /// </summary>

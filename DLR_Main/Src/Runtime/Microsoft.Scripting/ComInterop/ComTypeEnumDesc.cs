@@ -15,10 +15,19 @@
 
 #if !SILVERLIGHT // ComObject
 
+#if CODEPLEX_40
+using System;
+using System.Linq.Expressions;
+#else
 using System; using Microsoft;
 using Microsoft.Linq.Expressions;
+#endif
 using System.Runtime.InteropServices;
+#if CODEPLEX_40
+using System.Dynamic;
+#else
 using Microsoft.Scripting;
+#endif
 using System.Globalization;
 using ComTypes = System.Runtime.InteropServices.ComTypes;
 

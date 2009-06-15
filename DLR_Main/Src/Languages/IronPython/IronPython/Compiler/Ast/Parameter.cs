@@ -22,7 +22,11 @@ using Microsoft.Scripting.Runtime;
 
 using IronPython.Runtime.Binding;
 
+#if CODEPLEX_40
+using MSAst = System.Linq.Expressions;
+#else
 using MSAst = Microsoft.Linq.Expressions;
+#endif
 
 namespace IronPython.Compiler.Ast {
 

@@ -17,10 +17,16 @@ using System; using Microsoft;
 
 using System.Collections.Generic;
 using System.Runtime.CompilerServices;
+#if !CODEPLEX_40
 using Microsoft.Runtime.CompilerServices;
+#endif
 
 
+#if CODEPLEX_40
+namespace System.Dynamic.Utils {
+#else
 namespace Microsoft.Scripting.Utils {
+#endif
     internal sealed class ReferenceEqualityComparer<T> : IEqualityComparer<T> {
         internal static readonly ReferenceEqualityComparer<T> Instance = new ReferenceEqualityComparer<T>();
 

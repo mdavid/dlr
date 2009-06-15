@@ -17,9 +17,17 @@ using System; using Microsoft;
 
 using System.Collections.Generic;
 using System.Diagnostics;
+#if CODEPLEX_40
+using System.Linq.Expressions;
+#else
 using Microsoft.Linq.Expressions;
+#endif
 
+#if CODEPLEX_40
+namespace System.Dynamic.Utils {
+#else
 namespace Microsoft.Scripting.Utils {
+#endif
 
     // Will be replaced with CLRv4 managed contracts
     internal static class ContractUtils {

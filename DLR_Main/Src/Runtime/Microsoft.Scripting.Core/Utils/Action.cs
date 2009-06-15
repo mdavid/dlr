@@ -15,7 +15,11 @@
 using System; using Microsoft;
 
 
+#if CODEPLEX_40
+namespace System {
+#else
 namespace Microsoft {
+#endif
     #if MICROSOFT_SCRIPTING_CORE
 
     /// <summary>

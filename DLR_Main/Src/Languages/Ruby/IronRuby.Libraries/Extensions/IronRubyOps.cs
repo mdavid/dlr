@@ -18,7 +18,11 @@ using IronRuby.Compiler.Generation;
 using IronRuby.Runtime;
 using Microsoft.Scripting.Runtime;
 using System.Diagnostics;
+#if CODEPLEX_40
+using System;
+#else
 using System; using Microsoft;
+#endif
 
 namespace IronRuby.Builtins {
     [RubyModule("IronRuby", Extends = typeof(Ruby), Restrictions = ModuleRestrictions.None)]

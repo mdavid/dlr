@@ -13,11 +13,18 @@
  *
  * ***************************************************************************/
 
+#if CODEPLEX_40
+using System;
+using System.Linq.Expressions;
+#else
 using System; using Microsoft;
 using Microsoft.Linq.Expressions;
+#endif
 using System.Reflection;
 using System.Runtime.CompilerServices;
+#if !CODEPLEX_40
 using Microsoft.Runtime.CompilerServices;
+#endif
 
 using System.Text;
 using Microsoft.Scripting.Generation;
@@ -26,7 +33,11 @@ using Microsoft.Scripting.Utils;
 using AstUtils = Microsoft.Scripting.Ast.Utils;
 
 namespace Microsoft.Scripting.Actions {
+#if CODEPLEX_40
+    using Ast = System.Linq.Expressions.Expression;
+#else
     using Ast = Microsoft.Linq.Expressions.Expression;
+#endif
 
     public class MemberBinderHelper<TActionKind> : BinderHelper<TActionKind>
         where TActionKind : OldMemberAction {

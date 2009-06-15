@@ -19,7 +19,11 @@ using Microsoft.Scripting;
 using Microsoft.Scripting.Utils;
 
 namespace IronRuby.Compiler.Ast {
+#if CODEPLEX_40
+    using MSA = System.Linq.Expressions;
+#else
     using MSA = Microsoft.Linq.Expressions;
+#endif
 
     public partial class SingletonDeclaration : ModuleDeclaration {
         private readonly Expression/*!*/ _singleton;

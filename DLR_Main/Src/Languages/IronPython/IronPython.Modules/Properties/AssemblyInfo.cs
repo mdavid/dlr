@@ -16,7 +16,9 @@ using System; using Microsoft;
 
 using System.Reflection;
 using System.Runtime.CompilerServices;
+#if !CODEPLEX_40
 using Microsoft.Runtime.CompilerServices;
+#endif
 
 using System.Runtime.InteropServices;
 using System.Security;
@@ -57,6 +59,9 @@ using System.Security;
 [assembly: AssemblyFileVersion("2.0.0.00")]
 [assembly: AssemblyInformationalVersion("2.0")]
 [assembly: AllowPartiallyTrustedCallers]
+#if CODEPLEX_40
+[assembly: SecurityRules(SecurityRuleSet.Level1)]
+#endif
 #endif
 
 

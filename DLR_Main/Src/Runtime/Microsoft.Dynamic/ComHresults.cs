@@ -17,7 +17,11 @@ using System; using Microsoft;
 
 #if !SILVERLIGHT // ComObject
 
+#if CODEPLEX_40
+namespace System.Dynamic {
+#else
 namespace Microsoft.Scripting {
+#endif
 
     internal static class ComHresults {
     

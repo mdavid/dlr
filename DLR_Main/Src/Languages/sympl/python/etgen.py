@@ -1,20 +1,17 @@
 
 import clr
-clr.AddReference("Microsoft.Scripting.Core")
-import System.Linq.Expressions as Exprs
+if clr.use35:
+    clr.AddReference("Microsoft.Scripting.Core")
+    import Microsoft.Linq.Expressions as Exprs
+    from Microsoft.Scripting import CallInfo
+else:
+    clr.AddReference("System.Core")
+    import System.Linq.Expressions as Exprs
+    from System.Dynamic import CallInfo
 
-#from Microsoft.Scripting import (ExpandoObject, InvokeBinder, DynamicMetaObject,
-#                            GetMemberBinder, SetMemberBinder)
-
-#from System.Runtime.CompilerServices import CallSite
-#
-#import System.Reflection as Refl
+from System.Collections.Generic import IEnumerable
 
 import System
-#from System import Action, Func
-#import System.String as String
-
-from Microsoft.Scripting import CallInfo
 
 import parser
 import runtime
@@ -130,7 +127,9 @@ def AnalyzeLambdaDef (expr, scope, description):
                Exprs.Expression.GetFuncType(
                    System.Array[System.Type](
                        [object] * (len(expr.Params) + 1))),
-               Exprs.Expression.Block(body),
+               ## Due to .NET 4.0 co/contra-variance, IPy's binding isn't picking
+               ## the overload with just IEnumerable<Expr>, so pick it explicitly.
+               Exprs.Expression.Block.Overloads[IEnumerable[Exprs.Expression]](body),
                paramsInOrder)
 
 
@@ -330,7 +329,10 @@ def AnalyzeBlockExpr (expr, scope):
     body = []
     for e in expr.Body:
         body.append(AnalyzeExpr(e, scope))
-    return Exprs.Expression.Block(object, body)
+    ## Due to .NET 4.0 co/contra-variance, IPy's binding isn't picking the overload
+    ## with Type and IEnumerable<Expr>, so pick it explicitly.
+    return Exprs.Expression.Block.Overloads[
+              System.Type, IEnumerable[Exprs.Expression]](object, body)
 
 ### AnalyzeQuoteExpr converts a list, literal, or id expr to a runtime quoted
 ### literal and returns the Constant expression for it.
@@ -412,8 +414,12 @@ def AnalyzeLoopExpr (expr, scope):
     body = []
     for e in expr.Body:
         body.append(AnalyzeExpr(e, loopscope))
-    return Exprs.Expression.Loop(Exprs.Expression.Block(object, body), 
-                                 loopscope.LoopBreak)
+    ## Due to .NET 4.0 co/contra-variance, IPy's binding isn't picking the overload
+    ## with Type and IEnumerable<Expr>, so pick it explicitly.
+    return Exprs.Expression.Loop(Exprs.Expression.Block.Overloads
+                                    [System.Type, IEnumerable[Exprs.Expression]]
+                                    (object, body), 
+                                  loopscope.LoopBreak)
 
 def AnalyzeBreakExpr (expr, scope):
     debugprint("analyze break ..." + repr(expr.Value))

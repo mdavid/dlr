@@ -18,10 +18,16 @@ using System; using Microsoft;
 using System.Collections.ObjectModel;
 using System.Reflection;
 using System.Runtime.CompilerServices;
+#if !CODEPLEX_40
 using Microsoft.Runtime.CompilerServices;
+#endif
 
 
+#if CODEPLEX_40
+namespace System.Linq.Expressions {
+#else
 namespace Microsoft.Linq.Expressions {
+#endif
 #if !SILVERLIGHT
     public partial class Expression {
         #region Generated Expression Debugger Proxies

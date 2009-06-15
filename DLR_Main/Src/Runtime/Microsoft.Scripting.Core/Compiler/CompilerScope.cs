@@ -20,12 +20,23 @@ using System.Collections.ObjectModel;
 using System.Diagnostics;
 using System.Reflection.Emit;
 using System.Runtime.CompilerServices;
+#if !CODEPLEX_40
 using Microsoft.Runtime.CompilerServices;
+#endif
 
+#if CODEPLEX_40
+using System.Dynamic;
+using System.Dynamic.Utils;
+#else
 using Microsoft.Scripting;
 using Microsoft.Scripting.Utils;
+#endif
 
+#if CODEPLEX_40
+namespace System.Linq.Expressions.Compiler {
+#else
 namespace Microsoft.Linq.Expressions.Compiler {
+#endif
     internal enum VariableStorageKind {
         Local,
         Hoisted

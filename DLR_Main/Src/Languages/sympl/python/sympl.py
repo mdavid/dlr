@@ -1,11 +1,23 @@
 import clr
 
-clr.AddReference("Microsoft.Scripting.Core")
-from Microsoft.Scripting import (ExpandoObject, IDynamicMetaObjectProvider,
-                            DynamicMetaObject, BindingRestrictions, CallInfo)
+from System import Environment
+if Environment.Version.Major<4:
+    clr.use35 = True
+else:
+    clr.use35 = False
 
-clr.AddReference("Microsoft.Scripting.Core")
-import System.Linq.Expressions as Exprs
+if clr.use35:
+    clr.AddReference("Microsoft.Scripting.Core")
+    from Microsoft.Scripting import (ExpandoObject, IDynamicMetaObjectProvider,
+                                DynamicMetaObject, BindingRestrictions, CallInfo)
+    import Microsoft.Linq.Expressions as Exprs
+else:
+    clr.AddReference("System.Core")
+    from System.Dynamic import (ExpandoObject, IDynamicMetaObjectProvider,
+                                DynamicMetaObject, BindingRestrictions, CallInfo)
+    import System.Linq.Expressions as Exprs
+
+from System.Collections.Generic import IEnumerable
 
 import runtime
 import parser
@@ -120,7 +132,9 @@ class Sympl (object):
             ## Use ftype with void return so that lambda ignores body result.
             ftype = Exprs.Expression.GetActionType(System.Array[System.Type](
                                                       [Sympl, ExpandoObject]))
-            body = Exprs.Expression.Block(body)
+            ## Due to .NET 4.0 co/contra-variance, IPy's binding isn't picking
+            ## the overload with just IEnumerable<Expr>, so pick it explicitly.
+            body = Exprs.Expression.Block.Overloads[IEnumerable[Exprs.Expression]](body)
             modulefun = Exprs.Expression.Lambda(ftype, body, scope.RuntimeExpr,
                                                 scope.ModuleExpr)
             dbgmodfun = modulefun
@@ -146,7 +160,9 @@ class Sympl (object):
         ftype = Exprs.Expression.GetFuncType(
                     System.Array[System.Type](
                         [Sympl, ExpandoObject, object]))
-        body = Exprs.Expression.Block(body)
+        ## Due to .NET 4.0 co/contra-variance, IPy's binding isn't picking
+        ## the overload with just IEnumerable<Expr>, so pick it explicitly.
+        body = Exprs.Expression.Block.Overloads[IEnumerable[Exprs.Expression]](body)
         fun = Exprs.Expression.Lambda(ftype, body, scope.RuntimeExpr,
                                       scope.ModuleExpr)
         dbgmodfun = fun

@@ -14,7 +14,11 @@
  * ***************************************************************************/
 
 using System.Diagnostics;
+#if CODEPLEX_40
+using System;
+#else
 using System; using Microsoft;
+#endif
 using IronRuby.Compiler.Ast;
 using Microsoft.Scripting.Utils;
 using System.Text;

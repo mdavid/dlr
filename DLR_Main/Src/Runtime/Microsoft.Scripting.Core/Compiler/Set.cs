@@ -18,8 +18,13 @@ using System; using Microsoft;
 using System.Collections;
 using System.Collections.Generic;
 
+#if CODEPLEX_40
+// Note: can't move to Utils because name conflicts with System.Linq.Set
+namespace System.Linq.Expressions {
+#else
 // Note: can't move to Utils because name conflicts with Microsoft.Linq.Set
 namespace Microsoft.Linq.Expressions {
+#endif
     
     /// <summary>
     /// A simple hashset, built on Dictionary{K, V}

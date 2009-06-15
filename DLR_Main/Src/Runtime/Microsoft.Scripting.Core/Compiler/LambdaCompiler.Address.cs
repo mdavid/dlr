@@ -17,11 +17,19 @@ using System; using Microsoft;
 
 using System.Collections.Generic;
 using System.Diagnostics;
+#if CODEPLEX_40
+using System.Dynamic.Utils;
+#else
 using Microsoft.Scripting.Utils;
+#endif
 using System.Reflection;
 using System.Reflection.Emit;
 
+#if CODEPLEX_40
+namespace System.Linq.Expressions.Compiler {
+#else
 namespace Microsoft.Linq.Expressions.Compiler {
+#endif
     partial class LambdaCompiler {
         private void EmitAddress(Expression node, Type type) {
             EmitAddress(node, type, CompilationFlags.EmitExpressionStart);

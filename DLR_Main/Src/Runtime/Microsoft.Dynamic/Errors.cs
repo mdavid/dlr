@@ -16,7 +16,11 @@ using System; using Microsoft;
 
 
 
+#if CODEPLEX_40
+namespace System.Dynamic {
+#else
 namespace Microsoft.Scripting {
+#endif
 
 #if MICROSOFT_DYNAMIC
     internal static partial class Strings {

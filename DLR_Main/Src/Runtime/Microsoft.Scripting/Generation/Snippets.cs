@@ -13,7 +13,11 @@
  *
  * ***************************************************************************/
 
+#if CODEPLEX_40
+using System;
+#else
 using System; using Microsoft;
+#endif
 using System.IO;
 using System.Reflection;
 using System.Reflection.Emit;
@@ -99,8 +103,13 @@ namespace Microsoft.Scripting.Generation {
 
         public static void SetSaveAssemblies(bool enable, string directory) {
             //Set SaveAssemblies on for inner ring by calling SetSaveAssemblies via Reflection.
+#if CODEPLEX_40
+            Assembly core = typeof(System.Linq.Expressions.Expression).Assembly;
+            Type assemblyGen = core.GetType("System.Linq.Expressions.Compiler.AssemblyGen");
+#else
             Assembly core = typeof(Microsoft.Linq.Expressions.Expression).Assembly;
             Type assemblyGen = core.GetType("Microsoft.Linq.Expressions.Compiler.AssemblyGen");
+#endif
             //The type may not exist.
             if (assemblyGen != null) {
                 MethodInfo configSaveAssemblies = assemblyGen.GetMethod("SetSaveAssemblies", BindingFlags.NonPublic | BindingFlags.Static);
@@ -131,8 +140,13 @@ namespace Microsoft.Scripting.Generation {
             //    inner ring assemblies have dependency on outer ring assemlies via generated IL.
             // 3) Verify inner ring assemblies.
             // 4) Verify outer ring assemblies.
+#if CODEPLEX_40
+            Assembly core = typeof(System.Linq.Expressions.Expression).Assembly;
+            Type assemblyGen = core.GetType("System.Linq.Expressions.Compiler.AssemblyGen");
+#else
             Assembly core = typeof(Microsoft.Linq.Expressions.Expression).Assembly;
             Type assemblyGen = core.GetType("Microsoft.Linq.Expressions.Compiler.AssemblyGen");
+#endif
             //The type may not exist.
             string[] coreAssemblyLocations = null;
             if (assemblyGen != null) {

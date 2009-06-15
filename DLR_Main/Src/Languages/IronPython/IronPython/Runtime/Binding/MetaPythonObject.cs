@@ -13,10 +13,19 @@
  *
  * ***************************************************************************/
 
+#if CODEPLEX_40
+using System;
+#else
 using System; using Microsoft;
+#endif
 using System.Diagnostics;
+#if CODEPLEX_40
+using System.Linq.Expressions;
+using System.Dynamic;
+#else
 using Microsoft.Linq.Expressions;
 using Microsoft.Scripting;
+#endif
 using Microsoft.Scripting.Actions;
 using Microsoft.Scripting.Ast;
 using Microsoft.Scripting.Runtime;
@@ -24,7 +33,11 @@ using IronPython.Runtime.Types;
 using IronPython.Runtime.Operations;
 
 namespace IronPython.Runtime.Binding {
+#if CODEPLEX_40
+    using Ast = System.Linq.Expressions.Expression;
+#else
     using Ast = Microsoft.Linq.Expressions.Expression;
+#endif
     using AstUtils = Microsoft.Scripting.Ast.Utils;
 
     partial class MetaPythonObject : DynamicMetaObject {
@@ -131,7 +144,7 @@ namespace IronPython.Runtime.Binding {
 
             GetMemberBinder gma = (GetMemberBinder)member;
 
-            return gma.FallbackGetMember(self);
+            return gma.FallbackGetMember(self.Restrict(self.GetLimitType()));
         }
 
         protected static string GetGetMemberName(DynamicMetaObjectBinder member) {

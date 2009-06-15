@@ -20,8 +20,13 @@ using Microsoft.Scripting.Utils;
 using AstUtils = Microsoft.Scripting.Ast.Utils;
 
 namespace IronRuby.Compiler.Ast {
+#if CODEPLEX_40
+    using Ast = System.Linq.Expressions.Expression;
+    using MSA = System.Linq.Expressions;
+#else
     using Ast = Microsoft.Linq.Expressions.Expression;
     using MSA = Microsoft.Linq.Expressions;
+#endif
 
     // class Name
     //   <statements>

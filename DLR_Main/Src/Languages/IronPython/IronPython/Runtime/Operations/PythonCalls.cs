@@ -16,7 +16,12 @@ using System; using Microsoft;
 
 
 using Microsoft.Scripting;
+#if CODEPLEX_40
+using System.Dynamic;
+using System.Linq.Expressions;
+#else
 using Microsoft.Linq.Expressions;
+#endif
 using Microsoft.Scripting.Runtime;
 using Microsoft.Scripting.Actions;
 using DefaultContext = IronPython.Runtime.DefaultContext;

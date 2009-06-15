@@ -13,7 +13,11 @@
  *
  * ***************************************************************************/
 
+#if CODEPLEX_40
+using System;
+#else
 using System; using Microsoft;
+#endif
 using System.Collections;
 using System.Diagnostics;
 using System.Reflection;
@@ -241,7 +245,11 @@ false
             // TODO:
             // protected int Fld;
             // protected static int Fld;
+#if CODEPLEX_40
+            // protected event System.Func<object> Evnt;
+#else
             // protected event Microsoft.Func<object> Evnt;
+#endif
         }
 
         public void ClrVisibility1() {

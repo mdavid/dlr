@@ -13,12 +13,21 @@
  *
  * ***************************************************************************/
 
+#if CODEPLEX_40
+using System;
+#else
 using System; using Microsoft;
+#endif
 using System.Collections.Generic;
 using System.Diagnostics;
+#if CODEPLEX_40
+using System.Linq.Expressions;
+using System.Dynamic;
+#else
 using Microsoft.Linq.Expressions;
-using Microsoft.Scripting;
+#endif
 
+using Microsoft.Scripting;
 using Microsoft.Scripting.Actions;
 using Microsoft.Scripting.Actions.Calls;
 using Microsoft.Scripting.Runtime;
@@ -52,7 +61,11 @@ namespace IronPython.Runtime.Binding {
             }
 #if !SILVERLIGHT
             DynamicMetaObject com;
+#if CODEPLEX_40
+            if (System.Dynamic.ComBinder.TryBindInvoke(this, target, args, out com)) {
+#else
             if (Microsoft.Scripting.ComBinder.TryBindInvoke(this, target, args, out com)) {
+#endif
                 return com;
             }
 #endif

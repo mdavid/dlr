@@ -20,15 +20,24 @@ using Microsoft.Scripting;
 using Microsoft.Scripting.Runtime;
 using Microsoft.Scripting.Utils;
 using AstUtils = Microsoft.Scripting.Ast.Utils;
+#if CODEPLEX_40
+using MSA = System.Linq.Expressions;
+using System;
+#else
 using MSA = Microsoft.Linq.Expressions;
 using System; using Microsoft;
+#endif
 using Microsoft.Scripting.Actions;
 using System.Collections.ObjectModel;
 using System.Diagnostics;
 using Microsoft.Scripting.Interpreter;
     
 namespace IronRuby.Compiler.Ast {
+#if CODEPLEX_40
+    using Ast = System.Linq.Expressions.Expression;
+#else
     using Ast = Microsoft.Linq.Expressions.Expression;
+#endif
     
     public partial class MethodDeclaration : DeclarationExpression {
         // self, block

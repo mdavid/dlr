@@ -17,11 +17,19 @@ using System; using Microsoft;
 
 using System.Collections.ObjectModel;
 using Microsoft.Scripting.Utils;
+#if CODEPLEX_40
+using MSAst = System.Linq.Expressions;
+#else
 using MSAst = Microsoft.Linq.Expressions;
+#endif
 using AstUtils = Microsoft.Scripting.Ast.Utils;
 
 namespace IronPython.Compiler.Ast {
+#if CODEPLEX_40
+    using Ast = System.Linq.Expressions.Expression;
+#else
     using Ast = Microsoft.Linq.Expressions.Expression;
+#endif
     
     public sealed class SuiteStatement : Statement {
         private readonly Statement[] _statements;

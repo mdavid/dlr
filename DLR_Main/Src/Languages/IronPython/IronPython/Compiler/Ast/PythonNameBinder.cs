@@ -13,7 +13,11 @@
  *
  * ***************************************************************************/
 
+#if CODEPLEX_40
+using System;
+#else
 using System; using Microsoft;
+#endif
 using System.Collections.Generic;
 using System.Diagnostics;
 using IronPython.Runtime;
@@ -189,7 +193,6 @@ namespace IronPython.Compiler.Ast {
 
         internal void ReportSyntaxWarning(string message, Node node) {
             _context.Errors.Add(_context.SourceUnit, message, node.Span, -1, Severity.Warning);
-            throw PythonOps.SyntaxWarning(message, _context.SourceUnit, node.Span, -1);
         }
 
         internal void ReportSyntaxError(string message, Node node) {
@@ -354,20 +357,19 @@ namespace IronPython.Compiler.Ast {
             foreach (SymbolId n in node.Names) {
                 PythonVariable conflict;
                 // Check current scope for conflicting variable
+                bool assignedGlobal = false;
                 if (_currentScope.TryGetVariable(n, out conflict)) {
                     // conflict?
                     switch (conflict.Kind) {
                         case VariableKind.Global:
-                            // OK
-                            break;
-
                         case VariableKind.Local:
                         case VariableKind.HiddenLocal:
                         case VariableKind.GlobalLocal:
+                            assignedGlobal = true;
                             ReportSyntaxWarning(
                                 String.Format(
                                     System.Globalization.CultureInfo.InvariantCulture,
-                                    "Variable {0} assigned before global declaration",
+                                    "name '{0}' is assigned to before global declaration",
                                     SymbolTable.IdToString(n)
                                 ),
                                 node
@@ -388,11 +390,11 @@ namespace IronPython.Compiler.Ast {
                 }
 
                 // Check for the name being referenced previously. If it has been, issue warning.
-                if (_currentScope.IsReferenced(n)) {
+                if (_currentScope.IsReferenced(n) && !assignedGlobal) {
                     ReportSyntaxWarning(
                         String.Format(
                         System.Globalization.CultureInfo.InvariantCulture,
-                        "Variable {0} used before global declaration",
+                        "name '{0}' is used prior to global declaration",
                         SymbolTable.IdToString(n)),
                     node);
                 }

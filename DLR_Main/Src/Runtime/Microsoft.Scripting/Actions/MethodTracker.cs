@@ -13,15 +13,24 @@
  *
  * ***************************************************************************/
 
+#if CODEPLEX_40
+using System;
+using System.Linq.Expressions;
+#else
 using System; using Microsoft;
 using Microsoft.Linq.Expressions;
+#endif
 using System.Reflection;
 using Microsoft.Scripting.Utils;
 using Microsoft.Contracts;
 using AstUtils = Microsoft.Scripting.Ast.Utils;
 
 namespace Microsoft.Scripting.Actions {
+#if CODEPLEX_40
+    using Ast = System.Linq.Expressions.Expression;
+#else
     using Ast = Microsoft.Linq.Expressions.Expression;
+#endif
 
     public class MethodTracker : MemberTracker {
         private readonly MethodInfo _method;
@@ -86,7 +95,11 @@ namespace Microsoft.Scripting.Actions {
             return binder.ReturnMemberTracker(type, BindToInstance(instance));
         }
 
+#if CODEPLEX_40
+        internal override System.Linq.Expressions.Expression Call(Expression context, ActionBinder binder, params Expression[] arguments) {
+#else
         internal override Microsoft.Linq.Expressions.Expression Call(Expression context, ActionBinder binder, params Expression[] arguments) {
+#endif
             if (Method.IsPublic && Method.DeclaringType.IsVisible) {
                 // TODO: Need to use MethodBinder in here to make this right.
                 return binder.MakeCallExpression(context, Method, arguments);
