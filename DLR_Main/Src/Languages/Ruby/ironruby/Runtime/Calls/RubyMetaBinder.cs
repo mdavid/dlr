@@ -39,6 +39,11 @@ using System.Linq.Expressions;
 #else
 using Microsoft.Linq.Expressions;
 #endif
+using System.Runtime.CompilerServices;
+#if !CODEPLEX_40
+using Microsoft.Runtime.CompilerServices;
+#endif
+
 
 namespace IronRuby.Runtime.Calls {
     public abstract class RubyMetaBinder : DynamicMetaObjectBinder, IExpressionSerializable {
@@ -64,11 +69,28 @@ namespace IronRuby.Runtime.Calls {
         protected abstract bool Build(MetaObjectBuilder/*!*/ metaBuilder, CallArguments/*!*/ args, bool defaultFallback);
         public abstract Expression CreateExpression();
 
-        protected virtual DynamicMetaObjectBinder GetInteropBinder(RubyContext/*!*/ context, IList<DynamicMetaObject/*!*/>/*!*/ args, 
-            out MethodInfo postProcessor) {
+#if CODEPLEX_40
+        public override T BindDelegate<T>(System.Runtime.CompilerServices.CallSite<T> site, object[] args) {
+#else
+        public override T BindDelegate<T>(Microsoft.Runtime.CompilerServices.CallSite<T> site, object[] args) {
+#endif
+            InterpretedDispatcher dispatcher = MethodDispatcher.CreateInterpreted(typeof(T), args.Length);
 
-            postProcessor = null;
-            return null;
+            if (dispatcher == null) {
+                // call site has too many arguments:
+                PerfTrack.NoteEvent(PerfTrack.Categories.Binding, "Ruby: ! No dispatcher for " + Signature.ToString());
+                return base.BindDelegate<T>(site, args);
+            } else {
+                Expression binding = Bind(args, dispatcher.Parameters, dispatcher.ReturnLabel);
+
+                if (binding == null) {
+                    throw new InvalidImplementationException("DynamicMetaObjectBinder.Bind must return non-null meta-object");
+                }
+
+                T result = dispatcher.CreateDelegate<T>(binding);
+                CacheTarget(result);
+                return result;
+            }
         }
 
         public override DynamicMetaObject/*!*/ Bind(DynamicMetaObject/*!*/ scopeOrContextOrTarget, DynamicMetaObject/*!*/[]/*!*/ args) {
@@ -79,12 +101,18 @@ namespace IronRuby.Runtime.Calls {
 
             if (IsForeignMetaObject(callArgs.MetaTarget)) {
                 return InteropBind(metaBuilder, callArgs);
-            } 
+            }
 
             Build(metaBuilder, callArgs, true);
             return metaBuilder.CreateMetaObject(this);
         }
 
+        protected virtual DynamicMetaObjectBinder GetInteropBinder(RubyContext/*!*/ context, IList<DynamicMetaObject/*!*/>/*!*/ args,
+            out MethodInfo postProcessor) {
+
+            postProcessor = null;
+            return null;
+        }
 
         private DynamicMetaObject/*!*/ InteropBind(MetaObjectBuilder/*!*/ metaBuilder, CallArguments/*!*/ args) {
             // TODO: argument count limit depends on the binder!

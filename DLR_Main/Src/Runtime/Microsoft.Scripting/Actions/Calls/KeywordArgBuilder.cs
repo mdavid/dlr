@@ -18,15 +18,13 @@ using System;
 #else
 using System; using Microsoft;
 #endif
-using System.Collections.Generic;
 using System.Diagnostics;
 #if CODEPLEX_40
-using System.Dynamic;
 using System.Linq.Expressions;
 #else
-using Microsoft.Scripting;
 using Microsoft.Linq.Expressions;
 #endif
+using System.Reflection;
 
 namespace Microsoft.Scripting.Actions.Calls {
     /// <summary>
@@ -105,7 +103,7 @@ namespace Microsoft.Scripting.Actions.Calls {
         }
 
         private static RestrictedArguments MakeRestrictedArg(RestrictedArguments args, int index) {
-            return new RestrictedArguments(new[] { args.GetObject(index) }, new[] { args.GetType(index) });
+            return new RestrictedArguments(new[] { args.GetObject(index) }, new[] { args.GetType(index) }, false);
         }
 
         private int GetKeywordIndex(int paramCount) {
@@ -114,6 +112,10 @@ namespace Microsoft.Scripting.Actions.Calls {
 
         internal override Expression ByRefArgument {
             get { return _builder.ByRefArgument; }
+        }
+
+        public override ArgBuilder Clone(ParameterInfo newType) {
+            return new KeywordArgBuilder(_builder.Clone(newType), _kwArgCount, _kwArgIndex);
         }
     }
 }

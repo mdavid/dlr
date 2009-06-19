@@ -14,8 +14,6 @@
 #####################################################################################
 
 """Test cases for class-related features specific to CLI"""
-from __future__ import with_statement
-
 # this needs to run before we add ref to Microsoft.Scripting where we'll get the
 # non-generic version of Action[T].  Therefore it also can't run in test_interpret_sanity.
 import sys
@@ -1241,7 +1239,7 @@ def test_generic_method_error():
     import clr
     clr.AddReference('System.Core')
     from System.Linq import Queryable
-    AssertErrorWithMessage(TypeError, "Queryable.First is a generic method and must be indexed with types before calling", Queryable.First, [])
+    AssertErrorWithMessage(TypeError, "The type arguments for method 'First' cannot be inferred from the usage. Try specifying the type arguments explicitly.", Queryable.First, [])
 
 def test_collection_length():
     a = GenericCollection()

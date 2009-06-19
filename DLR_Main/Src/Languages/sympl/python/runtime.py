@@ -625,7 +625,9 @@ class TypeModelMetaObject (DynamicMetaObject):
 ###
 class DynamicObjectHelpers (object):
     Sentinel = object()
-    
+    GetSites = {}
+    SetSites = {}
+
     @staticmethod
     def HasMember (dynObj, name):
         if not isinstance(dynObj, IDynamicMetaObjectProvider):
@@ -647,12 +649,14 @@ class DynamicObjectHelpers (object):
         ## Work around an IronPython 4.0 issue:
         ## http://ironpython.codeplex.com/WorkItem/View.aspx?WorkItemId=22735
         if clr.use35:
-            site = CallSite[Func[CallSite, object, object]].Create(
-                       DOHelpersGetMemberBinder(name))
+			func = Func
         else:
-            fixedFunc = clr.GetPythonType(Type.GetType("System.Func`3"))
-            site = CallSite[fixedFunc[CallSite, object, object]].Create(
-                       DOHelpersGetMemberBinder(name))
+		    func = clr.GetPythonType(Type.GetType("System.Func`3"))
+        site = DynamicObjectHelpers.GetSites.get(name)
+        if site is None:
+            site = CallSite[func[CallSite, object, object]].Create(
+				       DOHelpersGetMemberBinder(name))
+            DynamicObjectHelpers.GetSites[name] = site
         return site.Target(site, dynObj)
 
     @staticmethod
@@ -666,17 +670,18 @@ class DynamicObjectHelpers (object):
     def SetMember(dynObj, name, value):
         if not isinstance(dynObj, IDynamicMetaObjectProvider):
             raise Exception("DynamicObjectHelpers only works on IDOs for now.")
-        ## For general usage ExpandoObject type param could be object.
-
         ## Work around an IronPython 4.0 issue:
         ## http://ironpython.codeplex.com/WorkItem/View.aspx?WorkItemId=22735
         if clr.use35:
-            site = CallSite[Action[CallSite, ExpandoObject, object]].Create(
-                      DOHelpersSetMemberBinder(name))
+			action = Action
         else:
-            fixedAction = clr.GetPythonType(Type.GetType("System.Action`3"))
-            site = CallSite[fixedAction[CallSite, ExpandoObject, object]].Create(
-                      DOHelpersSetMemberBinder(name))
+		    action = clr.GetPythonType(Type.GetType("System.Action`3"))
+        site = DynamicObjectHelpers.SetSites.get(name)
+        if site is None:
+            ## For general usage ExpandoObject type param could be object.
+            site = CallSite[action[CallSite, ExpandoObject, object]].Create(
+				       DOHelpersSetMemberBinder(name))
+            DynamicObjectHelpers.SetSites[name] = site
         site.Target(site, dynObj, value)
 
 

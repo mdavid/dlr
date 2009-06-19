@@ -1284,7 +1284,7 @@ namespace IronRuby.Runtime {
             return result;
         }
 
-        internal bool TryGetClrTypeInstanceData(object obj, out RubyInstanceData result) {
+        internal bool TryGetClrTypeInstanceData(object/*!*/ obj, out RubyInstanceData result) {
             lock (ReferenceTypeInstanceDataLock) {
                 return _referenceTypeInstanceData.TryGetValue(obj, out result);
             }

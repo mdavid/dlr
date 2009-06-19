@@ -79,6 +79,10 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "python", "python", "{D0F225
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Sympl35", "Languages\sympl\csharp\Sympl35.csproj", "{AD5B6F0A-FD60-4D2E-B58A-EE762C5AC3B9}"
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Debugging", "Debugging", "{4FC58D43-D4AB-49E5-A43E-332A44F5C3B0}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Microsoft.Scripting.Debugging", "Runtime\Microsoft.Scripting.Debugging\Microsoft.Scripting.Debugging.csproj", "{ED82A346-1CD9-4CB0-9C00-4CDD4CF577CF}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -253,6 +257,16 @@ Global
 		{AD5B6F0A-FD60-4D2E-B58A-EE762C5AC3B9}.Release|Any CPU.Build.0 = Release|Any CPU
 		{AD5B6F0A-FD60-4D2E-B58A-EE762C5AC3B9}.Silverlight Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{AD5B6F0A-FD60-4D2E-B58A-EE762C5AC3B9}.Silverlight Release|Any CPU.ActiveCfg = Release|Any CPU
+		{ED82A346-1CD9-4CB0-9C00-4CDD4CF577CF}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{ED82A346-1CD9-4CB0-9C00-4CDD4CF577CF}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{ED82A346-1CD9-4CB0-9C00-4CDD4CF577CF}.FxCop|Any CPU.ActiveCfg = Silverlight Release|Any CPU
+		{ED82A346-1CD9-4CB0-9C00-4CDD4CF577CF}.FxCop|Any CPU.Build.0 = Silverlight Release|Any CPU
+		{ED82A346-1CD9-4CB0-9C00-4CDD4CF577CF}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{ED82A346-1CD9-4CB0-9C00-4CDD4CF577CF}.Release|Any CPU.Build.0 = Release|Any CPU
+		{ED82A346-1CD9-4CB0-9C00-4CDD4CF577CF}.Silverlight Debug|Any CPU.ActiveCfg = Silverlight Debug|Any CPU
+		{ED82A346-1CD9-4CB0-9C00-4CDD4CF577CF}.Silverlight Debug|Any CPU.Build.0 = Silverlight Debug|Any CPU
+		{ED82A346-1CD9-4CB0-9C00-4CDD4CF577CF}.Silverlight Release|Any CPU.ActiveCfg = Silverlight Release|Any CPU
+		{ED82A346-1CD9-4CB0-9C00-4CDD4CF577CF}.Silverlight Release|Any CPU.Build.0 = Silverlight Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -286,5 +300,6 @@ Global
 		{366E6024-A530-48BB-A003-3696292B764A} = {E0137294-977D-4C68-A029-D2A2FB8C4596}
 		{D0F225A9-2773-46F4-9AEF-80779294ED12} = {E0137294-977D-4C68-A029-D2A2FB8C4596}
 		{AD5B6F0A-FD60-4D2E-B58A-EE762C5AC3B9} = {2E293A6C-C20A-4BBE-A901-DBAB27B06D6E}
+		{ED82A346-1CD9-4CB0-9C00-4CDD4CF577CF} = {4FC58D43-D4AB-49E5-A43E-332A44F5C3B0}
 	EndGlobalSection
 EndGlobal

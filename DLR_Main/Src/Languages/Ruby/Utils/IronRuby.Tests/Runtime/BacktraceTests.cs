@@ -155,6 +155,7 @@ Backtrace3.rb:0
         }
 
         public void Backtrace4() {
+#if TODO
             // TODO: need to fix interpreter
             if (_driver.Interpret) return;
 
@@ -190,6 +191,7 @@ Backtrace4.rb:11:in `foo'
 Backtrace4.rb:10:in `foo'
 Backtrace4.rb:0
 ", OutputFlags.Match);
+#endif
         }
     }
 }

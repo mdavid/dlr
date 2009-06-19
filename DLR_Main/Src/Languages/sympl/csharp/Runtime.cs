@@ -16,7 +16,7 @@ using System.Runtime.CompilerServices;
 using Path = System.IO.Path;
 using File = System.IO.File;
 using Directory = System.IO.Directory;
-using System.Diagnostics;
+using Debug = System.Diagnostics.Debug;
 
 namespace SymplSample {
 
@@ -522,17 +522,35 @@ namespace SymplSample {
             //return false;
         }
 
+        static private Dictionary<string,
+                                  CallSite<Func<CallSite, object, object>>>
+            _getSites = new Dictionary<string,
+                                       CallSite<Func<CallSite, object, object>>>();
+            
         internal static object GetMember(IDynamicMetaObjectProvider o,
                                          string name) {
-            var site = CallSite<Func<CallSite, object, object>>
-                           .Create(new DoHelpersGetMemberBinder(name));
+            CallSite<Func<CallSite, object, object>> site;
+            if (! DynamicObjectHelpers._getSites.TryGetValue(name, out site)) {
+                site = CallSite<Func<CallSite, object, object>>
+                               .Create(new DoHelpersGetMemberBinder(name));
+                DynamicObjectHelpers._getSites[name] = site;
+            }
             return site.Target(site, o);
         }
 
+        static private Dictionary<string,
+                                  CallSite<Action<CallSite, object, object>>>
+            _setSites = new Dictionary<string,
+                                       CallSite<Action<CallSite, object, object>>>();
+
         internal static void SetMember(IDynamicMetaObjectProvider o, string name,
                                        object value) {
-            var site = CallSite<Action<CallSite, object, object>>
+            CallSite<Action<CallSite, object, object>> site;
+            if (! DynamicObjectHelpers._setSites.TryGetValue(name, out site)) {
+                site = CallSite<Action<CallSite, object, object>>
                           .Create(new DoHelpersSetMemberBinder(name));
+                DynamicObjectHelpers._setSites[name] = site;
+            }
             site.Target(site, o, value);
         }
 
@@ -544,10 +562,12 @@ namespace SymplSample {
 
         public override DynamicMetaObject FallbackGetMember(
                 DynamicMetaObject target, DynamicMetaObject errorSuggestion) {
-            // Don't add my own type restriction because target added it.
-            return new DynamicMetaObject(
+            return errorSuggestion ??
+                   new DynamicMetaObject(
                            Expression.Constant(DynamicObjectHelpers.Sentinel),
-                           target.Restrictions);
+                           target.Restrictions.Merge(
+                               BindingRestrictions.GetTypeRestriction(
+                                   target.Expression, target.LimitType)));
         }
     }
 

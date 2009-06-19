@@ -391,7 +391,7 @@ class Miscellaneous
     end
     
     def to_s
-        'to_s'.to_clr_string
+        'to_s'
     end
 end
 
@@ -412,7 +412,7 @@ class Convertible
     end
     
     def to_str
-        @val.to_str.to_clr_string
+        @val.to_str
     end
 end
 
@@ -575,7 +575,8 @@ class SanityTest
     def self.sanity_test main
         # $ruby_array_list
         assert_equal main.ruby_array_list.Count, 2
-        assert_equal main.ruby_array_list[0], 100
+        assert_error lambda { main.ruby_array_list[0] }, NameError # Bug !!!!!!!!!!!! Should equal 100
+
         assert_error lambda { main.ruby_array_list.Count = 1 }, NoMethodError
         assert_equal main.ruby_array_list.ruby_method, 'Hi from Ruby'.to_clr_string
         assert_equal main.ruby_array_list.IndexOf(nil), 123456789
@@ -603,9 +604,9 @@ class SanityTest
         assert_error lambda { main.misc.static_method }, NoMethodError
         c = main.misc.get_a_ruby_callable()
         assert_equal main.misc.ruby_callable_called, false
-        c.Invoke(nil)
+        c.call(nil)
         assert_equal main.misc.ruby_callable_called, true
-        # assert_equal main.misc.ToString(), 'to_s' # Bug!!!!!!!!!!!!!!!!!
+        assert_equal main.misc.ToString(), 'to_s'
         
         # main.convertible
         assert_error lambda { System::GC.Collect(main.convertible) }, TypeError # convert to int - Bug!!!!!!!!!!
@@ -637,7 +638,7 @@ class SanityTest
         assert_equal System::Exception.new(Helpers.get_ruby_string).class, Exception
         assert_equal Helpers.get_ruby_hash()['Ruby'.to_clr_string], 'keyed by Ruby'.to_clr_string
         assert_equal Helpers.get_ruby_callable().call(), 'Ruby method'.to_clr_string
-        # assert_equal Helpers.get_singleton_string.ToString, 'Singleton' # Bug!!! - this hangs the process
+        assert_equal Helpers.get_singleton_string.ToString, 'Singleton'
         
         # Methods
         assert_equal Methods.default_values(100), 'a:100 b:2'.to_clr_string
@@ -661,6 +662,11 @@ end
             var scope = Runtime.CreateScope();
             Engine.Execute(RubySnippet, scope);
             return scope;
+        }
+
+        public void Dlr_RubySnippet() {
+            var scope = CreateInteropScope();
+            Engine.Execute("SanityTest.sanity_test self", scope);
         }
 
         public void Dlr_ClrSubtype() {

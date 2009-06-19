@@ -47,10 +47,10 @@ namespace Microsoft.Scripting.Actions.Calls {
         /// <summary>
         /// Parameter info is not available for this argument.
         /// </summary>
-        public SimpleArgBuilder(Type parameterType, int index, bool isParams, bool isParamsDict) 
+        public SimpleArgBuilder(Type parameterType, int index, bool isParams, bool isParamsDict)
             : this(null, parameterType, index, isParams, isParamsDict) {
         }
-    
+
         /// <summary>
         /// Type and whether the parameter is a params-array or params-dictionary is derived from info.
         /// </summary>
@@ -131,6 +131,10 @@ namespace Microsoft.Scripting.Actions.Calls {
             get {
                 return _parameterType;
             }
+        }
+
+        public override ArgBuilder Clone(ParameterInfo newType) {
+            return new SimpleArgBuilder(newType, newType.ParameterType, _index, _isParams, _isParamsDict);
         }
     }
 }
