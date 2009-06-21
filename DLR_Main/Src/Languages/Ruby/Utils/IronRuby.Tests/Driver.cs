@@ -80,7 +80,7 @@ namespace IronRuby.Tests {
 
             runtimeSetup.DebugMode = _driver.IsDebug;
             runtimeSetup.PrivateBinding = testCase.Options.PrivateBinding;
-            languageSetup.Options["InterpretedMode"] = _driver.Interpret;
+            languageSetup.Options["NoAdaptiveCompilation"] = _driver.NoAdaptiveCompilation;
             languageSetup.Options["Verbosity"] = 2;
             languageSetup.Options["Compatibility"] = testCase.Options.Compatibility;
 
@@ -105,7 +105,7 @@ namespace IronRuby.Tests {
         private static bool _runTokenizerDriver;
         private static bool _displayList;
         private static bool _partialTrust;
-        private static bool _interpret;
+        private static bool _noAdaptiveCompilation;
         private static bool _runPython = true;
 
         public TestRuntime TestRuntime {
@@ -136,8 +136,8 @@ namespace IronRuby.Tests {
             get { return _partialTrust; }
         }
 
-        public bool Interpret {
-            get { return _interpret; }
+        public bool NoAdaptiveCompilation {
+            get { return _noAdaptiveCompilation; }
         }
 
         public bool RunPython {
@@ -148,7 +148,7 @@ namespace IronRuby.Tests {
             if (args.Contains("/help") || args.Contains("-?") || args.Contains("/?") || args.Contains("-help")) {
                 Console.WriteLine("Verbose                      : /verbose");
                 Console.WriteLine("Partial trust                : /partial");
-                Console.WriteLine("Interpret                    : /interpret");
+                Console.WriteLine("No adaptive compilation      : /noadaptive");
                 Console.WriteLine("Save to assemblies           : /save");
                 Console.WriteLine("Debug Mode                   : /debug");
                 Console.WriteLine("Disable Python interop tests : /py-");
@@ -189,14 +189,14 @@ namespace IronRuby.Tests {
                 _partialTrust = true;
             }
 
-            if (args.Contains("-X:Interpret")) {
-                args.Remove("-X:Interpret");
-                _interpret = true;
+            if (args.Contains("-X:NoAdaptiveCompilation")) {
+                args.Remove("-X:NoAdaptiveCompilation");
+                _noAdaptiveCompilation = true;
             }
 
-            if (args.Contains("/interpret")) {
-                args.Remove("/interpret");
-                _interpret = true;
+            if (args.Contains("/noadaptive")) {
+                args.Remove("/noadaptive");
+                _noAdaptiveCompilation = true;
             }
 
             if (args.Contains("/py-")) {

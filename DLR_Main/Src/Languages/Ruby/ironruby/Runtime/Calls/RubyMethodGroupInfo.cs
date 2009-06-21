@@ -57,14 +57,12 @@ namespace IronRuby.Runtime.Calls {
             _isStatic = info._isStatic;
             _hasVirtuals = info._hasVirtuals;
             _staticDispatchMethods = info._staticDispatchMethods;
-            // Note: overloadOwners and maxCachedOverloadLevel are cleared whenever the group is copied.
         }
 
         // copy ctor
         private RubyMethodGroupInfo(RubyMethodGroupInfo/*!*/ info, MethodBase/*!*/[] methods)
             : base(methods, info.Flags, info.DeclaringModule) {
             _isStatic = info._isStatic;
-            // Note: overloadOwners and maxCachedOverloadLevel are cleared whenever the group is copied.
         }
 
         protected internal override RubyMemberInfo/*!*/ Copy(RubyMemberFlags flags, RubyModule/*!*/ module) {
@@ -77,10 +75,6 @@ namespace IronRuby.Runtime.Calls {
 
         internal override SelfCallConvention CallConvention {
             get { return _isStatic ? SelfCallConvention.NoSelf : SelfCallConvention.SelfIsInstance; }
-        }
-
-        internal override bool IsRubyMember {
-            get { return false; }
         }
 
         internal bool IsStatic {

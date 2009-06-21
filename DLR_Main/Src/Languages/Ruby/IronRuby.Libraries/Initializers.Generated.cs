@@ -4768,9 +4768,9 @@ namespace IronRuby.Builtins {
             
             module.DefineLibraryMethod("===", 0x51, 
 #if CODEPLEX_40
-                new System.Func<IronRuby.Runtime.BinaryOpStorage, System.Object, System.Object, System.Boolean>(IronRuby.Builtins.KernelOps.HashEquals)
+                new System.Func<IronRuby.Runtime.BinaryOpStorage, System.Object, System.Object, System.Boolean>(IronRuby.Builtins.KernelOps.CaseEquals)
 #else
-                new Func<IronRuby.Runtime.BinaryOpStorage, System.Object, System.Object, System.Boolean>(IronRuby.Builtins.KernelOps.HashEquals)
+                new Func<IronRuby.Runtime.BinaryOpStorage, System.Object, System.Object, System.Boolean>(IronRuby.Builtins.KernelOps.CaseEquals)
 #endif
             );
             
@@ -4900,9 +4900,9 @@ namespace IronRuby.Builtins {
             
             module.DefineLibraryMethod("equal?", 0x51, 
 #if CODEPLEX_40
-                new System.Func<System.Object, System.Object, System.Boolean>(IronRuby.Builtins.KernelOps.Equal)
+                new System.Func<System.Object, System.Object, System.Boolean>(IronRuby.Builtins.KernelOps.IsEqual)
 #else
-                new Func<System.Object, System.Object, System.Boolean>(IronRuby.Builtins.KernelOps.Equal)
+                new Func<System.Object, System.Object, System.Boolean>(IronRuby.Builtins.KernelOps.IsEqual)
 #endif
             );
             
@@ -9751,9 +9751,9 @@ namespace IronRuby.Builtins {
         private static void LoadSystem__Collections__IList_Instance(IronRuby.Builtins.RubyModule/*!*/ module) {
             module.DefineLibraryMethod("-", 0x51, 
 #if CODEPLEX_40
-                new System.Func<IronRuby.Runtime.RubyContext, System.Collections.IList, System.Collections.IList, IronRuby.Builtins.RubyArray>(IronRuby.Builtins.IListOps.Difference)
+                new System.Func<IronRuby.Runtime.UnaryOpStorage, IronRuby.Runtime.BinaryOpStorage, IronRuby.Runtime.RubyContext, System.Collections.IList, System.Collections.IList, IronRuby.Builtins.RubyArray>(IronRuby.Builtins.IListOps.Difference)
 #else
-                new Func<IronRuby.Runtime.RubyContext, System.Collections.IList, System.Collections.IList, IronRuby.Builtins.RubyArray>(IronRuby.Builtins.IListOps.Difference)
+                new Func<IronRuby.Runtime.UnaryOpStorage, IronRuby.Runtime.BinaryOpStorage, IronRuby.Runtime.RubyContext, System.Collections.IList, System.Collections.IList, IronRuby.Builtins.RubyArray>(IronRuby.Builtins.IListOps.Difference)
 #endif
             );
             
@@ -9951,9 +9951,9 @@ namespace IronRuby.Builtins {
             
             module.DefineLibraryMethod("eql?", 0x51, 
 #if CODEPLEX_40
-                new System.Func<System.Collections.IList, System.Object, System.Boolean>(IronRuby.Builtins.IListOps.HashEquals)
+                new System.Func<IronRuby.Runtime.BinaryOpStorage, System.Collections.IList, System.Object, System.Boolean>(IronRuby.Builtins.IListOps.HashEquals)
 #else
-                new Func<System.Collections.IList, System.Object, System.Boolean>(IronRuby.Builtins.IListOps.HashEquals)
+                new Func<IronRuby.Runtime.BinaryOpStorage, System.Collections.IList, System.Object, System.Boolean>(IronRuby.Builtins.IListOps.HashEquals)
 #endif
             );
             
@@ -10015,9 +10015,9 @@ namespace IronRuby.Builtins {
             
             module.DefineLibraryMethod("hash", 0x51, 
 #if CODEPLEX_40
-                new System.Func<System.Collections.IList, System.Int32>(IronRuby.Builtins.IListOps.GetHashCode)
+                new System.Func<IronRuby.Runtime.UnaryOpStorage, IronRuby.Runtime.ConversionStorage<System.Int32>, System.Collections.IList, System.Int32>(IronRuby.Builtins.IListOps.GetHashCode)
 #else
-                new Func<System.Collections.IList, System.Int32>(IronRuby.Builtins.IListOps.GetHashCode)
+                new Func<IronRuby.Runtime.UnaryOpStorage, IronRuby.Runtime.ConversionStorage<System.Int32>, System.Collections.IList, System.Int32>(IronRuby.Builtins.IListOps.GetHashCode)
 #endif
             );
             

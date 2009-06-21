@@ -22,12 +22,8 @@ using System; using Microsoft;
 
 namespace IronRuby.Tests {
     public partial class Tests {
-        private bool PreciseTraces {
-            get { return Runtime.Setup.DebugMode /*|| _driver.Interpret*/; }
-        }
-
         private bool PreciseSinglePassTraces {
-            get { return true; }
+            get { return Runtime.Setup.DebugMode || !_driver.NoAdaptiveCompilation; }
         }
 
         public void Backtrace1() {

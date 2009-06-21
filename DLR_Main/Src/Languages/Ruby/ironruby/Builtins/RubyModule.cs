@@ -698,6 +698,14 @@ namespace IronRuby.Builtins {
             set { GetInstanceData().Tainted = value; }
         }
 
+        public int BaseGetHashCode() {
+            return base.GetHashCode();
+        }
+
+        public bool BaseEquals(object other) {
+            return base.Equals(other);
+        }
+
         #endregion
 
         #region Factories (thread-safe)
@@ -1220,10 +1228,12 @@ namespace IronRuby.Builtins {
                 // Alias preserves visibility and declaring module even though the alias is declared in a different module (e.g. subclass) =>
                 // we can share method info (in fact, sharing is sound with Method#== semantics - it returns true on aliased methods).
                 // 
-                // We need to copy overload group since otherwise it might mess up caching if the alias is defined in a sub-module and 
+                // CLR members: 
+                // Detaches the member from its underlying type (by creating a copy).
+                // Note: We need to copy overload group since otherwise it might mess up caching if the alias is defined in a sub-module and 
                 // overloads of the same name that are not included in the overload group are inherited to this module.
                 // EnumerateMethods also relies on overload groups only representing cached CLR members.
-                if (method is RubyOverloadGroupInfo) {
+                if (!method.IsRubyMember) {
                     SetMethodNoEventNoLock(Context, newName, method.Copy(method.Flags, method.DeclaringModule));
                 } else {
                     SetMethodNoEventNoLock(Context, newName, method);
@@ -1235,7 +1245,8 @@ namespace IronRuby.Builtins {
 
         // Module#define_method:
         public void SetDefinedMethodNoEventNoLock(RubyContext/*!*/ callerContext, string/*!*/ name, RubyMemberInfo/*!*/ method, RubyMethodVisibility visibility) {
-            // copy method, Method#== returns false on defined methods and redefining the original method doesn't affect the new one:
+            // CLR members: Detaches the member from its underlying type (by creating a copy).
+            // Note: Method#== returns false on defined methods and redefining the original method doesn't affect the new one:
             SetMethodNoEventNoLock(callerContext, name, method.Copy((RubyMemberFlags)visibility, this));
         }
 
@@ -1246,6 +1257,7 @@ namespace IronRuby.Builtins {
             RubyMemberInfo existing;
             bool skipHidden = false;
             if (TryGetMethod(name, ref skipHidden, out existing)) {
+                // CLR members: Detaches the member from its underlying type (by creating a copy).
                 SetMethodNoEventNoLock(callerContext, name, method.Copy((RubyMemberFlags)visibility, this));
             } else {
                 SetMethodNoEventNoLock(callerContext, name, new SuperForwarderInfo((RubyMemberFlags)visibility, method.DeclaringModule, name));
@@ -1254,6 +1266,7 @@ namespace IronRuby.Builtins {
 
         // Module#module_function:
         public void SetModuleFunctionNoEventNoLock(RubyContext/*!*/ callerContext, string/*!*/ name, RubyMemberInfo/*!*/ method) {
+            // CLR members: Detaches the member from its underlying type (by creating a copy).
             // TODO: check for CLR instance members, it should be an error to call module_function on them:
             SingletonClass.SetMethodNoEventNoLock(callerContext, name, method.Copy(RubyMemberFlags.Public, SingletonClass));
         }
@@ -1408,6 +1421,10 @@ namespace IronRuby.Builtins {
                     } else {
                         SetMethodNoEventNoLock(Context, name, RubyMemberInfo.HiddenMethod);
                     }
+                    return true;
+                } else if (TryGetClrMember(name, false, out method)) {
+                    Debug.Assert(!method.IsRemovable);
+                    SetMethodNoEventNoLock(Context, name, RubyMemberInfo.HiddenMethod);
                     return true;
                 } else {
                     return false;
@@ -1625,14 +1642,31 @@ namespace IronRuby.Builtins {
                 return true;
             }
 
-            string mangled;
-            if (virtualLookup && (mangled = RubyUtils.MangleName(name)) != name && TryGetDefinedMethod(mangled, ref skipHidden, out method)) {
-                return true;
+            if (virtualLookup) {
+                string mangled;
+                if ((mangled = RubyUtils.MangleName(name)) != name && TryGetDefinedMethod(mangled, ref skipHidden, out method)
+                    && method.IsRubyMember) {
+                    return true;
+                }
+
+                // Special mappings:
+                // Do not map to Kernel#hash/eql? to prevent recursion in case Object.GetHashCode/Equals is removed.
+                if (this != Context.KernelModule) {
+                    if (name == "GetHashCode" && TryGetDefinedMethod("hash", out method) && method.IsRubyMember) {
+                        return true;
+                    } else if (name == "Equals" && TryGetDefinedMethod("eql?", out method) && method.IsRubyMember) {
+                        return true;
+                    }
+                }
             }
 
+            return !skipHidden && TryGetClrMember(name, virtualLookup, out method);
+        }
+
+        private bool TryGetClrMember(string/*!*/ name, bool virtualLookup, out RubyMemberInfo method) {
             // Skip hidden CLR overloads.
             // Skip lookup on types that are not visible or interfaces.
-            if (!skipHidden && _typeTracker != null && !_typeTracker.Type.IsInterface) {
+            if (_typeTracker != null && !_typeTracker.Type.IsInterface) {
                 // Note: Do not allow mangling for CLR virtual lookups - we want to match the overridden name exactly as is, 
                 // so that it corresponds to the base method call the override stub performs.
                 bool tryUnmangle = !virtualLookup && (_restrictions & ModuleRestrictions.NoNameMangling) == 0;
@@ -1643,6 +1677,7 @@ namespace IronRuby.Builtins {
                 }
             }
 
+            method = null;
             return false;
         }
 
@@ -1657,9 +1692,9 @@ namespace IronRuby.Builtins {
             InitializeMethodsNoLock();
 
             foreach (KeyValuePair<string, RubyMemberInfo> method in _methods) {
-                // Exclude overload groups as they only represent cached CLR method calls and these methods are enumerated below.
+                // Exclude attached CLR members as they only represent cached CLR method calls and these methods are enumerated below.
                 // Include undefined and CLR hidden members - the action uses them to hide the names.
-                if (!(method.Value is RubyOverloadGroupInfo)) {
+                if (method.Value.IsRubyMember) {
                     if (action(this, method.Key, method.Value)) {
                         return true;
                     }

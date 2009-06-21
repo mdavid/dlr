@@ -91,9 +91,11 @@
       <Compile Include="thread.cs" />
       <Compile Include="time.cs" />
       <Compile Include="xxsubtype.cs" />
+      <Compile Include="_bytesio.cs" />
       <Compile Include="_codecs_cn.cs" />
       <Compile Include="_collections.cs" />
       <Compile Include="_ctypes_test.cs" />
+      <Compile Include="_fileio.cs" />
       <Compile Include="_functools.cs" />
       <Compile Include="_heapq.cs" />
       <Compile Include="_md5.cs" />

@@ -72,6 +72,14 @@ namespace IronRuby.Builtins {
             public void Freeze() {
                 GetInstanceData().Freeze();
             }
+
+            public int BaseGetHashCode() {
+                return base.GetHashCode();
+            }
+
+            public bool BaseEquals(object other) {
+                return base.Equals(other);
+            }
         }
     }
 #endif
@@ -79,9 +87,19 @@ namespace IronRuby.Builtins {
     public partial class Hash {
         public sealed partial class Subclass : Hash, IRubyObject {
             private RubyInstanceData _instanceData;
+            private RubyClass/*!*/ _immediateClass;
             
             [Emitted]
-            public RubyClass/*!*/ ImmediateClass { get; set; }
+            public RubyClass/*!*/ ImmediateClass {
+                get {
+                    return _immediateClass;
+                }
+                set {
+                    // once a singleton immediate class is set it can't be changed:
+                    Debug.Assert((_immediateClass == null || !_immediateClass.IsSingletonClass) && value != null);
+                    _immediateClass = value;
+                }
+            }
 
             public RubyInstanceData/*!*/ GetInstanceData() {
                 return RubyOps.GetInstanceData(ref _instanceData);
@@ -102,15 +120,33 @@ namespace IronRuby.Builtins {
 
             public void Freeze() {
                 GetInstanceData().Freeze();
+            }
+
+            public int BaseGetHashCode() {
+                return base.GetHashCode();
+            }
+
+            public bool BaseEquals(object other) {
+                return base.Equals(other);
             }
         }
     }
     public partial class MatchData {
         public sealed partial class Subclass : MatchData, IRubyObject {
             private RubyInstanceData _instanceData;
+            private RubyClass/*!*/ _immediateClass;
             
             [Emitted]
-            public RubyClass/*!*/ ImmediateClass { get; set; }
+            public RubyClass/*!*/ ImmediateClass {
+                get {
+                    return _immediateClass;
+                }
+                set {
+                    // once a singleton immediate class is set it can't be changed:
+                    Debug.Assert((_immediateClass == null || !_immediateClass.IsSingletonClass) && value != null);
+                    _immediateClass = value;
+                }
+            }
 
             public RubyInstanceData/*!*/ GetInstanceData() {
                 return RubyOps.GetInstanceData(ref _instanceData);
@@ -131,15 +167,33 @@ namespace IronRuby.Builtins {
 
             public void Freeze() {
                 GetInstanceData().Freeze();
+            }
+
+            public int BaseGetHashCode() {
+                return base.GetHashCode();
+            }
+
+            public bool BaseEquals(object other) {
+                return base.Equals(other);
             }
         }
     }
     public partial class Proc {
         public sealed partial class Subclass : Proc, IRubyObject {
             private RubyInstanceData _instanceData;
+            private RubyClass/*!*/ _immediateClass;
             
             [Emitted]
-            public RubyClass/*!*/ ImmediateClass { get; set; }
+            public RubyClass/*!*/ ImmediateClass {
+                get {
+                    return _immediateClass;
+                }
+                set {
+                    // once a singleton immediate class is set it can't be changed:
+                    Debug.Assert((_immediateClass == null || !_immediateClass.IsSingletonClass) && value != null);
+                    _immediateClass = value;
+                }
+            }
 
             public RubyInstanceData/*!*/ GetInstanceData() {
                 return RubyOps.GetInstanceData(ref _instanceData);
@@ -160,15 +214,33 @@ namespace IronRuby.Builtins {
 
             public void Freeze() {
                 GetInstanceData().Freeze();
+            }
+
+            public int BaseGetHashCode() {
+                return base.GetHashCode();
+            }
+
+            public bool BaseEquals(object other) {
+                return base.Equals(other);
             }
         }
     }
     public partial class Range {
         public sealed partial class Subclass : Range, IRubyObject {
             private RubyInstanceData _instanceData;
+            private RubyClass/*!*/ _immediateClass;
             
             [Emitted]
-            public RubyClass/*!*/ ImmediateClass { get; set; }
+            public RubyClass/*!*/ ImmediateClass {
+                get {
+                    return _immediateClass;
+                }
+                set {
+                    // once a singleton immediate class is set it can't be changed:
+                    Debug.Assert((_immediateClass == null || !_immediateClass.IsSingletonClass) && value != null);
+                    _immediateClass = value;
+                }
+            }
 
             public RubyInstanceData/*!*/ GetInstanceData() {
                 return RubyOps.GetInstanceData(ref _instanceData);
@@ -189,15 +261,33 @@ namespace IronRuby.Builtins {
 
             public void Freeze() {
                 GetInstanceData().Freeze();
+            }
+
+            public int BaseGetHashCode() {
+                return base.GetHashCode();
+            }
+
+            public bool BaseEquals(object other) {
+                return base.Equals(other);
             }
         }
     }
     public partial class RubyRegex {
         public sealed partial class Subclass : RubyRegex, IRubyObject {
             private RubyInstanceData _instanceData;
+            private RubyClass/*!*/ _immediateClass;
             
             [Emitted]
-            public RubyClass/*!*/ ImmediateClass { get; set; }
+            public RubyClass/*!*/ ImmediateClass {
+                get {
+                    return _immediateClass;
+                }
+                set {
+                    // once a singleton immediate class is set it can't be changed:
+                    Debug.Assert((_immediateClass == null || !_immediateClass.IsSingletonClass) && value != null);
+                    _immediateClass = value;
+                }
+            }
 
             public RubyInstanceData/*!*/ GetInstanceData() {
                 return RubyOps.GetInstanceData(ref _instanceData);
@@ -218,6 +308,14 @@ namespace IronRuby.Builtins {
 
             public void Freeze() {
                 GetInstanceData().Freeze();
+            }
+
+            public int BaseGetHashCode() {
+                return base.GetHashCode();
+            }
+
+            public bool BaseEquals(object other) {
+                return base.Equals(other);
             }
         }
     }
@@ -236,6 +334,14 @@ namespace IronRuby.Builtins {
 
             public RubyInstanceData TryGetInstanceData() {
                 return _instanceData;
+            }
+
+            public int BaseGetHashCode() {
+                return base.GetHashCode();
+            }
+
+            public bool BaseEquals(object other) {
+                return base.Equals(other);
             }
         }
     }
