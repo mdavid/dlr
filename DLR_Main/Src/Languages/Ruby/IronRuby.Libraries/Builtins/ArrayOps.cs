@@ -487,7 +487,7 @@ namespace IronRuby.Builtins {
             BlockParam block, RubyArray/*!*/ self) {
 
             RubyArray result = self.CreateInstance();
-            IListOps.Replace(comparisonStorage.Context, result, self);
+            IListOps.Replace(result, self);
             return SortInPlace(comparisonStorage, lessThanStorage, greaterThanStorage, block, result);
         }
 

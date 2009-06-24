@@ -96,9 +96,9 @@ namespace Microsoft.Scripting {
 
             var cache = CallSiteOps.GetRuleCache(@this);
 
-            var cachedRules = cache.GetRules();
-            for (int i = 0; i < cachedRules.Length; i++) {
-                rule = cachedRules[i].Target;
+            applicable = cache.GetRules();
+            for (int i = 0; i < applicable.Length; i++) {
+                rule = applicable[i];
 
                 //
                 // Execute the rule
@@ -221,9 +221,9 @@ namespace Microsoft.Scripting {
 
             var cache = CallSiteOps.GetRuleCache(@this);
 
-            var cachedRules = cache.GetRules();
-            for (int i = 0; i < cachedRules.Length; i++) {
-                rule = cachedRules[i].Target;
+            applicable = cache.GetRules();
+            for (int i = 0; i < applicable.Length; i++) {
+                rule = applicable[i];
 
                 //
                 // Execute the rule
@@ -346,9 +346,9 @@ namespace Microsoft.Scripting {
 
             var cache = CallSiteOps.GetRuleCache(@this);
 
-            var cachedRules = cache.GetRules();
-            for (int i = 0; i < cachedRules.Length; i++) {
-                rule = cachedRules[i].Target;
+            applicable = cache.GetRules();
+            for (int i = 0; i < applicable.Length; i++) {
+                rule = applicable[i];
 
                 //
                 // Execute the rule
@@ -471,9 +471,9 @@ namespace Microsoft.Scripting {
 
             var cache = CallSiteOps.GetRuleCache(@this);
 
-            var cachedRules = cache.GetRules();
-            for (int i = 0; i < cachedRules.Length; i++) {
-                rule = cachedRules[i].Target;
+            applicable = cache.GetRules();
+            for (int i = 0; i < applicable.Length; i++) {
+                rule = applicable[i];
 
                 //
                 // Execute the rule
@@ -596,9 +596,9 @@ namespace Microsoft.Scripting {
 
             var cache = CallSiteOps.GetRuleCache(@this);
 
-            var cachedRules = cache.GetRules();
-            for (int i = 0; i < cachedRules.Length; i++) {
-                rule = cachedRules[i].Target;
+            applicable = cache.GetRules();
+            for (int i = 0; i < applicable.Length; i++) {
+                rule = applicable[i];
 
                 //
                 // Execute the rule
@@ -721,9 +721,9 @@ namespace Microsoft.Scripting {
 
             var cache = CallSiteOps.GetRuleCache(@this);
 
-            var cachedRules = cache.GetRules();
-            for (int i = 0; i < cachedRules.Length; i++) {
-                rule = cachedRules[i].Target;
+            applicable = cache.GetRules();
+            for (int i = 0; i < applicable.Length; i++) {
+                rule = applicable[i];
 
                 //
                 // Execute the rule
@@ -846,9 +846,9 @@ namespace Microsoft.Scripting {
 
             var cache = CallSiteOps.GetRuleCache(@this);
 
-            var cachedRules = cache.GetRules();
-            for (int i = 0; i < cachedRules.Length; i++) {
-                rule = cachedRules[i].Target;
+            applicable = cache.GetRules();
+            for (int i = 0; i < applicable.Length; i++) {
+                rule = applicable[i];
 
                 //
                 // Execute the rule
@@ -971,9 +971,9 @@ namespace Microsoft.Scripting {
 
             var cache = CallSiteOps.GetRuleCache(@this);
 
-            var cachedRules = cache.GetRules();
-            for (int i = 0; i < cachedRules.Length; i++) {
-                rule = cachedRules[i].Target;
+            applicable = cache.GetRules();
+            for (int i = 0; i < applicable.Length; i++) {
+                rule = applicable[i];
 
                 //
                 // Execute the rule
@@ -1096,9 +1096,9 @@ namespace Microsoft.Scripting {
 
             var cache = CallSiteOps.GetRuleCache(@this);
 
-            var cachedRules = cache.GetRules();
-            for (int i = 0; i < cachedRules.Length; i++) {
-                rule = cachedRules[i].Target;
+            applicable = cache.GetRules();
+            for (int i = 0; i < applicable.Length; i++) {
+                rule = applicable[i];
 
                 //
                 // Execute the rule
@@ -1221,9 +1221,9 @@ namespace Microsoft.Scripting {
 
             var cache = CallSiteOps.GetRuleCache(@this);
 
-            var cachedRules = cache.GetRules();
-            for (int i = 0; i < cachedRules.Length; i++) {
-                rule = cachedRules[i].Target;
+            applicable = cache.GetRules();
+            for (int i = 0; i < applicable.Length; i++) {
+                rule = applicable[i];
 
                 //
                 // Execute the rule
@@ -1346,9 +1346,9 @@ namespace Microsoft.Scripting {
 
             var cache = CallSiteOps.GetRuleCache(@this);
 
-            var cachedRules = cache.GetRules();
-            for (int i = 0; i < cachedRules.Length; i++) {
-                rule = cachedRules[i].Target;
+            applicable = cache.GetRules();
+            for (int i = 0; i < applicable.Length; i++) {
+                rule = applicable[i];
 
                 //
                 // Execute the rule
@@ -1470,9 +1470,9 @@ namespace Microsoft.Scripting {
 
             var cache = CallSiteOps.GetRuleCache(@this);
 
-            var cachedRules = cache.GetRules();
-            for (int i = 0; i < cachedRules.Length; i++) {
-                rule = cachedRules[i].Target;
+            applicable = cache.GetRules();
+            for (int i = 0; i < applicable.Length; i++) {
+                rule = applicable[i];
 
                 //
                 // Execute the rule
@@ -1594,9 +1594,9 @@ namespace Microsoft.Scripting {
 
             var cache = CallSiteOps.GetRuleCache(@this);
 
-            var cachedRules = cache.GetRules();
-            for (int i = 0; i < cachedRules.Length; i++) {
-                rule = cachedRules[i].Target;
+            applicable = cache.GetRules();
+            for (int i = 0; i < applicable.Length; i++) {
+                rule = applicable[i];
 
                 //
                 // Execute the rule
@@ -1718,9 +1718,9 @@ namespace Microsoft.Scripting {
 
             var cache = CallSiteOps.GetRuleCache(@this);
 
-            var cachedRules = cache.GetRules();
-            for (int i = 0; i < cachedRules.Length; i++) {
-                rule = cachedRules[i].Target;
+            applicable = cache.GetRules();
+            for (int i = 0; i < applicable.Length; i++) {
+                rule = applicable[i];
 
                 //
                 // Execute the rule
@@ -1842,9 +1842,9 @@ namespace Microsoft.Scripting {
 
             var cache = CallSiteOps.GetRuleCache(@this);
 
-            var cachedRules = cache.GetRules();
-            for (int i = 0; i < cachedRules.Length; i++) {
-                rule = cachedRules[i].Target;
+            applicable = cache.GetRules();
+            for (int i = 0; i < applicable.Length; i++) {
+                rule = applicable[i];
 
                 //
                 // Execute the rule
@@ -1966,9 +1966,9 @@ namespace Microsoft.Scripting {
 
             var cache = CallSiteOps.GetRuleCache(@this);
 
-            var cachedRules = cache.GetRules();
-            for (int i = 0; i < cachedRules.Length; i++) {
-                rule = cachedRules[i].Target;
+            applicable = cache.GetRules();
+            for (int i = 0; i < applicable.Length; i++) {
+                rule = applicable[i];
 
                 //
                 // Execute the rule
@@ -2090,9 +2090,9 @@ namespace Microsoft.Scripting {
 
             var cache = CallSiteOps.GetRuleCache(@this);
 
-            var cachedRules = cache.GetRules();
-            for (int i = 0; i < cachedRules.Length; i++) {
-                rule = cachedRules[i].Target;
+            applicable = cache.GetRules();
+            for (int i = 0; i < applicable.Length; i++) {
+                rule = applicable[i];
 
                 //
                 // Execute the rule
@@ -2214,9 +2214,9 @@ namespace Microsoft.Scripting {
 
             var cache = CallSiteOps.GetRuleCache(@this);
 
-            var cachedRules = cache.GetRules();
-            for (int i = 0; i < cachedRules.Length; i++) {
-                rule = cachedRules[i].Target;
+            applicable = cache.GetRules();
+            for (int i = 0; i < applicable.Length; i++) {
+                rule = applicable[i];
 
                 //
                 // Execute the rule
@@ -2338,9 +2338,9 @@ namespace Microsoft.Scripting {
 
             var cache = CallSiteOps.GetRuleCache(@this);
 
-            var cachedRules = cache.GetRules();
-            for (int i = 0; i < cachedRules.Length; i++) {
-                rule = cachedRules[i].Target;
+            applicable = cache.GetRules();
+            for (int i = 0; i < applicable.Length; i++) {
+                rule = applicable[i];
 
                 //
                 // Execute the rule
@@ -2462,9 +2462,9 @@ namespace Microsoft.Scripting {
 
             var cache = CallSiteOps.GetRuleCache(@this);
 
-            var cachedRules = cache.GetRules();
-            for (int i = 0; i < cachedRules.Length; i++) {
-                rule = cachedRules[i].Target;
+            applicable = cache.GetRules();
+            for (int i = 0; i < applicable.Length; i++) {
+                rule = applicable[i];
 
                 //
                 // Execute the rule
@@ -2586,9 +2586,9 @@ namespace Microsoft.Scripting {
 
             var cache = CallSiteOps.GetRuleCache(@this);
 
-            var cachedRules = cache.GetRules();
-            for (int i = 0; i < cachedRules.Length; i++) {
-                rule = cachedRules[i].Target;
+            applicable = cache.GetRules();
+            for (int i = 0; i < applicable.Length; i++) {
+                rule = applicable[i];
 
                 //
                 // Execute the rule

@@ -57,6 +57,11 @@ namespace SymplSample {
             } else {
                 // What has more than one name, must be Globals access.
                 value = runtime.Globals;
+                // For more correctness and generality, shouldn't assume all
+                // globals are dynamic objects, or that a look up like foo.bar.baz
+                // cascades through all dynamic objects.
+                // Would need to manually create a CallSite here with Sympl's
+                // GetMemberBinder, and think about a caching strategy per name.
                 foreach (string name in what) {
                     value = DynamicObjectHelpers.GetMember(
                                 (IDynamicMetaObjectProvider)value, name);

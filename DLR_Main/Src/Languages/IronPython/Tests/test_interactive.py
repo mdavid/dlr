@@ -550,8 +550,8 @@ time.sleep(2)
     ipi = IronPythonInstance(executable, exec_prefix, extraArgs + " " + inputScript)
     (result, output, output2, exitCode) = ipi.StartAndRunToCompletion()
     AreEqual(exitCode, 0)
-    Assert("AssertionError: hello" in output)
-    Assert("IronPython." not in output)     # '.' is necessary here
+    Assert("AssertionError: hello" in output2)
+    Assert("IronPython." not in output2)     # '.' is necessary here
     ipi.End()
 
 def test_aform_feeds():
@@ -925,6 +925,21 @@ def test_remote_abort_command():
             AssertContains(output, "Thread was being aborted.") # ThreadAbortException
             continue
     Assert(False, "KeyboardInterrupt not thrown. Only KeyboardInterrupt was thrown")
+
+def test_exception_slicing_warning():
+    ipi = IronPythonInstance(executable, exec_prefix, '-c "print Exception(*range(2))[1]"')
+    res = ipi.StartAndRunToCompletion()
+    AreEqual(res[0], True)  # should have started
+    AreEqual(res[1], '1\r\n')   # some std out
+    AreEqual(res[2], '')    # no std err
+    AreEqual(res[3], 0)     # should return 0
+    
+    ipi = IronPythonInstance(executable, exec_prefix, '-3 -c "print Exception(*range(2))[1]"')
+    res = ipi.StartAndRunToCompletion()
+    AreEqual(res[0], True)  # should have started
+    AreEqual(res[1], '1\r\n')   # std out
+    Assert(res[2].endswith('DeprecationWarning: __getitem__ not supported for exception classes in 3.x; use args attribute\r\n')) #std err
+    AreEqual(res[3], 0)     # should return 0
 
 #------------------------------------------------------------------------------
 

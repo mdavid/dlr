@@ -607,9 +607,9 @@ namespace IronRuby.StandardLibrary.Yaml {
             
             module.DefineLibraryMethod("add", 0x11, 
 #if CODEPLEX_40
-                new System.Func<IronRuby.Runtime.RubyContext, IronRuby.StandardLibrary.Yaml.RubyYaml.YamlStream, System.Object, IronRuby.Builtins.RubyArray>(IronRuby.StandardLibrary.Yaml.RubyYaml.YamlStream.Add)
+                new System.Func<IronRuby.StandardLibrary.Yaml.RubyYaml.YamlStream, System.Object, IronRuby.Builtins.RubyArray>(IronRuby.StandardLibrary.Yaml.RubyYaml.YamlStream.Add)
 #else
-                new Func<IronRuby.Runtime.RubyContext, IronRuby.StandardLibrary.Yaml.RubyYaml.YamlStream, System.Object, IronRuby.Builtins.RubyArray>(IronRuby.StandardLibrary.Yaml.RubyYaml.YamlStream.Add)
+                new Func<IronRuby.StandardLibrary.Yaml.RubyYaml.YamlStream, System.Object, IronRuby.Builtins.RubyArray>(IronRuby.StandardLibrary.Yaml.RubyYaml.YamlStream.Add)
 #endif
             );
             
@@ -631,9 +631,9 @@ namespace IronRuby.StandardLibrary.Yaml {
             
             module.DefineLibraryMethod("edit", 0x11, 
 #if CODEPLEX_40
-                new System.Func<IronRuby.Runtime.RubyContext, IronRuby.StandardLibrary.Yaml.RubyYaml.YamlStream, System.Int32, System.Object, System.Object>(IronRuby.StandardLibrary.Yaml.RubyYaml.YamlStream.EditDocument)
+                new System.Func<IronRuby.StandardLibrary.Yaml.RubyYaml.YamlStream, System.Int32, System.Object, System.Object>(IronRuby.StandardLibrary.Yaml.RubyYaml.YamlStream.EditDocument)
 #else
-                new Func<IronRuby.Runtime.RubyContext, IronRuby.StandardLibrary.Yaml.RubyYaml.YamlStream, System.Int32, System.Object, System.Object>(IronRuby.StandardLibrary.Yaml.RubyYaml.YamlStream.EditDocument)
+                new Func<IronRuby.StandardLibrary.Yaml.RubyYaml.YamlStream, System.Int32, System.Object, System.Object>(IronRuby.StandardLibrary.Yaml.RubyYaml.YamlStream.EditDocument)
 #endif
             );
             

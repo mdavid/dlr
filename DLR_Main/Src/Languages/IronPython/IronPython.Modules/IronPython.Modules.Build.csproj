@@ -69,7 +69,6 @@
       <Compile Include="array.cs" />
       <Compile Include="binascii.cs" />
       <Compile Include="cmath.cs" />
-      <Compile Include="codecs.cs" />
       <Compile Include="copy_reg.cs" />
       <Compile Include="cPickle.cs" />
       <Compile Include="cStringIO.cs" />
@@ -92,6 +91,7 @@
       <Compile Include="time.cs" />
       <Compile Include="xxsubtype.cs" />
       <Compile Include="_bytesio.cs" />
+      <Compile Include="_codecs.cs" />
       <Compile Include="_codecs_cn.cs" />
       <Compile Include="_collections.cs" />
       <Compile Include="_ctypes_test.cs" />

@@ -74,8 +74,13 @@ namespace IronRuby.Runtime.Calls {
 #else
         public override T BindDelegate<T>(Microsoft.Runtime.CompilerServices.CallSite<T> site, object[] args) {
 #endif
-            InterpretedDispatcher dispatcher = MethodDispatcher.CreateInterpreted(typeof(T), args.Length);
+            RubyContext context = _context ?? ((Signature.HasScope) ? ((RubyScope)args[0]).RubyContext : (RubyContext)args[0]);
 
+            if (context.Options.NoAdaptiveCompilation) {
+                return base.BindDelegate<T>(site, args);
+            }
+
+            InterpretedDispatcher dispatcher = MethodDispatcher.CreateInterpreted(typeof(T), args.Length);
             if (dispatcher == null) {
                 // call site has too many arguments:
                 PerfTrack.NoteEvent(PerfTrack.Categories.Binding, "Ruby: ! No dispatcher for " + Signature.ToString());

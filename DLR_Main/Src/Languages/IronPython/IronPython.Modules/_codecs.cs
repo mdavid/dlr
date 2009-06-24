@@ -58,7 +58,13 @@ namespace IronPython.Modules {
         }
 
         public static object charmap_decode(string input, [Optional]string errors, [Optional]IDictionary<object, object> map) {
-            if (input.Length == 0) return String.Empty;
+            return CharmapDecodeWorker(input, errors, map, true);
+        }
+
+        private static object CharmapDecodeWorker(string input, string errors, IDictionary<object, object> map, bool isDecode) {
+            if (input.Length == 0) {
+                return PythonTuple.MakeTuple(String.Empty, 0);
+            }
 
             StringBuilder res = new StringBuilder();
             for (int i = 0; i < input.Length; i++) {
@@ -67,10 +73,15 @@ namespace IronPython.Modules {
                 if (map == null) {
                     res.Append(input[i]);
                     continue;
-                } 
-                
+                }
+
                 if (!map.TryGetValue((int)input[i], out val)) {
-                    if (errors == "strict") throw PythonOps.LookupError("failed to find key in mapping");
+                    if (errors == "strict") {
+                        if (isDecode) {
+                            throw PythonOps.UnicodeDecodeError("failed to find key in mapping");
+                        }
+                        throw PythonOps.UnicodeEncodeError("failed to find key in mapping");
+                    }
                     continue;
                 }
 
@@ -79,8 +90,8 @@ namespace IronPython.Modules {
             return PythonTuple.MakeTuple(res.ToString(), res.Length);
         }
 
-        public static object charmap_encode(string input, string errors, IDictionary<object, object> map) {
-            return charmap_decode(input, errors, map);
+        public static object charmap_encode(string input, [DefaultParameterValue("strict")]string errors, [DefaultParameterValue(null)]IDictionary<object, object> map) {
+            return CharmapDecodeWorker(input, errors, map, false);
         }
 
         public static object decode(CodeContext/*!*/ context, object obj) {
@@ -119,7 +130,7 @@ namespace IronPython.Modules {
             return PythonOps.GetIndex(context, PythonCalls.Call(context, t[EncoderIndex], obj, errors), 0);
         }
 
-        public static object escape_decode(string text) {
+        public static object escape_decode(string text, [DefaultParameterValue("strict")]string errors) {
             StringBuilder res = new StringBuilder();
             for (int i = 0; i < text.Length; i++) {
 
@@ -135,14 +146,34 @@ namespace IronPython.Modules {
                         case '\\': res.Append('\\'); break;
                         case 'f': res.Append((char)0x0c); break;
                         case 'v': res.Append((char)0x0b); break;
+                        case '\n': break;
                         case 'x':
-                            if (i >= text.Length - 2) throw PythonOps.ValueError("invalid character value");
+                            int dig1, dig2;
+                            if (i >= text.Length - 2 || !CharToInt(text[i], out dig1) || !CharToInt(text[i + 1], out dig2)) {
+                                switch (errors) {
+                                    case "strict":
+                                        if (i >= text.Length - 2) {
+                                            throw PythonOps.ValueError("invalid character value");
+                                        } else {
+                                            throw PythonOps.ValueError("invalid hexadecimal digit");
+                                        }
+                                    case "replace":
+                                        res.Append("?");
+                                        i--;
+                                        while (i < (text.Length - 1)) {
+                                            res.Append(text[i++]);
+                                        }
+                                        continue;
+                                    default:
+                                        throw PythonOps.ValueError("decoding error; unknown error handling code: " + errors);
+                                }
+                            }
 
-                            res.Append(CharToInt(text[i]) * 16 + CharToInt(text[i + 1]));
+                            res.Append(dig1 * 16 + dig2);
                             i += 2;
                             break;
                         default:
-                            res.Append("\\" + text[i - 1]);
+                            res.Append("\\" + text[i]);
                             break;
                     }
                 } else {
@@ -153,16 +184,22 @@ namespace IronPython.Modules {
             return PythonTuple.MakeTuple(res.ToString(), text.Length);
         }
 
-        static int CharToInt(char ch) {
+        private static bool CharToInt(char ch, out int val) {
             if (Char.IsDigit(ch)) {
-                return ch - '0';
+                val = ch - '0';
+                return true;
             }
             ch = Char.ToUpper(ch);
-            if (ch >= 'A' && ch <= 'F') return ch - 'A' + 10;
-            throw PythonOps.ValueError("invalid hexadecimal digit");
+            if (ch >= 'A' && ch <= 'F') {
+                val = ch - 'A' + 10;
+                return true;
+            }
+
+            val = 0;
+            return false;            
         }
 
-        public static PythonTuple/*!*/ escape_encode(string text) {
+        public static PythonTuple/*!*/ escape_encode(string text, [DefaultParameterValue("strict")]string errors) {
             StringBuilder res = new StringBuilder();
             for (int i = 0; i < text.Length; i++) {
                 switch (text[i]) {
@@ -556,7 +593,7 @@ namespace IronPython.Modules {
 
         public override bool Fallback(byte[] bytesUnknown, int index) {
             if (index > 0 && index + bytesUnknown.Length != inputBytes.Length) {
-                throw PythonOps.UnicodeDecodeError("failed to decode bytes at index {0}", index);
+                throw PythonOps.UnicodeEncodeError("failed to decode bytes at index {0}", index);
             }
 
             // just some bad bytes at the end

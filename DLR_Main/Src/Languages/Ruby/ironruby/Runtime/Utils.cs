@@ -24,6 +24,7 @@ using System.Text;
 using System.Reflection;
 using System.Collections;
 using System.Collections.Generic;
+using IronRuby.Builtins;
 
 namespace IronRuby.Runtime {
     public static class Utils {
@@ -348,15 +349,20 @@ namespace IronRuby.Runtime {
             return result;
         }
 
-        internal static void AddRange(this IList/*!*/ list, IEnumerable<object>/*!*/ range) {
-            Assert.NotNull(list, range);
+
+
+        internal static void AddRange(this IList/*!*/ collection, IEnumerable<object>/*!*/ range) {
+            Assert.NotNull(collection, range);
 
             List<object> objList;
-            if ((objList = list as List<object>) != null) {
+            RubyArray array;
+            if ((array = collection as RubyArray) != null) {
+                array.AddRange(range);
+            } else if ((objList = collection as List<object>) != null) {
                 objList.AddRange(range);
             } else {
                 foreach (var item in range) {
-                    list.Add(item);
+                    collection.Add(item);
                 }
             }
         }
@@ -365,7 +371,10 @@ namespace IronRuby.Runtime {
             Assert.NotNull(list, range);
 
             List<object> objList;
-            if ((objList = list as List<object>) != null) {
+            RubyArray array;
+            if ((array = list as RubyArray) != null) {
+                array.AddRange(range);
+            } else if ((objList = list as List<object>) != null) {
                 objList.AddRange(range);
             } else {
                 foreach (var item in range) {
