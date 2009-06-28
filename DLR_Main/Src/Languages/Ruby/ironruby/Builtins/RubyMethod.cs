@@ -35,6 +35,8 @@ using Ast = Microsoft.Linq.Expressions.Expression;
 using AstUtils = Microsoft.Scripting.Ast.Utils;
 
 namespace IronRuby.Builtins {
+    using BlockCallTargetUnsplatN = Func<BlockParam, object, object[], RubyArray, object>;
+
     public partial class RubyMethod {
         private readonly object _target;
         private readonly string/*!*/ _name;

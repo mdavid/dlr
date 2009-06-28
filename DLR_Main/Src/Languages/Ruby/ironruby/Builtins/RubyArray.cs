@@ -358,6 +358,7 @@ namespace IronRuby.Builtins {
 
         public RubyArray/*!*/ AddMultiple(int count, object value) {
             Mutate();
+            _content.Capacity += count;
             for (int i = 0; i < count; i++) {
                 _content.Add(value);
             }

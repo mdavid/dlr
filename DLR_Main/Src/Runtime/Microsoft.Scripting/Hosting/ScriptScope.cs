@@ -28,6 +28,7 @@ using Microsoft.Linq.Expressions;
 #endif
 using System.Runtime.Remoting;
 using System.Runtime.Serialization;
+using System.Security.Permissions;
 #if CODEPLEX_40
 using System.Dynamic;
 #else
@@ -352,5 +353,13 @@ namespace Microsoft.Scripting.Hosting {
         }
 
         #endregion
+
+#if !SILVERLIGHT
+        // TODO: Figure out what is the right lifetime
+        [SecurityPermission(SecurityAction.LinkDemand, Flags = SecurityPermissionFlag.Infrastructure)]
+        public override object InitializeLifetimeService() {
+            return null;
+        }
+#endif
     }
 }

@@ -3,6 +3,7 @@ using System;
 #else
 using System; using Microsoft;
 #endif
+using System.Collections;
 using System.Runtime.InteropServices;
 using Microsoft.Scripting.Hosting;
   using IronRuby.Runtime;
@@ -13,7 +14,7 @@ public partial class Klass {
         return arg0;
       }
     }
-#line 37 "./bcl/equality/equality_spec.rb"
+#line 34 "./bcl/equality/equality_spec.rb"
 public static class EqualityChecker {
       public static new bool Equals(object o1, object o2) { return o1.Equals(o2); }
     }
@@ -40,6 +41,20 @@ public class IComparableConsumer {
   
   public class IComparableProvider {
   
+  }
+#line 4 "./bcl/ienumerable/implementation_spec.rb"
+#line 7 "./bcl/ienumerable/implementation_spec.rb"
+public interface ITestList : IEnumerable {
+  }
+
+  public class Tester {
+    public ArrayList Test(ITestList list) {
+      ArrayList l = new ArrayList();
+      foreach(var item in list) {
+        l.Add(item);
+      }
+      return l;
+    }
   }
 #line 5 "./bcl/numerics/byte_spec.rb"
 public partial class NumericHelper {
@@ -256,7 +271,7 @@ public class ClassWithEvents {
     public event EventHandler OnEvent;
   }
   #pragma warning restore 67
-#line 4 "./fields/access_spec.rb"
+#line 5 "./fields/access_spec.rb"
 #pragma warning disable 414
   public partial class ClassWithFields {
     public string field = "field";
@@ -277,7 +292,20 @@ public class ClassWithEvents {
     protected static string protectedStaticField = "protected static";
     protected static readonly string protectedStaticReadOnlyField = "protected static readonly";
   }
-  #pragma warning restore 414
+
+  #pragma warning disable 649
+  public class InternalFieldTester {
+    internal string MyField;
+
+    public InternalFieldTester() {
+      var runtime = ScriptRuntime.CreateFromConfiguration();
+      var engine = runtime.GetEngine("IronRuby");
+      var scope = engine.CreateScope();
+      scope.SetVariable("foo", this);
+      engine.Execute("foo.MyField = 'Hello'", scope);
+    }
+  }
+  #pragma warning restore 414, 649
 #line 4 "./interface/implementation_spec.rb"
 public interface IDoFoo {
       int Foo(string str);
@@ -334,7 +362,7 @@ public interface IEmptyInterfaceGroup { }
 
     public interface IInterfaceGroup1<T> {void m1();}
     public interface IInterfaceGroup1<T,V> {void m1();}
-#line 224 "./method/invocation/generic_spec.rb"
+#line 226 "./method/invocation/generic_spec.rb"
 public partial class ClassWithMethods {
         #region private methods
   private string Private1Generic0Arg<T>() {
@@ -463,7 +491,7 @@ public partial class ClassWithMethods {
     }
 
     public partial class SubKlass : Klass {}
-#line 262 "./method/invocation/generic_spec.rb"
+#line 264 "./method/invocation/generic_spec.rb"
 #pragma warning disable 693
     public partial class GenericClassWithMethods<K> {
       #region private methods
@@ -588,7 +616,7 @@ public partial class ClassWithMethods {
 
     }
     #pragma warning restore 693
-#line 289 "./method/invocation/generic_spec.rb"
+#line 291 "./method/invocation/generic_spec.rb"
 #pragma warning disable 693
     public partial class GenericClass2Params<K, J> {
       #region private methods
@@ -754,18 +782,18 @@ public partial class ClassWithMethods {
       protected string ProtectedMethod() {return "protected";}
       private string PrivateMethod() {return "private";}
     }
-#line 39 "./method/reflection_spec.rb"
+#line 59 "./method/reflection_spec.rb"
 public abstract partial class AbstractClassWithMethods {
       public abstract string PublicMethod();
       protected abstract string ProtectedMethod();
     }
-#line 87 "./method/reflection_spec.rb"
+#line 107 "./method/reflection_spec.rb"
 public partial class ClassWithOverloads {
       public string Overloaded() { return "empty"; }
       public string Overloaded(int arg) { return "one arg"; }
       public string Overloaded(int arg1, int arg2) { return "two args"; }
     }
-#line 127 "./method/reflection_spec.rb"
+#line 147 "./method/reflection_spec.rb"
 public partial class Klass{
       public static int StaticVoidMethod() {
         return 1;
@@ -775,6 +803,16 @@ public partial class Klass{
 namespace NotEmptyNamespace {
     public class Foo {
       public static int Bar() { return 1; }
+    }
+  }
+#line 4 "./ruby/additions/clr_new_spec.rb"
+namespace CLRNew {
+    public class Ctor {
+      public int Tracker {get; set;}
+
+      public Ctor() {
+        Tracker = 1; 
+      }
     }
   }
 #line 4 "./ruby/name_mangling/public_spec.rb"

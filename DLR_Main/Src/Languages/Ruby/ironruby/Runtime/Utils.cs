@@ -137,12 +137,6 @@ namespace IronRuby.Runtime {
             }
         }
 
-        private static void Copy(string/*!*/ src, int srcOffset, char[]/*!*/ dst, int dstOffset, int count) {
-            for (int i = 0; i < count; i++) {
-                dst[dstOffset + i] = src[srcOffset + i];
-            }
-        }
-
         internal static int Append<T>(ref T[]/*!*/ array, int itemCount, T item, int repeatCount) {
             Resize(ref array, itemCount + repeatCount);
             Fill(array, itemCount, item, repeatCount);
@@ -152,7 +146,7 @@ namespace IronRuby.Runtime {
         internal static int Append(ref char[]/*!*/ array, int itemCount, string/*!*/ other, int start, int count) {
             int newCount = itemCount + count;
             Resize(ref array, newCount);
-            Copy(other, start, array, itemCount, count);
+            other.CopyTo(start, array, itemCount, count);
             return newCount;
         }
 
@@ -171,7 +165,7 @@ namespace IronRuby.Runtime {
 
         internal static int InsertAt(ref char[]/*!*/ array, int itemCount, int index, string/*!*/ other, int start, int count) {
             ResizeForInsertion(ref array, itemCount, index, count);
-            Copy(other, start, array, index, count);
+            other.CopyTo(start, array, index, count);
             return itemCount + count;
         }
 
@@ -349,33 +343,16 @@ namespace IronRuby.Runtime {
             return result;
         }
 
-
-
-        internal static void AddRange(this IList/*!*/ collection, IEnumerable<object>/*!*/ range) {
-            Assert.NotNull(collection, range);
-
-            List<object> objList;
-            RubyArray array;
-            if ((array = collection as RubyArray) != null) {
-                array.AddRange(range);
-            } else if ((objList = collection as List<object>) != null) {
-                objList.AddRange(range);
-            } else {
-                foreach (var item in range) {
-                    collection.Add(item);
-                }
-            }
-        }
-
-        internal static void AddRange(this IList/*!*/ list, IEnumerable/*!*/ range) {
+        internal static void AddRange(IList/*!*/ list, IList/*!*/ range) {
             Assert.NotNull(list, range);
 
             List<object> objList;
+            IEnumerable<object> enumerableRange;
             RubyArray array;
             if ((array = list as RubyArray) != null) {
                 array.AddRange(range);
-            } else if ((objList = list as List<object>) != null) {
-                objList.AddRange(range);
+            } else if ((objList = list as List<object>) != null && (enumerableRange = range as IEnumerable<object>) != null) {
+                objList.AddRange(enumerableRange);
             } else {
                 foreach (var item in range) {
                     list.Add(item);

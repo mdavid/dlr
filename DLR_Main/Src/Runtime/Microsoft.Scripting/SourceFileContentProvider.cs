@@ -19,6 +19,7 @@ using System;
 using System; using Microsoft;
 #endif
 using System.IO;
+using System.Security.Permissions;
 using Microsoft.Scripting.Utils;
 
 namespace Microsoft.Scripting {
@@ -37,11 +38,11 @@ namespace Microsoft.Scripting {
 
         #region Construction
 
-        internal FileStreamContentProvider(PlatformAdaptationLayer manager, string path) {
-            ContractUtils.RequiresNotNull(path, "path");
+        internal FileStreamContentProvider(PlatformAdaptationLayer pal, string path) {
+            Assert.NotNull(pal, path);
 
             _path = path;
-            _pal = new PALHolder(manager);
+            _pal = new PALHolder(pal);
         }
 
         #endregion
@@ -66,6 +67,14 @@ namespace Microsoft.Scripting {
             internal Stream GetStream(string path) {
                 return _pal.OpenInputFileStream(path);
             }
+
+#if !SILVERLIGHT
+            // TODO: Figure out what is the right lifetime
+            [SecurityPermission(SecurityAction.LinkDemand, Flags = SecurityPermissionFlag.Infrastructure)]
+            public override object InitializeLifetimeService() {
+                return null;
+            }
+#endif
         }
     }
 }
