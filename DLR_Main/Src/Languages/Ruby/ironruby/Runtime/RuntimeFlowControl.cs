@@ -63,10 +63,15 @@ namespace IronRuby.Runtime {
         }
 
         [Emitted]
-        public static void LeaveMethodFrame(RuntimeFlowControl/*!*/ rfc) {
+        public static void LeaveMethodFrameRfc(RuntimeFlowControl/*!*/ rfc) {
             rfc.IsActiveMethod = false;            
         }
 
+        [Emitted]
+        public static void LeaveMethodFrame(RubyMethodScope/*!*/ scope) {
+            scope.RuntimeFlowControl.IsActiveMethod = false;
+        }
+        
         [Emitted]
         public static void LeaveBlockFrame(RubyBlockScope/*!*/ scope) {
             
@@ -224,8 +229,9 @@ namespace IronRuby.Runtime {
                 return returnValue;
             }
 
-            if (proc.Owner.IsActiveMethod) {
-                throw new MethodUnwinder(proc.Owner, returnValue);
+            RuntimeFlowControl owner = proc.GetOwner();
+            if (owner.IsActiveMethod) {
+                throw new MethodUnwinder(owner, returnValue);
             } 
             
             throw new LocalJumpError("unexpected return");
@@ -244,8 +250,9 @@ namespace IronRuby.Runtime {
                     throw new BlockUnwinder(returnValue, false);
                 }
 
-                if (proc.Owner.IsActiveMethod) {
-                    throw new MethodUnwinder(proc.Owner, returnValue);
+                RuntimeFlowControl owner = proc.GetOwner();
+                if (owner.IsActiveMethod) {
+                    throw new MethodUnwinder(owner, returnValue);
                 }
 
                 throw new LocalJumpError("unexpected return");
@@ -277,7 +284,11 @@ namespace IronRuby.Runtime {
         }
 
         [Emitted]
-        public static bool MethodYield(RuntimeFlowControl rfc, BlockParam/*!*/ yieldedBlockFlowControl, object returnValue) {
+        public static bool MethodYield(RubyScope/*!*/ scope, BlockParam/*!*/ yieldedBlockFlowControl, object returnValue) {
+            return MethodYieldRfc(scope.RuntimeFlowControl, yieldedBlockFlowControl, returnValue);
+        }
+
+        public static bool MethodYieldRfc(RuntimeFlowControl rfc, BlockParam/*!*/ yieldedBlockFlowControl, object returnValue) {
             Assert.NotNull(yieldedBlockFlowControl);
 
             switch (yieldedBlockFlowControl.ReturnReason) {

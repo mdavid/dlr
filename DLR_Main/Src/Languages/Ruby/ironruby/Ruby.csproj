@@ -331,7 +331,6 @@
     <Compile Include="Builtins\RubyArray.cs" />
     <Compile Include="Builtins\RubyClass.cs" />
     <Compile Include="Runtime\RubyCallTargets.cs" />
-    <Compile Include="Runtime\EvalEntryPointDelegate.cs" />
     <Compile Include="Runtime\Loader.cs" />
     <Compile Include="Runtime\Calls\RubyEventInfo.cs" />
     <Compile Include="Runtime\RubyExceptionData.cs" />

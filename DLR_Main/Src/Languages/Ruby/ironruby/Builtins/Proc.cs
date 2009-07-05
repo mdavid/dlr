@@ -60,7 +60,7 @@ namespace IronRuby.Builtins {
         // Although we could load self from scope in Ruby defined blocks, we cannot do so when we don't have a scope.
         private readonly object _self;
 
-        // Local scope inside the proc captured by the block definition:
+        // The scope that defines this block.
         private readonly RubyScope/*!*/ _scope;
 
         // position of the block definition (opening brace):
@@ -70,8 +70,7 @@ namespace IronRuby.Builtins {
         private readonly BlockDispatcher/*!*/ _dispatcher;
         private ProcKind _kind;
 
-        // we need to remember the block's owner and proc-converter frames:
-        internal RuntimeFlowControl Owner { get; set; }
+        // The frame that converted this block to a proc:
         internal RuntimeFlowControl Converter { get; set; }
 
         public ProcKind Kind {
@@ -100,7 +99,14 @@ namespace IronRuby.Builtins {
             get { return _sourceLine; }
         }
 
-        internal static PropertyInfo/*!*/ SelfProperty { get { return typeof(Proc).GetProperty("Self"); } }
+        internal RuntimeFlowControl/*!*/ GetOwner() {
+            RubyMethodScope method = _scope.GetInnerMostMethodScope();
+            if (method != null) {
+                return method.RuntimeFlowControl;
+            } else {
+                return _scope.Top.RuntimeFlowControl;
+            }
+        }
 
         #region Construction, Conversion
 
@@ -116,7 +122,6 @@ namespace IronRuby.Builtins {
 
         protected Proc(Proc/*!*/ proc)
             : this(proc.Kind, proc.Self, proc.LocalScope, proc.SourcePath, proc.SourceLine, proc.Dispatcher) {
-            Owner = proc.Owner;
             Converter = proc.Converter;
         }
 
@@ -172,8 +177,8 @@ namespace IronRuby.Builtins {
 
             BuildCall(
                 metaBuilder,
-                convertedTarget,                              // proc object  
-                Ast.Property(convertedTarget, SelfProperty),  // self captured by the block closure
+                convertedTarget,                       // proc object  
+                Methods.GetProcSelf.OpCall(convertedTarget),  // self captured by the block closure
                 null,
                 args
             );

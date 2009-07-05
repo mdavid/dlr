@@ -123,21 +123,24 @@ namespace IronRuby.Compiler.Ast {
         /// </code>
         private MSA.Expression/*!*/ TransformReadCondition(AstGenerator/*!*/ gen) {
             // Define state variable in the inner most method scope.
-            var stateVariable = gen.CurrentMethod.Builder.DefineHiddenVariable("#in_range", typeof(bool));
+            var stateVariable = gen.MakeHiddenVariableAccess(gen.CurrentMethod);
 
             var begin = AstFactory.Box(_begin.TransformRead(gen));
             var end = AstFactory.Box(_end.TransformRead(gen));
 
+            // state: 
+            // false <=> null
+            // true <=> non-null
             if (_isExclusive) {
                 return Ast.Condition(
-                    stateVariable,
-                    Ast.Block(Ast.Assign(stateVariable, Methods.IsFalse.OpCall(end)), AstUtils.Constant(true)),
-                    Ast.Assign(stateVariable, Methods.IsTrue.OpCall(begin))
+                    Ast.ReferenceNotEqual(stateVariable, AstUtils.Constant(null)),
+                    Ast.Block(Ast.Assign(stateVariable, Methods.NullIfTrue.OpCall(end)), AstUtils.Constant(true)),
+                    Ast.ReferenceNotEqual(Ast.Assign(stateVariable, Methods.NullIfFalse.OpCall(begin)), AstUtils.Constant(null))
                 );  
             } else {
                 return Ast.Condition(
-                    Ast.OrElse(stateVariable, Methods.IsTrue.OpCall(begin)),
-                    Ast.Block(Ast.Assign(stateVariable, Methods.IsFalse.OpCall(end)), AstUtils.Constant(true)),
+                    Ast.OrElse(Ast.ReferenceNotEqual(stateVariable, AstUtils.Constant(null)), Methods.IsTrue.OpCall(begin)),
+                    Ast.Block(Ast.Assign(stateVariable, Methods.NullIfTrue.OpCall(end)), AstUtils.Constant(true)),
                     AstUtils.Constant(false)
                 );
                                   

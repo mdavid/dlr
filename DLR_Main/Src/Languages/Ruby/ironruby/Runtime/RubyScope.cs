@@ -54,7 +54,7 @@ namespace IronRuby.Runtime {
 #if !SILVERLIGHT
     [DebuggerTypeProxy(typeof(RubyScope.DebugView))]
 #endif
-    public abstract class RubyScope {
+    public abstract class RubyScope : IRuntimeVariables {
         private sealed class EmptyRuntimeVariables : IRuntimeVariables {
             int IRuntimeVariables.Count {
                 get { return 0; }
@@ -67,11 +67,14 @@ namespace IronRuby.Runtime {
         }
 
         internal static readonly LocalsDictionary _EmptyLocals = new LocalsDictionary(new EmptyRuntimeVariables(), new SymbolId[0]);
+        private static readonly StrongBox<object>[] _EmptyClosure = new StrongBox<object>[0];
 
         internal bool InLoop;
         internal bool InRescue;
 
+        private StrongBox<object>/*!*/[]/*!*/ _closure;
         private IAttributesCollection/*!*/ _frame;
+
         private readonly RubyTopLevelScope/*!*/ _top;
         private readonly RubyScope _parent;
 
@@ -133,12 +136,13 @@ namespace IronRuby.Runtime {
 
         public IAttributesCollection/*!*/ Frame {
             get {
-                // TODO: Debug.Assert(_frame != null);
                 return _frame; 
             }
-            internal set {
-                Debug.Assert(_frame == null && value != null);
-                _frame = value;
+        }
+
+        internal StrongBox<object>/*!*/[]/*!*/ Closure {
+            get {
+                return _closure;
             }
         }
 
@@ -165,6 +169,27 @@ namespace IronRuby.Runtime {
             _selfObject = selfObject;
             _runtimeFlowControl = runtimeFlowControl;
             _methodAttributes = RubyMethodAttributes.PrivateInstance;
+        }
+
+        int IRuntimeVariables.Count {
+            get { return _closure.Length; }
+        }
+
+        object IRuntimeVariables.this[int index] {
+            get { return _closure[index].Value; }
+            set { _closure[index].Value = value; }
+        }
+
+        internal void SetClosure(StrongBox<object>/*!*/[]/*!*/ closure, SymbolId[]/*!*/ variableNames) {
+            Debug.Assert(_frame == null && _closure == null);
+            _frame = new LocalsDictionary(this, variableNames);
+            _closure = closure;
+        }
+
+        internal void SetEmptyClosure() {
+            Debug.Assert(_frame == null && _closure == null);
+            _frame = _EmptyLocals;
+            _closure = _EmptyClosure;
         }
 
         public bool IsEmpty {
@@ -519,10 +544,10 @@ namespace IronRuby.Runtime {
 
     public abstract class RubyClosureScope : RubyScope {
         // $+
-        private MatchData _currentMatch; // TODO: per method scope and top level scope, not block scope
+        private MatchData _currentMatch;
 
         // $_
-        private object _lastInputLine; // TODO: per method scope and top level scope, not block scope
+        private object _lastInputLine;
 
         // top scope:
         protected RubyClosureScope(RuntimeFlowControl/*!*/ runtimeFlowControl, object selfObject)
@@ -664,9 +689,8 @@ var closureScope = scope as RubyClosureScope;
             get { return _blockFlowControl; }
         }
         
-        internal RubyBlockScope(RubyScope/*!*/ parent, RuntimeFlowControl/*!*/ runtimeFlowControl, BlockParam/*!*/ blockFlowControl, object selfObject)
-            : base(parent, runtimeFlowControl, selfObject) {
-            Assert.NotNull(blockFlowControl);
+        internal RubyBlockScope(BlockParam/*!*/ blockFlowControl, object selfObject)
+            : base(blockFlowControl.Proc.LocalScope, blockFlowControl.Proc.LocalScope.RuntimeFlowControl, selfObject) {
             _blockFlowControl = blockFlowControl;
         }
     }
@@ -713,7 +737,7 @@ var closureScope = scope as RubyClosureScope;
         internal RubyTopLevelScope(RubyContext/*!*/ context)
             : base(new RuntimeFlowControl(), null) {
             _context = context;
-            Frame = _EmptyLocals;
+            SetEmptyClosure();
         }
 
         internal RubyTopLevelScope(RubyGlobalScope/*!*/ globalScope, RubyModule scopeModule, RubyModule methodLookupModule,

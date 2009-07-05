@@ -199,7 +199,7 @@ namespace IronRuby.Runtime.Calls {
                         throw;
                     }
                 } finally {
-                    RubyOps.LeaveMethodFrame(rfc);
+                    RubyOps.LeaveMethodFrameRfc(rfc);
                 }
             } else {
                 return ((CallSite<Func<CallSite, object, Proc /*$GenericParams*/, object>>)callSite).
@@ -227,7 +227,7 @@ namespace IronRuby.Runtime.Calls {
                         throw;
                     }
                 } finally {
-                    RubyOps.LeaveMethodFrame(rfc);
+                    RubyOps.LeaveMethodFrameRfc(rfc);
                 }
             } else {
                 return ((CallSite<Func<CallSite, RubyScope, object, Proc /*$GenericParams*/, object>>)callSite).
@@ -288,7 +288,7 @@ namespace IronRuby.Runtime.Calls {
                         throw;
                     }
                 } finally {
-                    RubyOps.LeaveMethodFrame(rfc);
+                    RubyOps.LeaveMethodFrameRfc(rfc);
                 }
             } else {
                 return ((CallSite<Func<CallSite, object, Proc , T0, object>>)callSite).
@@ -316,7 +316,7 @@ namespace IronRuby.Runtime.Calls {
                         throw;
                     }
                 } finally {
-                    RubyOps.LeaveMethodFrame(rfc);
+                    RubyOps.LeaveMethodFrameRfc(rfc);
                 }
             } else {
                 return ((CallSite<Func<CallSite, RubyScope, object, Proc , T0, object>>)callSite).
@@ -375,7 +375,7 @@ namespace IronRuby.Runtime.Calls {
                         throw;
                     }
                 } finally {
-                    RubyOps.LeaveMethodFrame(rfc);
+                    RubyOps.LeaveMethodFrameRfc(rfc);
                 }
             } else {
                 return ((CallSite<Func<CallSite, object, Proc , T0 , T1, object>>)callSite).
@@ -403,7 +403,7 @@ namespace IronRuby.Runtime.Calls {
                         throw;
                     }
                 } finally {
-                    RubyOps.LeaveMethodFrame(rfc);
+                    RubyOps.LeaveMethodFrameRfc(rfc);
                 }
             } else {
                 return ((CallSite<Func<CallSite, RubyScope, object, Proc , T0 , T1, object>>)callSite).
@@ -462,7 +462,7 @@ namespace IronRuby.Runtime.Calls {
                         throw;
                     }
                 } finally {
-                    RubyOps.LeaveMethodFrame(rfc);
+                    RubyOps.LeaveMethodFrameRfc(rfc);
                 }
             } else {
                 return ((CallSite<Func<CallSite, object, Proc , T0 , T1 , T2, object>>)callSite).
@@ -490,7 +490,7 @@ namespace IronRuby.Runtime.Calls {
                         throw;
                     }
                 } finally {
-                    RubyOps.LeaveMethodFrame(rfc);
+                    RubyOps.LeaveMethodFrameRfc(rfc);
                 }
             } else {
                 return ((CallSite<Func<CallSite, RubyScope, object, Proc , T0 , T1 , T2, object>>)callSite).
@@ -549,7 +549,7 @@ namespace IronRuby.Runtime.Calls {
                         throw;
                     }
                 } finally {
-                    RubyOps.LeaveMethodFrame(rfc);
+                    RubyOps.LeaveMethodFrameRfc(rfc);
                 }
             } else {
                 return ((CallSite<Func<CallSite, object, Proc , T0 , T1 , T2 , T3, object>>)callSite).
@@ -577,7 +577,7 @@ namespace IronRuby.Runtime.Calls {
                         throw;
                     }
                 } finally {
-                    RubyOps.LeaveMethodFrame(rfc);
+                    RubyOps.LeaveMethodFrameRfc(rfc);
                 }
             } else {
                 return ((CallSite<Func<CallSite, RubyScope, object, Proc , T0 , T1 , T2 , T3, object>>)callSite).
@@ -636,7 +636,7 @@ namespace IronRuby.Runtime.Calls {
                         throw;
                     }
                 } finally {
-                    RubyOps.LeaveMethodFrame(rfc);
+                    RubyOps.LeaveMethodFrameRfc(rfc);
                 }
             } else {
                 return ((CallSite<Func<CallSite, object, Proc , T0 , T1 , T2 , T3 , T4, object>>)callSite).
@@ -664,7 +664,7 @@ namespace IronRuby.Runtime.Calls {
                         throw;
                     }
                 } finally {
-                    RubyOps.LeaveMethodFrame(rfc);
+                    RubyOps.LeaveMethodFrameRfc(rfc);
                 }
             } else {
                 return ((CallSite<Func<CallSite, RubyScope, object, Proc , T0 , T1 , T2 , T3 , T4, object>>)callSite).

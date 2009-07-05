@@ -23,114 +23,163 @@ using System.Collections.ObjectModel;
 using System.Diagnostics;
 using Microsoft.Scripting.Utils;
 using System.Threading;
-#if CODEPLEX_40
-using MSA = System.Linq.Expressions;
-#else
-using MSA = Microsoft.Linq.Expressions;
+using Microsoft.Scripting.Ast;
+using System.Runtime.CompilerServices;
+#if !CODEPLEX_40
+using Microsoft.Runtime.CompilerServices;
 #endif
+
+using Microsoft.Scripting;
 
 namespace IronRuby.Compiler.Ast {
 #if CODEPLEX_40
     using Ast = System.Linq.Expressions.Expression;
+    using MSA = System.Linq.Expressions;
 #else
     using Ast = Microsoft.Linq.Expressions.Expression;
+    using MSA = Microsoft.Linq.Expressions;
 #endif
-    using Microsoft.Scripting.Ast;
-
+    using IronRuby.Runtime;
+    
     internal sealed class ScopeBuilder {
-        private static readonly List<MSA.ParameterExpression> _FinishedVariables = new List<MSA.ParameterExpression>(0);
+        private readonly MSA.ParameterExpression/*!*/[] _parameters;
+        private readonly int _firstClosureParam;
+        private readonly int _localCount;
+        private readonly LexicalScope/*!*/ _lexicalScope;
+        private int _liftedHiddenVariableCount;
 
-        // local variables and parameters exposed at runtime via dictionary:
-        private List<MSA.ParameterExpression> _visibleLocals;
+        private readonly ReadOnlyCollectionBuilder<MSA.ParameterExpression>/*!*/ _hiddenVariables;
 
-        // all local variables except for parameters that are used in the scope:
-        private List<MSA.ParameterExpression> _allLocals;
+        // Local variables that hold on the closures used within this scope.
+        // Closure #0 stores the parent scope's local variables, closure #1 stores grand parent scope's locals, etc.
+        private List<MSA.ParameterExpression> _closures;
+
+        // Stores this scope's local variables.
+        private readonly MSA.ParameterExpression/*!*/ _localClosure;
         
 #if DEBUG
         private static int _Id;
         private int _id;
-
-        public ScopeBuilder() {
-            _id = Interlocked.Increment(ref _Id);
-        }
 #endif
 
-        private bool VisibleFinished {
-            get { return _visibleLocals == _FinishedVariables; }
+        public ScopeBuilder(int localCount, LexicalScope/*!*/ lexicalScope)
+            : this(null, -1, localCount, lexicalScope) {
         }
 
-        private bool AllFinished {
-            get { return _allLocals == _FinishedVariables; }
+        public ScopeBuilder(MSA.ParameterExpression/*!*/[] parameters, int firstClosureParam, int localCount, LexicalScope/*!*/ lexicalScope) {
+#if DEBUG
+            _id = Interlocked.Increment(ref _Id);
+#endif
+            _parameters = parameters;
+            _localCount = localCount;
+            _firstClosureParam = firstClosureParam;
+            _lexicalScope = lexicalScope;
+            _hiddenVariables = new ReadOnlyCollectionBuilder<MSA.ParameterExpression>();
+            _localClosure = DefineHiddenVariable("#locals", typeof(StrongBox<object>[]));
+        }
+
+        internal LexicalScope/*!*/ LexicalScope {
+            get { return _lexicalScope; }
+        }
+
+        internal MSA.ParameterExpression/*!*/ GetClosure(int definitionDepth) {
+            Debug.Assert(definitionDepth >= 0);
+            
+            int delta = _lexicalScope.Depth - definitionDepth - 1;
+            if (delta == -1) {
+                return _localClosure;
+            }
+
+            if (_closures == null) {
+                _closures = new List<MSA.ParameterExpression>();
+            }
+
+            while (delta >= _closures.Count) {
+                _closures.Add(DefineHiddenVariable("#closure" + delta, typeof(StrongBox<object>[])));
+            }
+            return _closures[delta];
         }
 
         public MSA.ParameterExpression/*!*/ DefineHiddenVariable(string/*!*/ name, Type/*!*/ type) {
 #if DEBUG
-            int hiddenCount = ((_allLocals != null) ? _allLocals.Count : 0) - ((_visibleLocals != null) ? _visibleLocals.Count : 0);
-            name += "_" + _id + "_" + hiddenCount;
+            name += "_" + _id + "_" + _hiddenVariables.Count;
 #endif
             return AddHidden(Ast.Variable(type, name));
         }
 
-        // Defines visible user variable (of object type).
-        public MSA.ParameterExpression/*!*/ DefineVariable(string/*!*/ name) {
-            return AddVisible(Ast.Variable(typeof(object), name));
-        }
-        
-        public MSA.ParameterExpression/*!*/ AddVisible(MSA.ParameterExpression/*!*/ variable) {
-            ContractUtils.Requires(!VisibleFinished);
-            Debug.Assert(!AllFinished);
-
-            if (_visibleLocals == null) {
-                _visibleLocals = new List<MSA.ParameterExpression>();                
-            }
-
-            if (_allLocals == null) {
-                _allLocals = new List<MSA.ParameterExpression>();
-            }
-
-            _visibleLocals.Add(variable);
-            _allLocals.Add(variable);
-            return variable;
-        }
-
-        public void AddVisibleParameters(MSA.ParameterExpression[]/*!*/ parameters, int hiddenCount) {
-            ContractUtils.Requires(_visibleLocals == null, "Parameters should be added prior to other visible variables");
-
-            _visibleLocals = new List<MSA.ParameterExpression>(parameters.Length - hiddenCount);
-            for (int i = hiddenCount; i < parameters.Length; i++) {
-                _visibleLocals.Add(parameters[i]);
-            }
-        }
-
         public MSA.ParameterExpression/*!*/ AddHidden(MSA.ParameterExpression/*!*/ variable) {
-            ContractUtils.Requires(!AllFinished);
-            if (_allLocals == null) {
-                _allLocals = new List<MSA.ParameterExpression>();
-            }
-            _allLocals.Add(variable);
+            _hiddenVariables.Add(variable);
             return variable;
         }
 
-        public MSA.Expression/*!*/ VisibleVariables() {
-            MSA.Expression result;
-            if (_visibleLocals != null) {
-                result = Utils.VariableDictionary(new ReadOnlyCollection<MSA.ParameterExpression>(_visibleLocals.ToArray()));
-            } else {
-                result = Utils.VariableDictionary();
+        public int AddLiftedHiddenVariable() {
+            return LiftedVisibleVariableCount + (_liftedHiddenVariableCount++);
+        }
+
+        private int LiftedVisibleVariableCount {
+            get { return (_parameters != null ? _parameters.Length - _firstClosureParam : 0) + _localCount; }
+        }
+
+        public MSA.Expression/*!*/ MakeClosureDefinition() {
+            var initializers = new ReadOnlyCollectionBuilder<MSA.Expression>();
+
+            if (_parameters != null) {
+                // parameters map to the initial elements of the array:
+                for (int i = _firstClosureParam; i < _parameters.Length; i++) {
+                    initializers.Add(Methods.CreateInitializedStrongBox.OpCall(_parameters[i]));
+                }
             }
-            _visibleLocals = _FinishedVariables;
-            return result;
+
+            for (int i = 0; i < _localCount + _liftedHiddenVariableCount; i++) {
+                initializers.Add(Methods.CreateEmptyStrongBox.OpCall());
+            }
+
+            return Ast.Assign(_localClosure, Ast.NewArrayInit(typeof(StrongBox<object>), initializers));
+        }
+
+        public MSA.Expression/*!*/ GetVariableNamesExpression() {
+            SymbolId[] symbols = new SymbolId[LiftedVisibleVariableCount];
+
+            foreach (var var in _lexicalScope) {
+                symbols[var.Value.ClosureIndex] = SymbolTable.StringToId(var.Value.Name);
+            }
+
+            return Ast.Constant(symbols);
         }
 
         public MSA.Expression/*!*/ CreateScope(MSA.Expression/*!*/ body) {
-            MSA.Expression result;
-            if (_allLocals != null) {
-                result = Ast.Block(new ReadOnlyCollection<MSA.ParameterExpression>(_allLocals.ToArray()), body);
+            Debug.Assert(_closures == null);
+            return Ast.Block(_hiddenVariables, body);
+        }
+
+        public MSA.Expression/*!*/ CreateScope(MSA.Expression/*!*/ scopeVariable, MSA.Expression/*!*/ scopeInitializer, MSA.Expression/*!*/ body) {
+            // #locals variable already assigned (in MakeClosureDefinition).
+            // We need to initialize #closureN variables.
+            if (_closures != null) {
+                if (_closures.Count == 1) {
+                    return Ast.Block(_hiddenVariables, Ast.Block(
+                        Ast.Assign(_closures[0], Methods.GetParentClosure.OpCall(Ast.Assign(scopeVariable, scopeInitializer))),
+                        body
+                    ));
+                } else {
+                    var result = new ReadOnlyCollectionBuilder<MSA.Expression>();
+                    MSA.Expression tempScope = DefineHiddenVariable("#s", typeof(RubyScope));
+                    result.Add(Ast.Assign(scopeVariable, scopeInitializer));
+
+                    for (int i = 0; i < _closures.Count; i++) {
+                        result.Add(
+                            Ast.Assign(
+                                _closures[i],
+                                Methods.GetClosure.OpCall(Ast.Assign(tempScope, Methods.GetParentScope.OpCall(i == 0 ? scopeVariable : tempScope)))
+                            )
+                        );
+                    }
+                    result.Add(body);
+                    return Ast.Block(_hiddenVariables, result);
+                }
             } else {
-                result = body;
+                return Ast.Block(_hiddenVariables, Ast.Block(Ast.Assign(scopeVariable, scopeInitializer), body));
             }
-            _allLocals = _FinishedVariables;
-            return result;
         }
     }
 }

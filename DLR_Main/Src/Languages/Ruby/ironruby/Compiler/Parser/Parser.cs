@@ -241,6 +241,12 @@ namespace IronRuby.Compiler {
             return result;
         }
 
+        private LexicalScope EnterPaddingScope() {
+            LexicalScope result = new PaddingLexicalScope(CurrentScope);
+            _lexicalScopes.Push(result);
+            return result;
+        }
+
         private LexicalScope EnterTopScope() {
             LexicalScope result = new LexicalScope(null);
             _lexicalScopes.Push(result);

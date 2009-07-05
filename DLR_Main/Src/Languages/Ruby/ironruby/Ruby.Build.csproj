@@ -325,7 +325,6 @@
       <Compile Include="Runtime\Converter.Generated.cs" />
       <Compile Include="Runtime\CustomTypeDescHelpers.cs" />
       <Compile Include="Runtime\EqualityComparer.cs" />
-      <Compile Include="Runtime\EvalEntryPointDelegate.cs" />
       <Compile Include="Runtime\IDuplicable.cs" />
       <Compile Include="Runtime\InstanceDataWeakTable.cs" />
       <Compile Include="Runtime\IntegerValue.cs" />

@@ -62,8 +62,8 @@ namespace IronRuby.Runtime {
         public static readonly string/*!*/ MriReleaseDate = "2008-05-28";
 
         // IronRuby:
-        public const string/*!*/ IronRubyVersionString = "0.5.0.0";
-        public static readonly Version IronRubyVersion = new Version(0, 5, 0, 0);
+        public const string/*!*/ IronRubyVersionString = "0.6.0.0";
+        public static readonly Version IronRubyVersion = new Version(0, 6, 0, 0);
         internal const string/*!*/ IronRubyDisplayName = "IronRuby";
         internal const string/*!*/ IronRubyNames = "IronRuby;Ruby;rb";
         internal const string/*!*/ IronRubyFileExtensions = ".rb";
@@ -1780,7 +1780,7 @@ namespace IronRuby.Runtime {
 #endif
             var rubyOptions = (RubyCompilerOptions)options;
 
-            var lambda = ParseSourceCode<Func<RubyScope, RuntimeFlowControl, object, object>>(sourceUnit, rubyOptions, errorSink);
+            var lambda = ParseSourceCode<Func<RubyScope, object, object>>(sourceUnit, rubyOptions, errorSink);
             if (lambda == null) {
                 return null;
             }
@@ -1880,7 +1880,7 @@ namespace IronRuby.Runtime {
         protected override ScriptCode/*!*/ LoadCompiledCode(Delegate/*!*/ method, string path, string customData) {
             // TODO: we need to save the kind of the scope factory:
             SourceUnit su = new SourceUnit(this, NullTextContentProvider.Null, path, SourceCodeKind.File);
-            return new RubyScriptCode((Func<RubyScope, RuntimeFlowControl, object, object>)method, su, TopScopeFactoryKind.Hosted);
+            return new RubyScriptCode((Func<RubyScope, object, object>)method, su, TopScopeFactoryKind.Hosted);
         }
 
         public void CheckConstantName(string name) {

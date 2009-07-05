@@ -58,7 +58,6 @@ namespace IronPython.Runtime.Binding {
         private SlotCache/*!*/ _typeMembers = new SlotCache();
         private SlotCache/*!*/ _resolvedMembers = new SlotCache();
         private Dictionary<Type/*!*/, IList<Type/*!*/>/*!*/>/*!*/ _dlrExtensionTypes = MakeExtensionTypes();
-        private readonly OldGetMemberAction EmptyGetMemberAction;        
 
         [MultiRuntimeAware]
         private static readonly Dictionary<Type/*!*/, ExtensionTypeInfo/*!*/>/*!*/ _sysTypes = MakeSystemTypes();
@@ -75,8 +74,6 @@ namespace IronPython.Runtime.Binding {
                     DomainManager_AssemblyLoaded(this, new AssemblyLoadedEventArgs(asm));
                 }
             }
-
-            EmptyGetMemberAction = OldGetMemberAction.Make(this, String.Empty);
         }
 
         public override Expression/*!*/ ConvertExpression(Expression/*!*/ expr, Type/*!*/ toType, ConversionResultKind kind, Expression context) {
@@ -211,14 +208,13 @@ namespace IronPython.Runtime.Binding {
             );
         }
 
-        public override ErrorInfo/*!*/ MakeStaticAssignFromDerivedTypeError(Type accessingType, MemberTracker info, Expression assignedValue, Expression context) {
-            return MakeMissingMemberError(accessingType, info.Name);
+        public override ErrorInfo/*!*/ MakeStaticAssignFromDerivedTypeError(Type accessingType, DynamicMetaObject instance, MemberTracker info, Expression assignedValue, Expression context) {
+            return MakeMissingMemberError(accessingType, instance, info.Name);
         }
 
-        public override ErrorInfo/*!*/ MakeStaticPropertyInstanceAccessError(PropertyTracker/*!*/ tracker, bool isAssignment, IList<Expression/*!*/>/*!*/ parameters) {
+        public override ErrorInfo/*!*/ MakeStaticPropertyInstanceAccessError(PropertyTracker/*!*/ tracker, bool isAssignment, IList<Expression>/*!*/ parameters) {
             ContractUtils.RequiresNotNull(tracker, "tracker");
             ContractUtils.RequiresNotNull(parameters, "parameters");
-            ContractUtils.RequiresNotNullItems(parameters, "parameters");
 
             if (isAssignment) {
                 return ErrorInfo.FromException(
@@ -244,16 +240,16 @@ namespace IronPython.Runtime.Binding {
             return DynamicHelpers.GetPythonTypeFromType(t).Name;
         }
 
-        public override MemberGroup/*!*/ GetMember(OldDynamicAction action, Type type, string name) {
+        public override MemberGroup/*!*/ GetMember(MemberRequestKind actionKind, Type type, string name) {
             MemberGroup mg;
-            if (!_resolvedMembers.TryGetCachedMember(type, name, action.Kind == DynamicActionKind.GetMember, out mg)) {
+            if (!_resolvedMembers.TryGetCachedMember(type, name, actionKind == MemberRequestKind.Get, out mg)) {
                 mg = TypeInfo.GetMemberAll(
                     this,
-                    action,
+                    actionKind,
                     type,
                     name);
 
-                _resolvedMembers.CacheSlot(type, action.Kind == DynamicActionKind.GetMember, name, PythonTypeOps.GetSlot(mg, name, PrivateBinding), mg);
+                _resolvedMembers.CacheSlot(type, actionKind == MemberRequestKind.Get, name, PythonTypeOps.GetSlot(mg, name, PrivateBinding), mg);
             }
 
             return mg ?? MemberGroup.EmptyGroup;
@@ -296,7 +292,7 @@ namespace IronPython.Runtime.Binding {
             );
         }
 
-        public override ErrorInfo MakeMissingMemberError(Type type, string name) {
+        public override ErrorInfo MakeMissingMemberError(Type type, DynamicMetaObject self, string name) {
             string typeName;
             if (typeof(TypeTracker).IsAssignableFrom(type)) {
                 typeName = "type";
@@ -310,6 +306,32 @@ namespace IronPython.Runtime.Binding {
                     AstUtils.Constant(String.Format("'{0}' object has no attribute '{1}'", typeName, name))
                 )
             );
+        }
+
+        public override ErrorInfo MakeMissingMemberErrorForAssign(Type type, DynamicMetaObject self, string name) {
+            if (self != null) {
+                return MakeMissingMemberError(type, self, name);
+            }
+
+            return ErrorInfo.FromException(
+                Ast.New(
+                    typeof(ArgumentTypeException).GetConstructor(new Type[] { typeof(string) }),
+                    AstUtils.Constant(String.Format("can't set attributes of built-in/extension type '{0}'", NameConverter.GetTypeName(type)))
+                )
+            );
+        }
+
+        public override ErrorInfo MakeMissingMemberErrorForAssignReadOnlyProperty(Type type, DynamicMetaObject self, string name) {
+            return ErrorInfo.FromException(
+                Ast.New(
+                    typeof(MissingMemberException).GetConstructor(new Type[] { typeof(string) }),
+                    AstUtils.Constant(String.Format("can't assign to read-only property {0} of type '{1}'", name, NameConverter.GetTypeName(type)))
+                )
+            );
+        }
+
+        public override ErrorInfo MakeMissingMemberErrorForDelete(Type type, DynamicMetaObject self, string name) {
+            return MakeMissingMemberErrorForAssign(type, self, name);
         }
 
         /// <summary>
@@ -482,7 +504,7 @@ namespace IronPython.Runtime.Binding {
             if (!_typeMembers.TryGetCachedSlot(curType, true, strName, out slot)) {
                 MemberGroup mg = TypeInfo.GetMember(
                     this,
-                    OldGetMemberAction.Make(this, name),
+                    MemberRequestKind.Get,
                     curType,
                     strName);
 
@@ -510,7 +532,7 @@ namespace IronPython.Runtime.Binding {
             if (!_resolvedMembers.TryGetCachedSlot(curType, true, strName, out slot)) {
                 MemberGroup mg = TypeInfo.GetMemberAll(
                     this,
-                    OldGetMemberAction.Make(this, strName),
+                    MemberRequestKind.Get,
                     curType,
                     strName);
 
@@ -538,7 +560,7 @@ namespace IronPython.Runtime.Binding {
 
                 foreach (ResolvedMember rm in TypeInfo.GetMembers(
                     this,
-                    EmptyGetMemberAction,
+                    MemberRequestKind.Get,
                     type.UnderlyingSystemType)) {
 
                     if (!members.ContainsKey(rm.Name)) {
@@ -574,7 +596,7 @@ namespace IronPython.Runtime.Binding {
 
                 foreach (ResolvedMember rm in TypeInfo.GetMembersAll(
                     this,
-                    EmptyGetMemberAction,
+                    MemberRequestKind.Get,
                     type.UnderlyingSystemType)) {
 
                     if (!members.ContainsKey(rm.Name)) {

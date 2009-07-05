@@ -101,7 +101,6 @@
       <Compile Include="Actions\ActionBinder.cs" />
       <Compile Include="Actions\Argument.cs" />
       <Compile Include="Actions\ArgumentType.cs" />
-      <Compile Include="Actions\BinderHelper.cs" />
       <Compile Include="Actions\BinderHelpers.cs" />
       <Compile Include="Actions\BoundMemberTracker.cs" />
       <Compile Include="Actions\CallSignature.cs" />
@@ -109,7 +108,7 @@
       <Compile Include="Actions\ComboBinder.cs" />
       <Compile Include="Actions\ConditionalBuilder.cs" />
       <Compile Include="Actions\ConstructorTracker.cs" />
-      <Compile Include="Actions\ConvertToBinderHelper.cs" />
+      <Compile Include="Actions\ConversionResultKind.cs" />
       <Compile Include="Actions\CustomTracker.cs" />
       <Compile Include="Actions\DefaultBinder.Conversions.cs" />
       <Compile Include="Actions\DefaultBinder.cs" />
@@ -119,7 +118,6 @@
       <Compile Include="Actions\DefaultBinder.MethodCalls.cs" />
       <Compile Include="Actions\DefaultBinder.Operations.cs" />
       <Compile Include="Actions\DefaultBinder.SetMember.cs" />
-      <Compile Include="Actions\DeleteMemberBinderHelper.cs" />
       <Compile Include="Actions\DynamicSiteHelper.cs" />
       <Compile Include="Actions\ErrorInfo.cs" />
       <Compile Include="Actions\EventTracker.cs" />
@@ -128,10 +126,9 @@
       <Compile Include="Actions\ExtensionPropertyTracker.cs" />
       <Compile Include="Actions\ExtensionUnaryOperationBinder.cs" />
       <Compile Include="Actions\FieldTracker.cs" />
-      <Compile Include="Actions\GetMemberBinderHelper.cs" />
       <Compile Include="Actions\Interceptor.cs" />
-      <Compile Include="Actions\MemberBinderHelper.cs" />
       <Compile Include="Actions\MemberGroup.cs" />
+      <Compile Include="Actions\MemberRequestKind.cs" />
       <Compile Include="Actions\MemberTracker.cs" />
       <Compile Include="Actions\MethodGroup.cs" />
       <Compile Include="Actions\MethodTracker.cs" />
@@ -144,7 +141,6 @@
       <Compile Include="Actions\PropertyTracker.cs" />
       <Compile Include="Actions\ReflectedPropertyTracker.cs" />
       <Compile Include="Actions\RuleBuilder.cs" />
-      <Compile Include="Actions\SetMemberBinderHelper.cs" />
       <Compile Include="Actions\TopNamespaceTracker.cs" />
       <Compile Include="Actions\TrackerTypes.cs" />
       <Compile Include="Actions\TypeGroup.cs" />
@@ -186,20 +182,6 @@
       <Compile Include="Actions\Calls\ReturnReferenceArgBuilder.cs" />
       <Compile Include="Actions\Calls\SimpleArgBuilder.cs" />
       <Compile Include="Actions\Calls\TypeInferer.cs" />
-    </ItemGroup>
-    <ItemGroup>
-      <!--                               -->
-      <!--          Actions.Old          -->
-      <!--                               -->
-      <Compile Include="Actions\Old\OldCallAction.cs" />
-      <Compile Include="Actions\Old\OldConvertToAction.cs" />
-      <Compile Include="Actions\Old\OldCreateInstanceAction.cs" />
-      <Compile Include="Actions\Old\OldDeleteMemberAction.cs" />
-      <Compile Include="Actions\Old\OldDoOperationAction.cs" />
-      <Compile Include="Actions\Old\OldDynamicAction.cs" />
-      <Compile Include="Actions\Old\OldGetMemberAction.cs" />
-      <Compile Include="Actions\Old\OldMemberAction.cs" />
-      <Compile Include="Actions\Old\OldSetMemberAction.cs" />
     </ItemGroup>
     <ItemGroup>
       <!--                       -->

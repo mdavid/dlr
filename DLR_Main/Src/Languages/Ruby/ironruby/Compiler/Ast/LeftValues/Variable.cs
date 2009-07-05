@@ -26,6 +26,7 @@ using MSA = System.Linq.Expressions;
 #else
 using MSA = Microsoft.Linq.Expressions;
 #endif
+using Microsoft.Scripting.Utils;
 using AstUtils = Microsoft.Scripting.Ast.Utils;
 
 namespace IronRuby.Compiler.Ast {
@@ -34,7 +35,6 @@ namespace IronRuby.Compiler.Ast {
 #else
     using Ast = Microsoft.Linq.Expressions.Expression;
 #endif
-    using Microsoft.Scripting.Utils;
 
     public abstract class Variable : LeftValue {
         private readonly string/*!*/ _name;

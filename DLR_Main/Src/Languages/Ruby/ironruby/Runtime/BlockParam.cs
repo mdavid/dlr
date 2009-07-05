@@ -163,7 +163,7 @@ namespace IronRuby.Runtime {
         /// </summary>
         public bool BlockJumped(object returnValue) {
             // if this method is a proc converter then the current frame is Proc.Converter, otherwise it is not available:
-            return RubyOps.MethodYield(_isLibProcConverter ? _proc.Converter : null, this, returnValue);
+            return RubyOps.MethodYieldRfc(_isLibProcConverter ? _proc.Converter : null, this, returnValue);
         }
 
         public object Break(object returnValue) {

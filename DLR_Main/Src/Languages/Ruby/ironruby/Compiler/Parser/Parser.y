@@ -1295,10 +1295,12 @@ primary:
       expr do
         {
             _tokenizer.COND_POP();
+            EnterPaddingScope();
         }
       compstmt END
         {
-            $$ = new ForLoopExpression($2, $5, $8, @$);
+            $$ = new ForLoopExpression(CurrentScope, $2, $5, $8, @$);
+            LeaveScope();
         }
     | block_expression
         {

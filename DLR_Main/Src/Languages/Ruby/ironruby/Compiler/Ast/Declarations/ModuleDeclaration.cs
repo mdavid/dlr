@@ -74,6 +74,10 @@ namespace IronRuby.Compiler.Ast {
             throw Assert.Unreachable;
         }
 
+        private ScopeBuilder/*!*/ DefineLocals() {
+            return new ScopeBuilder(DefinedScope.AllocateClosureSlotsForLocals(0), DefinedScope);
+        }
+
         internal sealed override MSA.Expression/*!*/ TransformRead(AstGenerator/*!*/ gen) {
             string debugString = (IsSingletonDeclaration) ? "SINGLETON" : ((this is ClassDeclaration) ? "CLASS" : "MODULE") + " " + QualifiedName.Name;
 
@@ -82,11 +86,10 @@ namespace IronRuby.Compiler.Ast {
             // definition needs to take place outside the defined lexical scope:
             var definition = MakeDefinitionExpression(gen);
             var selfVariable = outerLocals.DefineHiddenVariable("#module", typeof(RubyModule));
-            var rfcVariable = gen.CurrentRfcVariable;
             var parentScope = gen.CurrentScopeVariable;
 
             // inner locals:
-            ScopeBuilder scope = new ScopeBuilder();
+            ScopeBuilder scope = DefineLocals();
             var scopeVariable = scope.DefineHiddenVariable("#scope", typeof(RubyScope));
             
             gen.EnterModuleDefinition(
@@ -96,10 +99,7 @@ namespace IronRuby.Compiler.Ast {
                 IsSingletonDeclaration
             );
 
-            // first, transform locals defined within the module body:
-            DefinedScope.TransformLocals(scope);
-
-            // second, transform body:
+            // transform body:
             MSA.Expression transformedBody = Body.TransformRead(gen);
 
             // outer local:
@@ -113,9 +113,14 @@ namespace IronRuby.Compiler.Ast {
                 gen.DebugMarker(debugString),
                 Ast.Assign(selfVariable, definition),
                 scope.CreateScope(
+                    scopeVariable,
+                    Methods.CreateModuleScope.OpCall(
+                        scope.MakeClosureDefinition(),
+                        scope.GetVariableNamesExpression(), 
+                        parentScope, 
+                        selfVariable
+                    ),
                     Ast.Block(
-                        Ast.Assign(scopeVariable, 
-                            Methods.CreateModuleScope.OpCall(scope.VisibleVariables(), parentScope, rfcVariable, selfVariable)),
                         Ast.Assign(resultVariable, transformedBody),
                         AstUtils.Empty()
                     )

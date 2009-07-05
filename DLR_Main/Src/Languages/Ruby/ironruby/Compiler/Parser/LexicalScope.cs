@@ -28,21 +28,23 @@ using Microsoft.Scripting;
 using Microsoft.Scripting.Actions;
 using Microsoft.Scripting.Utils;
 using IronRuby.Compiler.Ast;
-#if CODEPLEX_40
-using MSA = System.Linq.Expressions;
-#else
-using MSA = Microsoft.Linq.Expressions;
-#endif
 using IronRuby.Runtime;
 
 namespace IronRuby.Compiler {
+#if CODEPLEX_40
+    using MSA = System.Linq.Expressions;
+    using Ast = System.Linq.Expressions.Expression;
+#else
+    using MSA = Microsoft.Linq.Expressions;
+    using Ast = Microsoft.Linq.Expressions.Expression;
+#endif
 
     // Scope contains variables defined outside of the current compilation unit. Used for assertion checks only.
     // (e.g. created for variables in the runtime scope of eval).
     internal sealed class RuntimeLexicalScope : LexicalScope {
         public RuntimeLexicalScope(List<string>/*!*/ names) 
-            : base(null) {
-
+            : base(null, -1) {
+         
             for (int i = 0; i < names.Count; i++) {
                 AddVariable(names[i], SourceSpan.None);
             }
@@ -56,8 +58,29 @@ namespace IronRuby.Compiler {
     public class LexicalScope : HybridStringDictionary<LocalVariable> {
         private readonly LexicalScope _outerScope;
 
-        internal LexicalScope(LexicalScope outerScope) {
+        //
+        // Note: Static vs. dynamic variables. Depth >= 0 => scope defines static variables, otherwise it defines dynamic variables. 
+        // 
+        // Do not statically define variables defined in top-level eval'd code:
+        //
+        // eval('x = 1')   <-- this variable needs to be defined in containing runtime scope, not in top-level eval scope
+        // eval('puts x')
+        // 
+        // eval('1.times { x = 1 }')  <-- x could be statically defined in the block since it is not visible outside the block
+        //
+        private readonly int _depth;
+
+        internal LexicalScope(LexicalScope outerScope)
+            : this(outerScope, (outerScope != null) ? (outerScope.IsRuntimeScope ? -1 : outerScope._depth + 1) : 0) {
+        }
+
+        protected LexicalScope(LexicalScope outerScope, int depth) {
             _outerScope = outerScope;
+            _depth = depth;
+        }
+
+        public int Depth {
+            get { return _depth; }
         }
 
         public LexicalScope OuterScope {
@@ -68,8 +91,13 @@ namespace IronRuby.Compiler {
             get { return false; }
         }
 
+        protected virtual bool AllowsVariableDefinitions {
+            get { return true; }
+        }
+
         public LocalVariable/*!*/ AddVariable(string/*!*/ name, SourceSpan location) {
-            var var = new LocalVariable(name, location);
+            Debug.Assert(AllowsVariableDefinitions);
+            var var = new LocalVariable(name, location, _depth);
             Add(name, var);
             return var;
         }
@@ -81,7 +109,12 @@ namespace IronRuby.Compiler {
                 return result;
             }
 
-            return AddVariable(name, location);
+            var targetScope = this;
+            while (!targetScope.AllowsVariableDefinitions) {
+                targetScope = targetScope.OuterScope;
+            }
+
+            return targetScope.AddVariable(name, location);
         }
 
         public LocalVariable ResolveVariable(string/*!*/ name) {
@@ -98,70 +131,15 @@ namespace IronRuby.Compiler {
 
         #region Transformation
 
-        internal void TransformLocals(ScopeBuilder/*!*/ locals) {
-            Assert.NotNull(locals);
-            Debug.Assert(!IsRuntimeScope);
-
-            // Do not statically define variables defined in top-level eval'd code:
-            //
-            // eval('x = 1')   <-- this variable needs to be defined in containing runtime scope, not in top-level eval scope
-            // eval('puts x')
-            // 
-            // eval('1.times { x = 1 }')  <-- x could be statically defined in the block since it is not visible outside the block
-            //
-            if (_outerScope == null || !_outerScope.IsRuntimeScope) {
-                foreach (var entry in this) {
-                    entry.Value.TransformDefinition(locals);
+        internal int AllocateClosureSlotsForLocals(int closureIndex) {
+            int localCount = 0;
+            foreach (var local in this) {
+                if (local.Value.ClosureIndex == -1) {
+                    local.Value.SetClosureIndex(closureIndex++);
+                    localCount++;
                 }
             }
-        }
-
-        /// <summary>
-        /// Updates local variable table on this scope with transformed parameters.
-        /// </summary>
-        internal MSA.ParameterExpression[]/*!*/ TransformParameters(Parameters parameters, int hiddenParameterCount) {
-
-            int paramCount = hiddenParameterCount;
-
-            if (parameters == null) {
-                return new MSA.ParameterExpression[0];
-            }
-
-            if (parameters.Mandatory != null) {
-                paramCount += parameters.Mandatory.Count;
-            }
-
-            if (parameters.Optional != null) {
-                paramCount += parameters.Optional.Count;
-            }
-
-            if (parameters.Array != null) {
-                paramCount += 1;
-            }
-
-            var result = new MSA.ParameterExpression[paramCount];
-
-            int dlrParamIndex = hiddenParameterCount;
-
-            if (parameters.Mandatory != null) {
-                for (int i = 0; i < parameters.Mandatory.Count; i++) {
-                    result[dlrParamIndex++] = parameters.Mandatory[i].TransformParameterDefinition();
-                }
-            }
-
-            if (parameters.Optional != null) {
-                for (int i = 0; i < parameters.Optional.Count; i++) {
-                    result[dlrParamIndex++] = ((LocalVariable)parameters.Optional[i].Left).TransformParameterDefinition();
-                }
-            }
-
-            if (parameters.Array != null) {
-                result[dlrParamIndex++] = parameters.Array.TransformParameterDefinition();
-            }
-
-            Debug.Assert(dlrParamIndex == result.Length);
-
-            return result;
+            return localCount;
         }
 
         internal static void TransformParametersToSuperCall(AstGenerator/*!*/ gen, CallBuilder/*!*/ callBuilder, Parameters parameters) {
@@ -189,6 +167,17 @@ namespace IronRuby.Compiler {
         #endregion
     }
 
+    internal sealed class PaddingLexicalScope : LexicalScope {
+        public PaddingLexicalScope(LexicalScope outerScope) 
+            : base(outerScope) {
+            Debug.Assert(outerScope != null);
+        }
+
+        protected override bool AllowsVariableDefinitions {
+            get { return false; }
+        }
+    }
+
     #region HybridStringDictionary
 
     public class HybridStringDictionary<TValue> : IEnumerable<KeyValuePair<string, TValue>> {
@@ -199,10 +188,14 @@ namespace IronRuby.Compiler {
 
         private Dictionary<string, TValue> _dict;
         private KeyValuePair<string, TValue>[] _list;
-        private int _size;
+        private int _listSize;
+
+        public int Count {
+            get { return _listSize + (_dict != null ? _dict.Count : 0); }
+        }
 
         public bool TryGetValue(string key, out TValue value) {
-            for (int i = 0; i < _size; i++) {
+            for (int i = 0; i < _listSize; i++) {
                 var entry = _list[i];
                 if (entry.Key == key) {
                     value = entry.Value;
@@ -219,9 +212,9 @@ namespace IronRuby.Compiler {
         }
 
         public void Add(string key, TValue value) {
-            if (_size > 0) {
-                if (_size < _list.Length) {
-                    _list[_size++] = new KeyValuePair<string, TValue>(key, value);
+            if (_listSize > 0) {
+                if (_listSize < _list.Length) {
+                    _list[_listSize++] = new KeyValuePair<string, TValue>(key, value);
                 } else {
                     _dict = new Dictionary<string, TValue>();
                     for (int i = 0; i < _list.Length; i++) {
@@ -230,21 +223,21 @@ namespace IronRuby.Compiler {
                     }
                     _dict.Add(key, value);
                     _list = null;
-                    _size = -1;
+                    _listSize = -1;
                 }
-            } else if (_size == 0) {
+            } else if (_listSize == 0) {
                 Debug.Assert(_list == null);
                 _list = new KeyValuePair<string, TValue>[ListLength];
                 _list[0] = new KeyValuePair<string, TValue>(key, value);
-                _size = 1;
+                _listSize = 1;
             } else {
-                Debug.Assert(_size == -1 && _dict != null);
+                Debug.Assert(_listSize == -1 && _dict != null);
                 _dict.Add(key, value);
             }
         }
 
         IEnumerator<KeyValuePair<string, TValue>>/*!*/ IEnumerable<KeyValuePair<string, TValue>>.GetEnumerator() {
-            for (int i = 0; i < _size; i++) {
+            for (int i = 0; i < _listSize; i++) {
                 yield return _list[i];
             }
 
