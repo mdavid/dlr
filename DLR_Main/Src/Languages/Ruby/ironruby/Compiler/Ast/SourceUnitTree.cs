@@ -81,7 +81,7 @@ namespace IronRuby.Compiler.Ast {
         }
 
         private ScopeBuilder/*!*/ DefineLocals() {
-            return new ScopeBuilder(_definedScope.AllocateClosureSlotsForLocals(0), _definedScope);
+            return new ScopeBuilder(_definedScope.AllocateClosureSlotsForLocals(0), null, _definedScope);
         }
 
         internal MSA.Expression<T>/*!*/ Transform<T>(AstGenerator/*!*/ gen) {
@@ -164,14 +164,14 @@ namespace IronRuby.Compiler.Ast {
                 case TopScopeFactoryKind.File:
                 case TopScopeFactoryKind.WrappedFile:
                     prologue = Methods.InitializeScope.OpCall(
-                        runtimeScopeVariable, scope.MakeClosureDefinition(), scope.GetVariableNamesExpression(),
+                        runtimeScopeVariable, scope.MakeLocalsStorage(), scope.GetVariableNamesExpression(),
                         EnterInterpretedFrameExpression.Instance
                     );
                     break;
 
                 case TopScopeFactoryKind.Main:
                     prologue = Methods.InitializeScope.OpCall(
-                        runtimeScopeVariable, scope.MakeClosureDefinition(), scope.GetVariableNamesExpression(),
+                        runtimeScopeVariable, scope.MakeLocalsStorage(), scope.GetVariableNamesExpression(),
                         EnterInterpretedFrameExpression.Instance
                     );
                     if (_dataOffset >= 0) {

@@ -440,7 +440,7 @@ namespace IronPython.Compiler {
                 Statement[] stmts = l.ToArray();
 
                 SuiteStatement ret = new SuiteStatement(stmts);
-                ret.SetLoc(start, GetEnd());
+                ret.SetLoc(start, stmts[stmts.Length - 1].End);
                 return ret;
             } else if (!MaybeEat(TokenKind.EndOfFile) && !EatNewLine()) {
                 // error handling, make sure we're making forward progress
@@ -1149,7 +1149,7 @@ namespace IronPython.Compiler {
 
             _sink.MatchPair(new SourceSpan(lStart, lEnd), new SourceSpan(rStart, rEnd), grouping);
 
-            ret.SetLoc(start, GetEnd());
+            ret.SetLoc(start, body.End);
 
             return ret;
         }
@@ -1555,10 +1555,10 @@ namespace IronPython.Compiler {
             Statement finallySuite = null;
             Statement elseSuite = null;
             Statement ret;
-
+            SourceLocation end;
             if (MaybeEat(TokenKind.KeywordFinally)) {
                 finallySuite = ParseFinallySuite(finallySuite);
-
+                end = finallySuite.End;
                 TryStatement tfs = new TryStatement(body, null, elseSuite, finallySuite);
                 tfs.Header = mid;
                 ret = tfs;
@@ -1567,6 +1567,7 @@ namespace IronPython.Compiler {
                 TryStatementHandler dh = null;
                 do {
                     TryStatementHandler handler = ParseTryStmtHandler();
+                    end = handler.End;
                     handlers.Add(handler);
 
                     if (dh != null) {
@@ -1579,18 +1580,20 @@ namespace IronPython.Compiler {
 
                 if (MaybeEat(TokenKind.KeywordElse)) {
                     elseSuite = ParseSuite();
+                    end = elseSuite.End;
                 }
 
                 if (MaybeEat(TokenKind.KeywordFinally)) {
                     // If this function has an except block, then it can set the current exception.
                     finallySuite = ParseFinallySuite(finallySuite);
+                    end = finallySuite.End;
                 }
 
                 TryStatement ts = new TryStatement(body, handlers.ToArray(), elseSuite, finallySuite);
                 ts.Header = mid;
                 ret = ts;
             }
-            ret.SetLoc(start, GetEnd());
+            ret.SetLoc(start, end);
             return ret;
         }
 
@@ -1636,7 +1639,7 @@ namespace IronPython.Compiler {
             Statement body = ParseSuite();
             TryStatementHandler ret = new TryStatementHandler(test1, test2, body);
             ret.Header = mid;
-            ret.SetLoc(start, GetEnd());
+            ret.SetLoc(start, body.End);
             return ret;
         }
 

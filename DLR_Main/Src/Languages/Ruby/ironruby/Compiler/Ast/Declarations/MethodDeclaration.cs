@@ -119,7 +119,7 @@ namespace IronRuby.Compiler.Ast {
             // allocate closure slots for locals:
             int localCount = DefinedScope.AllocateClosureSlotsForLocals(closureIndex);
 
-            return new ScopeBuilder(parameters, firstClosureParam, localCount, DefinedScope);
+            return new ScopeBuilder(parameters, firstClosureParam, localCount, null, DefinedScope);
         }
 
         internal MSA.LambdaExpression/*!*/ TransformBody(AstGenerator/*!*/ gen, RubyScope/*!*/ declaringScope, RubyModule/*!*/ declaringModule) {
@@ -192,7 +192,7 @@ namespace IronRuby.Compiler.Ast {
                 scope.CreateScope(
                     scopeVariable,
                     Methods.CreateMethodScope.OpCall(
-                        scope.MakeClosureDefinition(),
+                        scope.MakeLocalsStorage(),
                         scope.GetVariableNamesExpression(),
                         Ast.Constant(declaringScope, typeof(RubyScope)),
                         Ast.Constant(declaringModule, typeof(RubyModule)), 

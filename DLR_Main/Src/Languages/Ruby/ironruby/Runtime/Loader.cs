@@ -655,9 +655,7 @@ namespace IronRuby.Runtime {
 
         internal object[]/*!*/ GetLoadPaths() {
             lock (_loadedFiles) {
-                object[] result = new object[_loadPaths.Count];
-                _loadPaths.CopyTo(result);
-                return result;
+                return _loadPaths.ToArray();
             }
         }
 
@@ -704,9 +702,7 @@ namespace IronRuby.Runtime {
 
         internal object[]/*!*/ GetLoadedFiles() {
             lock (_loadedFiles) {
-                object[] result = new object[_loadedFiles.Count];
-                _loadedFiles.CopyTo(result);
-                return result;
+                return _loadedFiles.ToArray();
             }
         }
 

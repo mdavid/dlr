@@ -18,14 +18,24 @@ using System;
 #else
 using System; using Microsoft;
 #endif
-namespace IronRuby.Tests {
 
+namespace IronRuby.Tests {    
     public partial class Tests {
         public Tests(Driver/*!*/ driver) {
             _driver = driver;
 
             _methods = new Action[] {
                 Scenario_Startup, // must be the first test
+                
+                MutableString1,
+                MutableString2,
+                RubyArray_Ctors,
+                RubyArray_Basic,
+                RubyArray_Add,
+                RubyArray_Remove,
+                RubyArray_Insert,
+                RubyArray_Misc,
+
                 Scenario_ParserLogging,
                 Scenario_RubyTokenizer1,
                 Identifiers1,
@@ -92,7 +102,6 @@ namespace IronRuby.Tests {
                 Scenario_RubySingletonConstants1,
                 Scenario_RubyMath1,
 
-                MutableString1,
                 File1,
                 StringsPlus,
                 Strings0,
@@ -275,7 +284,9 @@ namespace IronRuby.Tests {
 
                 RangeConditionInclusive1,
                 RangeConditionExclusive1,
-                RangeCondition1,
+                RangeCondition1A,
+                RangeCondition1B,
+                RangeCondition1C,
                 RangeCondition2,
                 
                 Scenario_RubyClosures1,

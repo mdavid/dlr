@@ -45,7 +45,6 @@
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="System.Core" />
-    <Reference Include="System.Dynamic"/>
     <Reference Include="System" Condition=" $(SilverlightBuild) != 'true' " />
     <Reference Include="mscorlib, Version=2.0.5.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e" Condition=" '$(SilverlightBuild)' == 'true' ">
       <SpecificVersion>False</SpecificVersion>
@@ -179,6 +178,15 @@
       <Compile Include="Hosting\PythonService.cs" />
     </ItemGroup>
     <ItemGroup>
+      <!--                           -->
+      <!--          Modules          -->
+      <!--                           -->
+      <Compile Include="Modules\Builtin.cs" />
+      <Compile Include="Modules\Builtin.Generated.cs" />
+      <Compile Include="Modules\imp.cs" />
+      <Compile Include="Modules\sys.cs" />
+    </ItemGroup>
+    <ItemGroup>
       <!--                              -->
       <!--          Properties          -->
       <!--                              -->
@@ -190,8 +198,6 @@
       <!--          Runtime          -->
       <!--                           -->
       <Compile Include="Runtime\BindingWarnings.cs" />
-      <Compile Include="Runtime\Builtin.cs" />
-      <Compile Include="Runtime\Builtin.Generated.cs" />
       <Compile Include="Runtime\BuiltinsDictionaryStorage.cs" />
       <Compile Include="Runtime\ByteArray.cs" />
       <Compile Include="Runtime\Bytes.cs" />
@@ -210,6 +216,11 @@
       <Compile Include="Runtime\Descriptors.cs" />
       <Compile Include="Runtime\DictionaryOps.cs" />
       <Compile Include="Runtime\DictionaryStorage.cs" />
+      <Compile Include="Runtime\DontMapGetMemberNamesToDirAttribute.cs" />
+      <Compile Include="Runtime\DontMapICollectionToLenAttribute.cs" />
+      <Compile Include="Runtime\DontMapIDisposableToContextManagerAttribute.cs" />
+      <Compile Include="Runtime\DontMapIEnumerableToContainsAttribute.cs" />
+      <Compile Include="Runtime\DontMapIEnumerableToIterAttribute.cs" />
       <Compile Include="Runtime\Enumerate.cs" />
       <Compile Include="Runtime\ErrorCodes.cs" />
       <Compile Include="Runtime\FunctionAttributes.cs" />
@@ -233,7 +244,6 @@
       <Compile Include="Runtime\NameType.cs" />
       <Compile Include="Runtime\NewStringFormatter.cs" />
       <Compile Include="Runtime\NoLineFeedSourceContentProvider.cs" />
-      <Compile Include="Runtime\NullImporter.cs" />
       <Compile Include="Runtime\ObjectAttributesAdapter.cs" />
       <Compile Include="Runtime\OutputWriter.cs" />
       <Compile Include="Runtime\Profiler.cs" />
@@ -250,6 +260,7 @@
       <Compile Include="Runtime\PythonModuleAttribute.cs" />
       <Compile Include="Runtime\PythonNarrowing.cs" />
       <Compile Include="Runtime\PythonOptions.cs" />
+      <Compile Include="Runtime\PythonTracebackListener.cs" />
       <Compile Include="Runtime\PythonTuple.cs" />
       <Compile Include="Runtime\PythonTypeAttribute.cs" />
       <Compile Include="Runtime\Reversed.cs" />
@@ -264,7 +275,6 @@
       <Compile Include="Runtime\SymbolIdDictionaryStorage.cs" />
       <Compile Include="Runtime\Symbols.cs" />
       <Compile Include="Runtime\Symbols.Generated.cs" />
-      <Compile Include="Runtime\sys.cs" />
       <Compile Include="Runtime\ThrowingErrorSink.cs" />
       <Compile Include="Runtime\WarningInfo.cs" />
       <Compile Include="Runtime\WeakRef.cs" />
@@ -368,6 +378,7 @@
       <Compile Include="Runtime\Exceptions\UnicodeWarningException.Generated.cs" />
       <Compile Include="Runtime\Exceptions\UserWarningException.Generated.cs" />
       <Compile Include="Runtime\Exceptions\WarningException.Generated.cs" />
+      <Compile Include="Runtime\Exceptions\Win32Exception.cs" />
     </ItemGroup>
     <ItemGroup>
       <!--                                      -->
@@ -437,6 +448,7 @@
       <Compile Include="Runtime\Types\PythonAssemblyOps.cs" />
       <Compile Include="Runtime\Types\PythonSiteCache.cs" />
       <Compile Include="Runtime\Types\PythonType.cs" />
+      <Compile Include="Runtime\Types\PythonTypeDataSlot.cs" />
       <Compile Include="Runtime\Types\PythonTypeDictSlot.cs" />
       <Compile Include="Runtime\Types\PythonTypeSlot.cs" />
       <Compile Include="Runtime\Types\PythonTypeTypeSlot.cs" />
@@ -464,6 +476,12 @@
   <ItemGroup>
     <ProjectReference Include="..\..\..\Runtime\Microsoft.Scripting\Microsoft.Scripting.Build.csproj">
       <Name>Microsoft.Scripting</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\..\..\..\..\ndp\fx\src\Dynamic\System\Dynamic\Microsoft.Dynamic.Build.csproj">
+      <Name>Microsoft.Dynamic</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\..\..\Runtime\Microsoft.Scripting.Debugging\Microsoft.Scripting.Debugging.Build.csproj">
+      <Name>Microsoft.Scripting.Debugging</Name>
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>

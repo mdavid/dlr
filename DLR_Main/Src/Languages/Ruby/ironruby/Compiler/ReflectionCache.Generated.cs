@@ -201,8 +201,6 @@ namespace IronRuby.Compiler {
         private static MethodInfo _GetArraySuffix;
         public static MethodInfo/*!*/ GetClassVariable { get { return _GetClassVariable ?? (_GetClassVariable = GetMethod(typeof(RubyOps), "GetClassVariable")); } }
         private static MethodInfo _GetClassVariable;
-        public static MethodInfo/*!*/ GetClosure { get { return _GetClosure ?? (_GetClosure = GetMethod(typeof(RubyOps), "GetClosure")); } }
-        private static MethodInfo _GetClosure;
         public static MethodInfo/*!*/ GetContextFromBlockParam { get { return _GetContextFromBlockParam ?? (_GetContextFromBlockParam = GetMethod(typeof(RubyOps), "GetContextFromBlockParam")); } }
         private static MethodInfo _GetContextFromBlockParam;
         public static MethodInfo/*!*/ GetContextFromIRubyObject { get { return _GetContextFromIRubyObject ?? (_GetContextFromIRubyObject = GetMethod(typeof(RubyOps), "GetContextFromIRubyObject")); } }
@@ -239,6 +237,8 @@ namespace IronRuby.Compiler {
         private static MethodInfo _GetInstanceData;
         public static MethodInfo/*!*/ GetInstanceVariable { get { return _GetInstanceVariable ?? (_GetInstanceVariable = GetMethod(typeof(RubyOps), "GetInstanceVariable")); } }
         private static MethodInfo _GetInstanceVariable;
+        public static MethodInfo/*!*/ GetLocals { get { return _GetLocals ?? (_GetLocals = GetMethod(typeof(RubyOps), "GetLocals")); } }
+        private static MethodInfo _GetLocals;
         public static MethodInfo/*!*/ GetLocalVariable { get { return _GetLocalVariable ?? (_GetLocalVariable = GetMethod(typeof(RubyOps), "GetLocalVariable")); } }
         private static MethodInfo _GetLocalVariable;
         public static MethodInfo/*!*/ GetMetaObject { get { return _GetMetaObject ?? (_GetMetaObject = GetMethod(typeof(RubyOps), "GetMetaObject")); } }
@@ -249,8 +249,8 @@ namespace IronRuby.Compiler {
         private static MethodInfo _GetMethodBlockParameterSelf;
         public static MethodInfo/*!*/ GetMethodUnwinderReturnValue { get { return _GetMethodUnwinderReturnValue ?? (_GetMethodUnwinderReturnValue = GetMethod(typeof(RubyOps), "GetMethodUnwinderReturnValue")); } }
         private static MethodInfo _GetMethodUnwinderReturnValue;
-        public static MethodInfo/*!*/ GetParentClosure { get { return _GetParentClosure ?? (_GetParentClosure = GetMethod(typeof(RubyOps), "GetParentClosure")); } }
-        private static MethodInfo _GetParentClosure;
+        public static MethodInfo/*!*/ GetParentLocals { get { return _GetParentLocals ?? (_GetParentLocals = GetMethod(typeof(RubyOps), "GetParentLocals")); } }
+        private static MethodInfo _GetParentLocals;
         public static MethodInfo/*!*/ GetParentScope { get { return _GetParentScope ?? (_GetParentScope = GetMethod(typeof(RubyOps), "GetParentScope")); } }
         private static MethodInfo _GetParentScope;
         public static MethodInfo/*!*/ GetProcSelf { get { return _GetProcSelf ?? (_GetProcSelf = GetMethod(typeof(RubyOps), "GetProcSelf")); } }
@@ -271,6 +271,8 @@ namespace IronRuby.Compiler {
         private static MethodInfo _InitializeScope;
         public static MethodInfo/*!*/ InitializeScopeNoLocals { get { return _InitializeScopeNoLocals ?? (_InitializeScopeNoLocals = GetMethod(typeof(RubyOps), "InitializeScopeNoLocals")); } }
         private static MethodInfo _InitializeScopeNoLocals;
+        public static MethodInfo/*!*/ InstantiateBlock { get { return _InstantiateBlock ?? (_InstantiateBlock = GetMethod(typeof(RubyOps), "InstantiateBlock")); } }
+        private static MethodInfo _InstantiateBlock;
         public static MethodInfo/*!*/ IRubyObject_BaseEquals { get { return _IRubyObject_BaseEquals ?? (_IRubyObject_BaseEquals = GetMethod(typeof(IRubyObject), "BaseEquals")); } }
         private static MethodInfo _IRubyObject_BaseEquals;
         public static MethodInfo/*!*/ IRubyObject_BaseGetHashCode { get { return _IRubyObject_BaseGetHashCode ?? (_IRubyObject_BaseGetHashCode = GetMethod(typeof(IRubyObject), "BaseGetHashCode")); } }

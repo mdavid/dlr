@@ -31,6 +31,8 @@ using IronPython.Runtime.Types;
 [assembly: PythonModule("math", typeof(IronPython.Modules.PythonMath))]
 namespace IronPython.Modules {
     public static partial class PythonMath {
+        public const string __doc__ = "Provides common mathematical functions.";
+
         public const double pi = Math.PI;
         public const double e = Math.E;
 

@@ -23,6 +23,8 @@ using System.Collections.Generic;
 using System.IO;
 using System.Text;
 
+using Microsoft.Scripting.Runtime;
+
 using IronPython.Runtime;
 using IronPython.Runtime.Operations;
 using IronPython.Runtime.Types;
@@ -177,6 +179,9 @@ namespace IronPython.Modules {
         public static PythonType InputType = DynamicHelpers.GetPythonTypeFromType(typeof(StringI));
         public static PythonType OutputType = DynamicHelpers.GetPythonTypeFromType(typeof(StringO));
 
+        public const string __doc__ = "Provides file like objects for reading and writing to strings.";
+
+        [PythonType, PythonHidden, DontMapIEnumerableToContains]
         public class StringI : IEnumerable<string>, IEnumerable {
             private StringStream _sr;
 
@@ -205,6 +210,10 @@ namespace IronPython.Modules {
 
             public string getvalue(bool usePos) {
                 return _sr.Prefix;
+            }
+
+            public bool isatty() {
+                return false;
             }
 
             public object __iter__() {
@@ -322,6 +331,7 @@ namespace IronPython.Modules {
             #endregion
         }
 
+        [PythonType, PythonHidden, DontMapIEnumerableToContains]
         public class StringO : IEnumerable<string>, IEnumerable {
             private StringStream _sr = new StringStream("");
             private int _softspace;
@@ -354,6 +364,10 @@ namespace IronPython.Modules {
             public string getvalue(bool usePos) {
                 ThrowIfClosed();
                 return _sr.Prefix;
+            }
+
+            public bool isatty() {
+                return false;
             }
 
             public string next() {
@@ -446,17 +460,24 @@ namespace IronPython.Modules {
             }
 
             public void write(string s) {
+                if (s == null) {
+                    throw PythonOps.TypeError("write argument must be a string or read-only character buffer, not None");
+                }
+
                 ThrowIfClosed();
                 _sr.Write(s);
             }
 
+            public void write([NotNull]PythonBuffer buffer) {
+                _sr.Write(buffer.ToString());
+            }
+
             public void writelines(object o) {
-                ThrowIfClosed();
                 IEnumerator e = PythonOps.GetEnumerator(o);
                 while (e.MoveNext()) {
                     string s = e.Current as string;
                     if (s == null) {
-                        throw PythonOps.ValueError("string expected");
+                        throw PythonOps.TypeError("string expected");
                     }
                     write(s);
                 }

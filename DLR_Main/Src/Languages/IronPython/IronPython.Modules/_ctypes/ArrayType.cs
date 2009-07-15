@@ -122,7 +122,7 @@ namespace IronPython.Modules {
                 return res;
             }
 
-            public _Array from_buffer(ArrayModule.PythonArray array, [DefaultParameterValue(0)]int offset) {
+            public _Array from_buffer(ArrayModule.array array, [DefaultParameterValue(0)]int offset) {
                 ValidateArraySizes(array, offset, ((INativeType)this).Size);
 
                 _Array res = (_Array)CreateInstance(Context.SharedContext);
@@ -132,7 +132,7 @@ namespace IronPython.Modules {
                 return res;
             }
 
-            public _Array from_buffer_copy(ArrayModule.PythonArray array, [DefaultParameterValue(0)]int offset) {
+            public _Array from_buffer_copy(ArrayModule.array array, [DefaultParameterValue(0)]int offset) {
                 ValidateArraySizes(array, offset, ((INativeType)this).Size);
 
                 _Array res = (_Array)CreateInstance(Context.SharedContext);

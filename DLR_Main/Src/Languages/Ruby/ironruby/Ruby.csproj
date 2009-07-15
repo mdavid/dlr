@@ -19,7 +19,7 @@
     <SignedSym Condition="'$(SignAssembly)' == 'true'">SIGNED</SignedSym>
     <DelaySign>true</DelaySign>
     <BaseAddress>887095296</BaseAddress>
-    <SilverlightPath Condition="$(SilverlightPath) == ''">$(ProgramFiles)\Microsoft Silverlight\2.0.40115.0</SilverlightPath>
+    <SilverlightPath Condition="$(SilverlightPath) == ''">$(ProgramFiles)\Microsoft Silverlight\3.0.40624.0</SilverlightPath>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'FxCop|AnyCPU' ">
     <DebugType>pdbonly</DebugType>
@@ -112,6 +112,7 @@
       <Link>Properties\SilverlightVersion.cs</Link>
     </Compile>
     <Compile Include="Builtins\Binding.cs" />
+    <Compile Include="Builtins\CharacterMap.cs" />
     <Compile Include="Builtins\ConsoleStream.cs" />
     <None Include="Builtins\Subclasses.Generator.rb" />
     <Compile Include="Builtins\RubyErrno.cs" />
@@ -133,7 +134,7 @@
     <Compile Include="Builtins\RubyClass.Meta.cs" />
     <Compile Include="Builtins\RubyEncoding.cs" />
     <Compile Include="Builtins\MutableString.BinaryContent.cs" />
-    <Compile Include="Builtins\MutableString.StringBuilderContent.cs" />
+    <Compile Include="Builtins\MutableString.CharArrayContent.cs" />
     <Compile Include="Builtins\MutableString.StringContent.cs" />
     <Compile Include="Builtins\RubyMethod.Meta.cs" />
     <Compile Include="Builtins\File.cs" />

@@ -75,7 +75,7 @@ namespace IronRuby.Compiler.Ast {
         }
 
         private ScopeBuilder/*!*/ DefineLocals() {
-            return new ScopeBuilder(DefinedScope.AllocateClosureSlotsForLocals(0), DefinedScope);
+            return new ScopeBuilder(DefinedScope.AllocateClosureSlotsForLocals(0), null, DefinedScope);
         }
 
         internal sealed override MSA.Expression/*!*/ TransformRead(AstGenerator/*!*/ gen) {
@@ -115,7 +115,7 @@ namespace IronRuby.Compiler.Ast {
                 scope.CreateScope(
                     scopeVariable,
                     Methods.CreateModuleScope.OpCall(
-                        scope.MakeClosureDefinition(),
+                        scope.MakeLocalsStorage(),
                         scope.GetVariableNamesExpression(), 
                         parentScope, 
                         selfVariable

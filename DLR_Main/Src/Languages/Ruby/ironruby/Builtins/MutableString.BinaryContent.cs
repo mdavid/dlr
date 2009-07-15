@@ -95,6 +95,10 @@ namespace IronRuby.Builtins {
 
             public override int Count {
                 get { return _count; }
+                set {
+                    Utils.Resize(ref _data, value);
+                    _count = value;
+                }
             }
 
             public override bool IsEmpty {
@@ -102,7 +106,7 @@ namespace IronRuby.Builtins {
             }
 
             public override int GetCharCount() {
-                return (IsBinaryEncoded) ? _count : (_count == 0) ? 0 : SwitchToChars().GetCharCount();
+                return (_owner.HasByteCharacters) ? _count : (_count == 0) ? 0 : SwitchToChars().GetCharCount();
             }
 
             public override int GetByteCount() {
@@ -161,6 +165,10 @@ namespace IronRuby.Builtins {
                 SwitchToChars();
             }
 
+            public override void SwitchToMutableContent() {
+                // nop
+            }
+
             public override GenericRegex/*!*/ ToRegularExpression(RubyRegexOptions options) {
                 // TODO: Fix BinaryRegex and use instead
                 return new StringRegex(ToString(), options);
@@ -191,6 +199,9 @@ namespace IronRuby.Builtins {
             #region Slices (read-only)
 
             public override char GetChar(int index) {
+                if (_owner.HasByteCharacters) {
+                    return (char)_data[index];
+                }
                 return SwitchToChars().DataGetChar(index);
             }
 
@@ -264,7 +275,11 @@ namespace IronRuby.Builtins {
             #region Append
 
             public override void Append(char c, int repeatCount) {
-                SwitchToChars(repeatCount).Append(c, repeatCount);
+                if (c < 0x80 || _owner.IsBinaryEncoded) {
+                    Append((byte)c, repeatCount);
+                } else {
+                    SwitchToChars(repeatCount).Append(c, repeatCount);
+                }
             }
 
             public override void Append(byte b, int repeatCount) {
@@ -300,8 +315,14 @@ namespace IronRuby.Builtins {
 
             #region Insert
 
+            // requires: encoding is ascii-identity
             public override void Insert(int index, char c) {
-                SwitchToChars(1).Insert(index, c);
+                if (_owner.HasByteCharacters) {
+                    Debug.Assert(c < 0x80 || _owner.IsBinaryEncoded);
+                    _count = Utils.InsertAt(ref _data, _count, index, (byte)c, 1);
+                } else {
+                    SwitchToChars(1).Insert(index, c);
+                }
             }
 
             public override void Insert(int index, byte b) {
@@ -324,12 +345,19 @@ namespace IronRuby.Builtins {
                 str.Insert(index, _data, start, count);
             }
 
-            public override void SetItem(int index, byte b) {
+            public override void SetByte(int index, byte b) {
+                Debug.Assert(index < _count);
                 _data[index] = b;
             }
 
-            public override void SetItem(int index, char c) {
-                SwitchToChars().DataSetChar(index, c);
+            // requires: encoding is ascii-identity
+            public override void SetChar(int index, char c) {
+                if (_owner.HasByteCharacters) {
+                    Debug.Assert(c < 0x80 || _owner.IsBinaryEncoded);
+                    SetByte(index, (byte)c);
+                } else {
+                    SwitchToChars().DataSetChar(index, c);
+                }
             }
 
             #endregion

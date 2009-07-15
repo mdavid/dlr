@@ -71,7 +71,7 @@ namespace IronRuby.Runtime {
 
         public static void RequiresNotFrozen(RubyContext/*!*/ context, object/*!*/ obj) {
             if (context.IsObjectFrozen(obj)) {
-                throw RubyExceptions.CreateTypeError("can't modify frozen object");
+                throw RubyExceptions.CreateObjectFrozenError();
             }
         }
 
@@ -502,13 +502,15 @@ namespace IronRuby.Runtime {
 
         #region Tracking operations that have the potential for infinite recursion
 
+        public static readonly MutableString InfiniteRecursionMarker = MutableString.Create("[...]").Freeze();
+
         public class RecursionTracker {
             [ThreadStatic]
             private Dictionary<object, bool> _infiniteTracker;
 
             private Dictionary<object, bool> TryPushInfinite(object obj) {
                 if (_infiniteTracker == null) {
-                    _infiniteTracker = new Dictionary<object, bool>(ReferenceEqualityComparer<object>.Instance);
+                    _infiniteTracker = new Dictionary<object, bool>(ReferenceEqualityComparer.Instance);
                 }
                 Dictionary<object, bool> infinite = _infiniteTracker;
                 if (infinite.ContainsKey(obj)) {

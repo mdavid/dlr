@@ -57,5 +57,12 @@ namespace Microsoft.Scripting.Debugging {
         // Payload:
         //   the exception object that was thrown
         Exception,
+
+        // Fired when an exception is thrown and is not handled by 
+        // the current method.
+        //
+        // Payload:
+        //   the exception object that was thrown
+        ExceptionUnwind,
     }
 }

@@ -1,7 +1,7 @@
 
 import clr
+
 if clr.use35:
-    clr.AddReference("Microsoft.Dynamic")  ## For ComBinder only.
     clr.AddReference("Microsoft.Scripting.Core")
     
     import Microsoft.Linq.Expressions as Exprs
@@ -11,14 +11,12 @@ if clr.use35:
                                 BindingRestrictions, IDynamicMetaObjectProvider,
                                 InvokeMemberBinder, CreateInstanceBinder,
                                 GetIndexBinder, SetIndexBinder, 
-                                BinaryOperationBinder, UnaryOperationBinder,
-                                ComBinder)
+                                BinaryOperationBinder, UnaryOperationBinder)
     
     from Microsoft.Runtime.CompilerServices import CallSite
     
     from Microsoft import (Action, Func)
 else:
-    clr.AddReference("System.Dynamic")  ## For ComBinder only.
     clr.AddReference("System.Core")
     
     import System.Linq.Expressions as Exprs
@@ -28,12 +26,14 @@ else:
                                 BindingRestrictions, IDynamicMetaObjectProvider,
                                 InvokeMemberBinder, CreateInstanceBinder,
                                 GetIndexBinder, SetIndexBinder, 
-                                BinaryOperationBinder, UnaryOperationBinder,
-                                ComBinder)
+                                BinaryOperationBinder, UnaryOperationBinder)
     
     from System.Runtime.CompilerServices import CallSite
     
     from System import (Action, Func)
+
+clr.AddReference("Microsoft.Dynamic")  ## For ComBinder only.
+from Microsoft.Scripting import ComBinder
 
 from System import (MissingMemberException,
                     InvalidOperationException, Boolean, MissingMemberException,

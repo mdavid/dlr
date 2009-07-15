@@ -206,24 +206,24 @@ a = [1,2,3]
 p m = a.clr_member(:count)
 p m[]
 
-p m = a.clr_member(:binary_search)
+p m = a.clr_member(:index_of)
 p m.clr_members.size
 p m.overload(Object).clr_members
 ", @"
 #<Method: Array#count>
 3
-#<Method: Array#binary_search>
+#<Method: Array#index_of>
 3
-[Int32 BinarySearch(System.Object)]
+[Int32 IndexOf(System.Object)]
 ");
 
             TestOutput(@"
 class C < Array
 end
 
-p C.new.clr_member(:get_enumerator).call.move_next
+p C.new.clr_member(:index_of).call(1)
 ", @"
-false
+-1
 ");
         }
 

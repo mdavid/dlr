@@ -26,6 +26,7 @@ using System;
 #else
 using System; using Microsoft;
 #endif
+using System.Threading;
 using IronRuby.Runtime;
 using AstUtils = Microsoft.Scripting.Ast.Utils;
 
@@ -42,7 +43,6 @@ namespace IronRuby.Compiler.Ast {
         private readonly Expression/*!*/ _begin;
         private readonly Expression/*!*/ _end;
         private readonly bool _isExclusive;
-        private bool _isCondition;
         
         public Expression/*!*/ Begin {
             get { return _begin; }
@@ -56,21 +56,12 @@ namespace IronRuby.Compiler.Ast {
             get { return _isExclusive; }
         }
 
-        public bool IsCondition {
-            get { return _isCondition; }
-        }
-
-        public RangeExpression(Expression/*!*/ begin, Expression/*!*/ end, bool isExclusive, bool isCondition, SourceSpan location) 
+        public RangeExpression(Expression/*!*/ begin, Expression/*!*/ end, bool isExclusive,SourceSpan location) 
             : base(location) {
             Assert.NotNull(begin, end);
             _begin = begin;
             _end = end;
             _isExclusive = isExclusive;
-            _isCondition = isCondition;
-        }
-    
-        public RangeExpression(Expression/*!*/ begin, Expression/*!*/ end, bool isExclusive, SourceSpan location) 
-            : this(begin, end, isExclusive, false, location) {
         }
 
         private bool IsIntegerRange(out int intBegin, out int intEnd) {
@@ -88,9 +79,7 @@ namespace IronRuby.Compiler.Ast {
 
         internal override MSA.Expression/*!*/ TransformRead(AstGenerator/*!*/ gen) {
             int intBegin, intEnd;
-            if (_isCondition) {
-                return TransformReadCondition(gen);
-            } else if (IsIntegerRange(out intBegin, out intEnd)) {
+            if (IsIntegerRange(out intBegin, out intEnd)) {
                 return (_isExclusive ? Methods.CreateExclusiveIntegerRange : Methods.CreateInclusiveIntegerRange).OpCall(
                     AstUtils.Constant(intBegin), AstUtils.Constant(intEnd)
                 );
@@ -102,6 +91,35 @@ namespace IronRuby.Compiler.Ast {
                     AstUtils.Constant(new BinaryOpStorage(gen.Context))
                 );
             }
+        }
+
+        private static int _flipFlopVariableId;
+
+        internal override Expression/*!*/ ToCondition(LexicalScope/*!*/ currentScope) {
+            int intBegin, intEnd;
+            if (!IsIntegerRange(out intBegin, out intEnd)) {
+                return new RangeCondition(
+                    this,
+                    currentScope.GetInnerMostTopScope().AddVariable("#FlipFlopState" + Interlocked.Increment(ref _flipFlopVariableId), Location)
+                );
+            }
+            return this;
+        }
+    }
+
+    public partial class RangeCondition : Expression {
+        private readonly RangeExpression/*!*/ _range;
+        private readonly LocalVariable/*!*/ _stateVariable;
+
+        public RangeExpression/*!*/ Range {
+            get { return _range; }
+        }
+
+        internal RangeCondition(RangeExpression/*!*/ range, LocalVariable/*!*/ stateVariable)
+            : base(range.Location) {
+            Assert.NotNull(range, stateVariable);
+            _range = range;
+            _stateVariable = stateVariable;
         }
 
         /// <code>
@@ -121,36 +139,44 @@ namespace IronRuby.Compiler.Ast {
         ///     false
         ///   end  
         /// </code>
-        private MSA.Expression/*!*/ TransformReadCondition(AstGenerator/*!*/ gen) {
-            // Define state variable in the inner most method scope.
-            var stateVariable = gen.MakeHiddenVariableAccess(gen.CurrentMethod);
-
-            var begin = AstFactory.Box(_begin.TransformRead(gen));
-            var end = AstFactory.Box(_end.TransformRead(gen));
+        internal override MSA.Expression/*!*/ TransformRead(AstGenerator/*!*/ gen) {
+            var begin = AstFactory.Box(_range.Begin.TransformRead(gen));
+            var end = AstFactory.Box(_range.End.TransformRead(gen));
 
             // state: 
             // false <=> null
             // true <=> non-null
-            if (_isExclusive) {
+            if (_range.IsExclusive) {
                 return Ast.Condition(
-                    Ast.ReferenceNotEqual(stateVariable, AstUtils.Constant(null)),
-                    Ast.Block(Ast.Assign(stateVariable, Methods.NullIfTrue.OpCall(end)), AstUtils.Constant(true)),
-                    Ast.ReferenceNotEqual(Ast.Assign(stateVariable, Methods.NullIfFalse.OpCall(begin)), AstUtils.Constant(null))
-                );  
+                    Ast.ReferenceNotEqual(
+                        _stateVariable.TransformReadVariable(gen, false), 
+                        AstUtils.Constant(null)
+                    ),
+                    Ast.Block(
+                        _stateVariable.TransformWriteVariable(gen, Methods.NullIfTrue.OpCall(end)), 
+                        AstUtils.Constant(true)
+                    ),
+                    Ast.ReferenceNotEqual(
+                        _stateVariable.TransformWriteVariable(gen, Methods.NullIfFalse.OpCall(begin)),
+                        AstUtils.Constant(null)
+                    )
+                );
             } else {
                 return Ast.Condition(
-                    Ast.OrElse(Ast.ReferenceNotEqual(stateVariable, AstUtils.Constant(null)), Methods.IsTrue.OpCall(begin)),
-                    Ast.Block(Ast.Assign(stateVariable, Methods.NullIfTrue.OpCall(end)), AstUtils.Constant(true)),
+                    Ast.OrElse(
+                        Ast.ReferenceNotEqual(
+                            _stateVariable.TransformReadVariable(gen, false), 
+                            AstUtils.Constant(null)
+                        ), 
+                        Methods.IsTrue.OpCall(begin)
+                    ),
+                    Ast.Block(
+                        _stateVariable.TransformWriteVariable(gen, Methods.NullIfTrue.OpCall(end)),
+                        AstUtils.Constant(true)
+                    ),
                     AstUtils.Constant(false)
                 );
-                                  
             }
-        }
-
-        internal override Expression/*!*/ ToCondition() {
-            int intBegin, intEnd;
-            _isCondition = !IsIntegerRange(out intBegin, out intEnd);
-            return this;
         }
     }
 }

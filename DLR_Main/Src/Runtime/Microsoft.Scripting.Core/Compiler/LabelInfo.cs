@@ -15,10 +15,12 @@
 using System; using Microsoft;
 
 
+#if MICROSOFT_SCRIPTING_CORE
 #if CODEPLEX_40
 using ILGenerator = System.Linq.Expressions.Compiler.OffsetTrackingILGenerator;
 #else
 using ILGenerator = Microsoft.Linq.Expressions.Compiler.OffsetTrackingILGenerator;
+#endif
 #endif
 
 using System.Collections.Generic;

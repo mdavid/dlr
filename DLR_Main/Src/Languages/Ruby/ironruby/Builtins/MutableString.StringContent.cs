@@ -66,7 +66,7 @@ namespace IronRuby.Builtins {
             }
 
             public override int GetBinaryHashCode(out int binarySum) {
-                return IsBinaryEncoded ? GetHashCode(out binarySum) : SwitchToBinary().GetBinaryHashCode(out binarySum);
+                return _owner.IsBinaryEncoded ? GetHashCode(out binarySum) : SwitchToBinary().GetBinaryHashCode(out binarySum);
             }
 
             public override bool IsBinary {
@@ -75,6 +75,9 @@ namespace IronRuby.Builtins {
 
             public override int Count {
                 get { return _data.Length; }
+                set {
+                    SwitchToMutable(value - _data.Length).Count = value;
+                }
             }
 
             public override bool IsEmpty {
@@ -86,7 +89,7 @@ namespace IronRuby.Builtins {
             }
 
             public override int GetByteCount() {
-                return (IsBinaryEncoded) ? _data.Length : (_data.Length == 0) ? 0 : SwitchToBinary().GetByteCount();
+                return (_owner.HasByteCharacters) ? _data.Length : (_data.Length == 0) ? 0 : SwitchToBinary().GetByteCount();
             }
 
             public override Content/*!*/ Clone() {
@@ -142,6 +145,10 @@ namespace IronRuby.Builtins {
                 // nop
             }
 
+            public override void SwitchToMutableContent() {
+                SwitchToMutable();
+            }
+
             public override GenericRegex/*!*/ ToRegularExpression(RubyRegexOptions options) {
                 return new StringRegex(_data, options);
             }
@@ -177,7 +184,7 @@ namespace IronRuby.Builtins {
             }
 
             public override byte GetByte(int index) {
-                return SwitchToBinary().GetByte(index);
+                return _owner.HasByteCharacters ? (byte)_data[index] : SwitchToBinary().GetByte(index);
             }
 
             public override string/*!*/ GetStringSlice(int start, int count) {
@@ -304,11 +311,11 @@ namespace IronRuby.Builtins {
                 str.Insert(index, _data, start, count);
             }
 
-            public override void SetItem(int index, byte b) {
-                SwitchToBinary().SetItem(index, b);
+            public override void SetByte(int index, byte b) {
+                SwitchToBinary().SetByte(index, b);
             }
 
-            public override void SetItem(int index, char c) {
+            public override void SetChar(int index, char c) {
                 SwitchToMutable().DataSetChar(index, c);
             }
 

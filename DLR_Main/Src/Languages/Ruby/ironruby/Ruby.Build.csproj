@@ -42,7 +42,6 @@
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="System.Core" />
-    <Reference Include="System.Dynamic"/>
     <Reference Include="System" Condition=" $(SilverlightBuild) != 'true' " />
     <Reference Include="mscorlib, Version=2.0.5.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e" Condition=" '$(SilverlightBuild)' == 'true' ">
       <SpecificVersion>False</SpecificVersion>
@@ -69,6 +68,7 @@
       <!--          Builtins          -->
       <!--                            -->
       <Compile Include="Builtins\Binding.cs" />
+      <Compile Include="Builtins\CharacterMap.cs" />
       <Compile Include="Builtins\ConsoleStream.cs" />
       <Compile Include="Builtins\DuplexStream.cs" />
       <Compile Include="Builtins\Exceptions.cs" />
@@ -81,9 +81,9 @@
       <Compile Include="Builtins\MatchData.cs" />
       <Compile Include="Builtins\MatchData.Subclass.cs" />
       <Compile Include="Builtins\MutableString.BinaryContent.cs" />
+      <Compile Include="Builtins\MutableString.CharArrayContent.cs" />
       <Compile Include="Builtins\MutableString.Content.cs" />
       <Compile Include="Builtins\MutableString.cs" />
-      <Compile Include="Builtins\MutableString.StringBuilderContent.cs" />
       <Compile Include="Builtins\MutableString.StringContent.cs" />
       <Compile Include="Builtins\MutableString.Subclass.cs" />
       <Compile Include="Builtins\MutableStringBuilder.cs" />
@@ -411,6 +411,9 @@
     </ItemGroup>
   <!-- End Generated Project Items By GenerateSystemCoreCsproj.py -->
   <ItemGroup>
+    <ProjectReference Include="..\..\..\..\..\ndp\fx\src\Dynamic\System\Dynamic\Microsoft.Dynamic.Build.csproj">
+      <Name>Microsoft.Dynamic</Name>
+    </ProjectReference>
     <ProjectReference Include="..\..\..\Runtime\Microsoft.Scripting\Microsoft.Scripting.Build.csproj">
       <Name>Microsoft.Scripting</Name>
     </ProjectReference>

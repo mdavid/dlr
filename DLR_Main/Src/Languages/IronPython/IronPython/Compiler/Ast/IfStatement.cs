@@ -15,6 +15,7 @@
 using System; using Microsoft;
 
 
+using System.Diagnostics;
 #if CODEPLEX_40
 using System.Dynamic;
 #else
@@ -67,8 +68,8 @@ namespace IronPython.Compiler.Ast {
 
                 result = ag.AddDebugInfo(
                     Ast.Condition(
-                        ag.TransformAndDynamicConvert(ist.Test, typeof(bool)), 
-                        ag.Transform(ist.Body), 
+                        ag.TransformAndDynamicConvert(ist.Test, typeof(bool)),
+                        ag.TransformMaybeSingleLineSuite(ist.Body, ist.Test.Start), 
                         result
                     ),
                     new SourceSpan(ist.Start, ist.Header)

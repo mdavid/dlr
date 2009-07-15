@@ -635,28 +635,6 @@ using Microsoft.Runtime.CompilerServices;
             }
         }
 
-        internal MSA.Expression/*!*/ MakeHiddenVariableAccess(VariableScope/*!*/ targetScope) {
-            VariableScope lambdaScope = GetCurrentLambdaScope();
-            if (lambdaScope == targetScope) {
-                // the variable doesn't need to be lifted:
-                return targetScope.Builder.DefineHiddenVariable("#lifted", typeof(object));
-            } else {
-                // add a new slot into the target closure:
-                return GetVariableAccess(targetScope.Builder.LexicalScope.Depth, targetScope.Builder.AddLiftedHiddenVariable());
-            }
-        }
-
-        internal MSA.Expression/*!*/ GetVariableAccess(int definitionLexicalDepth, int closureIndex) {
-            Debug.Assert(definitionLexicalDepth >= 0);
-            Debug.Assert(closureIndex >= 0);
-
-            // TODO (opt): optimize multiple accesses: LexicalScope can remember the number of references to each variable from given scope.
-            return Ast.Field(
-                Ast.ArrayAccess(_currentVariableScope.Builder.GetClosure(definitionLexicalDepth), AstUtils.Constant(closureIndex)),
-                Fields.StrongBox_Value
-            );
-        }
-
         internal List<MSA.Expression>/*!*/ TranformExpressions(IList<Expression>/*!*/ arguments) {
             Assert.NotNull(arguments);
             return TranformExpressions(arguments, new List<MSA.Expression>(arguments.Count));

@@ -43,7 +43,7 @@ namespace IronPython.Runtime.Types {
     /// The unbound representation of an event property
     /// </summary>
     [PythonType("event#")]
-    public sealed class ReflectedEvent : PythonTypeSlot, ICodeFormattable {
+    public sealed class ReflectedEvent : PythonTypeDataSlot, ICodeFormattable {
         private readonly bool _clsOnly;
         private readonly EventTracker/*!*/ _tracker;
 
@@ -107,10 +107,6 @@ namespace IronPython.Runtime.Types {
             }
 
             return false;
-        }
-
-        internal override bool IsSetDescriptor(CodeContext/*!*/ context, PythonType owner) {
-            return true;
         }
 
         internal override bool TryDeleteValue(CodeContext/*!*/ context, object instance, PythonType owner) {
@@ -225,14 +221,6 @@ namespace IronPython.Runtime.Types {
                 }
                 return this;
             }
-        }
-
-        public void __set__(CodeContext context, object instance, object value) {
-            TrySetValue(context, instance, DynamicHelpers.GetPythonType(instance), value);
-        }
-
-        public new void __delete__(CodeContext context, object instance) {
-            TryDeleteValue(context, instance, DynamicHelpers.GetPythonType(instance));
         }
 
         #endregion

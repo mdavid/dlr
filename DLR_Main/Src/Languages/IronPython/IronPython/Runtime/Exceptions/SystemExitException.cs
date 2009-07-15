@@ -19,6 +19,7 @@ using System;
 using System; using Microsoft;
 #endif
 using System.Runtime.Serialization;
+using IronPython.Modules;
 using IronPython.Runtime.Operations;
 using IronPython.Runtime.Types;
 

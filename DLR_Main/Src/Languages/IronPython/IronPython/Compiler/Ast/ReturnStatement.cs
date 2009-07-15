@@ -54,7 +54,7 @@ namespace IronPython.Compiler.Ast {
                     );
                 }
 
-                return ag.AddDebugInfo(AstUtils.YieldBreak(ag.GeneratorLabel), Span);
+                return ag.AddDebugInfo(AstUtils.YieldBreak(AstGenerator.GeneratorLabel), Span);
             }
 
             return ag.AddDebugInfo(

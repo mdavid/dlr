@@ -42,7 +42,6 @@
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="System.Core" />
-    <Reference Include="System.Dynamic"/>
     <Reference Include="System" Condition=" $(SilverlightBuild) != 'true' " />
     <Reference Include="mscorlib, Version=2.0.5.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e" Condition=" '$(SilverlightBuild)' == 'true' ">
       <SpecificVersion>False</SpecificVersion>
@@ -234,6 +233,9 @@
   <ItemGroup>
     <ProjectReference Include="..\..\..\Runtime\Microsoft.Scripting\Microsoft.Scripting.Build.csproj">
       <Name>Microsoft.Scripting</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\..\..\..\..\ndp\fx\src\Dynamic\System\Dynamic\Microsoft.Dynamic.Build.csproj">
+      <Name>Microsoft.Dynamic</Name>
     </ProjectReference>
     <ProjectReference Include="..\IronRuby\Ruby.Build.csproj">
       <Name>IronRuby</Name>

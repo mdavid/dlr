@@ -80,7 +80,7 @@ internal sealed class ReflectionCacheGenerator : Generator {
             }
         }
 
-        var methods = reflectedMethods.Sort((m1, m2) => m1.Key.CompareTo(m2.Key));
+        var methods = reflectedMethods.ToSortedList((m1, m2) => m1.Key.CompareTo(m2.Key));
         if (_anyError) {
             Environment.ExitCode = 1;
             return;

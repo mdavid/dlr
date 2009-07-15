@@ -55,32 +55,22 @@ namespace IronRuby.Runtime {
     public static partial class RubyOps {
 
         [Emitted]
-        public static readonly object/*!*/ DefaultArgument = new object();
+        public static readonly object DefaultArgument = new object();
         
         // Returned by a virtual site if a base call should be performed.
         [Emitted]
-        public static readonly object/*!*/ ForwardToBase = new object();
+        public static readonly object ForwardToBase = new object();
 
         #region Scopes
 
         [Emitted]
-        public static StrongBox<object> CreateInitializedStrongBox(object value) {
-            return new StrongBox<object>(value);
+        public static MutableTuple GetLocals(RubyScope/*!*/ scope) {
+            return scope.Locals;
         }
 
         [Emitted]
-        public static StrongBox<object> CreateEmptyStrongBox() {
-            return new StrongBox<object>();
-        }
-
-        [Emitted]
-        public static StrongBox<object>[] GetClosure(RubyScope/*!*/ scope) {
-            return scope.Closure;
-        }
-
-        [Emitted]
-        public static StrongBox<object>[] GetParentClosure(RubyScope/*!*/ scope) {
-            return scope.Parent.Closure;
+        public static MutableTuple GetParentLocals(RubyScope/*!*/ scope) {
+            return scope.Parent.Locals;
         }
 
         [Emitted]
@@ -107,11 +97,11 @@ namespace IronRuby.Runtime {
         }
 
         [Emitted]
-        public static void InitializeScope(RubyScope/*!*/ scope, StrongBox<object>/*!*/[]/*!*/ closure, SymbolId[]/*!*/ variableNames, 
+        public static void InitializeScope(RubyScope/*!*/ scope, MutableTuple locals, SymbolId[]/*!*/ variableNames, 
             InterpretedFrame interpretedFrame) {
 
-            if (scope.Frame == null) {
-                scope.SetClosure(closure, variableNames);
+            if (!scope.LocalsInitialized) {
+                scope.SetLocals(locals, variableNames);
             }
             scope.InterpretedFrame = interpretedFrame;
         }
@@ -137,17 +127,17 @@ namespace IronRuby.Runtime {
         }
 
         [Emitted]
-        public static RubyModuleScope/*!*/ CreateModuleScope(StrongBox<object>/*!*/[]/*!*/ closure, SymbolId[]/*!*/ variableNames, 
+        public static RubyModuleScope/*!*/ CreateModuleScope(MutableTuple locals, SymbolId[]/*!*/ variableNames, 
             RubyScope/*!*/ parent, RubyModule/*!*/ module) {
 
             RubyModuleScope scope = new RubyModuleScope(parent, module, false, parent.RuntimeFlowControl, module);
             scope.SetDebugName((module.IsClass ? "class" : "module") + " " + module.Name);
-            scope.SetClosure(closure, variableNames);
+            scope.SetLocals(locals, variableNames);
             return scope;
         }
 
         [Emitted]
-        public static RubyMethodScope/*!*/ CreateMethodScope(StrongBox<object>/*!*/[]/*!*/ closure, SymbolId[]/*!*/ variableNames, 
+        public static RubyMethodScope/*!*/ CreateMethodScope(MutableTuple locals, SymbolId[]/*!*/ variableNames, 
             RubyScope/*!*/ parentScope, RubyModule/*!*/ declaringModule, string/*!*/ definitionName,
             object selfObject, Proc blockParameter, InterpretedFrame interpretedFrame) {
 
@@ -155,18 +145,18 @@ namespace IronRuby.Runtime {
             RubyMethodScope scope = new RubyMethodScope(parentScope, declaringModule, definitionName, blockParameter, rfc, selfObject);
             scope.SetDebugName("method " + definitionName + ((blockParameter != null) ? "&" : null));
 
-            scope.SetClosure(closure, variableNames);
+            scope.SetLocals(locals, variableNames);
             scope.InterpretedFrame = interpretedFrame;
             return scope;
         }
 
         [Emitted]
-        public static RubyBlockScope/*!*/ CreateBlockScope(StrongBox<object>/*!*/[]/*!*/ closure, SymbolId[]/*!*/ variableNames, 
+        public static RubyBlockScope/*!*/ CreateBlockScope(MutableTuple locals, SymbolId[]/*!*/ variableNames, 
             BlockParam/*!*/ blockParam, object selfObject, InterpretedFrame interpretedFrame) {
 
             RubyBlockScope scope = new RubyBlockScope(blockParam, selfObject);
             scope.MethodAttributes = RubyMethodAttributes.PublicInstance;
-            scope.SetClosure(closure, variableNames);
+            scope.SetLocals(locals, variableNames);
             scope.InterpretedFrame = interpretedFrame;
             return scope;
         }
@@ -272,18 +262,15 @@ namespace IronRuby.Runtime {
         #region Blocks
 
         [Emitted]
-        public static Proc/*!*/ DefineBlock(RubyScope/*!*/ scope, object self, Delegate/*!*/ clrMethod,
-            int parameterCount, BlockSignatureAttributes attributesAndArity, string sourcePath, int startLine) {
-            Assert.NotNull(scope, clrMethod);
+        public static Proc InstantiateBlock(RubyScope/*!*/ scope, object self, BlockDispatcher/*!*/ dispatcher) {
+            return (dispatcher.Method != null) ? new Proc(ProcKind.Block, self, scope, dispatcher) : null;
+        }
 
+        [Emitted]
+        public static Proc/*!*/ DefineBlock(RubyScope/*!*/ scope, object self, BlockDispatcher/*!*/ dispatcher, object/*!*/ clrMethod) {
             // DLR closures should not be used:
-            Debug.Assert(!(clrMethod.Target is Closure) ||  ((Closure)clrMethod.Target).Locals == null);
-
-            // closes block over self and context
-            BlockDispatcher dispatcher = BlockDispatcher.Create(clrMethod, parameterCount, attributesAndArity);
-            Proc result = new Proc(ProcKind.Block, self, scope, sourcePath, startLine, dispatcher);
-
-            return result;
+            Debug.Assert(!(((Delegate)clrMethod).Target is Closure) || ((Closure)((Delegate)clrMethod).Target).Locals == null);
+            return new Proc(ProcKind.Block, self, scope, dispatcher.SetMethod(clrMethod));
         }
 
         /// <summary>

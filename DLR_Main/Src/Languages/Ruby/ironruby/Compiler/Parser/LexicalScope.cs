@@ -39,37 +39,29 @@ namespace IronRuby.Compiler {
     using Ast = Microsoft.Linq.Expressions.Expression;
 #endif
 
-    // Scope contains variables defined outside of the current compilation unit. Used for assertion checks only.
-    // (e.g. created for variables in the runtime scope of eval).
-    internal sealed class RuntimeLexicalScope : LexicalScope {
-        public RuntimeLexicalScope(List<string>/*!*/ names) 
-            : base(null, -1) {
-         
-            for (int i = 0; i < names.Count; i++) {
-                AddVariable(names[i], SourceSpan.None);
-            }
-        }
-
-        protected override bool IsRuntimeScope {
-            get { return true; }
-        }
-    }
-
-    public class LexicalScope : HybridStringDictionary<LocalVariable> {
+    public abstract class LexicalScope : HybridStringDictionary<LocalVariable> {
+        // Null if there is no parent lexical scopes whose local variables are visible eto this scope.
+        // Scopes:
+        // - method and module: null
+        // - source unit: RuntimeLexicalScope if eval, null otherwise
+        // - block: non-null
         private readonly LexicalScope _outerScope;
 
         //
-        // Note: Static vs. dynamic variables. Depth >= 0 => scope defines static variables, otherwise it defines dynamic variables. 
+        // Lexical depth relative to the inner-most scope that doesn't inherit locals from its parent.
+        // If depth >= 0 the scope defines static variables, otherwise it defines dynamic variables. 
         // 
-        // Do not statically define variables defined in top-level eval'd code:
+        private readonly int _depth;
+
+        // Note on dynamic scopes. 
+        // We don't statically define variables defined in top-level eval'd code so the depth of the top-level scope is -1 
+        // if the outer scope is a runtime scope.
         //
         // eval('x = 1')   <-- this variable needs to be defined in containing runtime scope, not in top-level eval scope
         // eval('puts x')
         // 
         // eval('1.times { x = 1 }')  <-- x could be statically defined in the block since it is not visible outside the block
         //
-        private readonly int _depth;
-
         internal LexicalScope(LexicalScope outerScope)
             : this(outerScope, (outerScope != null) ? (outerScope.IsRuntimeScope ? -1 : outerScope._depth + 1) : 0) {
         }
@@ -88,6 +80,10 @@ namespace IronRuby.Compiler {
         }
 
         protected virtual bool IsRuntimeScope {
+            get { return false; }
+        }
+
+        protected virtual bool IsTop {
             get { return false; }
         }
 
@@ -129,6 +125,17 @@ namespace IronRuby.Compiler {
             return null;
         }
 
+        internal LexicalScope/*!*/ GetInnerMostTopScope() {
+            Debug.Assert(!IsRuntimeScope);
+
+            LexicalScope scope = this;
+            while (!scope.IsTop) {
+                scope = scope.OuterScope;
+                Debug.Assert(scope != null);
+            }
+            return scope;
+        }
+
         #region Transformation
 
         internal int AllocateClosureSlotsForLocals(int closureIndex) {
@@ -167,6 +174,31 @@ namespace IronRuby.Compiler {
         #endregion
     }
 
+    /// <summary>
+    /// Method, module and source unit scopes.
+    /// </summary>
+    internal sealed class TopLexicalScope : LexicalScope {
+        public TopLexicalScope(LexicalScope outerScope)
+            : base(outerScope) {
+        }
+
+        protected override bool IsTop {
+            get { return true; }
+        }
+    }
+
+    /// <summary>
+    /// Block scope.
+    /// </summary>
+    internal sealed class BlockLexicalScope : LexicalScope {
+        public BlockLexicalScope(LexicalScope outerScope)
+            : base(outerScope) {
+        }
+    }
+
+    /// <summary>
+    /// for-loop scope.
+    /// </summary>
     internal sealed class PaddingLexicalScope : LexicalScope {
         public PaddingLexicalScope(LexicalScope outerScope) 
             : base(outerScope) {
@@ -175,6 +207,22 @@ namespace IronRuby.Compiler {
 
         protected override bool AllowsVariableDefinitions {
             get { return false; }
+        }
+    }
+
+    // Scope contains variables defined outside of the current compilation unit. Used for assertion checks only.
+    // (e.g. created for variables in the runtime scope of eval).
+    internal sealed class RuntimeLexicalScope : LexicalScope {
+        public RuntimeLexicalScope(List<string>/*!*/ names)
+            : base(null, -1) {
+
+            for (int i = 0; i < names.Count; i++) {
+                AddVariable(names[i], SourceSpan.None);
+            }
+        }
+
+        protected override bool IsRuntimeScope {
+            get { return true; }
         }
     }
 

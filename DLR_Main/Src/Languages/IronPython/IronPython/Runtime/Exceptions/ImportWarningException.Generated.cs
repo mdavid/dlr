@@ -19,6 +19,7 @@ using System;
 using System; using Microsoft;
 #endif
 using System.Runtime.Serialization;
+using System.ComponentModel;
 
 namespace IronPython.Runtime.Exceptions {
     #region Generated ImportWarningException

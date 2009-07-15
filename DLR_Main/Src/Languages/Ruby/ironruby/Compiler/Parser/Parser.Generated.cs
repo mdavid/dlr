@@ -2312,7 +2312,7 @@ public partial class Parser
       // expression_statement -> arg '?' jump_statement_parameterless ':' arg 
 #line 361 "Parser.y"
 			{
-            yyval.Expression = new ConditionalJumpExpression(GetValue(5).Expression.ToCondition(), GetValue(3).JumpStatement, false, GetValue(1).Expression, yyloc);
+            yyval.Expression = new ConditionalJumpExpression(ToCondition(GetValue(5).Expression), GetValue(3).JumpStatement, false, GetValue(1).Expression, yyloc);
         }
   }
 
@@ -2321,7 +2321,7 @@ public partial class Parser
       // expression_statement -> arg '?' arg ':' jump_statement_parameterless 
 #line 365 "Parser.y"
 			{
-            yyval.Expression = new ConditionalJumpExpression(GetValue(5).Expression.ToCondition(), GetValue(1).JumpStatement, true, GetValue(3).Expression, yyloc);
+            yyval.Expression = new ConditionalJumpExpression(ToCondition(GetValue(5).Expression), GetValue(1).JumpStatement, true, GetValue(3).Expression, yyloc);
         }
   }
 
@@ -2330,7 +2330,7 @@ public partial class Parser
       // conditional_statement -> stmt IfMod expr 
 #line 372 "Parser.y"
 			{
-            yyval.Expression = new ConditionalStatement(GetValue(1).Expression.ToCondition(), false, GetValue(3).Expression, null, yyloc);
+            yyval.Expression = new ConditionalStatement(ToCondition(GetValue(1).Expression), false, GetValue(3).Expression, null, yyloc);
         }
   }
 
@@ -2339,7 +2339,7 @@ public partial class Parser
       // conditional_statement -> stmt UnlessMod expr 
 #line 376 "Parser.y"
 			{
-            yyval.Expression = new ConditionalStatement(GetValue(1).Expression.ToCondition(), true, GetValue(3).Expression, null, yyloc);
+            yyval.Expression = new ConditionalStatement(ToCondition(GetValue(1).Expression), true, GetValue(3).Expression, null, yyloc);
         }
   }
 
@@ -2348,7 +2348,7 @@ public partial class Parser
       // conditional_statement -> stmt WhileMod expr 
 #line 380 "Parser.y"
 			{
-            yyval.Expression = MakeLoopStatement(GetValue(3).Expression, GetValue(1).Expression.ToCondition(), true, yyloc);
+            yyval.Expression = MakeLoopStatement(GetValue(3).Expression, ToCondition(GetValue(1).Expression), true, yyloc);
         }
   }
 
@@ -2357,7 +2357,7 @@ public partial class Parser
       // conditional_statement -> stmt UntilMod expr 
 #line 384 "Parser.y"
 			{
-            yyval.Expression = MakeLoopStatement(GetValue(3).Expression, GetValue(1).Expression.ToCondition(), false, yyloc);
+            yyval.Expression = MakeLoopStatement(GetValue(3).Expression, ToCondition(GetValue(1).Expression), false, yyloc);
         }
   }
 
@@ -2375,7 +2375,7 @@ public partial class Parser
       // conditional_statement -> arg '?' jump_statement_parameterless ':' jump_statement_parameterless 
 #line 392 "Parser.y"
 			{
-            yyval.Expression = new ConditionalStatement(GetValue(5).Expression.ToCondition(), false, GetValue(3).JumpStatement, GetValue(1).JumpStatement, yyloc);
+            yyval.Expression = new ConditionalStatement(ToCondition(GetValue(5).Expression), false, GetValue(3).JumpStatement, GetValue(1).JumpStatement, yyloc);
         }
   }
 
@@ -3589,7 +3589,7 @@ public partial class Parser
       // arg -> arg '?' arg ':' arg 
 #line 952 "Parser.y"
 			{
-            yyval.Expression = new ConditionalExpression(GetValue(5).Expression.ToCondition(), GetValue(3).Expression, GetValue(1).Expression, yyloc);
+            yyval.Expression = new ConditionalExpression(ToCondition(GetValue(5).Expression), GetValue(3).Expression, GetValue(1).Expression, yyloc);
         }
   }
 
@@ -4176,7 +4176,7 @@ public partial class Parser
       // primary -> If expr then compstmt if_tail End 
 #line 1259 "Parser.y"
 			{
-            yyval.Expression = MakeIfExpression(GetValue(5).Expression.ToCondition(), GetValue(3).Statements, GetValue(2).ElseIfClauses, yyloc);
+            yyval.Expression = MakeIfExpression(ToCondition(GetValue(5).Expression), GetValue(3).Statements, GetValue(2).ElseIfClauses, yyloc);
         }
   }
 
@@ -4185,7 +4185,7 @@ public partial class Parser
       // primary -> Unless expr then compstmt else_opt End 
 #line 1263 "Parser.y"
 			{
-            yyval.Expression = new UnlessExpression(GetValue(5).Expression.ToCondition(), GetValue(3).Statements, GetValue(2).ElseIfClause, yyloc);
+            yyval.Expression = new UnlessExpression(ToCondition(GetValue(5).Expression), GetValue(3).Statements, GetValue(2).ElseIfClause, yyloc);
         }
   }
 
@@ -4212,7 +4212,7 @@ public partial class Parser
       // primary -> While @9 expr do @10 compstmt End 
 #line 1275 "Parser.y"
 			{
-            yyval.Expression = new WhileLoopExpression(GetValue(5).Expression.ToCondition(), true, false, GetValue(2).Statements, yyloc);
+            yyval.Expression = new WhileLoopExpression(ToCondition(GetValue(5).Expression), true, false, GetValue(2).Statements, yyloc);
         }
   }
 
@@ -4239,7 +4239,7 @@ public partial class Parser
       // primary -> Until @11 expr do @12 compstmt End 
 #line 1287 "Parser.y"
 			{
-            yyval.Expression = new WhileLoopExpression(GetValue(5).Expression.ToCondition(), false, false, GetValue(2).Statements, yyloc);
+            yyval.Expression = new WhileLoopExpression(ToCondition(GetValue(5).Expression), false, false, GetValue(2).Statements, yyloc);
         }
   }
 

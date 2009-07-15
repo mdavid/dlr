@@ -75,9 +75,7 @@
       <Compile Include="datetime.cs" />
       <Compile Include="errno.cs" />
       <Compile Include="gc.cs" />
-      <Compile Include="imp.cs" />
       <Compile Include="IterTools.cs" />
-      <Compile Include="locale.cs" />
       <Compile Include="marshal.cs" />
       <Compile Include="math.cs" />
       <Compile Include="math.Generated.cs" />
@@ -98,6 +96,7 @@
       <Compile Include="_fileio.cs" />
       <Compile Include="_functools.cs" />
       <Compile Include="_heapq.cs" />
+      <Compile Include="_locale.cs" />
       <Compile Include="_md5.cs" />
       <Compile Include="_multibytecodec.cs" />
       <Compile Include="_random.cs" />

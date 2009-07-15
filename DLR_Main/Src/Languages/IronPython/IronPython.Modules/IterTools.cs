@@ -34,7 +34,8 @@ using Microsoft.Scripting.Math;
 [assembly: PythonModule("itertools", typeof(IronPython.Modules.PythonIterTools))]
 namespace IronPython.Modules {
     public static class PythonIterTools {
-        
+        public const string __doc__ = "Provides functions and classes for working with iterable objects.";
+
         public static object tee(object iterable) {
             return tee(iterable, 2);
         }
@@ -67,10 +68,11 @@ namespace IronPython.Modules {
         /// <summary>
         /// Base class used for iterator wrappers.
         /// </summary>
+        [PythonType, PythonHidden]
         public class IterBase : IEnumerator {
             private IEnumerator _inner;
 
-            protected IEnumerator InnerEnumerator {
+            internal IEnumerator InnerEnumerator {
                 get { return _inner; }
                 set { _inner = value; }
             }
@@ -96,6 +98,7 @@ namespace IronPython.Modules {
             #endregion
         }
 
+        [PythonType]
         public class chain : IterBase {
             private chain() {
             }
@@ -791,7 +794,7 @@ namespace IronPython.Modules {
             return ri;
         }
 
-        [PythonType]
+        [PythonType, DontMapICollectionToLen]
         public class repeat : IterBase, ICodeFormattable, ICollection {
             private int _remaining;
             private bool _fInfinite;
@@ -834,7 +837,7 @@ namespace IronPython.Modules {
 
             #region ICollection Members
 
-            public void CopyTo(Array array, int index) {
+            void ICollection.CopyTo(Array array, int index) {
                 if (_fInfinite) throw new InvalidOperationException();
                 if (_remaining > array.Length - index) {
                     throw new IndexOutOfRangeException();
@@ -845,23 +848,23 @@ namespace IronPython.Modules {
                 _remaining = 0;
             }
 
-            public int Count {
+            int ICollection.Count {
                 get { return __length_hint__(); }
             }
 
-            public bool IsSynchronized {
+            bool ICollection.IsSynchronized {
                 get { return false; }
             }
 
-            public object SyncRoot {
-                get { throw new NotImplementedException(); }
+            object ICollection.SyncRoot {
+                get { return this; }
             }
 
             #endregion
 
             #region IEnumerable Members
 
-            public IEnumerator GetEnumerator() {
+            IEnumerator IEnumerable.GetEnumerator() {
                 while (_fInfinite || _remaining > 0) {
                     _remaining--;
                     yield return _obj;
@@ -921,6 +924,7 @@ namespace IronPython.Modules {
             }
         }
 
+        [PythonHidden]
         public class TeeIterator : IEnumerator, IWeakReferenceable {
             internal IEnumerator _iter;
             internal List _data;

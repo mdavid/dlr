@@ -70,12 +70,13 @@ namespace IronRuby.Builtins {
             }
 
             public char DataGetChar(int index) {
+                Debug.Assert(index < _count);
                 return _data[index];
             }
 
-            public CharArrayContent/*!*/ DataSetChar(int index, char c) {
+            public void DataSetChar(int index, char c) {
+                Debug.Assert(index < _count);
                 _data[index] = c;
-                return this;
             }
 
             #region GetHashCode, Length, Clone (read-only)
@@ -85,7 +86,7 @@ namespace IronRuby.Builtins {
             }
 
             public override int GetBinaryHashCode(out int binarySum) {
-                return IsBinaryEncoded ? GetHashCode(out binarySum) : SwitchToBinary().GetBinaryHashCode(out binarySum);
+                return _owner.IsBinaryEncoded ? GetHashCode(out binarySum) : SwitchToBinary().GetBinaryHashCode(out binarySum);
             }
 
             public override bool IsBinary {
@@ -98,6 +99,10 @@ namespace IronRuby.Builtins {
 
             public override int Count {
                 get { return _count; }
+                set {
+                    Utils.Resize(ref _data, value);
+                    _count = value;
+                }
             }
 
             public override bool IsEmpty {
@@ -109,7 +114,7 @@ namespace IronRuby.Builtins {
             }
 
             public override int GetByteCount() {
-                return (IsBinaryEncoded) ? _count : (_count == 0) ? 0 : SwitchToBinary().GetByteCount();
+                return (_owner.HasByteCharacters) ? _count : (_count == 0) ? 0 : SwitchToBinary().GetByteCount();
             }
 
             public override void SwitchToBinaryContent() {
@@ -117,6 +122,10 @@ namespace IronRuby.Builtins {
             }
 
             public override void SwitchToStringContent() {
+                // nop
+            }
+
+            public override void SwitchToMutableContent() {
                 // nop
             }
 
@@ -200,6 +209,9 @@ namespace IronRuby.Builtins {
             }
 
             public override byte GetByte(int index) {
+                if (_owner.HasByteCharacters) {
+                    return (byte)_data[index];
+                }
                 return SwitchToBinary().GetByte(index);
             }
 
@@ -320,7 +332,12 @@ namespace IronRuby.Builtins {
             }
 
             public override void Insert(int index, byte b) {
-                SwitchToBinary(1).Insert(index, b);
+                if (_owner.HasByteCharacters) {
+                    Debug.Assert(b < 0x80 || _owner.IsBinaryEncoded);
+                    Insert(index, (char)b);
+                } else {
+                    SwitchToBinary(1).Insert(index, b);
+                }
             }
 
             public override void Insert(int index, string/*!*/ str, int start, int count) {
@@ -339,11 +356,17 @@ namespace IronRuby.Builtins {
                 str.Insert(index, _data, start, count);
             }
 
-            public override void SetItem(int index, byte b) {
-                SwitchToBinary().SetItem(index, b);
+            // requires: encoding is ascii-identity
+            public override void SetByte(int index, byte b) {
+                if (_owner.HasByteCharacters) {
+                    Debug.Assert(b < 0x80 || _owner.IsBinaryEncoded);
+                    DataSetChar(index, (char)b);
+                } else {
+                    SwitchToBinary().SetByte(index, b);
+                }
             }
 
-            public override void SetItem(int index, char c) {
+            public override void SetChar(int index, char c) {
                 DataSetChar(index, c);
             }
 

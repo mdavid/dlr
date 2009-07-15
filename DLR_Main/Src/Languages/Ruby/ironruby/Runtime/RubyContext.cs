@@ -1345,7 +1345,7 @@ namespace IronRuby.Runtime {
         private RubyInstanceData MutateInstanceVariables(object obj) {
             RubyInstanceData data;
             if (IsObjectFrozen(obj, out data)) {
-                throw RubyExceptions.CreateTypeError("can't modify frozen object");
+                throw RubyExceptions.CreateObjectFrozenError();
             }
             return data;
         }
