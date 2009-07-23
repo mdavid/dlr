@@ -21,13 +21,15 @@ using System; using Microsoft;
 using System.Collections.Generic;
 using System.Diagnostics;
 #if CODEPLEX_40
-using System.Linq.Expressions;
+using System.Dynamic;
 #else
-using Microsoft.Linq.Expressions;
+using Microsoft.Scripting;
 #endif
 using System.Reflection;
 using System.Threading;
+
 using Microsoft.Contracts;
+using Microsoft.Scripting.Actions.Calls;
 
 namespace Microsoft.Scripting.Actions {
     /// <summary>
@@ -92,11 +94,11 @@ namespace Microsoft.Scripting.Actions {
             return methods;
         }
 
-        public override Expression GetValue(Expression context, ActionBinder binder, Type type) {
-            return base.GetValue(context, binder, type);
+        public override DynamicMetaObject GetValue(OverloadResolverFactory resolverFactory, ActionBinder binder, Type type) {
+            return base.GetValue(resolverFactory, binder, type);
         }
 
-        public override MemberTracker BindToInstance(Expression instance) {
+        public override MemberTracker BindToInstance(DynamicMetaObject instance) {
             if (ContainsInstance) {
                 return new BoundMemberTracker(this, instance);
             }
@@ -104,7 +106,7 @@ namespace Microsoft.Scripting.Actions {
             return this;
         }
 
-        protected internal override Expression GetBoundValue(Expression context, ActionBinder binder, Type type, Expression instance) {
+        protected internal override DynamicMetaObject GetBoundValue(OverloadResolverFactory resolverFactory, ActionBinder binder, Type type, DynamicMetaObject instance) {
             return binder.ReturnMemberTracker(type, BindToInstance(instance));
         }
 

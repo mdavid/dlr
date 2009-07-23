@@ -56,7 +56,7 @@ namespace Microsoft.Scripting.Runtime {
             throw new NotImplementedException();
         }
 
-        public override Expression ConvertExpression(Expression expr, Type toType, ConversionResultKind kind, Expression context) {
+        public override Expression ConvertExpression(Expression expr, Type toType, ConversionResultKind kind, OverloadResolverFactory factory) {
             if (toType.IsAssignableFrom(expr.Type)) {
                 return expr;
             }

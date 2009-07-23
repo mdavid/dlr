@@ -90,7 +90,7 @@ namespace IronPython.Compiler.Ast {
         private Dictionary<int, bool> _handlerLocations;                // list of all exception handlers and finallys.  - used for debugging/tracing support to disallow jumping into handlers.  Value is true if handler is finally
 
         private static readonly Dictionary<string, MethodInfo> _HelperMethods = new Dictionary<string, MethodInfo>(); // cache of helper methods
-        private static readonly MethodInfo _UpdateStackTrace = typeof(ExceptionHelpers).GetMethod("UpdateStackTrace");
+        private static readonly MethodInfo _UpdateStackTrace = typeof(PythonOps).GetMethod("UpdateStackTrace");
         private static readonly MSAst.Expression _GetCurrentMethod = Ast.Call(typeof(MethodBase).GetMethod("GetCurrentMethod"));
         internal static readonly MSAst.Expression[] EmptyExpression = new MSAst.Expression[0];
         internal static readonly MSAst.BlockExpression EmptyBlock = Ast.Block(AstUtils.Empty());
@@ -134,16 +134,15 @@ namespace IronPython.Compiler.Ast {
             _context = context;
             _pythonContext = (PythonContext)context.SourceUnit.LanguageContext;
             _document = _context.SourceUnit.Document ?? Ast.SymbolDocument(name, PyContext.LanguageGuid, PyContext.VendorGuid);
-
-            LanguageContext pc = context.SourceUnit.LanguageContext;
+            
             switch (mode) {
-                case CompilationMode.Collectable: _globals = new ArrayGlobalAllocator(pc); break;
+                case CompilationMode.Collectable: _globals = new ArrayGlobalAllocator(_pythonContext); break;
                 case CompilationMode.Lookup: _globals = new DictionaryGlobalAllocator(); break;
-                case CompilationMode.ToDisk: _globals = new SavableGlobalAllocator(pc); break;
-                case CompilationMode.Uncollectable: _globals = new StaticGlobalAllocator(pc, name); break;
+                case CompilationMode.ToDisk: _globals = new SavableGlobalAllocator(_pythonContext); break;
+                case CompilationMode.Uncollectable: _globals = new StaticGlobalAllocator(_pythonContext, name); break;
             }
 
-            PythonOptions po = (pc.Options as PythonOptions);
+            PythonOptions po = (_pythonContext.Options as PythonOptions);
             Assert.NotNull(po);
             if (po.EnableProfiler && mode != CompilationMode.ToDisk) {
                 _profiler = Profiler.GetProfiler(PyContext);
@@ -526,11 +525,20 @@ namespace IronPython.Compiler.Ast {
         }
 
         internal MSAst.Expression/*!*/ AddDebugInfo(MSAst.Expression/*!*/ expression, SourceLocation start, SourceLocation end) {
+            if (PyContext.PythonOptions.GCStress != null) {
+                expression = Ast.Block(
+                    Ast.Call(
+                        typeof(GC).GetMethod("Collect", new[] { typeof(int) }), 
+                        Ast.Constant(PyContext.PythonOptions.GCStress.Value)
+                    ),
+                    expression
+                );
+            }
             return Utils.AddDebugInfo(expression, _document, start, end);
         }
 
         internal MSAst.Expression/*!*/ AddDebugInfo(MSAst.Expression/*!*/ expression, SourceSpan location) {
-            return Utils.AddDebugInfo(expression, _document, location.Start, location.End);
+            return AddDebugInfo(expression, location.Start, location.End);
         }
 
         internal MSAst.Expression/*!*/ AddDebugInfoAndVoid(MSAst.Expression/*!*/ expression, SourceSpan location) {
@@ -648,7 +656,7 @@ namespace IronPython.Compiler.Ast {
                             LineNumberUpdated
                         ),
                         Ast.Call(
-                            typeof(ExceptionHelpers).GetMethod("UpdateStackTrace"),
+                            _UpdateStackTrace,
                             LocalContext,
                             _GetCurrentMethod,
                             AstUtils.Constant(Name),

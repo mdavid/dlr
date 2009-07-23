@@ -176,7 +176,7 @@ namespace IronRuby.Runtime.Calls {
 
                 ).Finally(
                     // we need to mark the RFC dead snce the block might escape and break later:
-                    Methods.LeaveMethodFrameRfc.OpCall(rfcVariable)
+                    Methods.LeaveMethodFrame.OpCall(rfcVariable)
                 ), 
                 resultVariable
             );

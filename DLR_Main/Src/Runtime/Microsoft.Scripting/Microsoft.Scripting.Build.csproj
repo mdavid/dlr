@@ -140,7 +140,6 @@
       <Compile Include="Actions\OperatorInfo.cs" />
       <Compile Include="Actions\PropertyTracker.cs" />
       <Compile Include="Actions\ReflectedPropertyTracker.cs" />
-      <Compile Include="Actions\RuleBuilder.cs" />
       <Compile Include="Actions\TopNamespaceTracker.cs" />
       <Compile Include="Actions\TrackerTypes.cs" />
       <Compile Include="Actions\TypeGroup.cs" />
@@ -189,7 +188,6 @@
       <!--                       -->
       <Compile Include="Ast\BinaryExpression.cs" />
       <Compile Include="Ast\Block.cs" />
-      <Compile Include="Ast\CodeContextExpression.cs" />
       <Compile Include="Ast\ConstantExpression.cs" />
       <Compile Include="Ast\DebugStatement.cs" />
       <Compile Include="Ast\EmptyStatements.cs" />
@@ -364,7 +362,6 @@
       <Compile Include="Runtime\CallTypes.cs" />
       <Compile Include="Runtime\Cast.cs" />
       <Compile Include="Runtime\Cast.Generated.cs" />
-      <Compile Include="Runtime\CodeContext.cs" />
       <Compile Include="Runtime\CodeDomCodeGen.cs" />
       <Compile Include="Runtime\CompilerContext.cs" />
       <Compile Include="Runtime\ContextId.cs" />

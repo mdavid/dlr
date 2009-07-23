@@ -95,15 +95,6 @@ namespace IronRuby.Builtins {
             get { return _dispatcher.SourceLine; }
         }
 
-        internal RuntimeFlowControl/*!*/ GetOwner() {
-            RubyMethodScope method = _scope.GetInnerMostMethodScope();
-            if (method != null) {
-                return method.RuntimeFlowControl;
-            } else {
-                return _scope.Top.RuntimeFlowControl;
-            }
-        }
-
         #region Construction, Conversion
 
         internal Proc(ProcKind kind, object self, RubyScope/*!*/ scope, BlockDispatcher/*!*/ dispatcher) {

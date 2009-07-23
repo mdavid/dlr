@@ -104,7 +104,7 @@ namespace IronPython.Modules {
                 }
             }
 
-            object INativeType.GetValue(MemoryHolder owner, int offset, bool raw) {
+            object INativeType.GetValue(MemoryHolder owner, object readingFrom, int offset, bool raw) {
                 throw new NotImplementedException("union get value");
             }
 

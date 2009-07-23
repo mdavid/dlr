@@ -190,7 +190,7 @@ namespace IronPython.Modules {
                 }
             }
 
-            object INativeType.GetValue(MemoryHolder owner, int offset, bool raw) {
+            object INativeType.GetValue(MemoryHolder owner, object readingFrom, int offset, bool raw) {
                 if (IsStringType) {
                     SimpleType st = (SimpleType)_type;
                     string str;

@@ -273,8 +273,9 @@ namespace IronRuby.Runtime {
             bool isProcConverter;
 
             if (proc.Kind == ProcKind.Block) {
-                proc.Converter = new RuntimeFlowControl();
-                proc.Converter.IsActiveMethod = true;
+                var rfc = new RuntimeFlowControl();
+                rfc._activeFlowControlScope = rfc;
+                proc.Converter = rfc;
                 proc.Kind = ProcKind.Proc;
                 isProcConverter = true;
             } else {
@@ -289,7 +290,7 @@ namespace IronRuby.Runtime {
             Debug.Assert(bfc.Proc != null);
             if (bfc._isLibProcConverter) {
                 Debug.Assert(bfc.Proc.Converter != null);
-                bfc.Proc.Converter.IsActiveMethod = false;
+                bfc.Proc.Converter.LeaveMethod();
             }
         }
     }

@@ -130,7 +130,7 @@ namespace IronRuby.Runtime {
         public static RubyModuleScope/*!*/ CreateModuleScope(MutableTuple locals, SymbolId[]/*!*/ variableNames, 
             RubyScope/*!*/ parent, RubyModule/*!*/ module) {
 
-            RubyModuleScope scope = new RubyModuleScope(parent, module, false, parent.RuntimeFlowControl, module);
+            RubyModuleScope scope = new RubyModuleScope(parent, module, false, module);
             scope.SetDebugName((module.IsClass ? "class" : "module") + " " + module.Name);
             scope.SetLocals(locals, variableNames);
             return scope;
@@ -141,24 +141,18 @@ namespace IronRuby.Runtime {
             RubyScope/*!*/ parentScope, RubyModule/*!*/ declaringModule, string/*!*/ definitionName,
             object selfObject, Proc blockParameter, InterpretedFrame interpretedFrame) {
 
-            var rfc = CreateRfcForMethod(blockParameter);
-            RubyMethodScope scope = new RubyMethodScope(parentScope, declaringModule, definitionName, blockParameter, rfc, selfObject);
-            scope.SetDebugName("method " + definitionName + ((blockParameter != null) ? "&" : null));
-
-            scope.SetLocals(locals, variableNames);
-            scope.InterpretedFrame = interpretedFrame;
-            return scope;
+            return new RubyMethodScope(
+                locals, variableNames,
+                parentScope, declaringModule, definitionName, selfObject, blockParameter,
+                interpretedFrame
+            );            
         }
 
         [Emitted]
         public static RubyBlockScope/*!*/ CreateBlockScope(MutableTuple locals, SymbolId[]/*!*/ variableNames, 
             BlockParam/*!*/ blockParam, object selfObject, InterpretedFrame interpretedFrame) {
 
-            RubyBlockScope scope = new RubyBlockScope(blockParam, selfObject);
-            scope.MethodAttributes = RubyMethodAttributes.PublicInstance;
-            scope.SetLocals(locals, variableNames);
-            scope.InterpretedFrame = interpretedFrame;
-            return scope;
+            return new RubyBlockScope(locals, variableNames, blockParam, selfObject, interpretedFrame);
         }
 
         [Emitted]
@@ -574,7 +568,7 @@ namespace IronRuby.Runtime {
         public static void UndefineMethod(RubyScope/*!*/ scope, string/*!*/ name) {
             RubyModule owner = scope.GetInnerMostModuleForMethodLookup();
 
-            if (!owner.ResolveMethod(name, RubyClass.IgnoreVisibility).Found) {
+            if (!owner.ResolveMethod(name, VisibilityContext.AllVisible).Found) {
                 throw RubyExceptions.CreateUndefinedMethodError(owner, name);
             }
             owner.UndefineMethod(name);
@@ -584,7 +578,7 @@ namespace IronRuby.Runtime {
         public static bool IsDefinedMethod(object self, RubyScope/*!*/ scope, string/*!*/ name) {
             // MRI: this is different from UndefineMethod, it behaves like Kernel#method (i.e. doesn't use lexical scope):
             // TODO: visibility
-            return scope.RubyContext.ResolveMethod(self, name, RubyClass.IgnoreVisibility).Found;
+            return scope.RubyContext.ResolveMethod(self, name, VisibilityContext.AllVisible).Found;
         }
 
         #endregion
@@ -1234,7 +1228,7 @@ namespace IronRuby.Runtime {
             }
 
             LocalJumpError lje = exception as LocalJumpError;
-            if (lje != null && lje.SkipFrame == scope.RuntimeFlowControl) {
+            if (lje != null && lje.SkipFrame == scope.FlowControlScope) {
                 return false;
             }
 

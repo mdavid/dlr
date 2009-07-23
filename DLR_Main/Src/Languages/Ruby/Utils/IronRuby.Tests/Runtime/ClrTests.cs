@@ -21,17 +21,16 @@ using System; using Microsoft;
 using System.Collections;
 using System.Diagnostics;
 using System.Reflection;
-using System.Runtime.Serialization;
-using Microsoft.Scripting.Runtime;
-using IronRuby.Runtime;
-using IronRuby.Builtins;
-using Microsoft.Scripting.Math;
-using System.Runtime.InteropServices;
 using System.Runtime.CompilerServices;
 #if !CODEPLEX_40
 using Microsoft.Runtime.CompilerServices;
 #endif
 
+using System.Runtime.InteropServices;
+using IronRuby.Builtins;
+using IronRuby.Runtime;
+using Microsoft.Scripting.Math;
+using Microsoft.Scripting.Runtime;
 
 namespace InteropTests.Generics1 {
     public class C {
@@ -1574,7 +1573,20 @@ p E.new.virtual_method
 ");
         }
 
+        /// <summary>
+        /// See RubyMethodGroupBase.BuildCallNoFlow.
+        /// </summary>
+        public void ClrDetachedVirtual1() {
+            TestOutput(@"
+class C < System::Collections::ArrayList           
+  define_method(:Count, instance_method(:Count))
+end
 
+p C.new.Count
+", @"
+0
+");
+        }
 
         public class ClassWithToStringHashEquals1 {
             public override string ToString() {

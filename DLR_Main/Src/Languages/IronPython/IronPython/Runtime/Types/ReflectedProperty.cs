@@ -20,6 +20,7 @@ using System; using Microsoft;
 #endif
 using System.Diagnostics;
 #if CODEPLEX_40
+using System.Dynamic;
 using System.Linq.Expressions;
 #else
 using Microsoft.Linq.Expressions;
@@ -34,7 +35,6 @@ using Microsoft.Runtime.CompilerServices;
 using Microsoft.Scripting;
 using Microsoft.Scripting.Actions;
 using Microsoft.Scripting.Generation;
-using Microsoft.Scripting.Runtime;
 using Microsoft.Scripting.Utils;
 
 using IronPython.Runtime.Binding;
@@ -172,7 +172,7 @@ namespace IronPython.Runtime.Types {
             return true;
         }
 
-        internal override void MakeGetExpression(PythonBinder/*!*/ binder, Expression/*!*/ codeContext, Expression instance, Expression/*!*/ owner, ConditionalBuilder/*!*/ builder) {
+        internal override void MakeGetExpression(PythonBinder/*!*/ binder, Expression/*!*/ codeContext, DynamicMetaObject instance, DynamicMetaObject/*!*/ owner, ConditionalBuilder/*!*/ builder) {
             if (Getter.Length != 0 && !Getter[0].IsPublic) {
                 // fallback to runtime call
                 base.MakeGetExpression(binder, codeContext, instance, owner, builder);
@@ -185,16 +185,16 @@ namespace IronPython.Runtime.Types {
                             MemberTracker.FromMemberInfo(_info)
                         ),
                         typeof(object)
-                    )
+                    ).Expression
                 );
             } else if (instance != null) {
                 builder.FinishCondition(
                     AstUtils.Convert(
                         binder.MakeCallExpression(
-                            codeContext,
+                            new PythonOverloadResolverFactory(binder, codeContext),
                             Getter[0],
                             instance
-                        ),
+                        ).Expression,
                         typeof(object)
                     )
                 );
@@ -202,9 +202,9 @@ namespace IronPython.Runtime.Types {
                 builder.FinishCondition(
                     AstUtils.Convert(
                         binder.MakeCallExpression(
-                            codeContext,
+                            new PythonOverloadResolverFactory(binder, codeContext),
                             Getter[0]
-                        ),
+                        ).Expression,
                         typeof(object)
                     )
                 );                

@@ -861,7 +861,7 @@ namespace IronPython.Modules {
                     doc.AppendLine();
                 }
 
-                IList<object> names = ((IMembersList)oldClass).GetMemberNames(context);
+                IList<object> names = ((IPythonMembersList)oldClass).GetMemberNames(context);
                 List sortNames = new List(names);
                 sortNames.sort(context);
                 names = sortNames;
@@ -1562,6 +1562,11 @@ namespace IronPython.Modules {
             }
             if (file == null) {
                 throw PythonOps.RuntimeError("lost sys.std_out");
+            }
+
+            if (args == null) {
+                // passing None to print passes a null object array
+                args = new object[1];
             }
 
             PythonFile pf = file as PythonFile;

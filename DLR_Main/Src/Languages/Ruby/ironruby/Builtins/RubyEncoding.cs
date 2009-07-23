@@ -390,7 +390,7 @@ namespace IronRuby.Builtins {
             ContractUtils.RequiresNotNull(encoding, "encoding");
             if (encoding == BinaryEncoding.Instance) {
                 return Binary;
-            } else if (encoding == Encoding.UTF8) {
+            } else if (encoding.ToString() == Encoding.UTF8.ToString()) {
                 return UTF8;
             } else {
                 throw new ArgumentException(String.Format("Unknown encoding: '{0}'", encoding));
@@ -424,7 +424,6 @@ namespace IronRuby.Builtins {
             return Expression.Constant(UTF8);
         }
 #endif
-
     }
 
 }

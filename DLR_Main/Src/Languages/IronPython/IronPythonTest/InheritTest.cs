@@ -26,7 +26,7 @@ using Microsoft.Runtime.CompilerServices;
 #endif
 
 using System.Text;
-using Microsoft.Scripting.Runtime;
+using IronPython.Runtime;
 
 namespace IronPythonTest {
 

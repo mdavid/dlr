@@ -34,7 +34,7 @@ using IronPython.Runtime.Types;
 namespace IronPython.Runtime {
     [PythonType]
     public class staticmethod : PythonTypeSlot {
-        private object _func;
+        internal object _func;
 
         public staticmethod(object func) {
             this._func = func;
@@ -157,7 +157,7 @@ namespace IronPython.Runtime {
         }
 
         [SpecialName, PropertyMethod, WrapperDescriptor]
-        public static void Set__doc__(PythonProperty self) {
+        public static void Set__doc__(PythonProperty self, object value) {
             throw PythonOps.TypeError("'property' object is immutable");
         }
 

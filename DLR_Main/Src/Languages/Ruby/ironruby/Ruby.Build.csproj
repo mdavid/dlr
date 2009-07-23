@@ -398,6 +398,7 @@
       <Compile Include="Runtime\Calls\SuperCallAction.cs" />
       <Compile Include="Runtime\Calls\SuperForwarderInfo.cs" />
       <Compile Include="Runtime\Calls\VersionHandle.cs" />
+      <Compile Include="Runtime\Calls\VisibilityContext.cs" />
     </ItemGroup>
     <ItemGroup>
       <!--                                   -->

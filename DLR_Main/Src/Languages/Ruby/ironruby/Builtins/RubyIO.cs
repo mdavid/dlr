@@ -109,7 +109,7 @@ namespace IronRuby.Builtins {
         }
 
         private void ResetLineNumbersForReadOnlyFiles(RubyContext/*!*/ context) {
-            if (_mode == IOMode.ReadOnlyFromStart || _mode == IOMode.ReadWriteAppend || _mode == IOMode.ReadWriteFromStart || _mode == IOMode.ReadWriteTruncate) {
+            if (RubyIO.IsReadable(_mode)) {
                 context.InputProvider.LastInputLineNumber = 0;
             }
         }
@@ -228,6 +228,13 @@ namespace IronRuby.Builtins {
 
         internal static ArgumentException/*!*/ IllegalMode(string modeString) {
             return new ArgumentException(String.Format("illegal access mode {0}", modeString));
+        }
+
+        public static bool IsReadable(IOMode mode) {
+            return (mode == IOMode.ReadOnlyFromStart || 
+                mode == IOMode.ReadWriteAppend || 
+                mode == IOMode.ReadWriteFromStart || 
+                mode == IOMode.ReadWriteTruncate);
         }
 
         #endregion

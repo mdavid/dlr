@@ -333,8 +333,6 @@ namespace IronRuby.Compiler {
         private static MethodInfo _LeaveLoop;
         public static MethodInfo/*!*/ LeaveMethodFrame { get { return _LeaveMethodFrame ?? (_LeaveMethodFrame = GetMethod(typeof(RubyOps), "LeaveMethodFrame")); } }
         private static MethodInfo _LeaveMethodFrame;
-        public static MethodInfo/*!*/ LeaveMethodFrameRfc { get { return _LeaveMethodFrameRfc ?? (_LeaveMethodFrameRfc = GetMethod(typeof(RubyOps), "LeaveMethodFrameRfc")); } }
-        private static MethodInfo _LeaveMethodFrameRfc;
         public static MethodInfo/*!*/ LeaveProcConverter { get { return _LeaveProcConverter ?? (_LeaveProcConverter = GetMethod(typeof(RubyOps), "LeaveProcConverter")); } }
         private static MethodInfo _LeaveProcConverter;
         public static MethodInfo/*!*/ LeaveRescue { get { return _LeaveRescue ?? (_LeaveRescue = GetMethod(typeof(RubyOps), "LeaveRescue")); } }

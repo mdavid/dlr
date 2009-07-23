@@ -15,17 +15,16 @@
 
 #if CODEPLEX_40
 using System;
+using System.Dynamic;
 using System.Linq.Expressions;
 #else
 using System; using Microsoft;
+using Microsoft.Scripting;
 using Microsoft.Linq.Expressions;
 #endif
 using System.Reflection;
-#if CODEPLEX_40
-using System.Dynamic;
-#else
-using Microsoft.Scripting;
-#endif
+
+using Microsoft.Scripting.Actions.Calls;
 using Microsoft.Scripting.Generation;
 using Microsoft.Scripting.Runtime;
 using Microsoft.Scripting.Utils;
@@ -37,9 +36,9 @@ namespace Microsoft.Scripting.Actions {
     using Ast = Microsoft.Linq.Expressions.Expression;
 #endif
     using AstUtils = Microsoft.Scripting.Ast.Utils;
-
+    
     public partial class DefaultBinder : ActionBinder {
-        public DynamicMetaObject ConvertTo(Type toType, ConversionResultKind kind, DynamicMetaObject arg) {
+        public DynamicMetaObject ConvertTo(Type toType, ConversionResultKind kind, DynamicMetaObject arg, OverloadResolverFactory resolverFactory) {
             ContractUtils.RequiresNotNull(toType, "toType");
             ContractUtils.RequiresNotNull(arg, "arg");
 
@@ -52,8 +51,8 @@ namespace Microsoft.Scripting.Actions {
 
             DynamicMetaObject res = 
                 TryConvertToObject(toType, arg.Expression.Type, arg, typeRestrictions) ??
-                TryAllConversions(toType, kind, arg.Expression.Type, typeRestrictions, arg) ??
-                TryAllConversions(toType, kind, arg.GetLimitType(), typeRestrictions, arg) ??
+                TryAllConversions(resolverFactory, toType, kind, arg.Expression.Type, typeRestrictions, arg) ??
+                TryAllConversions(resolverFactory, toType, kind, arg.GetLimitType(), typeRestrictions, arg) ??
                 MakeErrorTarget(toType, kind, typeRestrictions, arg);
 
             if ((kind == ConversionResultKind.ExplicitTry || kind == ConversionResultKind.ImplicitTry) && toType.IsValueType) {
@@ -87,14 +86,14 @@ namespace Microsoft.Scripting.Actions {
         /// <summary>
         /// Checks if any conversions are available and if so builds the target for that conversion.
         /// </summary>
-        private DynamicMetaObject TryAllConversions(Type toType, ConversionResultKind kind, Type knownType, BindingRestrictions restrictions, DynamicMetaObject arg) {
+        private DynamicMetaObject TryAllConversions(OverloadResolverFactory factory, Type toType, ConversionResultKind kind, Type knownType, BindingRestrictions restrictions, DynamicMetaObject arg) {
             return
-                TryAssignableConversion(toType, knownType, restrictions, arg) ??           // known type -> known type
-                TryExtensibleConversion(toType, knownType, restrictions, arg) ??           // Extensible<T> -> Extensible<T>.Value
-                TryUserDefinedConversion(kind, toType, knownType, restrictions, arg) ??    // op_Implicit
-                TryImplicitNumericConversion(toType, knownType, restrictions, arg) ??      // op_Implicit
-                TryNullableConversion(toType, kind, knownType, restrictions, arg) ??       // null -> Nullable<T> or T -> Nullable<T>
-                TryNullConversion(toType, knownType, restrictions);                        // null -> reference type
+                TryAssignableConversion(toType, knownType, restrictions, arg) ??                // known type -> known type
+                TryExtensibleConversion(toType, knownType, restrictions, arg) ??                // Extensible<T> -> Extensible<T>.Value
+                TryUserDefinedConversion(kind, toType, knownType, restrictions, arg) ??         // op_Implicit
+                TryImplicitNumericConversion(toType, knownType, restrictions, arg) ??           // op_Implicit
+                TryNullableConversion(factory, toType, kind, knownType, restrictions, arg) ??   // null -> Nullable<T> or T -> Nullable<T>
+                TryNullConversion(toType, knownType, restrictions);                             // null -> reference type
         }
 
         /// <summary>
@@ -220,7 +219,7 @@ namespace Microsoft.Scripting.Actions {
         /// <summary>
         /// Checks if there's a conversion to/from Nullable of T.
         /// </summary>
-        private DynamicMetaObject TryNullableConversion(Type toType, ConversionResultKind kind, Type knownType, BindingRestrictions restrictions, DynamicMetaObject arg) {
+        private DynamicMetaObject TryNullableConversion(OverloadResolverFactory factory, Type toType, ConversionResultKind kind, Type knownType, BindingRestrictions restrictions, DynamicMetaObject arg) {
             if (toType.IsGenericType && toType.GetGenericTypeDefinition() == typeof(Nullable<>)) {
                 if (knownType == typeof(DynamicNull)) {
                     // null -> Nullable<T>
@@ -230,7 +229,7 @@ namespace Microsoft.Scripting.Actions {
                 } else if (kind == ConversionResultKind.ExplicitCast || kind == ConversionResultKind.ExplicitTry) {
                     if (knownType != typeof(object)) {
                         // when doing an explicit cast we'll do things like int -> Nullable<float>
-                        return MakeConvertingToTToNullableOfTTarget(toType, kind, restrictions, arg);
+                        return MakeConvertingToTToNullableOfTTarget(factory, toType, kind, restrictions, arg);
                     }
                 }
             }
@@ -423,13 +422,13 @@ namespace Microsoft.Scripting.Actions {
         /// <summary>
         /// Helper to produce the rule for converting T to Nullable of T
         /// </summary>
-        private DynamicMetaObject MakeConvertingToTToNullableOfTTarget(Type toType, ConversionResultKind kind, BindingRestrictions restrictions, DynamicMetaObject arg) {
+        private DynamicMetaObject MakeConvertingToTToNullableOfTTarget(OverloadResolverFactory resolverFactory, Type toType, ConversionResultKind kind, BindingRestrictions restrictions, DynamicMetaObject arg) {
             Type valueType = toType.GetGenericArguments()[0];
 
             // ConvertSelfToT -> Nullable<T>
             if (kind == ConversionResultKind.ExplicitCast) {
                 // if the conversion to T fails we just throw
-                Expression conversion = ConvertExpression(arg.Expression, valueType, kind, AstUtils.Constant(null, typeof(CodeContext)));
+                Expression conversion = ConvertExpression(arg.Expression, valueType, kind, resolverFactory);
 
                 return new DynamicMetaObject(
                     Ast.New(
@@ -439,7 +438,7 @@ namespace Microsoft.Scripting.Actions {
                     restrictions
                 );
             } else {
-                Expression conversion = ConvertExpression(arg.Expression, valueType, kind, AstUtils.Constant(null, typeof(CodeContext)));
+                Expression conversion = ConvertExpression(arg.Expression, valueType, kind, resolverFactory);
 
                 // if the conversion to T succeeds then produce the nullable<T>, otherwise return default(retType)
                 ParameterExpression tmp = Ast.Variable(typeof(object), "tmp");

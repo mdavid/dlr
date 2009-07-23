@@ -54,6 +54,7 @@ namespace IronPython.Modules {
                     INativeType elementType = ElementType;
                     return elementType.GetValue(
                         _memHolder,
+                        this,
                         checked(index * elementType.Size),
                         false
                     );

@@ -514,6 +514,13 @@ namespace IronPython.Hosting {
         protected override void UnhandledException(Exception e) {
             PythonOps.PrintException(new CodeContext(Scope, Language), e, Console);
         }
+
+        private new PythonContext Language {
+            get {
+                return (PythonContext)base.Language;
+            }
+        }
+
     }
 #endif
 }

@@ -118,13 +118,46 @@ namespace IronRuby.Runtime {
         
         #endregion
 
+        #region Random Number Generator
+
+        private object _randomNumberGeneratorLock = new object();
+        private Random _randomNumberGenerator; // lazy
+        private object _randomNumberGeneratorSeed = ScriptingRuntimeHelpers.Int32ToObject(0);
+
+        public object RandomNumberGeneratorSeed {
+            get { return _randomNumberGeneratorSeed; }
+        }
+
+        public void SeedRandomNumberGenerator(IntegerValue value) {
+            lock (_randomNumberGeneratorLock) {
+                _randomNumberGenerator = new Random(value.IsFixnum ? value.Fixnum : value.Bignum.GetHashCode());
+                _randomNumberGeneratorSeed = value.ToObject();
+            }
+        }
+
+        public Random/*!*/ RandomNumberGenerator {
+            get {
+                if (_randomNumberGenerator == null) {
+                    lock (_randomNumberGeneratorLock) {
+                        if (_randomNumberGenerator == null) {
+                            _randomNumberGenerator = new Random();
+                        }
+                    }
+                }
+                return _randomNumberGenerator;
+            }
+        }
+
+        #endregion
+
         #region Threading
 
         // Thread#main
         private readonly Thread _mainThread;
 
         // Thread#critical=
-        private bool _isInCriticalRegion;
+        // We just need a bool. But we store the Thread object for easier debugging if there is a hang
+        private Thread _criticalThread;
         private readonly object _criticalMonitor = new object();
 
         #endregion
@@ -289,9 +322,9 @@ namespace IronRuby.Runtime {
             get { return _criticalMonitor; }
         }
 
-        public bool IsInCriticalRegion {
-            get { return _isInCriticalRegion; }
-            set { _isInCriticalRegion = value; }
+        public Thread CriticalThread {
+            get { return _criticalThread; }
+            set { _criticalThread = value; }
         }
 
         public Proc TraceListener {
@@ -1219,12 +1252,12 @@ namespace IronRuby.Runtime {
         // thread-safe:
         public MethodResolutionResult ResolveMethod(object target, string/*!*/ name, bool includePrivate) {
             var owner = GetImmediateClassOf(target);
-            return owner.ResolveMethod(name, includePrivate ? RubyClass.IgnoreVisibility : owner);
+            return owner.ResolveMethod(name, includePrivate ? VisibilityContext.AllVisible : new VisibilityContext(owner));
         }
 
         // thread-safe:
-        public MethodResolutionResult ResolveMethod(object target, string/*!*/ name, RubyClass visibilityContext) {
-            return GetImmediateClassOf(target).ResolveMethod(name, visibilityContext);
+        public MethodResolutionResult ResolveMethod(object target, string/*!*/ name, VisibilityContext visibility) {
+            return GetImmediateClassOf(target).ResolveMethod(name, visibility);
         }
 
         // thread-safe:

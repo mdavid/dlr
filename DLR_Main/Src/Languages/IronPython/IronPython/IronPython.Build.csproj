@@ -205,6 +205,7 @@
       <Compile Include="Runtime\ClassMethodAttribute.cs" />
       <Compile Include="Runtime\ClassMethodDescriptor.cs" />
       <Compile Include="Runtime\ClrModule.cs" />
+      <Compile Include="Runtime\CodeContext.cs" />
       <Compile Include="Runtime\CommonDictionaryStorage.cs" />
       <Compile Include="Runtime\CompareUtil.cs" />
       <Compile Include="Runtime\CompiledLoader.cs" />
@@ -252,6 +253,7 @@
       <Compile Include="Runtime\PythonBuffer.cs" />
       <Compile Include="Runtime\PythonContext.cs" />
       <Compile Include="Runtime\PythonDictionary.cs" />
+      <Compile Include="Runtime\PythonDynamicStackFrame.cs" />
       <Compile Include="Runtime\PythonFile.cs" />
       <Compile Include="Runtime\PythonFunction.cs" />
       <Compile Include="Runtime\PythonFunction.Generated.cs" />
@@ -448,6 +450,7 @@
       <Compile Include="Runtime\Types\PythonAssemblyOps.cs" />
       <Compile Include="Runtime\Types\PythonSiteCache.cs" />
       <Compile Include="Runtime\Types\PythonType.cs" />
+      <Compile Include="Runtime\Types\PythonType.Generated.cs" />
       <Compile Include="Runtime\Types\PythonTypeDataSlot.cs" />
       <Compile Include="Runtime\Types\PythonTypeDictSlot.cs" />
       <Compile Include="Runtime\Types\PythonTypeSlot.cs" />

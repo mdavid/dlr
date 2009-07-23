@@ -24,6 +24,7 @@ using Microsoft.Scripting;
 using Microsoft.Scripting.Ast;
 using Microsoft.Scripting.Runtime;
 
+using IronPython.Runtime;
 using IronPython.Runtime.Operations;
 
 #if CODEPLEX_40
@@ -42,7 +43,7 @@ namespace IronPython.Compiler.Ast {
     class SavableGlobalAllocator : ArrayGlobalAllocator {
         private readonly List<MSAst.Expression/*!*/>/*!*/ _constants;
 
-        public SavableGlobalAllocator(LanguageContext/*!*/ context)
+        public SavableGlobalAllocator(PythonContext/*!*/ context)
             : base(context) {
             _constants = new List<MSAst.Expression>();
         }

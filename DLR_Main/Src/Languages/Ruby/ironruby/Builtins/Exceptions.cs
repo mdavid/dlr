@@ -26,7 +26,7 @@ namespace IronRuby.Builtins {
 
     [Serializable]
     public class LocalJumpError : SystemException {
-
+        [NonSerialized]
         private readonly RuntimeFlowControl _skipFrame;
 
         /// <summary>

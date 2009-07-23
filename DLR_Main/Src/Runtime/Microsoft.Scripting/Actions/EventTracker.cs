@@ -18,20 +18,22 @@ using System;
 #else
 using System; using Microsoft;
 #endif
+using System.Collections.Generic;
 using System.Diagnostics;
 #if CODEPLEX_40
-using System.Linq.Expressions;
+using System.Dynamic;
 #else
-using Microsoft.Linq.Expressions;
+using Microsoft.Scripting;
 #endif
 using System.Reflection;
-using Microsoft.Contracts;
-using System.Collections.Generic;
-using Microsoft.Scripting.Utils;
-using Microsoft.Scripting.Runtime;
 using System.Runtime.InteropServices;
-using Microsoft.Scripting.Generation;
 using System.Threading;
+
+using Microsoft.Contracts;
+using Microsoft.Scripting.Actions.Calls;
+using Microsoft.Scripting.Generation;
+using Microsoft.Scripting.Runtime;
+using Microsoft.Scripting.Utils;
 
 namespace Microsoft.Scripting.Actions {
     public class EventTracker : MemberTracker {
@@ -110,11 +112,11 @@ namespace Microsoft.Scripting.Actions {
             }
         }
 
-        protected internal override Expression GetBoundValue(Expression context, ActionBinder binder, Type type, Expression instance) {
+        protected internal override DynamicMetaObject GetBoundValue(OverloadResolverFactory resolverFactory, ActionBinder binder, Type type, DynamicMetaObject instance) {
             return binder.ReturnMemberTracker(type, new BoundMemberTracker(this, instance));
         }
 
-        public override MemberTracker BindToInstance(Expression instance) {
+        public override MemberTracker BindToInstance(DynamicMetaObject instance) {
             if (IsStatic) {
                 return this;
             }
