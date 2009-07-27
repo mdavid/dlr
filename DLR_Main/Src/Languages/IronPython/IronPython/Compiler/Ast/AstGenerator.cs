@@ -19,11 +19,6 @@ using System;
 using System; using Microsoft;
 #endif
 using System.Collections.Generic;
-using System.Collections.ObjectModel;
-#if CODEPLEX_40
-using System.Dynamic;
-#else
-#endif
 using System.Diagnostics;
 #if CODEPLEX_40
 using System.Linq.Expressions;
@@ -31,7 +26,11 @@ using System.Linq.Expressions;
 using Microsoft.Linq.Expressions;
 #endif
 using System.Reflection;
-using System.Text;
+using System.Runtime.CompilerServices;
+#if !CODEPLEX_40
+using Microsoft.Runtime.CompilerServices;
+#endif
+
 
 using Microsoft.Scripting;
 using Microsoft.Scripting.Actions;
@@ -45,7 +44,6 @@ using IronPython.Runtime.Binding;
 using IronPython.Runtime.Operations;
 
 using AstUtils = Microsoft.Scripting.Ast.Utils;
-using Debugging = Microsoft.Scripting.Debugging;
 #if CODEPLEX_40
 using MSAst = System.Linq.Expressions;
 #else
@@ -73,7 +71,7 @@ namespace IronPython.Compiler.Ast {
         private LabelTarget _returnLabel;                               // the label for the end of the current method, if "return" was used
         private readonly MSAst.SymbolDocumentInfo _document;            // if set, used to wrap expressions with debug information
         private readonly GlobalAllocator/*!*/ _globals;                 // helper class for generating globals code gen
-        private readonly List<ParameterExpression> _locals;             // local variables allocated during the transformation of the code
+        private readonly ReadOnlyCollectionBuilder<ParameterExpression> _locals;             // local variables allocated during the transformation of the code
         private readonly List<ParameterExpression> _params;             // parameters allocated during the transformation of the code
         private List<ClosureInfo> _liftedVars;                          // list of all variables and which ones are closed over.
         private MSAst.ParameterExpression _localCodeContext;            // the current context if it's different from the global context.
@@ -102,7 +100,7 @@ namespace IronPython.Compiler.Ast {
             _isGenerator = generator;
 
             _name = name;
-            _locals = new List<ParameterExpression>();
+            _locals = new ReadOnlyCollectionBuilder<ParameterExpression>();
             _params = new List<ParameterExpression>();
 
             if (profilerName == null) {
@@ -409,7 +407,7 @@ namespace IronPython.Compiler.Ast {
 
             // wrap a scope if needed
             if (_locals != null && _locals.Count > 0) {
-                body = Ast.Block(new ReadOnlyCollection<ParameterExpression>(_locals.ToArray()), body);
+                body = Ast.Block(_locals.ToReadOnlyCollection(), body);
             }
 
             return body;
@@ -549,12 +547,8 @@ namespace IronPython.Compiler.Ast {
         }
 
         internal MSAst.Expression/*!*/ AddReturnTarget(MSAst.Expression/*!*/ expression) {
-            return AddReturnTarget(expression, typeof(object));
-        }
-
-        internal MSAst.Expression/*!*/ AddReturnTarget(MSAst.Expression/*!*/ expression, Type type) {
             if (_returnLabel != null) {
-                expression = Ast.Label(_returnLabel, AstUtils.Convert(expression, type));
+                expression = Ast.Label(_returnLabel, AstUtils.Convert(expression, typeof(object)));
                 _returnLabel = null;
             }
             return expression;
@@ -825,7 +819,7 @@ namespace IronPython.Compiler.Ast {
 
             MSAst.Expression toExpr = fromStmt.Transform(this);
 
-            if (toExpr != null && updateLine) {
+            if (toExpr != null && updateLine && Context.SourceUnit.Kind != SourceCodeKind.Expression) {
                 toExpr = Ast.Block(
                     UpdateLineNumber(fromStmt.Start.Line),
                     toExpr
@@ -996,7 +990,10 @@ namespace IronPython.Compiler.Ast {
         }
 
         internal ScriptCode MakeScriptCode(MSAst.Expression/*!*/ body, CompilerContext/*!*/ context, PythonAst/*!*/ ast) {
-            return Globals.MakeScriptCode(Ast.Block(_locals, body), context, ast);
+            if (_locals.Count > 0) {
+                body = Ast.Block(_locals.ToReadOnlyCollection(), body);
+            }
+            return Globals.MakeScriptCode(body, context, ast);
         }
 
         #region Binder Factories

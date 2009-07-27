@@ -43,6 +43,7 @@ namespace IronPython.Compiler.Ast {
         private bool _nestedFreeVariables;          // nested function with free variable
         private bool _locals;                       // The scope needs locals dictionary
                                                     // due to "exec" or call to dir, locals, eval, vars...
+        private bool _hasLateboundVarSets;          // calls code which can assign to variables
         
         private Dictionary<SymbolId, PythonVariable> _variables;
         private Dictionary<SymbolId, PythonReference> _references;
@@ -80,6 +81,21 @@ namespace IronPython.Compiler.Ast {
         internal bool NeedsLocalsDictionary {
             get { return _locals; }
             set { _locals = value; }
+        }
+
+        /// <summary>
+        /// True if variables can be set in a late bound fashion that we don't
+        /// know about at code gen time - for example via from foo import *.
+        /// 
+        /// This is tracked independently of the ContainsUnqualifiedExec/NeedsLocalsDictionary
+        /// </summary>
+        internal bool HasLateBoundVariableSets {
+            get {
+                return _hasLateboundVarSets;
+            }
+            set {
+                _hasLateboundVarSets = value;
+            }
         }
 
         internal Dictionary<SymbolId, PythonVariable> Variables {

@@ -156,12 +156,12 @@ namespace SymplSample.Hosting {
         }
 
         public override bool TryGetMember(GetMemberBinder binder, out object result) {
-            return _scope.TryGetName(SymbolTable.StringToCaseInsensitiveId(binder.Name),
+            return _scope.TryGetVariable(SymbolTable.StringToCaseInsensitiveId(binder.Name),
                                      out result);
         }
 
         public override bool TrySetMember(SetMemberBinder binder, object value) {
-            _scope.SetName(SymbolTable.StringToId(binder.Name), value);
+            _scope.SetVariable(SymbolTable.StringToId(binder.Name), value);
             return true;
         }
     }

@@ -21,7 +21,6 @@ using System; using Microsoft;
 using System.Diagnostics;
 using IronPython.Runtime.Binding;
 using Microsoft.Scripting;
-using Microsoft.Scripting.Runtime;
 using Microsoft.Scripting.Utils;
 using AstUtils = Microsoft.Scripting.Ast.Utils;
 #if CODEPLEX_40
@@ -37,7 +36,7 @@ namespace IronPython.Compiler.Ast {
     using Ast = Microsoft.Linq.Expressions.Expression;
 #endif
 
-    public class BinaryExpression : Expression {
+    public partial class BinaryExpression : Expression {
         private readonly Expression _left, _right;
         private readonly PythonOperator _op;
 
@@ -151,6 +150,13 @@ namespace IronPython.Compiler.Ast {
         }
 
         internal override MSAst.Expression Transform(AstGenerator ag, Type type) {
+            if (!CanEmitWarning(ag, _op)) {
+                Expression folded = ConstantFold();
+                if (folded != this) {
+                    return folded.Transform(ag, type);
+                }
+            }
+
             MSAst.Expression left = ag.Transform(_left);
 
             if (NeedComparisonTransformation()) {
@@ -194,8 +200,7 @@ namespace IronPython.Compiler.Ast {
             PythonOperationKind action = PythonOperatorToAction(op);
             if (action != PythonOperationKind.None) {
                 // Create action expression
-                if (op == PythonOperator.Divide &&
-                    (ag.DivisionOptions == PythonDivisionOptions.Warn || ag.DivisionOptions == PythonDivisionOptions.WarnAll)) {
+                if (CanEmitWarning(ag, op)) {
                     MSAst.ParameterExpression tempLeft = ag.GetTemporary("left", left.Type);
                     MSAst.ParameterExpression tempRight = ag.GetTemporary("right", right.Type);
                     return Ast.Block(
@@ -235,6 +240,11 @@ namespace IronPython.Compiler.Ast {
                     AstGenerator.ConvertIfNeeded(right, typeof(object))
                 );
             }
+        }
+
+        private static bool CanEmitWarning(AstGenerator ag, PythonOperator op) {
+            return op == PythonOperator.Divide &&
+                                (ag.DivisionOptions == PythonDivisionOptions.Warn || ag.DivisionOptions == PythonDivisionOptions.WarnAll);
         }
 
         public override void Walk(PythonWalker walker) {

@@ -73,9 +73,7 @@ namespace IronRuby.Runtime {
         }
     }
         
-#if !SILVERLIGHT
     [DebuggerTypeProxy(typeof(RubyScope.DebugView))]
-#endif
     public abstract class RubyScope : RuntimeFlowControl {
         internal bool InLoop;
         internal bool InRescue;
@@ -534,7 +532,6 @@ namespace IronRuby.Runtime {
 #endif
         }
 
-#if !SILVERLIGHT
         internal sealed class DebugView {
             private readonly RubyScope/*!*/ _scope;
             [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Performance", "CA1823:AvoidUnusedPrivateFields")]
@@ -554,7 +551,7 @@ namespace IronRuby.Runtime {
                     while (true) {
                         foreach (var variable in scope.GetDeclaredLocalVariables()) {
                             string name = SymbolTable.IdToString(variable.Key);
-                            string className = _scope.RubyContext.GetImmediateClassOf(variable.Value).GetDisplayName(_scope.RubyContext, true).ConvertToString();
+                            string className = _scope.RubyContext.GetClassDisplayName(variable.Value);
                             if (scope != _scope) {
                                 name += " (outer)";
                             }
@@ -576,19 +573,19 @@ namespace IronRuby.Runtime {
             }
 
             [DebuggerDisplay("{B}", Name = "MethodAttributes", Type = "")]
-            public RubyMethodAttributes B {
+            public object B {
                 get { return _scope._methodAttributes; }
             }
 
             [DebuggerDisplay("{C}", Name = "ParentScope", Type = "")]
-            public RubyScope C {
+            public object C {
                 get { return (RubyScope)_scope.Parent; }
             }
 
-            [DebuggerDisplay("", Name = "RawVariables", Type = "")]
-            public System.Collections.Hashtable/*!*/ D {
+            [DebuggerDisplay("", Name = "Raw Variables", Type = "")]
+            public object D {
                 get {
-                    System.Collections.Hashtable result = new System.Collections.Hashtable();
+                    var result = new Dictionary<SymbolId, object>();
                     foreach (var variable in _scope.GetDeclaredLocalVariables()) {
                         result.Add(variable.Key, variable.Value);
                     }
@@ -612,7 +609,6 @@ namespace IronRuby.Runtime {
                 }
             }
         }
-#endif
         #endregion
     }
 
@@ -944,15 +940,15 @@ var closureScope = scope as RubyClosureScope;
                 str = str.Substring(0, str.Length - 1);
                 name = SymbolTable.StringToId(str);
 
-                if (!globalScope.ContainsName(name)) {
+                if (!globalScope.ContainsVariable(name)) {
                     var unmangled = SymbolTable.StringToId(RubyUtils.TryUnmangleName(str));
-                    if (!unmangled.IsEmpty && globalScope.ContainsName(unmangled)) {
+                    if (!unmangled.IsEmpty && globalScope.ContainsVariable(unmangled)) {
                         name = unmangled;
                     }
                 }
 
                 var value = args[0];
-                globalScope.SetName(name, value);
+                globalScope.SetVariable(name, value);
                 return value;
             } else {
                 if (args.Length != 0) {
@@ -960,12 +956,12 @@ var closureScope = scope as RubyClosureScope;
                 }
 
                 object value;
-                if (globalScope.TryGetName(name, out value)) {
+                if (globalScope.TryGetVariable(name, out value)) {
                     return value;
                 }
 
                 string unmangled = RubyUtils.TryUnmangleName(str);
-                if (unmangled != null && globalScope.TryGetName(SymbolTable.StringToId(unmangled), out value)) {
+                if (unmangled != null && globalScope.TryGetVariable(SymbolTable.StringToId(unmangled), out value)) {
                     return value;
                 }
 

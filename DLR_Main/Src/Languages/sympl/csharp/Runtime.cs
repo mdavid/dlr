@@ -176,13 +176,13 @@ namespace SymplSample {
         // from LINQ functionality to avoid referencing System.Core.dll and
         // Microsoft.Scripting.Core.dll for internal building.
 
-        internal static IEnumerable<U> Select<T, U>(this IEnumerable<T> enumerable, Microsoft.Func<T, U> select) {
+        internal static IEnumerable<U> Select<T, U>(this IEnumerable<T> enumerable, Func<T, U> select) {
             foreach (T t in enumerable) {
                 yield return select(t);
             }
         }
 
-        internal static IEnumerable<T> Where<T>(this IEnumerable<T> enumerable, Microsoft.Func<T, bool> where) {
+        internal static IEnumerable<T> Where<T>(this IEnumerable<T> enumerable, Func<T, bool> where) {
             foreach (T t in enumerable) {
                 if (where(t)) {
                     yield return t;
@@ -190,7 +190,7 @@ namespace SymplSample {
             }
         }
 
-        internal static bool Any<T>(this IEnumerable<T> source, Microsoft.Func<T, bool> predicate) {
+        internal static bool Any<T>(this IEnumerable<T> source, Func<T, bool> predicate) {
             foreach (T element in source) {
                 if (predicate(element)) {
                     return true;

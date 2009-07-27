@@ -15,7 +15,7 @@
 using System; using Microsoft;
 
 
-#if MICROSOFT_SCRIPTING_CORE
+#if MICROSOFT_SCRIPTING_CORE || SILVERLIGHT
 #if CODEPLEX_40
 using ILGenerator = System.Linq.Expressions.Compiler.OffsetTrackingILGenerator;
 #else
@@ -35,6 +35,10 @@ using Microsoft.Linq.Expressions.Compiler;
 #endif
 using System.Reflection;
 using System.Reflection.Emit;
+
+#if SILVERLIGHT
+using System.Core;
+#endif
 
 #if CODEPLEX_40
 namespace System.Runtime.CompilerServices {

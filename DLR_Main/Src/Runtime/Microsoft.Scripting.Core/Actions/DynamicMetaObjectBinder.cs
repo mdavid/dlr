@@ -31,7 +31,12 @@ using System.Runtime.CompilerServices;
 using Microsoft.Runtime.CompilerServices;
 #endif
 
+
+#if SILVERLIGHT
+using System.Core;
+#else
 using System.Runtime.Remoting;
+#endif
 
 #if CODEPLEX_40
 namespace System.Dynamic {

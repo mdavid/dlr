@@ -29,6 +29,11 @@ using MSAst = Microsoft.Linq.Expressions;
 #endif
 
 namespace IronPython.Compiler.Ast {
+#if CODEPLEX_40
+    using Ast = System.Linq.Expressions.Expression;
+#else
+    using Ast = Microsoft.Linq.Expressions.Expression;
+#endif
 
     public class GeneratorExpression : Expression {
         private readonly FunctionDefinition _function;
@@ -42,9 +47,8 @@ namespace IronPython.Compiler.Ast {
         internal override MSAst.Expression Transform(AstGenerator ag, Type type) {
             MSAst.Expression func = _function.TransformToFunctionExpression(ag);
 
-            return ag.Invoke(
-                typeof(object),
-                new CallSignature(1),
+            return Ast.Call(
+                AstGenerator.GetHelperMethod("MakeGeneratorExpression"),
                 func,
                 ag.TransformAsObject(_iterable)
             );

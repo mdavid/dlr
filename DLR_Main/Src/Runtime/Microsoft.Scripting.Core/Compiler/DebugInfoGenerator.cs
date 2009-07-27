@@ -13,7 +13,7 @@
  *
  * ***************************************************************************/
 
-#if MICROSOFT_SCRIPTING_CORE
+#if MICROSOFT_SCRIPTING_CORE || SILVERLIGHT
 #if CODEPLEX_40
 using ILGenerator = System.Linq.Expressions.Compiler.OffsetTrackingILGenerator;
 #else

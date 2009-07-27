@@ -424,7 +424,6 @@
       <Compile Include="Runtime\TokenizerService.cs" />
       <Compile Include="Runtime\TokenTriggers.cs" />
       <Compile Include="Runtime\TransformDictEnumerator.cs" />
-      <Compile Include="Runtime\UnboundNameException.cs" />
       <Compile Include="Runtime\Uninitialized.cs" />
     </ItemGroup>
     <ItemGroup>

@@ -110,6 +110,7 @@
       <Compile Include="Builtins\RubyModule.Meta.cs" />
       <Compile Include="Builtins\RubyObject.cs" />
       <Compile Include="Builtins\RubyObject.Meta.cs" />
+      <Compile Include="Builtins\RubyObjectDebugView.cs" />
       <Compile Include="Builtins\RubyRegex.cs" />
       <Compile Include="Builtins\RubyRegex.Subclass.cs" />
       <Compile Include="Builtins\RubyRegexOptions.cs" />

@@ -96,7 +96,7 @@ namespace Microsoft.Scripting.Hosting {
         /// <exception cref="MissingMemberException">The specified name is not defined in the scope.</exception>
         /// <exception cref="ArgumentNullException"><paramref name="name"/> is a <c>null</c> reference.</exception>
         public dynamic GetVariable(string name) {
-            return _scope.LookupName(_engine.LanguageContext, SymbolTable.StringToId(name));
+            return _scope.GetVariable(SymbolTable.StringToId(name));
         }
 
         /// <summary>
@@ -115,7 +115,7 @@ namespace Microsoft.Scripting.Hosting {
         /// </summary>
         /// <exception cref="ArgumentNullException"><paramref name="name"/> is a <c>null</c> reference.</exception>
         public bool TryGetVariable(string name, out dynamic value) {
-            return _scope.TryGetName(SymbolTable.StringToId(name), out value);
+            return _scope.TryGetVariable(SymbolTable.StringToId(name), out value);
         }
 
         /// <summary>
@@ -126,7 +126,7 @@ namespace Microsoft.Scripting.Hosting {
         /// <exception cref="ArgumentNullException"><paramref name="name"/> is a <c>null</c> reference.</exception>
         public bool TryGetVariable<T>(string name, out T value) {
             object result;
-            if (_scope.TryGetName(SymbolTable.StringToId(name), out result)) {
+            if (_scope.TryGetVariable(SymbolTable.StringToId(name), out result)) {
                 value = _engine.Operations.ConvertTo<T>(result);
                 return true;
             }
@@ -139,7 +139,7 @@ namespace Microsoft.Scripting.Hosting {
         /// </summary>
         /// <exception cref="ArgumentNullException"><paramref name="name"/> is a <c>null</c> reference.</exception>
         public void SetVariable(string name, object value) {
-            _scope.SetName(SymbolTable.StringToId(name), value);
+            _scope.SetVariable(SymbolTable.StringToId(name), value);
         }
 
 #if !SILVERLIGHT
@@ -186,7 +186,7 @@ namespace Microsoft.Scripting.Hosting {
         /// </summary>
         /// <exception cref="ArgumentNullException"><paramref name="name"/> is a <c>null</c> reference.</exception>
         public bool ContainsVariable(string name) {
-            return _scope.ContainsName(SymbolTable.StringToId(name));
+            return _scope.ContainsVariable(SymbolTable.StringToId(name));
         }
 
         /// <summary>
@@ -195,7 +195,7 @@ namespace Microsoft.Scripting.Hosting {
         /// <returns><c>true</c> if the value existed in the scope before it has been removed.</returns>
         /// <exception cref="ArgumentNullException"><paramref name="name"/> is a <c>null</c> reference.</exception>
         public bool RemoveVariable(string name) {
-            return _scope.TryRemoveName(SymbolTable.StringToId(name));
+            return _scope.TryRemoveVariable(SymbolTable.StringToId(name));
         }
 
         /// <summary>

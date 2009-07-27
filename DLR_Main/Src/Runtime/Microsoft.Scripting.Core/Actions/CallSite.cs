@@ -31,6 +31,10 @@ using Microsoft.Linq.Expressions.Compiler;
 #endif
 using System.Reflection;
 
+#if SILVERLIGHT
+using System.Core;
+#endif //SILVERLIGHT
+
 #if CODEPLEX_40
 namespace System.Runtime.CompilerServices {
 #else

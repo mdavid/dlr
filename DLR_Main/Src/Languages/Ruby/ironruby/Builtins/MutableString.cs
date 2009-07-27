@@ -520,7 +520,15 @@ namespace IronRuby.Builtins {
         }
 
         /// <summary>
-        /// Makes this string tainted if the specified string is tainted.
+        /// Makes this string tainted if the specified object is tainted.
+        /// </summary>
+        public MutableString/*!*/ TaintBy(IRubyObjectState/*!*/ obj) {
+            IsTainted |= obj.IsTainted;
+            return this;
+        }
+
+        /// <summary>
+        /// Makes this string tainted if the specified object is tainted.
         /// </summary>
         public MutableString/*!*/ TaintBy(object/*!*/ obj, RubyContext/*!*/ context) {
             IsTainted |= context.IsObjectTainted(obj);
@@ -528,7 +536,7 @@ namespace IronRuby.Builtins {
         }
 
         /// <summary>
-        /// Makes this string tainted if the specified string is tainted.
+        /// Makes this string tainted if the specified object is tainted.
         /// </summary>
         public MutableString/*!*/ TaintBy(object/*!*/ obj, RubyScope/*!*/ scope) {
             IsTainted |= scope.RubyContext.IsObjectTainted(obj);

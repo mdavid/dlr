@@ -53,10 +53,15 @@ namespace IronRuby.StandardLibrary.Sockets {
         }
 
         public override void Flush() {
+            if (_internalWriteBuffer.Count == 0) {
+                return;
+            }
+
             byte[] bufferedData = _internalWriteBuffer.ToArray();
             int bytesSent = _socket.Send(bufferedData);
             if (bytesSent < bufferedData.Length) {
                 // TODO: Resend the rest
+                System.Diagnostics.Debug.Assert(false, "Partial data sent");
             }
             _internalWriteBuffer.Clear();
         }
@@ -123,6 +128,7 @@ namespace IronRuby.StandardLibrary.Sockets {
                     Flush();
                 }
             }
+            Flush();
         }
     }
 }

@@ -18,6 +18,7 @@ using System;
 #else
 using System; using Microsoft;
 #endif
+using Microsoft.Scripting;
 using Microsoft.Scripting.Hosting;
 using Microsoft.Scripting.Hosting.Shell;
 using IronRuby;
@@ -47,9 +48,23 @@ internal sealed class RubyConsoleHost : ConsoleHost {
         return Ruby.CreateRubySetup();
     }
 
+    private static void SetHome() {
+        try {
+            PlatformAdaptationLayer platform = PlatformAdaptationLayer.Default;
+            string homeDir = RubyUtils.GetHomeDirectory(platform);
+            platform.SetEnvironmentVariable("HOME", homeDir);
+        } catch (System.Security.SecurityException e) {
+            // Ignore EnvironmentPermission exception
+            if (e.PermissionType != typeof(System.Security.Permissions.EnvironmentPermission)) {
+                throw;
+            }
+        }
+    }
+
     [STAThread]
     [RubyStackTraceHidden]
     static int Main(string[] args) {
+        SetHome();
         return new RubyConsoleHost().Run(args);
     }
 }

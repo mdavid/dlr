@@ -15,9 +15,13 @@
 
 #if CODEPLEX_40
 using System;
-using System.Linq.Expressions;
 #else
 using System; using Microsoft;
+#endif
+using System.Diagnostics;
+#if CODEPLEX_40
+using System.Linq.Expressions;
+#else
 using Microsoft.Linq.Expressions;
 #endif
 
@@ -27,6 +31,7 @@ using Microsoft.Scripting.Interpreter;
 using Microsoft.Scripting.Runtime;
 using Microsoft.Scripting.Utils;
 
+using IronPython.Runtime;
 using IronPython.Runtime.Operations;
 
 namespace IronPython.Compiler {
@@ -216,14 +221,15 @@ namespace IronPython.Compiler {
     class LookupGlobalVariable : Expression, IInstructionProvider, IPythonGlobalExpression {
         private readonly string/*!*/ _name;
         private readonly bool/*!*/ _isLocal;
-        private readonly Expression/*!*/ _scope;
+        private readonly Expression/*!*/ _codeContextExpr;
 
-        public LookupGlobalVariable(Expression/*!*/ scopeExpr, string/*!*/  name, bool isLocal) {
+        public LookupGlobalVariable(Expression/*!*/ codeContextExpr, string/*!*/  name, bool isLocal) {
+            Debug.Assert(codeContextExpr.Type == typeof(CodeContext));
             Assert.NotNull(name);
 
             _name = name;
             _isLocal = isLocal;
-            _scope = scopeExpr;
+            _codeContextExpr = codeContextExpr;
         }
 
         public sealed override ExpressionType NodeType {
@@ -243,7 +249,7 @@ namespace IronPython.Compiler {
         public Expression/*!*/ RawValue() {
             return Expression.Call(
                 typeof(PythonOps).GetMethod(_isLocal ? "RawGetLocal" : "RawGetGlobal"),
-                _scope,
+                _codeContextExpr,
                 Utils.Constant(SymbolTable.StringToId(_name))
             );
         }
@@ -251,7 +257,7 @@ namespace IronPython.Compiler {
         public override Expression/*!*/ Reduce() {
             return Expression.Call(
                 typeof(PythonOps).GetMethod(_isLocal ? "GetLocal" : "GetGlobal"),
-                _scope,
+                _codeContextExpr,
                 Utils.Constant(SymbolTable.StringToId(_name))
             );
         }
@@ -259,7 +265,7 @@ namespace IronPython.Compiler {
         public Expression/*!*/ Assign(Expression/*!*/ value) {
             return Expression.Call(
                 typeof(PythonOps).GetMethod(_isLocal ? "SetLocal" : "SetGlobal"),
-                _scope,
+                _codeContextExpr,
                 Utils.Constant(SymbolTable.StringToId(_name)),
                 value
             );
@@ -268,7 +274,7 @@ namespace IronPython.Compiler {
         public Expression/*!*/ Delete() {
             return Expression.Call(
                 typeof(PythonOps).GetMethod(_isLocal ? "DeleteLocal" : "DeleteGlobal"),
-                _scope,
+                _codeContextExpr,
                 Utils.Constant(SymbolTable.StringToId(_name))
             );
         }
@@ -276,7 +282,7 @@ namespace IronPython.Compiler {
         #region IInstructionProvider Members
 
         void IInstructionProvider.AddInstructions(LightCompiler compiler) {
-            compiler.Compile(_scope);
+            compiler.Compile(_codeContextExpr);
             compiler.AddInstruction(new LookupGlobalInstruction(_name, _isLocal));
         }
 
@@ -294,9 +300,9 @@ namespace IronPython.Compiler {
         public override int ProducedStack { get { return 1; } }
         public override int Run(InterpretedFrame frame) {
             if (_isLocal) {
-                frame.Push(PythonOps.GetLocal((Scope)frame.Pop(), _name));
+                frame.Push(PythonOps.GetLocal((CodeContext)frame.Pop(), _name));
             } else {
-                frame.Push(PythonOps.GetGlobal((Scope)frame.Pop(), _name));
+                frame.Push(PythonOps.GetGlobal((CodeContext)frame.Pop(), _name));
             }
             return +1;
         }

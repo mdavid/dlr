@@ -27,6 +27,7 @@ using Microsoft.Scripting.Runtime;
 
 using IronPython.Compiler.Ast;
 using IronPython.Runtime;
+using IronPython.Runtime.Operations;
 
 #if CODEPLEX_40
 using MSAst = System.Linq.Expressions;
@@ -68,6 +69,9 @@ namespace IronPython.Compiler {
             if (scope == _optimizedContext.Scope) {
                 EnsureCompiled();
 
+                if (_context.SourceUnit.Kind == SourceCodeKind.Expression) {
+                    return OptimizedEvalWrapper();
+                }
                 return _optimizedTarget();
             }
 
@@ -82,7 +86,29 @@ namespace IronPython.Compiler {
                 );
             }
 
+            if (_context.SourceUnit.Kind == SourceCodeKind.Expression) {
+                return EvalWrapper(scope);
+            }
             return _unoptimizedCode.Run(scope);
+        }
+
+        // wrappers so we can do minimal code gen for eval code
+        private object EvalWrapper(Scope scope) {
+            try {
+                return _unoptimizedCode.Run(scope);
+            } catch (Exception) {
+                PythonOps.UpdateStackTrace(new CodeContext(scope, (PythonContext)_optimizedContext.LanguageContext), _optimizedTarget.Method, "<module>", "<string>", 0);
+                throw;
+            }
+        }
+
+        private object OptimizedEvalWrapper() {
+            try {
+                return _optimizedTarget();
+            } catch (Exception) {
+                PythonOps.UpdateStackTrace(_optimizedContext, _optimizedTarget.Method, "<module>", "<string>", 0);
+                throw;
+            }
         }
 
         public override Scope/*!*/ CreateScope() {
