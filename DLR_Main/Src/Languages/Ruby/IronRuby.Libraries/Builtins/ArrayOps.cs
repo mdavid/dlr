@@ -31,6 +31,7 @@ using System.Text;
 using IronRuby.Compiler;
 using IronRuby.Runtime;
 using IronRuby.Runtime.Calls;
+using IronRuby.Runtime.Conversions;
 using Microsoft.Scripting.Actions;
 using Microsoft.Scripting.Generation;
 using Microsoft.Scripting.Runtime;
@@ -267,6 +268,7 @@ namespace IronRuby.Builtins {
             ConversionStorage<MutableString>/*!*/ stringCast, 
             RubyContext/*!*/ context, RubyArray/*!*/ self, [DefaultProtocol, NotNull]MutableString/*!*/ format) {
 
+            // TODO (encoding):
             using (MutableStringStream stream = new MutableStringStream()) {
                 BinaryWriter writer = new BinaryWriter(stream);
                 int i = 0;

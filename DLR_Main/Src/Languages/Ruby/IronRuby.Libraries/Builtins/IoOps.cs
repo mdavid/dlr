@@ -39,6 +39,7 @@ using Ast = System.Linq.Expressions.Expression;
 using Ast = Microsoft.Linq.Expressions.Expression;
 #endif
 using System.Collections;
+using System.Globalization;
 
 namespace IronRuby.Builtins {
 
@@ -479,13 +480,13 @@ namespace IronRuby.Builtins {
         // TODO: 1.9 only
         [RubyMethod("external_encoding")]
         public static RubyEncoding GetExternalEncoding(RubyIO/*!*/ self) {
-            return (self.ExternalEncoding != null) ? RubyEncoding.GetRubyEncoding(self.ExternalEncoding) : null;
+            return self.ExternalEncoding;
         }
 
         // TODO: 1.9 only
         [RubyMethod("internal_encoding")]
         public static RubyEncoding GetInternalEncoding(RubyIO/*!*/ self) {
-            return (self.InternalEncoding != null) ? RubyEncoding.GetRubyEncoding(self.InternalEncoding) : null;
+            return self.InternalEncoding;
         }
 
         // TODO: 1.9 only
@@ -626,7 +627,7 @@ namespace IronRuby.Builtins {
             return c;
         }
 
-        private static readonly MutableString NewLine = MutableString.CreateMutable("\n").Freeze();
+        private static readonly MutableString NewLine = MutableString.CreateMutable("\n", RubyEncoding.Binary).Freeze();
 
         public static MutableString/*!*/ ToPrintedString(ConversionStorage<MutableString>/*!*/ tosConversion, object obj) {
             IDictionary<object, object> hash;
@@ -638,12 +639,12 @@ namespace IronRuby.Builtins {
             } else if ((hash = obj as IDictionary<object, object>) != null) {
                 return IDictionaryOps.ToMutableString(tosConversion, hash);
             } else if (obj == null) {
-                return MutableString.Create("nil");
+                return MutableString.CreateAscii("nil");
             } else if (obj is bool) {
-                return MutableString.Create((bool)obj ? "true" : "false");
+                return MutableString.CreateAscii((bool)obj ? "true" : "false");
             } else if (obj is double) {
                 double value = (double)obj;
-                var result = MutableString.Create(value.ToString(System.Globalization.CultureInfo.InvariantCulture));
+                var result = MutableString.CreateAscii(value.ToString(CultureInfo.InvariantCulture));
                 if ((double)(int)value == value) {
                     result.Append(".0");
                 }
@@ -657,7 +658,7 @@ namespace IronRuby.Builtins {
 
         [RubyMethod("puts")]
         public static void PutsEmptyLine(BinaryOpStorage/*!*/ writeStorage, object self) {
-            Protocols.Write(writeStorage, self, MutableString.CreateMutable("\n"));
+            Protocols.Write(writeStorage, self, MutableString.CreateMutable("\n", RubyEncoding.Binary));
         }
 
         [RubyMethod("puts")]

@@ -84,7 +84,7 @@ namespace IronPython.Runtime.Binding {
             }
         }
 
-        public override bool CanConvertFrom(Type fromType, ParameterWrapper toParameter, NarrowingLevel level) {
+        public override bool CanConvertFrom(Type fromType, DynamicMetaObject fromArg, ParameterWrapper toParameter, NarrowingLevel level) {
             if ((fromType == typeof(List) || fromType.IsSubclassOf(typeof(List)))) {
                 if (toParameter.Type.IsGenericType &&
                     toParameter.Type.GetGenericTypeDefinition() == typeof(IList<>) &&
@@ -107,7 +107,7 @@ namespace IronPython.Runtime.Binding {
                 }
             }
 
-            return base.CanConvertFrom(fromType, toParameter, level);
+            return base.CanConvertFrom(fromType, fromArg, toParameter, level);
         }
 
         protected override BitArray MapSpecialParameters(ParameterMapping/*!*/ mapping) {

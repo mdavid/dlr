@@ -135,29 +135,6 @@ namespace IronRuby.Builtins {
 
         #endregion
 
-        #region Obsolete
-
-        /// <summary>
-        /// Creates an empty textual MutableString.
-        /// </summary>
-        public static MutableString/*!*/ CreateMutable() {
-            // TODO: encoding
-            return new MutableString(RubyEncoding.Obsolete);
-        }
-
-
-        // TODO: encoding
-        public static MutableString/*!*/ CreateMutable(string/*!*/ str) {
-            return new MutableString(str.ToCharArray(), RubyEncoding.Obsolete);
-        }
-
-        // TODO: encoding
-        public static MutableString/*!*/ Create(string/*!*/ str) {
-            return Create(str, RubyEncoding.Obsolete);
-        }
-
-        #endregion
-
         #region Factories
 
         public static MutableString/*!*/ CreateMutable(RubyEncoding/*!*/ encoding) {
@@ -175,6 +152,12 @@ namespace IronRuby.Builtins {
             return new MutableString(str, encoding);
         }
 
+        public static MutableString CreateAscii(string/*!*/ str) {
+            ContractUtils.RequiresNotNull(str, "str");
+            Debug.Assert(str.IsAscii());
+            return Create(str, RubyEncoding.Binary);
+        }
+
         public static MutableString/*!*/ Create(string/*!*/ str, RubyEncoding/*!*/ encoding) {
             ContractUtils.RequiresNotNull(str, "str");
             ContractUtils.RequiresNotNull(encoding, "encoding");
@@ -183,6 +166,10 @@ namespace IronRuby.Builtins {
 
         public static MutableString/*!*/ CreateBinary() {
             return new MutableString(Utils.EmptyBytes, 0, RubyEncoding.Binary);
+        }
+
+        public static MutableString/*!*/ CreateBinary(RubyEncoding/*!*/ encoding) {
+            return new MutableString(Utils.EmptyBytes, 0, encoding);
         }
 
         public static MutableString/*!*/ CreateBinary(int capacity) {
@@ -239,7 +226,7 @@ namespace IronRuby.Builtins {
         }
 
         public static MutableString/*!*/ CreateEmpty() {
-            return MutableString.Create(String.Empty);
+            return MutableString.Create(String.Empty, RubyEncoding.Binary);
         }
 
         /// <summary>
@@ -263,12 +250,14 @@ namespace IronRuby.Builtins {
             return Duplicate(context, copySingletonMembers, CreateInstance());
         }
 
-        public static MutableString[]/*!*/ MakeArray(ICollection<string>/*!*/ stringCollection) {
+        public static MutableString[]/*!*/ MakeArray(ICollection<string>/*!*/ stringCollection, RubyEncoding/*!*/ encoding) {
             ContractUtils.RequiresNotNull(stringCollection, "stringCollection");
+            ContractUtils.RequiresNotNull(encoding, "encoding");
+
             MutableString[] result = new MutableString[stringCollection.Count];
             int i = 0;
             foreach (var str in stringCollection) {
-                result[i++] = MutableString.Create(str);
+                result[i++] = MutableString.Create(str, encoding);
             }
             return result;
         }
@@ -468,6 +457,22 @@ namespace IronRuby.Builtins {
             //}
         }
 
+        /// <summary>
+        /// Checks if the string content is correctly encoded.
+        /// </summary>
+        public MutableString/*!*/ CheckEncoding() {
+            try {
+                _content.CheckEncoding();
+            } catch (EncoderFallbackException) {
+                // TODO: better exception
+                throw;
+            } catch (DecoderFallbackException) {
+                // TODO: better exception
+                throw;
+            }
+            return this;
+        }
+
         public bool IsTainted {
             get {
                 return (_flags & IsTaintedFlag) != 0; 
@@ -627,15 +632,22 @@ namespace IronRuby.Builtins {
         }
 
         // used by auto-conversions
-        [Obsolete("Do not use in code")]
-        public static implicit operator string(MutableString/*!*/ self) {
+        public static explicit operator string(MutableString/*!*/ self) {
             return self._content.ConvertToString();
         }
 
         // used by auto-conversions
-        [Obsolete("Do not use in code")]
-        public static implicit operator byte[](MutableString/*!*/ self) {
+        public static explicit operator byte[](MutableString/*!*/ self) {
             return self._content.ConvertToBytes();
+        }
+
+        // used by auto-conversions
+        public static explicit operator char(MutableString/*!*/ self) {
+            try {
+                return self.GetChar(0);
+            } catch (IndexOutOfRangeException) {
+                throw RubyExceptions.CreateTypeConversionError("String", "System::Char");
+            }
         }
 
         #endregion
@@ -799,7 +811,8 @@ namespace IronRuby.Builtins {
         // TODO: binary ops, ...
         public MutableString[]/*!*/ Split(char[]/*!*/ separators, int maxComponents, StringSplitOptions options) {
             // TODO:
-            return MakeArray(StringUtils.Split(_content.ConvertToString(), separators, maxComponents, options));
+            // TODO (encoding):
+            return MakeArray(StringUtils.Split(_content.ConvertToString(), separators, maxComponents, options), _encoding);
         }
         
         #endregion
@@ -1018,6 +1031,15 @@ namespace IronRuby.Builtins {
                 Mutate();
                 _content.Append(value, 0, value.Length);
             }
+            return this;
+        }
+
+        public MutableString/*!*/ Append(char[]/*!*/ value, int start, int count) {
+            ContractUtils.RequiresNotNull(value, "value");
+            ContractUtils.RequiresArrayRange(value, start, count, "startIndex", "count");
+
+            Mutate();
+            _content.Append(value, start, count);
             return this;
         }
 
@@ -1386,7 +1408,7 @@ namespace IronRuby.Builtins {
 
         #endregion
 
-        #region Quoted Representation
+        #region Quoted Representation (read-only)
 
 #if !SILVERLIGHT
         private sealed class DumpDecoderFallback : DecoderFallback {
@@ -1591,6 +1613,15 @@ namespace IronRuby.Builtins {
             }
         }
 
+        /// <summary>
+        /// Returns a string with all non-ASCII characters replaced by escaped Unicode or hexadecimal numeric sequences.
+        /// </summary>
+        public string/*!*/ ToAsciiString() {
+            var result = AppendRepresentation(new StringBuilder(), false, true, -1).ToString();
+            Debug.Assert(result.IsAscii());
+            return result;
+        }
+
         public StringBuilder/*!*/ AppendRepresentation(StringBuilder/*!*/ result, bool octalEscapes, bool forceEscapes, int quote) {
             ContractUtils.RequiresNotNull(result, "result");
 
@@ -1655,6 +1686,17 @@ namespace IronRuby.Builtins {
             } else {
                 return "String (binary)";
             }
+        }
+
+        #endregion
+
+        #region FormatMessage (read-only)
+
+        /// <summary>
+        /// Formats an error message that can be loaded from resources and thus localized.
+        /// </summary>
+        public static MutableString/*!*/ FormatMessage(string/*!*/ message, params MutableString[]/*!*/ args) {
+            return MutableString.Create(String.Format(message, args), RubyEncoding.UTF8);
         }
 
         #endregion

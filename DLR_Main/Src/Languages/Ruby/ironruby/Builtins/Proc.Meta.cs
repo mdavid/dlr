@@ -46,7 +46,7 @@ namespace IronRuby.Builtins {
             return new Meta(parameter, BindingRestrictions.Empty, this);
         }
 
-        internal sealed class Meta : RubyMetaObject<Proc> {
+        internal sealed class Meta : RubyMetaObject<Proc>, IConvertibleMetaObject {
             public override RubyContext/*!*/ Context {
                 get { return Value.LocalScope.RubyContext; }
             }
@@ -60,6 +60,10 @@ namespace IronRuby.Builtins {
             }
 
             // Conversion to a delegate.
+            public bool CanConvertTo(Type/*!*/ type, bool @explicit) {
+                return typeof(Delegate).IsAssignableFrom(type);
+            }
+
             public override DynamicMetaObject/*!*/ BindConvert(ConvertBinder/*!*/ binder) {
                 return InteropBinder.TryBindCovertToDelegate(this, binder, Methods.CreateDelegateFromProc)
                     ?? base.BindConvert(binder);

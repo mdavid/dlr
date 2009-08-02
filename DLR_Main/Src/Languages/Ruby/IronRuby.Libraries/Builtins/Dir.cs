@@ -52,7 +52,7 @@ namespace IronRuby.Builtins {
             } catch (Exception ex) {
                 throw ToRubyException(ex, strName, DirectoryOperation.Open);
             }
-            _dirName = MutableString.Create(RubyUtils.CanonicalizePath(strName));
+            _dirName = MutableString.Create(RubyUtils.CanonicalizePath(strName), RubyEncoding.Path);
             _closed = false;
             _pos = -2;
         }
@@ -108,7 +108,7 @@ namespace IronRuby.Builtins {
             if (defaultDirectory == null)
                 throw RubyExceptions.CreateArgumentError("HOME / USERPROFILE not set");
 
-            return ChangeDirectory(self, MutableString.Create(defaultDirectory));
+            return ChangeDirectory(self, MutableString.Create(defaultDirectory, RubyEncoding.Path));
 #else
             throw new InvalidOperationException();
 #endif
@@ -144,10 +144,10 @@ namespace IronRuby.Builtins {
             }
 
             RubyArray ret = new RubyArray(rawEntries.Length + 2);
-            ret.Add(MutableString.Create("."));
-            ret.Add(MutableString.Create(".."));
+            ret.Add(MutableString.CreateAscii("."));
+            ret.Add(MutableString.CreateAscii(".."));
             foreach (string entry in rawEntries) {
-                ret.Add(MutableString.Create(Path.GetFileName(entry)));
+                ret.Add(MutableString.Create(Path.GetFileName(entry), RubyEncoding.Path));
             }
             return ret;
         }
@@ -173,7 +173,7 @@ namespace IronRuby.Builtins {
         [RubyMethod("getwd", RubyMethodAttributes.PublicSingleton)]
         [RubyMethod("pwd", RubyMethodAttributes.PublicSingleton)]
         public static MutableString/*!*/ GetCurrentDirectory(object self) {
-            return MutableString.Create(RubyUtils.CanonicalizePath(Directory.GetCurrentDirectory()));
+            return MutableString.Create(RubyUtils.CanonicalizePath(Directory.GetCurrentDirectory()), RubyEncoding.Path);
         }
 
         #region glob
@@ -182,9 +182,9 @@ namespace IronRuby.Builtins {
         public static object Glob([NotNull]BlockParam/*!*/ block, RubyClass/*!*/ self, 
             [DefaultProtocol, NotNull]MutableString/*!*/ pattern, [DefaultProtocol, Optional]int flags) {
 
-            foreach (string fileName in IronRuby.Builtins.Glob.GlobResults(self.Context, pattern.ConvertToString(), flags)) {
+            foreach (string fileName in IronRuby.Builtins.Glob.GlobResults(self.Context.DomainManager.Platform, pattern.ConvertToString(), flags)) {
                 object result;
-                if (block.Yield(MutableString.Create(fileName).TaintBy(pattern), out result)) {
+                if (block.Yield(MutableString.Create(fileName, pattern.Encoding).TaintBy(pattern), out result)) {
                     return result;
                 }
             }
@@ -197,8 +197,8 @@ namespace IronRuby.Builtins {
             [DefaultProtocol, NotNull]MutableString/*!*/ pattern, [DefaultProtocol, Optional]int flags) {
             
             RubyArray result = new RubyArray();
-            foreach (string fileName in IronRuby.Builtins.Glob.GlobResults(self.Context, pattern.ConvertToString(), flags)) {
-                result.Add(MutableString.Create(fileName).TaintBy(pattern));
+            foreach (string fileName in IronRuby.Builtins.Glob.GlobResults(self.Context.DomainManager.Platform, pattern.ConvertToString(), flags)) {
+                result.Add(MutableString.Create(fileName, pattern.Encoding).TaintBy(pattern));
             }
 
             return result;
@@ -290,11 +290,11 @@ namespace IronRuby.Builtins {
 
             MutableString ret;
             if (self._pos == -2) {
-                ret = MutableString.Create(".");
+                ret = MutableString.CreateAscii(".");
             } else if (self._pos == -1) {
-                ret = MutableString.Create("..");
+                ret = MutableString.CreateAscii("..");
             } else {
-                ret = MutableString.Create(Path.GetFileName(self._rawEntries[self._pos]));
+                ret = MutableString.Create(Path.GetFileName(self._rawEntries[self._pos]), RubyEncoding.Path);
             }
             self._pos++;
             return ret;

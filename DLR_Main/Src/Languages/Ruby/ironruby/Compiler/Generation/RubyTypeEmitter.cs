@@ -36,6 +36,7 @@ using System.Linq.Expressions;
 #else
 using Microsoft.Linq.Expressions;
 #endif
+using IronRuby.Runtime.Conversions;
 
 namespace IronRuby.Compiler.Generation {
     public class RubyTypeEmitter : ClsTypeEmitter {

@@ -25,6 +25,8 @@ using Microsoft.Scripting.Actions;
 using Microsoft.Scripting.Utils;
 using IronRuby.Builtins;
 using IronRuby.Runtime;
+using IronRuby.Runtime.Calls;
+using IronRuby.Runtime.Conversions;
 using AstUtils = Microsoft.Scripting.Ast.Utils;
 #if CODEPLEX_40
 using MSA = System.Linq.Expressions;
@@ -38,7 +40,6 @@ namespace IronRuby.Compiler.Ast {
 #else
     using Ast = Microsoft.Linq.Expressions.Expression;
 #endif
-    using IronRuby.Runtime.Calls;
 
     public partial class MatchExpression : Expression {
         private readonly RegularExpression/*!*/ _regex;

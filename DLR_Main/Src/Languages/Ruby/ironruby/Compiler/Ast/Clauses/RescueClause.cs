@@ -15,7 +15,9 @@
 using System; using Microsoft;
 
 
-using System.Collections.Generic;
+using System.Diagnostics;
+using IronRuby.Runtime;
+using IronRuby.Runtime.Conversions;
 using Microsoft.Scripting;
 using Microsoft.Scripting.Ast;
 using Microsoft.Scripting.Utils;
@@ -32,10 +34,6 @@ namespace IronRuby.Compiler.Ast {
 #else
     using Ast = Microsoft.Linq.Expressions.Expression;
 #endif
-    using System.Diagnostics;
-    using IronRuby.Runtime.Calls;
-    using System.Collections;
-    using IronRuby.Runtime;
 
     // rescue type
     //   statements

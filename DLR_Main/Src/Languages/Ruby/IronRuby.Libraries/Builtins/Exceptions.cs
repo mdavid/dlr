@@ -223,7 +223,7 @@ namespace IronRuby.Builtins {
         [RubyConstructor]
         public static ExternalException/*!*/ Factory(RubyClass/*!*/ self, int errorCode) {
             // TODO:
-            var message = MutableString.Create("system error #" + errorCode);
+            var message = MutableString.Create("system error #" + errorCode, RubyEncoding.UTF8);
 
             ExternalException result = new ExternalException(RubyErrno.MakeMessage(ref message, "unknown error"));
             RubyExceptionData.InitializeException(result, message);

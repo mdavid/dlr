@@ -26,7 +26,7 @@ namespace IronRuby.Builtins {
         private int _position;
 
         public MutableStringStream() 
-            : this(MutableString.CreateMutable()) {
+            : this(MutableString.CreateBinary()) {
         }
 
         public MutableStringStream(MutableString/*!*/ basis) {

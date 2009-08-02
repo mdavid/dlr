@@ -45,7 +45,7 @@ namespace IronRuby.Builtins {
 
         [RubyMethod("to_s", RubyMethodAttributes.PublicInstance)]
         public static MutableString/*!*/ ToS(object/*!*/ self) {
-            return MutableString.Create("main");
+            return MutableString.CreateAscii("main");
         }
 
         // thread-safe:

@@ -55,7 +55,8 @@ namespace IronRuby.Tests {
 
                 OverloadResolution_Block1,
                 OverloadResolution_ParamArrays1,
-                AmbiguousMatch,
+                OverloadResolution_Numeric1,
+                AmbiguousMatch1,
                 Interpreter1,
                 Interpreter2,
                 Interpreter3,
@@ -410,6 +411,7 @@ namespace IronRuby.Tests {
                 ClrConstructor4,
                 ClrPrimitiveNumericTypes1,
                 ClrArrays1,
+                ClrArrays2,
                 ClrChar1,
                 ClrOperators1,
                 ClrOperators2,
@@ -604,10 +606,10 @@ namespace IronRuby.Tests {
                 AliasInModuleEval1,
                 MethodAliasInModuleEval1,
                 SuperInModuleEval1,
-                
                 // TODO: SuperParameterlessEval1,
                 // TODO: SuperParameterlessEval2,
                 SuperInDefineMethodEval1,
+                // TODO: NamesEncoding1,
 
                 Backtrace1,
                 Backtrace2,
@@ -621,7 +623,6 @@ namespace IronRuby.Tests {
                 Dlr_Convertible,
                 Dlr_Indexable,
                 Dlr_Number,
-                Dlr_Enumerable,
                 Dlr_Comparable,
                 Dlr_RubyObjects,
                 Dlr_Methods,

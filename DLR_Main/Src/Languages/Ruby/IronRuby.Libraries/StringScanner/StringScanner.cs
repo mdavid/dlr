@@ -125,7 +125,7 @@ namespace IronRuby.StandardLibrary.StringScanner {
             if (subgroup >= self.LastMatchingGroups.Count) {
                 return null;
             }
-            return MutableString.Create(self.LastMatchingGroups[subgroup].ToString());
+            return MutableString.Create(self.LastMatchingGroups[subgroup].ToString(), self._scanString.Encoding);
         }
 
         [RubyMethod("beginning_of_line?")]
@@ -184,7 +184,7 @@ namespace IronRuby.StandardLibrary.StringScanner {
         [RubyMethod("inspect")]
         [RubyMethod("to_s")]
         public static MutableString ToString(StringScanner/*!*/ self) {
-            return MutableString.Create(self.ToString());
+            return MutableString.Create(self.ToString(), self._scanString.Encoding);
         }
 
         [RubyMethod("match?")]
@@ -228,7 +228,7 @@ namespace IronRuby.StandardLibrary.StringScanner {
                 len = maxlen;
             }
             if (self.CurrentPosition >= self.Length || len == 0) {
-                return MutableString.CreateMutable();
+                return MutableString.CreateEmpty();
             }
             return self.ScanString.GetSlice(self.CurrentPosition, len);
         }
@@ -261,7 +261,7 @@ namespace IronRuby.StandardLibrary.StringScanner {
             int position = self.FoundPosition + self.LastMatch.Length;
             int len = self.Length - position;
             if (len <= 0) {
-                return MutableString.CreateMutable();
+                return MutableString.CreateEmpty();
             }
             return self.ScanString.GetSlice(position, len);
         }
@@ -284,7 +284,7 @@ namespace IronRuby.StandardLibrary.StringScanner {
         public static MutableString Rest(StringScanner/*!*/ self) {
             int len = self.Length - self.CurrentPosition;
             if (len <= 0) {
-                return MutableString.CreateMutable();
+                return MutableString.CreateEmpty();
             }
             return self.ScanString.GetSlice(self.CurrentPosition, len);
         }
@@ -431,7 +431,7 @@ namespace IronRuby.StandardLibrary.StringScanner {
             get { return _scanString.Length; }
         }
 
-        private MutableString ScanString {
+        private MutableString/*!*/ ScanString {
             get { return _scanString; }
             set { _scanString = value; }
         }

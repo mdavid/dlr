@@ -127,6 +127,11 @@ public class ClassWithOptionalConstructor {
         Arg = arg;
       }
     }
+#line 31 "./class/derivation/attribute_spec.rb"
+public abstract class Unsafe {
+        [return: MarshalAs(UnmanagedType.U1)]
+        public virtual bool Foo() { return true;}
+      }
 #line 14 "./class/instantiation/abstract_spec.rb"
 public partial class DerivedFromAbstract : AbstractClass {
     public override int m() {return 1;}
@@ -750,6 +755,10 @@ public partial class ClassWithIndexer {
         set { Values[i,j] = value; } 
       }
     }
+#line 5 "./method/invocation/internal_spec.rb"
+internal partial class PartialClassWithMethods {
+    internal int Foo(){ return 1; }
+  }
 #line 4 "./method/invocation/overload_spec.rb"
 public partial class ClassWithOverloads {
     public string PublicProtectedOverload(){
@@ -825,8 +834,16 @@ public class PublicNameHolder {
       public string Mixed_Snake_case() {return "Mixed_Snake_case";}
       public string CAPITAL() { return "CAPITAL";}
       public string PartialCapitalID() { return "PartialCapitalID";}
+      public string PartialCapitalId() { return "PartialCapitalId";}
       public string __LeadingCamelCase() { return "__LeadingCamelCase";}
       public string __leading_snake_case() { return "__leading_snake_case";}
+      public string foNBar() { return "foNBar"; }
+      public string fNNBar() { return "fNNBar"; }
+      public string NNNBar() { return "NNNBar"; }
+      public string MyUIApp() { return "MyUIApp"; }
+      public string MyIdYA() { return "MyIdYA"; }
+      public string NaN() { return "NaN"; }
+      public string NaNa() { return "NaNa"; }
     }
 
     public class SubPublicNameHolder : PublicNameHolder {

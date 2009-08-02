@@ -50,6 +50,9 @@ namespace IronRuby.Builtins {
 
         public static readonly RubyEncoding/*!*/ Binary = new RubyEncoding(BinaryEncoding.Instance, BinaryEncoding.Instance, null);
         public static readonly RubyEncoding/*!*/ UTF8 = new RubyEncoding(new UTF8Encoding(false, false), new UTF8Encoding(false, true), null);
+        public static readonly RubyEncoding/*!*/ ClassName = UTF8; // TODO: remove
+        public static readonly RubyEncoding/*!*/ Symbol = UTF8; // TODO: remove
+        public static readonly RubyEncoding/*!*/ Path = UTF8; // TODO: remove
         public static readonly RubyEncoding/*!*/ Obsolete = Binary;
         
         private static RubyEncoding _default;
@@ -140,7 +143,7 @@ namespace IronRuby.Builtins {
             get { return _encoding; }
         }
 
-        internal Encoding/*!*/ StrictEncoding {
+        public Encoding/*!*/ StrictEncoding {
             get { return _strictEncoding; }
         }
 

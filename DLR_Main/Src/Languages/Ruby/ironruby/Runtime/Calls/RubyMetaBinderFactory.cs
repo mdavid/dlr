@@ -12,6 +12,7 @@ using System.Dynamic;
 #else
 using Microsoft.Scripting;
 #endif
+using IronRuby.Runtime.Conversions;
 
 namespace IronRuby.Runtime.Calls {
     internal sealed class RubyMetaBinderFactory {

@@ -79,7 +79,7 @@ namespace IronRuby.Builtins {
             if (self is RubyObject) {
                 return ToMutableString(self);
             } else {
-                return MutableString.CreateMutable(self.BaseToString());
+                return MutableString.CreateMutable(self.BaseToString(), RubyEncoding.UTF8);
             }
         }
 

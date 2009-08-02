@@ -351,6 +351,8 @@ namespace IronPython.Runtime {
             return false;
         }
 
+        public const object __hash__ = null;
+
         #region ISequence Members
 
         internal void AddRange<T>(ICollection<T> otherList) {

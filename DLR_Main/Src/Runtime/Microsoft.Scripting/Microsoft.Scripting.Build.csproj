@@ -383,6 +383,7 @@
       <Compile Include="Runtime\ExtensionTypeAttribute.cs" />
       <Compile Include="Runtime\ExtraKeyEnumerator.cs" />
       <Compile Include="Runtime\Generator.cs" />
+      <Compile Include="Runtime\IConvertibleMetaObject.cs" />
       <Compile Include="Runtime\ICustomScriptCodeData.cs" />
       <Compile Include="Runtime\IdDispenser.cs" />
       <Compile Include="Runtime\IMembersList.cs" />

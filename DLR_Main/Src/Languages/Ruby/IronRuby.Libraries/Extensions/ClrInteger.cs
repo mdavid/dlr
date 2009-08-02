@@ -859,7 +859,7 @@ namespace IronRuby.Builtins {
         /// <example>12345.to_s => "12345"</example>
         [RubyMethod("to_s")]
         public static object ToString(object/*!*/ self) {
-            return MutableString.Create(self.ToString());
+            return MutableString.CreateAscii(self.ToString());
         }
 
         /// <summary>
@@ -880,7 +880,7 @@ namespace IronRuby.Builtins {
             }
             // TODO: Should we try to use a Fixnum specific ToString?
             // TODO: Can we do the ToLower in BigInteger?
-            return MutableString.Create(self.ToString((uint)radix).ToLower());
+            return MutableString.CreateAscii(self.ToString((uint)radix).ToLower());
         }
 
         #endregion

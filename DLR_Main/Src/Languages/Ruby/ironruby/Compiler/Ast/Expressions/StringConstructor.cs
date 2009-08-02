@@ -26,6 +26,8 @@ using IronRuby.Runtime;
 using IronRuby.Runtime.Calls;
 using Microsoft.Scripting;
 using Microsoft.Scripting.Utils;
+using System.Diagnostics;
+using IronRuby.Runtime.Conversions;
 using AstUtils = Microsoft.Scripting.Ast.Utils;
 
 namespace IronRuby.Compiler.Ast {
@@ -36,7 +38,6 @@ namespace IronRuby.Compiler.Ast {
     using Ast = Microsoft.Linq.Expressions.Expression;
     using MSA = Microsoft.Linq.Expressions;
 #endif
-    using System.Diagnostics;
 
     public enum StringKind {
         Mutable,

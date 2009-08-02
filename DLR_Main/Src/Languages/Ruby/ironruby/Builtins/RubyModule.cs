@@ -1677,8 +1677,8 @@ namespace IronRuby.Builtins {
 
         private bool TryGetClrMember(string/*!*/ name, bool virtualLookup, out RubyMemberInfo method) {
             // Skip hidden CLR overloads.
-            // Skip lookup on types that are not visible or interfaces.
-            if (_typeTracker != null && !_typeTracker.Type.IsInterface) {
+            // Skip lookup on types that are not visible, that are interfaces or generic type definitions.
+            if (_typeTracker != null && !_typeTracker.Type.IsInterface && !_typeTracker.Type.IsGenericTypeDefinition) {
                 // Note: Do not allow mangling for CLR virtual lookups - we want to match the overridden name exactly as is, 
                 // so that it corresponds to the base method call the override stub performs.
                 bool tryUnmangle = !virtualLookup && (_restrictions & ModuleRestrictions.NoNameMangling) == 0;
@@ -1912,14 +1912,6 @@ namespace IronRuby.Builtins {
 
             foreach (RubyModule module in expanded) {
                 if (module.IsInterface) {
-                    // Can't include generic interfaces
-                    if (module.TypeTracker.Type.ContainsGenericParameters) {
-                        throw RubyExceptions.CreateTypeError(String.Format(
-                            "{0}: cannot extend with open generic instantiation {1}. Only closed instantiations are supported.",
-                            Name, module.Name
-                            ));
-                    }
-
                     if (!CanIncludeClrInterface) {
                         bool alreadyIncluded = false;
                         foreach (RubyModule includedModule in _mixins) {
@@ -2014,11 +2006,11 @@ namespace IronRuby.Builtins {
             get { return true; }
         }
 
-        internal List<Type> GetClrInterfaces() {
+        internal List<Type> GetImplementedInterfaces() {
             List<Type> interfaces = new List<Type>();
             using (Context.ClassHierarchyLocker()) {
                 foreach (RubyModule m in _mixins) {
-                    if (m.IsInterface && !interfaces.Contains(m.TypeTracker.Type)) {
+                    if (m.IsInterface && !m.TypeTracker.Type.IsGenericTypeDefinition && !interfaces.Contains(m.TypeTracker.Type)) {
                         interfaces.Add(m.TypeTracker.Type);
                     }
                 }
@@ -2082,7 +2074,7 @@ namespace IronRuby.Builtins {
             if (IsSingletonClass) {
                 RubyClass c = (RubyClass)this;
                 object singletonOf;
-                MutableString result = MutableString.CreateMutable();
+                MutableString result = MutableString.CreateMutable(RubyEncoding.ClassName);
 
                 int nestings = 0;
                 while (true) {
@@ -2114,7 +2106,7 @@ namespace IronRuby.Builtins {
                 if (showEmptyName) {
                     return MutableString.FrozenEmpty;
                 } else {
-                    MutableString result = MutableString.CreateMutable();
+                    MutableString result = MutableString.CreateMutable(RubyEncoding.ClassName);
                     result.Append("#<");
                     result.Append(_context.GetClassOf(this).GetName(context));
                     result.Append(':');
@@ -2123,7 +2115,7 @@ namespace IronRuby.Builtins {
                     return result;
                 }
             } else {
-                return MutableString.CreateMutable(GetName(context));
+                return MutableString.CreateMutable(GetName(context), RubyEncoding.ClassName);
             }
         }
 

@@ -42,7 +42,7 @@ namespace IronRuby.Runtime.Calls {
     using Ast = Microsoft.Linq.Expressions.Expression;
 #endif
 
-    interface IRubyDynamicMetaObjectProvider : IDynamicMetaObjectProvider {
+    public interface IRubyDynamicMetaObjectProvider : IDynamicMetaObjectProvider {
     }
 
     public abstract class RubyMetaObject : DynamicMetaObject {
@@ -85,6 +85,11 @@ namespace IronRuby.Runtime.Calls {
         public override DynamicMetaObject/*!*/ BindBinaryOperation(BinaryOperationBinder/*!*/ binder, DynamicMetaObject/*!*/ arg) {
             return InteropBinder.BinaryOperation.Bind(CreateMetaContext(), binder, this, arg, binder.FallbackBinaryOperation);
         }
+
+        // TODO:
+        //public override DynamicMetaObject/*!*/ BindConvert(ConvertBinder/*!*/ binder) {
+        //    return InteropBinder.Convert.Bind(CreateMetaContext(), binder, this, binder.FallbackConvert);
+        //}
     }
     
     public abstract class RubyMetaObject<T> : RubyMetaObject {

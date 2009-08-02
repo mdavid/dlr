@@ -36,6 +36,7 @@ using IronRuby.Runtime.Calls;
 using Microsoft.Scripting;
 using Microsoft.Scripting.Runtime;
 using Microsoft.Scripting.Utils;
+using IronRuby.Runtime.Conversions;
 
 namespace IronRuby.Runtime {
     [Flags]
@@ -153,7 +154,7 @@ namespace IronRuby.Runtime {
             
             if (options.HasSearchPaths) {
                 foreach (string path in options.SearchPaths) {
-                    loadPaths.Add(MutableString.Create(path.Replace('\\', '/')));
+                    loadPaths.Add(MutableString.Create(path.Replace('\\', '/'), RubyEncoding.Path));
                 }
             }
             
@@ -167,7 +168,7 @@ namespace IronRuby.Runtime {
             
             AddAbsoluteLibraryPaths(loadPaths, applicationBaseDir, options.LibraryPaths);
 #endif
-            loadPaths.Add(MutableString.Create("."));
+            loadPaths.Add(MutableString.CreateAscii("."));
             return loadPaths;
         }
 
@@ -184,7 +185,7 @@ namespace IronRuby.Runtime {
                 } else {
                     fullPath = path;
                 }
-                result.Add(MutableString.Create(fullPath.Replace('\\', '/')));
+                result.Add(MutableString.Create(fullPath.Replace('\\', '/'), RubyEncoding.Path));
             }
         }
 
@@ -479,7 +480,7 @@ namespace IronRuby.Runtime {
                 throw new LoadError(String.Format("no such file to load -- {0}", path));
             }
 
-            MutableString pathWithExtension = MutableString.Create(path);
+            MutableString pathWithExtension = MutableString.Create(path, RubyEncoding.Path);
             if (file.AppendedExtension != null) {
                 pathWithExtension.Append(file.AppendedExtension);
             }
@@ -738,7 +739,7 @@ namespace IronRuby.Runtime {
             lock (_loadPaths) {
                 _loadPaths.Clear();
                 foreach (string path in paths) {
-                    _loadPaths.Add(MutableString.Create(path));
+                    _loadPaths.Add(MutableString.Create(path, RubyEncoding.Path));
                 }
             }
         }
@@ -748,7 +749,7 @@ namespace IronRuby.Runtime {
 
             lock (_loadPaths) {
                 foreach (string path in paths) {
-                    _loadPaths.Add(MutableString.Create(path));
+                    _loadPaths.Add(MutableString.Create(path, RubyEncoding.Path));
                 }
             }
         }
@@ -758,7 +759,7 @@ namespace IronRuby.Runtime {
 
             lock (_loadPaths) {
                 foreach (string path in paths) {
-                    _loadPaths.Insert(0, MutableString.Create(path));
+                    _loadPaths.Insert(0, MutableString.Create(path, RubyEncoding.Path));
                 }
             }
         }

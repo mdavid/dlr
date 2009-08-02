@@ -124,7 +124,7 @@ namespace IronRuby.StandardLibrary.Yaml {
 
             public object Construct(BaseConstructor ctor, string tag, Node node) {                
                 object result;
-                _block.Yield(MutableString.Create(tag), ctor.ConstructPrimitive(node), out result);
+                _block.Yield(MutableString.Create(tag, RubyEncoding.UTF8), ctor.ConstructPrimitive(node), out result);
                 return result;                
             }
 
@@ -153,7 +153,7 @@ namespace IronRuby.StandardLibrary.Yaml {
             }
             string str = value as string;
             if (str != null) {
-                return MutableString.Create(str);
+                return MutableString.Create(str, RubyEncoding.UTF8);
             }
             return value;
         }

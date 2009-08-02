@@ -183,7 +183,7 @@ namespace IronRuby.Runtime {
                     }
 
                     if (skipFrames == 0) {
-                        result.Add(MutableString.Create(FormatFrame(file, line, methodName)));
+                        result.Add(MutableString.Create(FormatFrame(file, line, methodName), RubyEncoding.UTF8));
                     } else {
                         skipFrames--;
                     }
@@ -282,7 +282,7 @@ namespace IronRuby.Runtime {
         }
 
         // \u2111\u211c;{method-name};{file-name};{line-number};{dlr-suffix}
-        private static bool TryParseRubyMethodName(ref string methodName, ref string fileName, ref int line) {
+        internal static bool TryParseRubyMethodName(ref string methodName, ref string fileName, ref int line) {
             if (methodName.StartsWith(RubyMethodPrefix)) {
                 string[] parts = methodName.Split(';');
                 if (parts.Length > 4) {
@@ -357,7 +357,7 @@ namespace IronRuby.Runtime {
         public object Message {
             get {
                 if (_message == null) {
-                    _message = MutableString.Create(_visibleException.Message);
+                    _message = MutableString.Create(_visibleException.Message, RubyEncoding.UTF8);
                 }
                 return _message;
             }

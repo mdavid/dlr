@@ -32,6 +32,9 @@ namespace IronRuby.Builtins {
     [RubyConstant("ENV")]
     [RubySingleton, Includes(typeof(Enumerable))]
     public static class EnvironmentSingletonOps {
+        private static MutableString/*!*/ FrozenString(object/*!*/ value) {
+            return MutableString.Create((string)value, RubyEncoding.UTF8).Freeze();
+        }
 
         #region Public Instance Methods
 
@@ -40,7 +43,7 @@ namespace IronRuby.Builtins {
         public static MutableString GetVariable(RubyContext/*!*/ context, object/*!*/ self, [DefaultProtocol, NotNull]MutableString/*!*/ name) {
             PlatformAdaptationLayer pal = context.DomainManager.Platform;
             string value = pal.GetEnvironmentVariable(name.ConvertToString());
-            return (value != null) ? MutableString.Create(value) : null;
+            return (value != null) ? FrozenString(value) : null;
         }
 
         [RubyMethod("[]=", RubyMethodAttributes.PublicInstance)]
@@ -79,8 +82,8 @@ namespace IronRuby.Builtins {
             }
 
             foreach (DictionaryEntry entry in variables) {
-                MutableString key = MutableString.Create(entry.Key.ToString()).Freeze();
-                MutableString value = MutableString.Create(entry.Value.ToString()).Freeze();
+                MutableString key = FrozenString(entry.Key);
+                MutableString value = FrozenString(entry.Value);
                 object result;
                 if (block.Yield(key, value, out result)) {
                     return result;
@@ -104,8 +107,8 @@ namespace IronRuby.Builtins {
 
             foreach (DictionaryEntry entry in variables) {
                 RubyArray array = new RubyArray(2);
-                array.Add(MutableString.Create(entry.Key.ToString()).Freeze());
-                array.Add(MutableString.Create(entry.Value.ToString()).Freeze());
+                array.Add(FrozenString(entry.Key));
+                array.Add(FrozenString(entry.Value));
                 object result;
                 if (block.Yield(array, out result)) {
                     return result;
@@ -123,7 +126,7 @@ namespace IronRuby.Builtins {
             }
 
             foreach (DictionaryEntry entry in variables) {
-                MutableString name = MutableString.Create(entry.Key.ToString()).Freeze();
+                MutableString name = FrozenString(entry.Key);
                 object result;
                 if (block.Yield(name, out result)) {
                     return result;
@@ -141,7 +144,7 @@ namespace IronRuby.Builtins {
             }
 
             foreach (DictionaryEntry entry in variables) {
-                MutableString value = MutableString.Create(entry.Value.ToString()).Freeze();
+                MutableString value = FrozenString(entry.Value);
                 object result;
                 if (block.Yield(value, out result)) {
                     return result;
@@ -189,7 +192,7 @@ namespace IronRuby.Builtins {
             PlatformAdaptationLayer pal = context.DomainManager.Platform;
             foreach (DictionaryEntry entry in pal.GetEnvironmentVariables()) {
                 if (strValue.Equals(entry.Value)) {
-                    return MutableString.Create(entry.Key.ToString()).Freeze();
+                    return FrozenString(entry.Key);
                 }
             }
             return null;
@@ -219,7 +222,7 @@ namespace IronRuby.Builtins {
             PlatformAdaptationLayer pal = context.DomainManager.Platform;
             Hash result = new Hash(context);
             foreach (DictionaryEntry entry in pal.GetEnvironmentVariables()) {
-                result.Add(MutableString.Create(entry.Value.ToString()).Freeze(), MutableString.Create(entry.Key.ToString()).Freeze());
+                result.Add(FrozenString(entry.Value), FrozenString(entry.Key));
             }
             return result;
         }
@@ -230,7 +233,7 @@ namespace IronRuby.Builtins {
             IDictionary variables = pal.GetEnvironmentVariables();
             RubyArray result = new RubyArray(variables.Count);
             foreach (DictionaryEntry entry in variables) {
-                result.Add(MutableString.Create(entry.Key.ToString()).Freeze());
+                result.Add(FrozenString(entry.Key));
             }
             return result;
         }
@@ -279,10 +282,9 @@ namespace IronRuby.Builtins {
             }
             RubyArray result = new RubyArray(2);
             foreach (DictionaryEntry entry in pal.GetEnvironmentVariables()) {
-                string key = entry.Key.ToString();
-                result.Add(MutableString.Create(key).Freeze());
-                result.Add(MutableString.Create(entry.Value.ToString()).Freeze());
-                pal.SetEnvironmentVariable(key, null);
+                result.Add(FrozenString(entry.Key));
+                result.Add(FrozenString(entry.Value));
+                pal.SetEnvironmentVariable((string)entry.Key, null);
                 break;
             }
             return result;
@@ -293,14 +295,14 @@ namespace IronRuby.Builtins {
             PlatformAdaptationLayer pal = context.DomainManager.Platform;
             Hash result = new Hash(context);
             foreach (DictionaryEntry entry in pal.GetEnvironmentVariables()) {
-                result.Add(MutableString.Create(entry.Key.ToString()).Freeze(), MutableString.Create(entry.Value.ToString()).Freeze());
+                result.Add(FrozenString(entry.Key), FrozenString(entry.Value));
             }
             return result;
         }
 
         [RubyMethod("to_s")]
         public static MutableString/*!*/ ToString(object/*!*/ self) {
-            return MutableString.Create("ENV");
+            return MutableString.CreateAscii("ENV");
         }
 
         [RubyMethod("values")]
@@ -309,7 +311,7 @@ namespace IronRuby.Builtins {
             IDictionary variables = pal.GetEnvironmentVariables();
             RubyArray result = new RubyArray(variables.Count);
             foreach (DictionaryEntry entry in variables) {
-                result.Add(MutableString.Create(entry.Value.ToString()).Freeze());
+                result.Add(FrozenString(entry.Value));
             }
             return result;
         }

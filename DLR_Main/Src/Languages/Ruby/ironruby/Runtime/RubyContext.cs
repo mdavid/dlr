@@ -20,29 +20,29 @@ using System; using Microsoft;
 #endif
 using System.Collections.Generic;
 using System.Diagnostics;
+#if CODEPLEX_40
+using System.Dynamic;
+#else
+#endif
 using System.IO;
 using System.Runtime.CompilerServices;
 #if !CODEPLEX_40
 using Microsoft.Runtime.CompilerServices;
 #endif
 
-#if CODEPLEX_40
-using System.Dynamic;
-#else
-#endif
 using System.Security;
 using System.Text;
 using System.Threading;
 using IronRuby.Builtins;
 using IronRuby.Compiler;
+using IronRuby.Compiler.Ast;
 using IronRuby.Compiler.Generation;
 using IronRuby.Runtime.Calls;
+using IronRuby.Runtime.Conversions;
 using Microsoft.Scripting;
 using Microsoft.Scripting.Actions;
-using Microsoft.Scripting.Generation;
 using Microsoft.Scripting.Runtime;
 using Microsoft.Scripting.Utils;
-using IronRuby.Compiler.Ast;
 #if CODEPLEX_40
 using MSA = System.Linq.Expressions;
 #else
@@ -393,7 +393,7 @@ namespace IronRuby.Runtime {
             _runtimeId = Interlocked.Increment(ref _RuntimeIdGenerator);
             _upTime = new Stopwatch();
             _upTime.Start();
-
+            
             Binder = new RubyBinder(this);
 
             _metaBinderFactory = new RubyMetaBinderFactory(this);
@@ -404,17 +404,17 @@ namespace IronRuby.Runtime {
             _namespaceCache = new Dictionary<NamespaceTracker, RubyModule>();
             _referenceTypeInstanceData = new WeakTable<object, RubyInstanceData>();
             _valueTypeInstanceData = new Dictionary<object, RubyInstanceData>();
-            _inputProvider = new RubyInputProvider(this, _options.Arguments);
+            _inputProvider = new RubyInputProvider(this, _options.Arguments, _options.ArgumentEncoding);
             _globalScope = DomainManager.Globals;
             _loader = new Loader(this);
             _emptyScope = new RubyTopLevelScope(this);
             if (_options.MainFile != null) {
-                _commandLineProgramPath = MutableString.Create(_options.MainFile);
+                _commandLineProgramPath = MutableString.Create(_options.MainFile, RubyEncoding.Path);
             }
             _currentException = null;
             _currentSafeLevel = 0;
             _childProcessExitStatus = null;
-            _inputSeparator = MutableString.Create("\n");
+            _inputSeparator = MutableString.CreateAscii("\n");
             _outputSeparator = null;
             _stringSeparator = null;
             _itemSeparator = null;
@@ -517,10 +517,10 @@ namespace IronRuby.Runtime {
         private void InitializeGlobalConstants() {
             Debug.Assert(_objectClass != null);
 
-            MutableString version = MutableString.Create(RubyContext.MriVersion);
-            MutableString platform = MutableString.Create("i386-mswin32");   // TODO: make this the correct string for MAC OS X in Silverlight
-            MutableString releaseDate = MutableString.Create(RubyContext.MriReleaseDate);
-            MutableString rubyEngine = MutableString.Create("ironruby");
+            MutableString version = MutableString.CreateAscii(RubyContext.MriVersion);
+            MutableString platform = MutableString.CreateAscii("i386-mswin32");   // TODO: make this the correct string for MAC OS X in Silverlight
+            MutableString releaseDate = MutableString.CreateAscii(RubyContext.MriReleaseDate);
+            MutableString rubyEngine = MutableString.CreateAscii("ironruby");
 
             SetGlobalConstant("RUBY_ENGINE", rubyEngine);
             SetGlobalConstant("RUBY_VERSION", version);
@@ -532,7 +532,7 @@ namespace IronRuby.Runtime {
             SetGlobalConstant("PLATFORM", platform);
             SetGlobalConstant("RELEASE_DATE", releaseDate);
 
-            SetGlobalConstant("IRONRUBY_VERSION", MutableString.Create(RubyContext.IronRubyVersionString));
+            SetGlobalConstant("IRONRUBY_VERSION", MutableString.CreateAscii(RubyContext.IronRubyVersionString));
 
             SetGlobalConstant("STDIN", StandardInput);
             SetGlobalConstant("STDOUT", StandardOutput);
@@ -733,7 +733,16 @@ namespace IronRuby.Runtime {
             }
 
             TypeTracker tracker = (TypeTracker)TypeTracker.FromMemberInfo(interfaceType);
-            result = CreateModule(GetQualifiedNameNoLock(interfaceType), null, null, null, null, null, tracker, ModuleRestrictions.None);
+
+            RubyModule[] mixins;
+            if (interfaceType.IsGenericType && !interfaceType.IsGenericTypeDefinition) {
+                // I<T0..Tn> mixes in its generic definition I<,..,>
+                mixins = new[] { GetOrCreateModuleNoLock(interfaceType.GetGenericTypeDefinition()) };
+            } else {
+                mixins = null;
+            }
+
+            result = CreateModule(GetQualifiedNameNoLock(interfaceType), null, null, null, mixins, null, tracker, ModuleRestrictions.None);
             _moduleCache[interfaceType] = result;
             return result;
         }
@@ -746,7 +755,15 @@ namespace IronRuby.Runtime {
                 return result;
             }
 
-            RubyClass baseClass = GetOrCreateClassNoLock(type.BaseType);
+            RubyClass baseClass;
+
+            if (type.IsGenericType && !type.IsGenericTypeDefinition) {
+                // C<T0..Tn>'s super class is its generic definition C<,..,>
+                baseClass = GetOrCreateClassNoLock(type.GetGenericTypeDefinition());
+            } else {
+                baseClass = GetOrCreateClassNoLock(type.BaseType);
+            }
+
             TypeTracker tracker = (TypeTracker)TypeTracker.FromMemberInfo(type);
             RubyModule[] interfaceMixins = GetDeclaredInterfaceModulesNoLock(type);
             RubyModule[] expandedMixins;
@@ -2054,14 +2071,15 @@ namespace IronRuby.Runtime {
 
                     int i = 0;
                     foreach (var counter in profile) {
-                        if (counter.Key.Length > maxLength) {
-                            maxLength = counter.Key.Length;
+                        string methodInfo = counter.Id;
+                        if (methodInfo.Length > maxLength) {
+                            maxLength = methodInfo.Length;
                         }
 
-                        totalTicks += counter.Value;
+                        totalTicks += counter.Ticks;
 
-                        keys[i] = counter.Key;
-                        values[i] = counter.Value;
+                        keys[i] = methodInfo;
+                        values[i] = counter.Ticks;
                         i++;
                     }
 
@@ -2397,12 +2415,12 @@ namespace IronRuby.Runtime {
                     _traceListenerSuspended = true;
 
                     _traceListener.Call(new[] {
-                        MutableString.Create(operation),                                          // event
-                        fileName != null ? MutableString.Create(fileName) : null,                 // file
-                        ScriptingRuntimeHelpers.Int32ToObject(lineNumber),                        // line
-                        SymbolTable.StringToId(name),                                             // TODO: alias
-                        new Binding(scope),                                                       // binding
-                        module.IsSingletonClass ? ((RubyClass)module).SingletonClassOf : module   // module
+                        MutableString.CreateAscii(operation),                                         // event
+                        fileName != null ? MutableString.Create(fileName, RubyEncoding.Path) : null,  // file
+                        ScriptingRuntimeHelpers.Int32ToObject(lineNumber),                            // line
+                        SymbolTable.StringToId(name),                                                 // TODO: alias
+                        new Binding(scope),                                                           // binding
+                        module.IsSingletonClass ? ((RubyClass)module).SingletonClassOf : module       // module
                     });
                 } finally {
                     _traceListenerSuspended = false;

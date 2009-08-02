@@ -34,7 +34,7 @@ namespace IronRuby.Builtins {
         [RubyMethod("id2name")]
         [RubyMethod("to_s")]
         public static MutableString/*!*/ ToString(SymbolId self) {
-            return MutableString.Create(SymbolTable.IdToString(self));
+            return MutableString.Create(SymbolTable.IdToString(self), RubyEncoding.Symbol);
         }
 
         [RubyMethod("inspect")]
@@ -58,7 +58,7 @@ namespace IronRuby.Builtins {
             switch (str) {
                 case null:
                     // Ruby doesn't allow empty symbols, we can get one from outside though:
-                    return MutableString.Create(":\"\"");
+                    return MutableString.CreateAscii(":\"\"");
 
                 case "|":
                 case "^":

@@ -32,6 +32,7 @@ using Microsoft.Scripting.Utils;
 using IronRuby.Builtins;
 using IronRuby.Runtime;
 using IronRuby.Runtime.Calls;
+using IronRuby.Runtime.Conversions;
 #if CODEPLEX_40
 using MSA = System.Linq.Expressions;
 #else
