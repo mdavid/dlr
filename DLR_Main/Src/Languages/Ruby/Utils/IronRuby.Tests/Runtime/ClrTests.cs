@@ -1479,6 +1479,65 @@ false
 ");
         }
 
+        public class ClassWithVirtualEvent1 {
+            public virtual event Func<int, int> OnEvent;
+
+            public int Fire(int arg) {
+                return OnEvent(arg);
+            }
+        }
+
+        public void ClrEventImpl1() {
+            // TODO: fix
+            if (_driver.PartialTrust) return;
+
+            var e = new ClassWithVirtualEvent1();
+            Context.ObjectClass.SetConstant("E", Context.GetClass(typeof(ClassWithVirtualEvent1)));
+
+            var f = Engine.Execute<ClassWithVirtualEvent1>(@"
+class F < E
+  def add_OnEvent handler
+    puts 'add ' + handler.inspect
+    super
+  end
+
+  def remove_OnEvent handler
+    puts 'remove ' + handler.inspect
+    super
+  end
+end
+
+F.new
+");
+            var handler = new Func<int, int>((i) => i + 1);
+
+#if CODEPLEX_40
+            AssertOutput(() => f.OnEvent += handler, @"add System.Func`2[System.Int32,System.Int32]");
+#else
+            AssertOutput(() => f.OnEvent += handler, @"add Microsoft.Func`2[System.Int32,System.Int32]");
+#endif
+            var r = f.Fire(10);
+            Assert(r == 11);
+#if CODEPLEX_40
+            AssertOutput(() => f.OnEvent -= handler, @"remove System.Func`2[System.Int32,System.Int32]");
+#else
+            AssertOutput(() => f.OnEvent -= handler, @"remove Microsoft.Func`2[System.Int32,System.Int32]");
+#endif
+
+            TestOutput(@"
+f = F.new
+f.on_event { |x| x * 2 }
+puts f.fire(10)
+", @"
+#if CODEPLEX_40
+add System.Func`2[System.Int32,System.Int32]
+#else
+add Microsoft.Func`2[System.Int32,System.Int32]
+#endif
+20
+");
+        }
+
         #endregion
 
         #region Virtual method overrides
@@ -2025,6 +2084,16 @@ init
 Init
 init
 ");
+        }
+
+        public struct Struct1 {
+            public int Foo;
+        }
+
+        public void ClrConstructor5() {
+            Context.ObjectClass.SetConstant("S", Context.GetClass(typeof(Struct1)));
+            var s = Engine.Execute(@"S.new");
+            Assert(s is Struct1);
         }
 
         #endregion

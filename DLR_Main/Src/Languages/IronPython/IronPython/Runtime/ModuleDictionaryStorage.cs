@@ -138,11 +138,10 @@ namespace IronPython.Runtime {
                             return true;
                         case MemberTypes.Method:
                             if (!((MethodInfo)members[0]).IsSpecialName) {
-                                value = BuiltinFunction.MakeMethod(
+                                value = BuiltinFunction.MakeFunction(
                                     name,
                                     ArrayUtils.ConvertAll<MemberInfo, MethodInfo>(members, delegate(MemberInfo mi) { return (MethodInfo)mi; }),
-                                    members[0].DeclaringType,
-                                    FunctionType.AlwaysVisible | FunctionType.Function
+                                    members[0].DeclaringType
                                     );
 
                                 if (publish) {

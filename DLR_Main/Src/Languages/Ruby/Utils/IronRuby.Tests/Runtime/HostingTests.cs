@@ -202,9 +202,8 @@ bar
 
         public void Scenario_RubyInteractive1() {
             ScriptScope scope = Runtime.CreateScope();
-            AssertOutput(delegate() {
-                Engine.CreateScriptSourceFromString("1+1", SourceCodeKind.InteractiveCode).Execute(scope);
-            }, "=> 2");
+            AssertOutput(() => Engine.CreateScriptSourceFromString("", SourceCodeKind.InteractiveCode).Execute(scope), "");
+            AssertOutput(() => Engine.CreateScriptSourceFromString("x = 1 + 1", SourceCodeKind.InteractiveCode).Execute(scope), "=> 2");
         }
 
         public void Scenario_RubyInteractive2() {

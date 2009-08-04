@@ -321,6 +321,8 @@ namespace IronRuby.Runtime {
                             return null;
                         }
                     }
+                } else if (c == '_') {
+                    return null;
                 } else {
                     if (mangled != null) {
                         mangled.Append(c);
