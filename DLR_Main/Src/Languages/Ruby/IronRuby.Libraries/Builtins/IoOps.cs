@@ -217,7 +217,7 @@ namespace IronRuby.Builtins {
             try {
                 process = Process.Start(startInfo);
             } catch (Exception e) {
-                throw RubyErrno.CreateENOENT(startInfo.FileName, e);
+                throw RubyExceptions.CreateENOENT(startInfo.FileName, e);
             }
 
             context.ChildProcessExitStatus = new RubyProcess.Status(process);
@@ -282,7 +282,7 @@ namespace IronRuby.Builtins {
                         return null;
                     }
                 } catch (Exception e) {
-                    throw RubyErrno.CreateEINVAL(e.Message, e);
+                    throw RubyExceptions.CreateEINVAL(e.Message, e);
                 }
 
                 result = new RubyArray();
@@ -724,7 +724,7 @@ namespace IronRuby.Builtins {
         private static RubyIO/*!*/ OpenFileForRead(RubyContext/*!*/ context, MutableString/*!*/ path) {
             string strPath = path.ConvertToString();
             if (!File.Exists(strPath)) {
-                throw RubyErrno.CreateENOENT(String.Format("No such file or directory - {0}", strPath));
+                throw RubyExceptions.CreateENOENT(String.Format("No such file or directory - {0}", strPath));
             }
             return new RubyIO(context, File.OpenRead(strPath), "r");
         }
@@ -783,7 +783,7 @@ namespace IronRuby.Builtins {
             [DefaultProtocol, NotNull]MutableString/*!*/ path, [DefaultProtocol]int length, [DefaultProtocol, Optional]int offset) {
 
             if (offset < 0) {
-                throw RubyErrno.CreateEINVAL();
+                throw RubyExceptions.CreateEINVAL();
             }
 
             if (length < 0) {

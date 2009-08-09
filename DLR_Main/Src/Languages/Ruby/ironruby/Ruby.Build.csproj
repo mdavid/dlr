@@ -99,7 +99,6 @@
       <Compile Include="Builtins\RubyClass.cs" />
       <Compile Include="Builtins\RubyClass.Meta.cs" />
       <Compile Include="Builtins\RubyEncoding.cs" />
-      <Compile Include="Builtins\RubyErrno.cs" />
       <Compile Include="Builtins\RubyEvent.cs" />
       <Compile Include="Builtins\RubyEvent.Meta.cs" />
       <Compile Include="Builtins\RubyInputProvider.cs" />

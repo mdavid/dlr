@@ -166,7 +166,6 @@ namespace IronRuby.Compiler.Ast {
                 Methods.FilterBlockException.OpCall(scopeVariable, filterVariable)
             ).Finally(
                 traceReturn,
-                Methods.LeaveBlockFrame.OpCall(scopeVariable),
                 LeaveInterpretedFrameExpression.Instance
             );
 

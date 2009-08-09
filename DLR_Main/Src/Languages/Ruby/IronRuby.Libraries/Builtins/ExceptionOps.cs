@@ -154,7 +154,7 @@ namespace IronRuby.Builtins {
 
                         ParameterExpression messageVariable = null;
 
-                        // new <exception-type>(GetClrMessage(<class>, #message = <message>))
+                        // RubyOps.MarkException(new <exception-type>(GetClrMessage(<class>, #message = <message>)))
                         if (cls.BuildAllocatorCall(metaBuilder, args, () =>
                             Ast.Call(null, new Func<RubyClass, object, string>(GetClrMessage).Method,
                                 classExpression,

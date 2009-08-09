@@ -2341,8 +2341,7 @@ false
         }
 
         public void ClrOperators2() {
-            AssertOutput(delegate() {
-                CompilerTest(@"
+            TestOutput(@"
 p :b == true                # Symbol hides SymbolId::op_Equality
 p String == Fixnum          # Only instance operator calls are allowed (MutableString::op_Equality shound be ignored)
 
@@ -2353,11 +2352,29 @@ class C < Numeric
 end
 
 p C.new.ceil                 # Numeric#ceil uses self with DefaultProtocol attribute
-");
-            }, @"
+", @"
 false
 false
 2
+");
+        }
+
+        /// <summary>
+        /// Operator mapping is not performed for builtin classes. 
+        /// CLR DateTime defines op_LessThan but we want less-than operator to call comparison method &lt;=&gt;.
+        /// </summary>
+        public void ClrOperators3() {
+            TestOutput(@"
+class Time
+  def <=>(other)
+    puts '<=>'
+    1
+  end
+end
+p Time.mktime(1) < Time.mktime(10)
+", @"
+<=>
+false
 ");
         }
 
@@ -2368,6 +2385,10 @@ false
 
             public object[] Numerics(byte a, sbyte b, short c, ushort d, int e, uint f, long g, ulong h, BigInteger i, Complex64 j, Convertible1 k) {
                 return new object[] { a, b, c, d, e, f, g, h, i, j, k };
+            }
+
+            public object[] Numerics(byte a, sbyte b, short c, ushort d, int e, uint f, long g, ulong h, BigInteger i) {
+                return new object[] { a, b, c, d, e, f, g, h, i };
             }
 
             public Delegate Delegate(Func<object, object> d) {
@@ -2470,7 +2491,7 @@ p(*Inst.numerics(1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11))
 (10+0j)
 Convertible(11)
 ");
-
+                        
             // protocol conversions:
             TestOutput(@"
 class C
@@ -2481,12 +2502,28 @@ class C
   def to_str
     'xxx'
   end
+
+  def to_int
+    1
+  end
 end
-p Inst.ListAndStrings(C.new, C.new)
+c = C.new
+
+p Inst.ListAndStrings(c, c)
 p Inst.Foo(Conv)
+p(*Inst.numerics(c, c, c, c, c, c, c, c, c))
 ", @"
 8
 12
+1 (Byte)
+1 (SByte)
+1 (Int16)
+1 (UInt16)
+1
+1 (UInt32)
+1 (Int64)
+1 (UInt64)
+1
 ");
             
             // protocol conversions:

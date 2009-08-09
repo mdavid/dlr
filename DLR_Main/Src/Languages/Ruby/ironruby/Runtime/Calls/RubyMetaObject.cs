@@ -32,14 +32,15 @@ using Microsoft.Scripting.Utils;
 using Microsoft.Scripting.Runtime;
 using IronRuby.Runtime;
 using IronRuby.Runtime.Calls;
+using IronRuby.Runtime.Conversions;
 using IronRuby.Compiler;
 using AstUtils = Microsoft.Scripting.Ast.Utils;
 
 namespace IronRuby.Runtime.Calls {
 #if CODEPLEX_40
-    using Ast = System.Linq.Expressions.Expression;
+    using Ast = System.Linq.Expressions.Expression;    
 #else
-    using Ast = Microsoft.Linq.Expressions.Expression;
+    using Ast = Microsoft.Linq.Expressions.Expression;    
 #endif
 
     public interface IRubyDynamicMetaObjectProvider : IDynamicMetaObjectProvider {
@@ -86,10 +87,14 @@ namespace IronRuby.Runtime.Calls {
             return InteropBinder.BinaryOperation.Bind(CreateMetaContext(), binder, this, arg, binder.FallbackBinaryOperation);
         }
 
-        // TODO:
-        //public override DynamicMetaObject/*!*/ BindConvert(ConvertBinder/*!*/ binder) {
-        //    return InteropBinder.Convert.Bind(CreateMetaContext(), binder, this, binder.FallbackConvert);
-        //}
+        public override DynamicMetaObject/*!*/ BindConvert(ConvertBinder/*!*/ binder) {
+            var protocolConversion = ProtocolConversionAction.TryGetDefaultConversionAction(Context, binder.Type);
+            if (protocolConversion != null) {
+                return protocolConversion.Bind(this, DynamicMetaObject.EmptyMetaObjects);
+            } else {
+                return binder.FallbackConvert(this);
+            }
+        }
     }
     
     public abstract class RubyMetaObject<T> : RubyMetaObject {

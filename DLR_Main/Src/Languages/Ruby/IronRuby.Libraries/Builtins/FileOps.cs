@@ -292,7 +292,7 @@ namespace IronRuby.Builtins {
         public static int Delete(RubyClass/*!*/ self, [DefaultProtocol, NotNull]MutableString/*!*/ path) {
             string strPath = path.ConvertToString();
             if (!FileExists(self.Context, strPath)) {
-                throw RubyErrno.CreateENOENT(String.Format("No such file or directory - {0}", strPath));
+                throw RubyExceptions.CreateENOENT(String.Format("No such file or directory - {0}", strPath));
             }
 #if !SILVERLIGHT
             FileAttributes oldAttributes = File.GetAttributes(strPath);
@@ -519,12 +519,12 @@ namespace IronRuby.Builtins {
             [DefaultProtocol, NotNull]MutableString/*!*/ oldPath, [DefaultProtocol, NotNull]MutableString/*!*/ newPath) {
 
             if (oldPath.IsEmpty || newPath.IsEmpty) {
-                throw RubyErrno.CreateENOENT();
+                throw RubyExceptions.CreateENOENT();
             }
 
             string strOldPath = oldPath.ConvertToString();
             if (!FileExists(context, strOldPath) && !DirectoryExists(context, strOldPath)) {
-                throw RubyErrno.CreateENOENT(String.Format("No such file or directory - {0}", oldPath));
+                throw RubyExceptions.CreateENOENT(String.Format("No such file or directory - {0}", oldPath));
             }
 
             string strNewPath = newPath.ConvertToString();
@@ -585,7 +585,7 @@ namespace IronRuby.Builtins {
         public static int UpdateTimes(RubyClass/*!*/ self, DateTime accessTime, DateTime modifiedTime, [NotNull]MutableString/*!*/ path) {
             string strPath = path.ConvertToString();
             if (!FileExists(self.Context, strPath)) {
-                throw RubyErrno.CreateENOENT(String.Format("No such file or directory - {0}", strPath));
+                throw RubyExceptions.CreateENOENT(String.Format("No such file or directory - {0}", strPath));
             }
 
             FileInfo info = new FileInfo(strPath);
@@ -685,7 +685,7 @@ namespace IronRuby.Builtins {
                 if (TryCreate(context, path, out fsi)) {
                     return fsi;
                 } else {
-                    throw RubyErrno.CreateENOENT(String.Format("No such file or directory - {0}", path));
+                    throw RubyExceptions.CreateENOENT(String.Format("No such file or directory - {0}", path));
                 }
             }
 

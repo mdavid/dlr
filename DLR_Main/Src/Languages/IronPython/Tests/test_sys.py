@@ -21,6 +21,10 @@ from iptest.assert_util import *
 
 import sys
 
+@skip("win32")
+def test_dont_write_bytecode():
+    AreEqual(sys.dont_write_bytecode, True)
+
 def test_getframe():
     # This test requires -X:FullFrames, run it in separate instance of IronPython.
     global testDelGetFrame
@@ -152,11 +156,9 @@ def test_winver():
     #E.g., "2.5"
     Assert(re.match("^\d\.\d$", sys.winver) != None)
 
-@disabled("CodePlex 16497")
 def test_ps1():
     Assert(not hasattr(sys, "ps1"))
 
-@disabled("CodePlex 16497")
 def test_ps2():
     Assert(not hasattr(sys, "ps2"))    
     

@@ -347,14 +347,14 @@ namespace IronRuby.Builtins {
 
             switch (op) {
                 case DirectoryOperation.ChangeDir:
-                    return RubyErrno.CreateEINVAL(path);
+                    return RubyExceptions.CreateEINVAL(path);
 
                 case DirectoryOperation.Open:
-                    return RubyErrno.CreateENOENT(path);
+                    return RubyExceptions.CreateENOENT(path);
 
                 case DirectoryOperation.Delete:
                     if (ex is ArgumentException) {
-                        return RubyErrno.CreateEINVAL(path);
+                        return RubyExceptions.CreateEINVAL(path);
                     }
                     if (ex is IOException) {
                         return Errno.CreateEACCES(path);
@@ -363,10 +363,10 @@ namespace IronRuby.Builtins {
 
                 case DirectoryOperation.Create:
                     if (ex is ArgumentException) {
-                        return RubyErrno.CreateEINVAL(path);
+                        return RubyExceptions.CreateEINVAL(path);
                     }
                     if (ex is IOException) {
-                        return RubyErrno.CreateEEXIST(path);
+                        return RubyExceptions.CreateEEXIST(path);
                     }
                     break;
             }

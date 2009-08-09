@@ -55,6 +55,7 @@ namespace IronRuby.Runtime {
     /// </summary>
     public sealed class RubyContext : LanguageContext {
         internal static readonly Guid RubyLanguageGuid = new Guid("F03C4640-DABA-473f-96F1-391400714DAB");
+        private static readonly Guid LanguageVendor_Microsoft = new Guid(-1723120188, -6423, 0x11d2, 0x90, 0x3f, 0, 0xc0, 0x4f, 0xa3, 2, 0xa1);
         private static int _RuntimeIdGenerator = 0;
 
         // MRI compliance:
@@ -223,9 +224,7 @@ namespace IronRuby.Runtime {
 
         [Conditional("DEBUG")]
         internal void RequiresClassHierarchyLock() {
-            if (!_classHierarchyLock.IsLocked) {
-                throw new InvalidOperationException("Code can only be executed while holding class hierarchy lock.");
-            }
+            ContractUtils.Requires(_classHierarchyLock.IsLocked, "Code can only be executed while holding class hierarchy lock.");
         }
 
         // classes used by runtime (we need to update initialization generator if any of these are added):
@@ -375,6 +374,10 @@ namespace IronRuby.Runtime {
 
         public override Guid LanguageGuid {
             get { return RubyLanguageGuid; }
+        }
+
+        public override Guid VendorGuid {
+            get { return LanguageVendor_Microsoft; }
         }
 
         public int RuntimeId {
@@ -2335,6 +2338,10 @@ namespace IronRuby.Runtime {
             }
 
             return new InteropBinder.CreateInstance(this, callInfo);
+        }
+
+        public override ConvertBinder/*!*/ CreateConvertBinder(Type toType, bool explicitCast) {
+            return new InteropBinder.Convert(this, toType, explicitCast);
         }
 
         // TODO: override GetMemberNames?

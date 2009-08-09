@@ -312,7 +312,7 @@ namespace IronRuby.Runtime {
             } catch (Exception e) {
                 if (!tryPartialName || !(e is FileNotFoundException)) {
                     if (throwOnError) {
-                        throw new LoadError(e.Message, e);
+                        throw RubyExceptions.CreateLoadError(e);
                     } else {
                         return null;
                     }
@@ -328,13 +328,13 @@ namespace IronRuby.Runtime {
                 assembly = Assembly.LoadWithPartialName(assemblyName);
             } catch (Exception e) {
                 if (throwOnError) {
-                    throw new LoadError(e.Message, e);
+                    throw RubyExceptions.CreateLoadError(e);
                 } else {
                     return null;
                 }
             }
             if (assembly == null && throwOnError) {
-                throw new LoadError(String.Format("Assembly '{0}' not found", assemblyName));
+                throw RubyExceptions.CreateLoadError(String.Format("Assembly '{0}' not found", assemblyName));
             }
 #pragma warning restore 618,612
             return assembly;
@@ -349,7 +349,9 @@ namespace IronRuby.Runtime {
                 try {
                     initializerType = assembly.GetType(typeName, true);
                 } catch (Exception e) {
-                    if (throwOnError) throw new LoadError(e.Message, e);
+                    if (throwOnError) {
+                        throw new LoadError(e.Message, e);
+                    }
                     return false;
                 }
 
@@ -359,7 +361,9 @@ namespace IronRuby.Runtime {
                 try {
                     DomainManager.LoadAssembly(assembly);
                 } catch (Exception e) {
-                    if (throwOnError) throw new LoadError(e.Message, e);
+                    if (throwOnError) {
+                        throw RubyExceptions.CreateLoadError(e);
+                    }
                     return false;
                 }
             }
@@ -444,7 +448,7 @@ namespace IronRuby.Runtime {
                     return assembly;
                 }
             } catch (Exception e) {
-                throw new LoadError(e.Message, e);
+                throw RubyExceptions.CreateLoadError(e);
             }
 
             return null;
@@ -477,7 +481,7 @@ namespace IronRuby.Runtime {
             string[] sourceFileExtensions = DomainManager.Configuration.GetFileExtensions();
             ResolvedFile file = FindFile(path, (flags & LoadFlags.AppendExtensions) != 0, sourceFileExtensions);
             if (file == null) {
-                throw new LoadError(String.Format("no such file to load -- {0}", path));
+                throw RubyExceptions.CreateLoadError(String.Format("no such file to load -- {0}", path));
             }
 
             MutableString pathWithExtension = MutableString.Create(path, RubyEncoding.Path);
@@ -491,7 +495,7 @@ namespace IronRuby.Runtime {
                     if (file.SourceUnit != null) {
                         Scope loadedScope;
                         if (!LoadedScripts.TryGetValue(fullPath, out loadedScope)) {
-                            throw new LoadError(String.Format("no such file to load -- {0}", file.Path));
+                            throw RubyExceptions.CreateLoadError(String.Format("no such file to load -- {0}", file.Path));
                         }
                         loaded = loadedScope;
                     } else {
@@ -522,7 +526,7 @@ namespace IronRuby.Runtime {
                         DomainManager.LoadAssembly(assembly);
                         loaded = assembly;
                     } catch (Exception e) {
-                        throw new LoadError(e.Message, e);
+                        throw RubyExceptions.CreateLoadError(e);
                     }
                 }
 
@@ -604,7 +608,7 @@ namespace IronRuby.Runtime {
                 isAbsolutePath = Platform.IsAbsolutePath(path);
                 extension = Path.GetExtension(path);
             } catch (ArgumentException e) {
-                throw new LoadError(e.Message, e);
+                throw RubyExceptions.CreateLoadError(e);
             }
 
             // Absolute path -> load paths not consulted.
@@ -674,7 +678,7 @@ namespace IronRuby.Runtime {
                     return GetSourceUnit(path + matchingExtensions[0], matchingExtensions[0], true);
                 } else if (matchingExtensions.Count > 1) {
                     Exception e = new AmbiguousFileNameException(path + matchingExtensions[0], path + matchingExtensions[1]);
-                    throw new LoadError(e.Message, e);
+                    throw RubyExceptions.CreateLoadError(e);
                 }
 
                 foreach (string libExtension in _LibraryExtensions) {
@@ -818,7 +822,7 @@ namespace IronRuby.Runtime {
                 Assembly assembly = _context.DomainManager.Platform.LoadAssembly(GetIronRubyAssemblyLongName("IronRuby.Libraries"));
                 initializerType = assembly.GetType(LibraryInitializer.GetBuiltinsFullTypeName());
             } catch (Exception e) {
-                throw new LoadError(e.Message, e);
+                throw RubyExceptions.CreateLoadError(e);
             }
 
             LoadLibrary(initializerType, true);
@@ -837,13 +841,13 @@ namespace IronRuby.Runtime {
             try {
                 initializer = Activator.CreateInstance(initializerType) as LibraryInitializer;
             } catch (TargetInvocationException e) {
-                throw new LoadError(e.Message, e);
+                throw RubyExceptions.CreateLoadError(e.InnerException);
             } catch (Exception e) {
-                throw new LoadError(e.Message, e);
+                throw RubyExceptions.CreateLoadError(e);
             }
 
             if (initializer == null) {
-                throw new LoadError(String.Format("Specified type {0} is not a subclass of {1}", 
+                throw RubyExceptions.CreateLoadError(String.Format("Specified type {0} is not a subclass of {1}", 
                     initializerType.FullName,
                     typeof(LibraryInitializer).FullName)
                 );

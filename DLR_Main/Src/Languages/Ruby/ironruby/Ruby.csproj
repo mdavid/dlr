@@ -121,7 +121,6 @@
     <Compile Include="Builtins\CharacterMap.cs" />
     <Compile Include="Builtins\ConsoleStream.cs" />
     <None Include="Builtins\Subclasses.Generator.rb" />
-    <Compile Include="Builtins\RubyErrno.cs" />
     <Compile Include="Builtins\MutableStringBuilder.cs" />
     <Compile Include="Builtins\RubyEvent.Meta.cs" />
     <Compile Include="Builtins\DuplexStream.cs" />
