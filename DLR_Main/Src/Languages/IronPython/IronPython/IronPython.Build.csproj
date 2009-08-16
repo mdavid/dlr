@@ -86,6 +86,7 @@
       <Compile Include="Compiler\PythonGlobalVariableExpression.cs" />
       <Compile Include="Compiler\PythonScriptCode.cs" />
       <Compile Include="Compiler\ReducableDynamicExpression.cs" />
+      <Compile Include="Compiler\RunnableScriptCode.cs" />
       <Compile Include="Compiler\RuntimeScriptCode.cs" />
       <Compile Include="Compiler\SavableGlobalAllocator.cs" />
       <Compile Include="Compiler\SavableScriptCode.cs" />
@@ -302,6 +303,7 @@
       <Compile Include="Runtime\Binding\FastBindResult.cs" />
       <Compile Include="Runtime\Binding\FastGetBase.cs" />
       <Compile Include="Runtime\Binding\FastSetBase.cs" />
+      <Compile Include="Runtime\Binding\IComConvertible.cs" />
       <Compile Include="Runtime\Binding\IFastGettable.cs" />
       <Compile Include="Runtime\Binding\IFastInvokable.cs" />
       <Compile Include="Runtime\Binding\IFastSettable.cs" />
@@ -365,7 +367,6 @@
       <Compile Include="Runtime\Exceptions\ObjectException.cs" />
       <Compile Include="Runtime\Exceptions\OldInstanceException.cs" />
       <Compile Include="Runtime\Exceptions\OSException.Generated.cs" />
-      <Compile Include="Runtime\Exceptions\OverflowWarningException.Generated.cs" />
       <Compile Include="Runtime\Exceptions\PendingDeprecationWarningException.Generated.cs" />
       <Compile Include="Runtime\Exceptions\PythonExceptions.cs" />
       <Compile Include="Runtime\Exceptions\PythonExceptions.Generated.cs" />
@@ -414,7 +415,6 @@
       <Compile Include="Runtime\Operations\PythonOps.Generated.cs" />
       <Compile Include="Runtime\Operations\PythonTypeOps.cs" />
       <Compile Include="Runtime\Operations\ScopeOps.cs" />
-      <Compile Include="Runtime\Operations\ScriptScopeOps.cs" />
       <Compile Include="Runtime\Operations\StringOps.cs" />
       <Compile Include="Runtime\Operations\TypeGroupOps.cs" />
       <Compile Include="Runtime\Operations\TypeTrackerOps.cs" />

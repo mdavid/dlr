@@ -340,7 +340,6 @@
       <!--                        -->
       <Compile Include="Math\BigInteger.cs" />
       <Compile Include="Math\Complex64.cs" />
-      <Compile Include="Math\MathResources.Designer.cs" />
     </ItemGroup>
     <ItemGroup>
       <!--                              -->

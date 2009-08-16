@@ -699,7 +699,7 @@ namespace IronPython.Runtime.Operations {
             }
 
             // if it's not round trippable though use .NET's round-trip format
-            return self.ToString("R");
+            return self.ToString("R", CultureInfo.InvariantCulture);
         }
 
         public static BigInteger/*!*/ __long__(double self) {

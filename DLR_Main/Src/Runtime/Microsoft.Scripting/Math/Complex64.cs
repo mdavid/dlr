@@ -18,6 +18,7 @@ using System;
 #else
 using System; using Microsoft;
 #endif
+using Microsoft.Scripting.Utils;
 
 namespace Microsoft.Scripting.Math {
     /// <summary>
@@ -122,9 +123,7 @@ namespace Microsoft.Scripting.Math {
 
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Design", "CA1065:DoNotRaiseExceptionsInUnexpectedLocations")] // TODO: fix
         public static implicit operator Complex64(BigInteger i) {
-            if (object.ReferenceEquals(i, null)) {
-                throw new ArgumentException(MathResources.InvalidArgument, "i");
-            }
+            ContractUtils.RequiresNotNull(i, "i");
 
             // throws an overflow exception if we can't handle the value.
             return MakeReal(i.ToFloat64());
@@ -167,7 +166,9 @@ namespace Microsoft.Scripting.Math {
         }
 
         public static Complex64 operator /(Complex64 a, Complex64 b) {
-            if (b.IsZero) throw new DivideByZeroException(MathResources.ComplexDivizionByZero);
+            if (b.IsZero) {
+                throw new DivideByZeroException("complex division by zero");
+            }
 
             double real, imag, den, r;
 

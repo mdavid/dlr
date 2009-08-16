@@ -65,10 +65,7 @@ namespace IronPython.Compiler.Ast {
         private PythonVariable _variable;               // The variable corresponding to the function name or null for lambdas
         internal PythonVariable _nameVariable;          // the variable that refers to the global __name__
 
-        private List<SymbolId> _closureVars;
-
         private static MSAst.ParameterExpression _functionParam = Ast.Parameter(typeof(PythonFunction), "$function");
-        internal static MSAst.ParameterExpression _functionStack = Ast.Variable(typeof(List<FunctionStack>), "funcStack");
 
         public bool IsLambda {
             get {
@@ -170,7 +167,13 @@ namespace IronPython.Compiler.Ast {
         internal override bool TryBindOuter(SymbolId name, out PythonVariable variable) {
             // Functions expose their locals to direct access
             ContainsNestedFreeVariables = true;
-            return TryGetVariable(name, out variable);
+            if (TryGetVariable(name, out variable)) {
+                if (variable.Kind == VariableKind.Local || variable.Kind == VariableKind.Parameter) {
+                    name = AddCellVariable(name);
+                }
+                return true;
+            }
+            return false;
         }
 
         internal override PythonVariable BindName(PythonNameBinder binder, SymbolId name) {
@@ -178,6 +181,9 @@ namespace IronPython.Compiler.Ast {
 
             // First try variables local to this scope
             if (TryGetVariable(name, out variable)) {
+                if (variable.Kind == VariableKind.GlobalLocal || variable.Kind == VariableKind.Global) {
+                    AddReferencedGlobal(name);
+                }
                 return variable;
             }
 
@@ -186,12 +192,7 @@ namespace IronPython.Compiler.Ast {
                 if (parent.TryBindOuter(name, out variable)) {
                     IsClosure = true;
                     variable.AccessedInNestedScope = true;
-                    if (_closureVars == null) {
-                        _closureVars = new List<SymbolId>();
-                    }
-                    if (!_closureVars.Contains(name)) {
-                        _closureVars.Add(name);
-                    }
+                    UpdateReferencedVariables(name, variable, parent);
                     return variable;
                 }
             }
@@ -205,9 +206,11 @@ namespace IronPython.Compiler.Ast {
                 return null;
             } else {
                 // Create a global variable to bind to.
+                AddReferencedGlobal(name);
                 return GetGlobalScope().EnsureGlobalVariable(binder, name);
             }
         }
+
 
         internal override void Bind(PythonNameBinder binder) {
             base.Bind(binder);
@@ -320,6 +323,8 @@ namespace IronPython.Compiler.Ast {
             List<MSAst.Expression> names = new List<MSAst.Expression>();
 
             List<MSAst.Expression> init = new List<MSAst.Expression>();
+            init.Add(Ast.ClearDebugInfo(ag.Document));
+
             TransformParameters(ag, bodyGen, defaults, names, needsWrapperMethod, init);
 
             MSAst.Expression parentContext;
@@ -399,8 +404,8 @@ namespace IronPython.Compiler.Ast {
             }
 
             if (_body.CanThrow && ag.PyContext.PythonOptions.Frames) {
-                body = AddFrame(bodyGen.LocalContext, _functionParam, body);
-                bodyGen.AddHiddenVariable(_functionStack);
+                body = AstGenerator.AddFrame(bodyGen.LocalContext, Ast.Property(_functionParam, typeof(PythonFunction).GetProperty("__code__")), body);
+                bodyGen.AddHiddenVariable(AstGenerator._functionStack);
             }
 
             body = bodyGen.AddProfiling(body);
@@ -427,13 +432,12 @@ namespace IronPython.Compiler.Ast {
             );
 
             Delegate originalDelegate;
-            MSAst.LambdaExpression code; code = Ast.Lambda(
+            MSAst.LambdaExpression code = Ast.Lambda(
                 GetDelegateType(_parameters, needsWrapperMethod, out originalDelegate),
                 AstGenerator.AddDefaultReturn(bodyStmt, typeof(object)),
                 bodyGen.Name + "$" + _lambdaId++,
                 bodyGen.Parameters
             );
-            
 
             // create the function code object which all function instances will share
             MSAst.Expression funcCode = Ast.Constant(
@@ -449,7 +453,11 @@ namespace IronPython.Compiler.Ast {
                     _sourceUnit.Path,
                     ag.EmitDebugSymbols,
                     ag.ShouldInterpret,
-                    _closureVars,
+                    FreeVariables,
+                    GlobalVariables,
+                    CellVariables,
+                    GetVarNames(),
+                    Variables == null ? 0 : Variables.Count,
                     bodyGen.LoopLocationsNoCreate,
                     bodyGen.HandlerLocationsNoCreate
                 )                
@@ -489,37 +497,18 @@ namespace IronPython.Compiler.Ast {
             return ret;
         }
 
-        /// <summary>
-        /// Creates a method frame for tracking purposes and enforces recursion
-        /// </summary>
-        internal static MSAst.Expression AddFrame(MSAst.Expression localContext, MSAst.Expression function, MSAst.Expression body) {
-            body = AstUtils.Try(
-                Ast.Assign(
-                    _functionStack,
-                    Ast.Call(
-                        typeof(PythonOps).GetMethod("PushFrame"),
-                        localContext,
-                        function
-                    )
-                ),
-                body
-            ).Finally(
-                Ast.Call(
-                    _functionStack,
-                    typeof(List<FunctionStack>).GetMethod("RemoveAt"),
-                    Ast.Add(
-                        Ast.Property(
-                            _functionStack,
-                            "Count"
-                        ),
-                        Ast.Constant(-1)
-                    )
-                )                
-            );
+        private IList<SymbolId> GetVarNames() {
+            List<SymbolId> res = new List<SymbolId>();
 
-            return body;
+            foreach (Parameter p in _parameters) {
+                res.Add(p.Name);
+            }
+
+            AppendVariables(res);
+
+            return res;
         }
-
+        
         private void TransformParameters(AstGenerator outer, AstGenerator inner, List<MSAst.Expression> defaults, List<MSAst.Expression> names, bool needsWrapperMethod, List<MSAst.Expression> init) {
             inner.Parameter(_functionParam);
 

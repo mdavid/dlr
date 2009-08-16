@@ -61,14 +61,14 @@ using Microsoft.Runtime.CompilerServices;
 #if !SILVERLIGHT
             DynamicMetaObject com;
 #if CODEPLEX_40
-            if (System.Dynamic.ComBinder.TryBindSetMember(this, self, value, out com)) {
+            if (System.Dynamic.ComBinder.TryBindSetMember(this, self, BindingHelpers.GetComArgument(value), out com)) {
 #else
-            if (Microsoft.Scripting.ComBinder.TryBindSetMember(this, self, value, out com)) {
+            if (Microsoft.Scripting.ComBinder.TryBindSetMember(this, self, BindingHelpers.GetComArgument(value), out com)) {
 #endif
                 return com;
             }
 #endif
-            return Context.Binder.SetMember(Name, self, value, new PythonOverloadResolverFactory(_context.Binder, AstUtils.Constant(Context.SharedContext)));
+            return Context.Binder.SetMember(Name, self, value, errorSuggestion, new PythonOverloadResolverFactory(_context.Binder, AstUtils.Constant(Context.SharedContext)));
         }
 
         public override T BindDelegate<T>(CallSite<T> site, object[] args) {

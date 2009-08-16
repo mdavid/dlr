@@ -20,19 +20,16 @@ using System; using Microsoft;
 #endif
 using System.Collections.Generic;
 using System.Diagnostics;
-#if CODEPLEX_40
-using System.Linq.Expressions;
-#else
-using Microsoft.Linq.Expressions;
-#endif
 using System.Reflection;
 using System.Reflection.Emit;
-using System.Text;
-#if CODEPLEX_40
-using System.Dynamic;
-#else
-using Microsoft.Scripting;
+using System.Runtime.CompilerServices;
+#if !CODEPLEX_40
+using Microsoft.Runtime.CompilerServices;
 #endif
+
+using System.Text;
+
+using Microsoft.Scripting.Generation;
 
 namespace Microsoft.Scripting.Utils {
     public static class ReflectionUtils {
@@ -256,6 +253,39 @@ namespace Microsoft.Scripting.Utils {
             if (backtick != -1) return typeName.Substring(0, backtick);
             return typeName;
         }
+
+        /// <summary>
+        /// Gets a Func of CallSite, object * paramCnt, object delegate type
+        /// that's suitable for use in a non-strongly typed call site.
+        /// </summary>
+        public static Type GetObjectCallSiteDelegateType(int paramCnt) {
+            switch (paramCnt) {
+                case 0: return typeof(Func<CallSite, object, object>);
+                case 1: return typeof(Func<CallSite, object, object, object>);
+                case 2: return typeof(Func<CallSite, object, object, object, object>);
+                case 3: return typeof(Func<CallSite, object, object, object, object, object>);
+                case 4: return typeof(Func<CallSite, object, object, object, object, object, object>);
+                case 5: return typeof(Func<CallSite, object, object, object, object, object, object, object>);
+                case 6: return typeof(Func<CallSite, object, object, object, object, object, object, object, object>);
+                case 7: return typeof(Func<CallSite, object, object, object, object, object, object, object, object, object>);
+                case 8: return typeof(Func<CallSite, object, object, object, object, object, object, object, object, object, object>);
+                case 9: return typeof(Func<CallSite, object, object, object, object, object, object, object, object, object, object, object>);
+                case 10: return typeof(Func<CallSite, object, object, object, object, object, object, object, object, object, object, object, object>);
+                case 11: return typeof(Func<CallSite, object, object, object, object, object, object, object, object, object, object, object, object, object>);
+                case 12: return typeof(Func<CallSite, object, object, object, object, object, object, object, object, object, object, object, object, object, object>);
+                case 13: return typeof(Func<CallSite, object, object, object, object, object, object, object, object, object, object, object, object, object, object, object>);
+                case 14: return typeof(Func<CallSite, object, object, object, object, object, object, object, object, object, object, object, object, object, object, object, object>);
+                default:
+                    Type[] paramTypes = new Type[paramCnt + 2];
+                    paramTypes[0] = typeof(CallSite);
+                    paramTypes[1] = typeof(object);
+                    for (int i = 0; i < paramCnt; i++) {
+                        paramTypes[i + 2] = typeof(object);
+                    }
+                    return Snippets.Shared.DefineDelegate("InvokeDelegate" + paramCnt, typeof(object), paramTypes);
+            }
+        }
+
 
     }
 }

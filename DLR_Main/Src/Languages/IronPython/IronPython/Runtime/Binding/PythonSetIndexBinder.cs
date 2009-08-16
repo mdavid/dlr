@@ -53,9 +53,9 @@ namespace IronPython.Runtime.Binding {
 #if !SILVERLIGHT
             DynamicMetaObject com;
 #if CODEPLEX_40
-            if (System.Dynamic.ComBinder.TryBindSetIndex(this, target, indexes, value, out com)) {
+            if (System.Dynamic.ComBinder.TryBindSetIndex(this, target, BindingHelpers.GetComArguments(indexes), BindingHelpers.GetComArgument(value), out com)) {
 #else
-            if (Microsoft.Scripting.ComBinder.TryBindSetIndex(this, target, indexes, value, out com)) {
+            if (Microsoft.Scripting.ComBinder.TryBindSetIndex(this, target, BindingHelpers.GetComArguments(indexes), BindingHelpers.GetComArgument(value), out com)) {
 #endif
                 return com;
             }

@@ -118,7 +118,7 @@ namespace IronRuby.Runtime {
             RubyFile dataFile;
             RubyContext context = scope.RubyContext;
             if (context.DomainManager.Platform.FileExists(dataPath)) {
-                dataFile = new RubyFile(context, dataPath, RubyFileMode.RDONLY);
+                dataFile = new RubyFile(context, dataPath, IOMode.ReadOnly);
                 dataFile.Seek(dataOffset, SeekOrigin.Begin);
             } else {
                 dataFile = null;
@@ -1349,7 +1349,7 @@ namespace IronRuby.Runtime {
         }
 
         [Emitted]
-        public static ArgumentException/*!*/ CreateArgumentsErrorForMissingBlock(string message) {
+        public static ArgumentException/*!*/ CreateArgumentsErrorForMissingBlock() {
             return (ArgumentException)RubyExceptions.CreateArgumentError("block not supplied");
         }
 

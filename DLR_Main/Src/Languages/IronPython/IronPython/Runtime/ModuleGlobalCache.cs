@@ -15,6 +15,7 @@
 
 using System.Diagnostics;
 using Microsoft.Scripting.Utils;
+using Microsoft.Scripting.Runtime;
 #if CODEPLEX_40
 using System.Linq.Expressions;
 using System;
@@ -23,7 +24,7 @@ using Microsoft.Linq.Expressions;
 using System; using Microsoft;
 #endif
 
-namespace Microsoft.Scripting.Runtime {
+namespace IronPython.Runtime {
     /// <summary>
     /// Cached global value.  Created and maintained on a per-language basis.  Default
     /// implementation returns a singleton which indicates caching is not occuring.

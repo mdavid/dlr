@@ -131,6 +131,7 @@ namespace IronPython.Compiler.Ast {
             for (ScopeStatement parent = Parent; parent != null; parent = parent.Parent) {
                 if (parent.TryBindOuter(name, out variable)) {
                     variable.AccessedInNestedScope = true;
+                    UpdateReferencedVariables(name, variable, parent);
                     return variable;
                 }
             }
@@ -172,9 +173,33 @@ namespace IronPython.Compiler.Ast {
                 );
             }
 
+            FunctionCode funcCodeObj = null;
             if (_body.CanThrow && ag.PyContext.PythonOptions.Frames) {
-                bodyStmt = FunctionDefinition.AddFrame(classGen.LocalContext, Ast.Constant(null, typeof(PythonFunction)), bodyStmt);
-                classGen.AddHiddenVariable(FunctionDefinition._functionStack);
+                funcCodeObj = new FunctionCode(
+                    ag.PyContext,
+                    null,
+                    null,
+                    SymbolTable.IdToString(Name),
+                    ag.GetDocumentation(_body),
+                    ArrayUtils.EmptyStrings,
+                    FunctionAttributes.None,
+                    Span,
+                    ag.Context.SourceUnit.Path,
+                    ag.EmitDebugSymbols,
+                    ag.ShouldInterpret,
+                    FreeVariables,
+                    GlobalVariables,
+                    CellVariables,
+                    AppendVariables(new List<SymbolId>()),
+                    Variables == null ? 0 : Variables.Count,
+                    classGen.LoopLocationsNoCreate,
+                    classGen.HandlerLocationsNoCreate
+                );
+
+                MSAst.Expression funcCode = Ast.Constant(funcCodeObj);
+
+                bodyStmt = AstGenerator.AddFrame(classGen.LocalContext, funcCode, bodyStmt);
+                classGen.AddHiddenVariable(AstGenerator._functionStack);
             }
 
             bodyStmt = classGen.WrapScopeStatements(
@@ -193,6 +218,10 @@ namespace IronPython.Compiler.Ast {
                 classGen.Name + "$" + _classId++,
                 classGen.Parameters
             );
+            
+            if (funcCodeObj != null) {
+                funcCodeObj.Code = lambda;
+            }
 
             MSAst.Expression classDef = Ast.Call(
                 AstGenerator.GetHelperMethod("MakeClass"),

@@ -101,7 +101,9 @@
     <Compile Include="Compiler\Ast\AssignmentStatement.cs" />
     <Compile Include="Compiler\Ast\AstGenerator.cs" />
     <Compile Include="Compiler\Ast\BinaryExpression.Generated.cs" />
+    <Compile Include="Compiler\RunnableScriptCode.cs" />
     <Compile Include="Modules\imp.cs" />
+    <Compile Include="Runtime\Binding\IComConvertible.cs" />
     <Compile Include="Runtime\CodeContext.cs" />
     <Compile Include="Runtime\DontMapIEnumerableToIterAttribute.cs" />
     <Compile Include="Runtime\Binding\ContextArgBuilder.cs" />

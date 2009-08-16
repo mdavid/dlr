@@ -106,11 +106,13 @@
       <Compile Include="Builtins\ObjectOps.cs" />
       <Compile Include="Builtins\ObjectSpace.cs" />
       <Compile Include="Builtins\Precision.cs" />
+      <Compile Include="Builtins\PrintOps.cs" />
       <Compile Include="Builtins\ProcOps.cs" />
       <Compile Include="Builtins\RangeOps.cs" />
       <Compile Include="Builtins\RubyEncodingOps.cs" />
       <Compile Include="Builtins\RubyGC.cs" />
       <Compile Include="Builtins\RubyMath.cs" />
+      <Compile Include="Builtins\RubyPipe.cs" />
       <Compile Include="Builtins\RubyProcess.cs" />
       <Compile Include="Builtins\RubyRegexOps.cs" />
       <Compile Include="Builtins\Signal.cs" />
