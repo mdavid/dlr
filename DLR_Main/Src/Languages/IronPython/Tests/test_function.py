@@ -790,6 +790,9 @@ def test_compile():
     x = compile("print 2/3", "<string>", "exec", 8192)
     Assert((x.co_flags & 8192) == 8192)
     
+    x = compile("2/3", "<string>", "eval", 8192)
+    AreEqual(eval(x), 2.0 / 3.0)
+
     names = [   "", ".", "1", "\n", " ", "@", "%^",
                 "a", "A", "Abc", "aBC", "filename.py",
                 "longlonglonglonglonglonglonglonglonglonglonglonglonglonglonglonglonglonglonglonglonglonglonglonglonglonglonglonglonglonglonglonglonglonglonglonglonglonglonglonglonglonglonglonglonglonglonglonglonglonglonglonglonglonglonglonglonglonglonglonglonglonglonglonglonglonglonglonglonglonglonglonglonglonglonglonglonglonglonglonglong",
@@ -1142,10 +1145,21 @@ def test_splat_none():
     def g(**kwargs): pass
     def h(*args, **kwargs): pass
     
-    AssertError(TypeError, lambda : f(*None))
-    AssertError(TypeError, lambda : g(**None))
-    AssertError(TypeError, lambda : h(*None, **None))
-
+    #CodePlex 20250
+    if is_cpython:
+        AssertErrorWithMessage(TypeError, "f() argument after * must be a sequence, not NoneType", 
+                               lambda : f(*None))
+        AssertErrorWithMessage(TypeError, "g() argument after ** must be a mapping, not NoneType", 
+                               lambda : g(**None))
+        AssertErrorWithMessage(TypeError, "h() argument after ** must be a mapping, not NoneType",
+                               lambda : h(*None, **None))
+    else:
+        AssertError(TypeError, "argument after * must be a sequence, not NoneType", 
+                   lambda : f(*None))
+        AssertError(TypeError, "argument after ** must be a mapping, not NoneType", 
+                    lambda : g(**None))
+        AssertError(TypeError, "argument after ** must be a mapping, not NoneType",
+                    lambda : h(*None, **None))
 
 def test_exec_funccode():
     # can't exec a func code w/ parameters

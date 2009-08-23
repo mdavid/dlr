@@ -440,7 +440,7 @@ namespace IronPython.Compiler.Ast {
             );
 
             // create the function code object which all function instances will share
-            MSAst.Expression funcCode = Ast.Constant(
+            MSAst.Expression funcCode = ag.Globals.GetConstant(
                 new FunctionCode(
                     ag.PyContext,
                     ag.EmitDebugSymbols ? null : originalDelegate,
@@ -462,6 +462,7 @@ namespace IronPython.Compiler.Ast {
                     bodyGen.HandlerLocationsNoCreate
                 )                
             );
+            bodyGen.FuncCodeExpr = funcCode;
 
             MSAst.Expression ret;
             if (ag.EmitDebugSymbols && !ag.PyContext.EnableTracing) {

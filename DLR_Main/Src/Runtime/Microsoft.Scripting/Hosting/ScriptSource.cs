@@ -31,7 +31,7 @@ using System.Text;
 using Microsoft.Scripting.Utils;
 using Microsoft.Scripting.Runtime;
 
-#if !SYSTEM_CORE
+#if !CLR4
 using dynamic = System.Object;
 #endif
 

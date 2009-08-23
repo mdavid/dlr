@@ -62,3 +62,6 @@ using System; using Microsoft;
 #endif
 [assembly: SecurityTransparent]
 [assembly: CLSCompliant(false)]
+#if CLR4
+[assembly: SecurityRules(SecurityRuleSet.Level1)]
+#endif

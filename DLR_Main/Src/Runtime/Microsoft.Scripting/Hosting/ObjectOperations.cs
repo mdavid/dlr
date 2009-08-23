@@ -32,7 +32,7 @@ using Microsoft.Linq.Expressions;
 using Microsoft.Scripting;
 #endif
 
-#if !SYSTEM_CORE
+#if !CLR4
 using dynamic = System.Object;
 #endif
 

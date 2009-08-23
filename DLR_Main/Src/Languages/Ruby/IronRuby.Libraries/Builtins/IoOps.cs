@@ -195,7 +195,6 @@ namespace IronRuby.Builtins {
         #endregion
 
         #region pipe, popen
-#if !SILVERLIGHT
 
         [RubyMethod("pipe", RubyMethodAttributes.PublicSingleton, BuildConfig = "!SILVERLIGHT")]
         public static RubyArray/*!*/ OpenPipe(RubyClass/*!*/ self) {
@@ -207,6 +206,7 @@ namespace IronRuby.Builtins {
             return result;
         }
 
+#if !SILVERLIGHT
         [RubyMethod("popen", RubyMethodAttributes.PublicSingleton, BuildConfig = "!SILVERLIGHT")]
         public static object OpenPipe(RubyContext/*!*/ context, BlockParam block, RubyClass/*!*/ self,
             [DefaultProtocol, NotNull]MutableString/*!*/ command, [DefaultProtocol, Optional, NotNull]MutableString modeString) {
@@ -228,11 +228,8 @@ namespace IronRuby.Builtins {
 
             Process process = OpenPipe(context, command, redirectStandardInput, redirectStandardOutput, false);
 
-            context.ChildProcessExitStatus = new RubyProcess.Status(process);
-
             StreamReader reader = null;
             StreamWriter writer = null;
-
             if (redirectStandardOutput) {
                 reader = process.StandardOutput;
             }
@@ -593,7 +590,7 @@ namespace IronRuby.Builtins {
 
             RubyBufferedStream stream = self.GetWritableStream();
             if (stream.DataBuffered) {
-                KernelOps.ReportWarning(writeStorage, tosConversion, self, MutableString.CreateAscii("syswrite for buffered IO"));
+                PrintOps.ReportWarning(writeStorage, tosConversion, MutableString.CreateAscii("syswrite for buffered IO"));
             }
             int bytes = Write(self, val);
             self.Flush();

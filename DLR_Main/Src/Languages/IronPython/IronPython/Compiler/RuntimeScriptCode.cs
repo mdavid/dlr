@@ -44,12 +44,12 @@ namespace IronPython.Compiler {
         private readonly CompilerContext/*!*/ _context;
         private readonly PythonAst/*!*/ _ast;
         private readonly CodeContext/*!*/ _optimizedContext;
-        private readonly MSAst.Expression<Func<object>> _code;
-        private Func<object> _optimizedTarget;
+        private readonly MSAst.Expression<Func<FunctionCode, object>> _code;
+        private Func<FunctionCode, object> _optimizedTarget;
 
         private ScriptCode _unoptimizedCode;
 
-        public RuntimeScriptCode(CompilerContext/*!*/ context, MSAst.Expression<Func<object>>/*!*/ expression, PythonAst/*!*/ ast, CodeContext/*!*/ codeContext)
+        public RuntimeScriptCode(CompilerContext/*!*/ context, MSAst.Expression<Func<FunctionCode, object>>/*!*/ expression, PythonAst/*!*/ ast, CodeContext/*!*/ codeContext)
             : base(context.SourceUnit) {
             _code = expression;
             _ast = ast;
@@ -65,6 +65,12 @@ namespace IronPython.Compiler {
             return InvokeTarget(_code, scope);
         }
 
+        public override FunctionCode GetFunctionCode() {
+            EnsureCompiled();
+
+            return EnsureFunctionCode(_optimizedTarget);
+        }
+
         private object InvokeTarget(MSAst.LambdaExpression code, Scope scope) {
             if (scope == _optimizedContext.Scope) {
                 EnsureCompiled();
@@ -74,7 +80,7 @@ namespace IronPython.Compiler {
                     if (_context.SourceUnit.Kind == SourceCodeKind.Expression) {
                         return OptimizedEvalWrapper();
                     }
-                    return _optimizedTarget();
+                    return _optimizedTarget(EnsureFunctionCode(_optimizedTarget));
                 } finally {
                     PopFrame();
                 }
@@ -99,9 +105,9 @@ namespace IronPython.Compiler {
         
         private object OptimizedEvalWrapper() {
             try {
-                return _optimizedTarget();
+                return _optimizedTarget(EnsureFunctionCode(_optimizedTarget));
             } catch (Exception) {
-                PythonOps.UpdateStackTrace(_optimizedContext, _optimizedTarget.Method, "<module>", "<string>", 0);
+                PythonOps.UpdateStackTrace(_optimizedContext, Code, _optimizedTarget.Method, "<module>", "<string>", 0);
                 throw;
             }
         }
@@ -116,7 +122,11 @@ namespace IronPython.Compiler {
             }
         }
 
-        private Func<object>/*!*/ Compile() {
+        protected override FunctionAttributes GetCodeAttributes() {
+            return GetCodeAttributes(_context);
+        }
+
+        private Func<FunctionCode, object>/*!*/ Compile() {
             var pco = (PythonCompilerOptions)_context.Options;
             var pc = (PythonContext)SourceUnit.LanguageContext;
             

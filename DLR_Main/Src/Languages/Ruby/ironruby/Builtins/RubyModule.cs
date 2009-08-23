@@ -625,13 +625,13 @@ namespace IronRuby.Builtins {
             Context.RequiresClassHierarchyLock();
 
             // deadCount is greated than 1/5 of total => remove dead (the threshold is arbitrary, might need tuning):
-            if (estimatedDeadCount * 5 < _dependentClasses.Count) {
+            if (estimatedDeadCount > 5 && estimatedDeadCount * 5 < _dependentClasses.Count) {
                 return;
             }
 
             int i = 0, j = 0;
             while (i < _dependentClasses.Count) {
-                if (!_dependentClasses[i].IsAlive) {
+                if (_dependentClasses[i].IsAlive) {
                     if (j != i) {
                         _dependentClasses[j] = _dependentClasses[i];
                     }

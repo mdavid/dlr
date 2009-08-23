@@ -38,7 +38,7 @@ using Microsoft.Scripting.Runtime;
 using Microsoft.Scripting.Utils;
 using AstUtils = Microsoft.Scripting.Ast.Utils;
 
-#if !SYSTEM_CORE
+#if !CLR4
 using dynamic = System.Object;
 #endif
 

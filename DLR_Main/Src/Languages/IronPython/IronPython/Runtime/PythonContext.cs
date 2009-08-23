@@ -77,7 +77,7 @@ namespace IronPython.Runtime {
         private readonly Scope/*!*/ _systemState;
         private readonly Dictionary<string, Type>/*!*/ _builtinsDict;
         private readonly PythonOverloadResolverFactory _sharedOverloadResolverFactory;
-#if !SILVERLIGHT && !CLR4
+#if !SILVERLIGHT
         private readonly AssemblyResolveHolder _resolveHolder;
 #endif
         private Encoding _defaultEncoding = PythonAsciiEncoding.Instance;
@@ -194,7 +194,7 @@ namespace IronPython.Runtime {
         internal readonly object _codeCleanupLock = new object(), _codeUpdateLock = new object();
         internal int _codeCount, _nextCodeCleanup = 200;
         private int _recursionLimit;
-        internal bool _enableTracing;
+        private bool _enableTracing;
 
         /// <summary>
         /// Creates a new PythonContext not bound to Engine.
@@ -242,7 +242,7 @@ namespace IronPython.Runtime {
             }
 
             List path = new List(_options.SearchPaths);
-#if !SILVERLIGHT && !CLR4
+#if !SILVERLIGHT
             _resolveHolder = new AssemblyResolveHolder(this);
             try {
                 Assembly entryAssembly = Assembly.GetEntryAssembly();
@@ -263,7 +263,7 @@ namespace IronPython.Runtime {
 
             RecursionLimit = _options.RecursionLimit;
 
-#if !SILVERLIGHT && !CLR4
+#if !SILVERLIGHT
             object asmResolve;
             if (options == null ||
                 !options.TryGetValue("NoAssemblyResolveHook", out asmResolve) ||
@@ -310,7 +310,7 @@ namespace IronPython.Runtime {
 
         internal bool EnableTracing {
             get {
-                return _enableTracing;
+                return _enableTracing || PythonOptions.Tracing;
             }
             set {
                 lock (_codeUpdateLock) {
@@ -646,16 +646,19 @@ namespace IronPython.Runtime {
 
 
         private Compiler.CompilationMode GetCompilationMode(PythonCompilerOptions options, SourceUnit source) {
+            if ((options.Module & ModuleOptions.ExecOrEvalCode) != 0) {
+                return CompilationMode.Lookup;
+            }
 
             if (ShouldInterpret(options, source)) {
                 // force collectible code for the adaptive compiler.  Technically these should
                 // be orthogonal but 
-                return Compiler.CompilationMode.Collectable;
+                return CompilationMode.Collectable;
             }
 
             return ((_options.Optimize || options.Optimized) && !_options.LightweightScopes) ?
-                Compiler.CompilationMode.Uncollectable :
-                Compiler.CompilationMode.Collectable;
+                CompilationMode.Uncollectable :
+                CompilationMode.Collectable;
         }
 
         internal bool ShouldInterpret(PythonCompilerOptions options, SourceUnit source) {
@@ -741,7 +744,7 @@ namespace IronPython.Runtime {
 
         protected override ScriptCode/*!*/ LoadCompiledCode(Delegate/*!*/ method, string path, string customData) {
             SourceUnit su = new SourceUnit(this, NullTextContentProvider.Null, path, SourceCodeKind.File);
-            return new OnDiskScriptCode((Func<CodeContext, object>)method, su, customData);
+            return new OnDiskScriptCode((Func<CodeContext, FunctionCode, object>)method, su, customData);
         }
 
         public override SourceCodeReader/*!*/ GetSourceReader(Stream/*!*/ stream, Encoding/*!*/ defaultEncoding, string path) {
@@ -1140,7 +1143,7 @@ namespace IronPython.Runtime {
             return null;
         }
 
-#if !SILVERLIGHT && !CLR4 // AssemblyResolve, files, path
+#if !SILVERLIGHT // AssemblyResolve, files, path
         private bool TryLoadAssemblyFromFileWithPath(string path, out Assembly res) {
             if (File.Exists(path) && Path.IsPathRooted(path)) {
                 try {
@@ -1218,7 +1221,7 @@ namespace IronPython.Runtime {
         public override void Shutdown() {
             object callable;
 
-#if !SILVERLIGHT && !CLR4
+#if !SILVERLIGHT
             UnhookAssemblyResolve();
 #endif
 
@@ -3727,23 +3730,23 @@ namespace IronPython.Runtime {
         internal void RegisterTracebackHandler() {
             Debug.Assert(_tracePipeline != null);   // ensure debug context should have been called
 
-            if (_tracePipeline.TraceCallback == null) {
-                _tracePipeline.TraceCallback = _tracebackListeners.Peek();
-                EnableTracing = true;
-            }
+            _tracePipeline.TraceCallback = _tracebackListeners.Peek();
+            EnableTracing = true;
         }
 
         internal void UnregisterTracebackHandler() {
             Debug.Assert(_tracePipeline != null);  // ensure debug context should have been called
 
-            if (_tracePipeline.TraceCallback != null) {
-                _tracePipeline.TraceCallback = null;
-                EnableTracing = false;
-            }
+            _tracePipeline.TraceCallback = null;
+            EnableTracing = false;
         }
 
         internal void PushTracebackHandler(PythonTracebackListener listener) {
             if (_debugContext != null) {
+                while (_tracebackListeners.Count > 0 && _tracebackListeners.Peek().ExceptionThrown) {
+                    // remove any orphaned traceback listeners that are just doing pops
+                    _tracebackListeners.Pop();
+                }
                 _tracebackListeners.Push(listener);
             }
         }

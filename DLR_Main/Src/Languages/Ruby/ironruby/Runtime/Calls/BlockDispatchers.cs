@@ -39,6 +39,7 @@ namespace IronRuby.Runtime.Calls {
         public BlockDispatcher0(BlockSignatureAttributes attributesAndArity, string sourcePath, int sourceLine)
             : base(attributesAndArity, sourcePath, sourceLine) {
             Debug.Assert(!HasUnsplatParameter);
+            Debug.Assert(!HasSingleCompoundParameter);
         }
 
         // R(0, -)
@@ -289,6 +290,7 @@ namespace IronRuby.Runtime.Calls {
         public BlockDispatcher2(BlockSignatureAttributes attributesAndArity, string sourcePath, int sourceLine)
             : base(attributesAndArity, sourcePath, sourceLine) {
             Debug.Assert(!HasUnsplatParameter);
+            Debug.Assert(!HasSingleCompoundParameter);
         }
 
         // R(0, -)
@@ -393,6 +395,7 @@ namespace IronRuby.Runtime.Calls {
         public BlockDispatcher3(BlockSignatureAttributes attributesAndArity, string sourcePath, int sourceLine)
             : base(attributesAndArity, sourcePath, sourceLine) {
             Debug.Assert(!HasUnsplatParameter);
+            Debug.Assert(!HasSingleCompoundParameter);
         }
 
         // R(0, -)
@@ -507,6 +510,7 @@ namespace IronRuby.Runtime.Calls {
         public BlockDispatcher4(BlockSignatureAttributes attributesAndArity, string sourcePath, int sourceLine)
             : base(attributesAndArity, sourcePath, sourceLine) {
             Debug.Assert(!HasUnsplatParameter);
+            Debug.Assert(!HasSingleCompoundParameter);
         }
 
         // R(0, -)

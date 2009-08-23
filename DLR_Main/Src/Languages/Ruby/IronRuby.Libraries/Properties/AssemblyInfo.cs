@@ -47,3 +47,7 @@ using System.Security;
 #endif
 [assembly: SecurityTransparent]
 #endif
+
+#if CLR4
+[assembly: SecurityRules(SecurityRuleSet.Level1)]
+#endif
