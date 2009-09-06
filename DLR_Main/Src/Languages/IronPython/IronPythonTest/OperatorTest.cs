@@ -12,14 +12,8 @@
  *
  *
  * ***************************************************************************/
-using System; using Microsoft;
-
 
 using System.Runtime.CompilerServices;
-#if !CODEPLEX_40
-using Microsoft.Runtime.CompilerServices;
-#endif
-
 using Microsoft.Scripting.Runtime;
 
 [assembly: ExtensionType(typeof(IronPythonTest.ExtendedClass), typeof(IronPythonTest.ExtensionClass))]

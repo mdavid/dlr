@@ -13,31 +13,21 @@
  *
  * ***************************************************************************/
 
-#if CODEPLEX_40
-using System;
+#if !CLR2
+using System.Linq.Expressions;
 #else
-using System; using Microsoft;
+using Microsoft.Scripting.Ast;
 #endif
+
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics;
-#if CODEPLEX_40
 using System.Dynamic;
-#else
-#endif
 using System.Globalization;
 using System.IO;
-#if CODEPLEX_40
-using System.Linq.Expressions;
-#else
-using Microsoft.Linq.Expressions;
-#endif
 using System.Reflection;
 using System.Runtime.CompilerServices;
-#if !CODEPLEX_40
-using Microsoft.Runtime.CompilerServices;
-#endif
-
 using System.Security;
 using System.Text;
 using System.Threading;
@@ -71,12 +61,13 @@ namespace IronPython.Runtime {
 
         // fields used during startup
         private readonly IDictionary<object, object>/*!*/ _modulesDict = new PythonDictionary();
-        private readonly Dictionary<SymbolId, ModuleGlobalCache>/*!*/ _builtinCache = new Dictionary<SymbolId, ModuleGlobalCache>();
+        private readonly Dictionary<string, ModuleGlobalCache>/*!*/ _builtinCache = new Dictionary<string, ModuleGlobalCache>(StringComparer.Ordinal);
         private readonly Dictionary<Type, string>/*!*/ _builtinModuleNames = new Dictionary<Type, string>();
         private readonly PythonOptions/*!*/ _options;
-        private readonly Scope/*!*/ _systemState;
-        private readonly Dictionary<string, Type>/*!*/ _builtinsDict;
+        private readonly PythonModule/*!*/ _systemState;
+        private readonly Dictionary<string, Type>/*!*/ _builtinModulesDict;
         private readonly PythonOverloadResolverFactory _sharedOverloadResolverFactory;
+        private readonly PythonBinder _binder;
 #if !SILVERLIGHT
         private readonly AssemblyResolveHolder _resolveHolder;
 #endif
@@ -88,8 +79,9 @@ namespace IronPython.Runtime {
 
         // other fields which might only be conditionally used
         private string _initialVersionString;
-        private Scope _clrModule;
-        private Scope _builtins;
+        private PythonModule _clrModule;
+        private PythonDictionary _builtinDict;
+        private PythonModule _builtins;
 
         private PythonFileManager _fileManager;
         private Dictionary<string, object> _errorHandlers;
@@ -118,7 +110,7 @@ namespace IronPython.Runtime {
         private CallSite<Func<CallSite, CodeContext, object, object>> _callSite0;
         private CallSite<Func<CallSite, CodeContext, object, object, object>> _callSite1;
         private CallSite<Func<CallSite, CodeContext, object, object, object, object>> _callSite2;
-        private CallSite<Func<CallSite, CodeContext, object, object[], IAttributesCollection, object>> _callDictSite;
+        private CallSite<Func<CallSite, CodeContext, object, object[], IDictionary<object, object>, object>> _callDictSite;
         private CallSite<Func<CallSite, CodeContext, object, string, IAttributesCollection, IAttributesCollection, PythonTuple, int, object>> _importSite;
         private CallSite<Func<CallSite, CodeContext, object, string, IAttributesCollection, IAttributesCollection, PythonTuple, object>> _oldImportSite;
         private CallSite<Func<CallSite, object, bool>> _isCallableSite;
@@ -152,6 +144,7 @@ namespace IronPython.Runtime {
         private CultureInfo _collateCulture, _ctypeCulture, _timeCulture, _monetaryCulture, _numericCulture;
         private CodeContext _defaultContext, _defaultClsContext;
         private readonly IEqualityComparer<object> _equalityComparer;
+        private readonly TopNamespaceTracker _topNamespace;
 
         private Dictionary<Type, CallSite<Func<CallSite, object, object, bool>>> _equalSites;
 
@@ -185,6 +178,7 @@ namespace IronPython.Runtime {
         private PythonDeleteIndexBinder[] _deleteIndexBinders;
         private DynamicMetaObjectBinder _invokeTwoConvertToInt;
         private static CultureInfo _CCulture;
+        private DynamicDelegateCreator _delegateCreator;
 
         // tracing / in-proc debugging support
         private Debugging.CompilerServices.DebugContext _debugContext;
@@ -202,13 +196,14 @@ namespace IronPython.Runtime {
         public PythonContext(ScriptDomainManager/*!*/ manager, IDictionary<string, object> options)
             : base(manager) {
             _options = new PythonOptions(options);
-            _builtinsDict = CreateBuiltinTable();
+            _builtinModulesDict = CreateBuiltinTable();
 
-            Scope defaultScope = new Scope();
-            _defaultContext = new CodeContext(defaultScope, this);
+            PythonDictionary defaultScope = new PythonDictionary();
+            ModuleContext modContext = new ModuleContext(defaultScope, this);
+            _defaultContext = modContext.GlobalContext;
             PythonBinder binder = new PythonBinder(manager, this, _defaultContext);
             _sharedOverloadResolverFactory = new PythonOverloadResolverFactory(binder, Expression.Constant(_defaultContext));
-            Binder = binder;
+            _binder = binder;
 
             CodeContext defaultClsContext = DefaultContext.CreateDefaultCLSContext(this);
             _defaultClsContext = defaultClsContext;
@@ -219,7 +214,7 @@ namespace IronPython.Runtime {
 
             InitializeBuiltins();
 
-            _systemState = CreateBuiltinModule("sys", typeof(SysModule), ModuleOptions.NoBuiltins).Scope;
+            _systemState = CreateBuiltinModule("sys", typeof(SysModule), ModuleOptions.NoBuiltins);
             InitializeSystemState();
 #if SILVERLIGHT
             AddToPath("");
@@ -232,13 +227,16 @@ namespace IronPython.Runtime {
             );
 
             if (_options.WarningFilters.Count > 0) {
-                _systemState.Dict[SymbolTable.StringToId("warnoptions")] = new List(_options.WarningFilters);
+                _systemState.__dict__["warnoptions"] = new List(_options.WarningFilters);
             }
 
             if (_options.Frames) {
-                _systemState.Dict[SymbolTable.StringToId("_getframe")] = BuiltinFunction.MakeFunction("_getframe", 
+                var getFrame = BuiltinFunction.MakeFunction(
+                    "_getframe", 
                     ArrayUtils.ConvertAll(typeof(SysModule).GetMember("_getframeImpl"), (x) => (MethodBase)x), 
-                    typeof(SysModule));
+                    typeof(SysModule)
+                );
+                _systemState.__dict__["_getframe"] = getFrame;
             }
 
             List path = new List(_options.SearchPaths);
@@ -259,7 +257,7 @@ namespace IronPython.Runtime {
             }
 #endif
 
-            _systemState.Dict[SymbolTable.StringToId("path")] = path;
+            _systemState.__dict__["path"] = path;
 
             RecursionLimit = _options.RecursionLimit;
 
@@ -278,8 +276,15 @@ namespace IronPython.Runtime {
 #endif
 
             _equalityComparer = new PythonEqualityComparer(this);
-            
-            EnsureModule(_defaultContext);
+            _topNamespace = new TopNamespaceTracker(manager);
+            foreach (Assembly asm in manager.GetLoadedAssemblyList()) {
+                _topNamespace.LoadAssembly(asm);
+            }
+            manager.AssemblyLoaded += new EventHandler<AssemblyLoadedEventArgs>(ManagerAssemblyLoaded);
+        }
+
+        void ManagerAssemblyLoaded(object sender, AssemblyLoadedEventArgs e) {
+            _topNamespace.LoadAssembly(e.Assembly);
         }
 
         /// <summary>
@@ -326,6 +331,12 @@ namespace IronPython.Runtime {
             }
         }
 
+        internal TopNamespaceTracker TopNamespace {
+            get {
+                return _topNamespace;
+            }
+        }
+
         public IEqualityComparer<object>/*!*/ EqualityComparer {
             get { return _equalityComparer; }
         }
@@ -343,7 +354,7 @@ namespace IronPython.Runtime {
             }
 
             int IEqualityComparer<object>.GetHashCode(object obj) {
-                return _context.Hash(obj);
+                return PythonContext.Hash(obj);
             }
         }
 
@@ -457,16 +468,16 @@ namespace IronPython.Runtime {
             }
         }
 
-        public Scope/*!*/ SystemState {
+        public PythonModule/*!*/ SystemState {
             get {
                 return _systemState;
             }
         }
 
-        public Scope/*!*/ ClrModule {
+        public PythonModule/*!*/ ClrModule {
             get {
                 if (_clrModule == null) {
-                    Interlocked.CompareExchange<Scope>(ref _clrModule, CreateBuiltinModule("clr").Scope, null);
+                    Interlocked.CompareExchange(ref _clrModule, CreateBuiltinModule("clr"), null);
                 }
 
                 return _clrModule;
@@ -475,7 +486,7 @@ namespace IronPython.Runtime {
 
         internal bool TryGetSystemPath(out List path) {
             object val;
-            if (SystemState.Dict.TryGetValue(SymbolTable.StringToId("path"), out val)) {
+            if (SystemState.__dict__.TryGetValue("path", out val)) {
                 path = val as List;
             } else {
                 path = null;
@@ -530,19 +541,18 @@ namespace IronPython.Runtime {
         internal PythonModule GetModuleByName(string/*!*/ name) {
             Assert.NotNull(name);
             object scopeObj;
-            Scope scope;
-            if (SystemStateModules.TryGetValue(name, out scopeObj) && (scope = scopeObj as Scope) != null) {
-                return EnsurePythonModule(scope);
+            PythonModule module;
+            if (SystemStateModules.TryGetValue(name, out scopeObj) && (module = scopeObj as PythonModule) != null) {
+                return module;
             }
             return null;
         }
 
         internal PythonModule GetModuleByPath(string/*!*/ path) {
             Assert.NotNull(path);
-            foreach (object scopeObj in SystemStateModules.Values) {
-                Scope scope = scopeObj as Scope;
-                if (scope != null) {
-                    PythonModule module = EnsurePythonModule(scope);
+            foreach (object moduleObj in SystemStateModules.Values) {
+                PythonModule module = moduleObj as PythonModule;
+                if (module != null) {
                     if (DomainManager.Platform.PathComparer.Compare(module.GetFile(), path) == 0) {
                         return module;
                     }
@@ -597,7 +607,7 @@ namespace IronPython.Runtime {
 
             SystemExceptionType = SystemExceptionValue = SystemExceptionTraceBack = null;
 
-            SysModule.PerformModuleReload(this, _systemState.Dict);
+            SysModule.PerformModuleReload(this, _systemState.__dict__);
         }
 
         private void InitializeSysFlags() {
@@ -649,13 +659,7 @@ namespace IronPython.Runtime {
             if ((options.Module & ModuleOptions.ExecOrEvalCode) != 0) {
                 return CompilationMode.Lookup;
             }
-
-            if (ShouldInterpret(options, source)) {
-                // force collectible code for the adaptive compiler.  Technically these should
-                // be orthogonal but 
-                return CompilationMode.Collectable;
-            }
-
+ 
             return ((_options.Optimize || options.Optimized) && !_options.LightweightScopes) ?
                 CompilationMode.Uncollectable :
                 CompilationMode.Collectable;
@@ -738,11 +742,24 @@ namespace IronPython.Runtime {
             return ast.TransformToAst(compilationMode ?? GetCompilationMode(pythonOptions, sourceUnit), context);
         }
 
-        protected override ScriptCode CompileSourceCode(SourceUnit/*!*/ sourceUnit, CompilerOptions/*!*/ options, ErrorSink/*!*/ errorSink) {
-            return CompilePythonCode(null, sourceUnit, options, errorSink);
+        public override ScriptCode CompileSourceCode(SourceUnit/*!*/ sourceUnit, CompilerOptions/*!*/ options, ErrorSink/*!*/ errorSink) {            
+            ScriptCode res = CompilePythonCode(null, sourceUnit, options, errorSink);
+            if (res != null) {
+                Scope scope = res.CreateScope();
+
+                // if this is an optimized module we need to initialize the optimized scope.
+                // Optimized scopes come w/ extensions already attached so we use that to know
+                // if we're optimized or not.
+                PythonScopeExtension scopeExtension = (PythonScopeExtension)scope.GetExtension(ContextId);
+                if (scopeExtension != null) {
+                    InitializeModule(sourceUnit.Path, scopeExtension.ModuleContext, res, ModuleOptions.None);
+                }
+            }
+
+            return res;
         }
 
-        protected override ScriptCode/*!*/ LoadCompiledCode(Delegate/*!*/ method, string path, string customData) {
+        public override ScriptCode/*!*/ LoadCompiledCode(Delegate/*!*/ method, string path, string customData) {
             SourceUnit su = new SourceUnit(this, NullTextContentProvider.Null, path, SourceCodeKind.File);
             return new OnDiskScriptCode((Func<CodeContext, FunctionCode, object>)method, su, customData);
         }
@@ -915,16 +932,38 @@ namespace IronPython.Runtime {
             return (module != null) ? module.Scope : null;
         }
 
-        internal PythonModule GetPythonModule(Scope scope) {
-            return (PythonModule)scope.GetExtension(ContextId);
-        }
+        public PythonModule/*!*/ InitializeModule(string fileName, ModuleContext moduleContext, ScriptCode scriptCode, ModuleOptions options) {
+            if ((options & ModuleOptions.NoBuiltins) == 0) {
+                moduleContext.InitializeBuiltins((options & ModuleOptions.ModuleBuiltins) != 0);
+            }
 
-        internal PythonModule EnsurePythonModule(Scope scope) {
-            return (PythonModule)EnsureScopeExtension(scope);
+            // If the filename is __init__.py then this is the initialization code
+            // for a package and we need to set the __path__ variable appropriately
+            if (fileName != null && Path.GetFileName(fileName) == "__init__.py") {
+                string dirname = Path.GetDirectoryName(fileName);
+                string dir_path = DomainManager.Platform.GetFullPath(dirname);
+                moduleContext.Globals["__path__"] = PythonOps.MakeList(dir_path);
+            }
+
+            moduleContext.ShowCls = (options & ModuleOptions.ShowClsMethods) != 0;
+            moduleContext.Features = options;
+
+            if ((options & ModuleOptions.Initialize) != 0) {
+                scriptCode.Run(moduleContext.GlobalScope);
+
+                if (!moduleContext.Globals.ContainsKey("__package__")) {
+                    moduleContext.Globals["__package__"] = null;
+                }
+            }
+
+            return moduleContext.Module;
         }
 
         public override ScopeExtension CreateScopeExtension(Scope scope) {
-            return CreatePythonModule(null, scope, ModuleOptions.None);
+            var ret = new PythonScopeExtension(this, scope);
+            ret.ModuleContext.InitializeBuiltins(false);
+
+            return ret;
         }
 
         internal PythonModule/*!*/ CompileModule(string fileName, string moduleName, SourceUnit sourceCode, ModuleOptions options) {
@@ -939,8 +978,7 @@ namespace IronPython.Runtime {
 
             scriptCode = GetScriptCode(sourceCode, moduleName, options);
             Scope scope = scriptCode.CreateScope();
-            scope.SetExtension(ContextId, CreatePythonModule(fileName, scope, options));
-            return CreateModule(fileName, scope, scriptCode, options);
+            return InitializeModule(fileName, ((PythonScopeExtension)scope.GetExtension(ContextId)).ModuleContext, scriptCode, options);
         }
 
         internal ScriptCode GetScriptCode(SourceUnit sourceCode, string moduleName, ModuleOptions options) {
@@ -959,7 +997,7 @@ namespace IronPython.Runtime {
 
         internal PythonModule CreateBuiltinModule(string name) {
             Type type;
-            if (Builtins.TryGetValue(name, out type)) {
+            if (BuiltinModules.TryGetValue(name, out type)) {
                 // RuntimeHelpers.RunClassConstructor
                 // run the type's .cctor before doing any custom reflection on the type.
                 // This allows modules to lazily initialize PythonType's to custom values
@@ -991,90 +1029,23 @@ namespace IronPython.Runtime {
                 }
             }
 
-            PythonModule mod = CreateModule(null, new Scope(dict), null, options);
-            mod.Scope.SetVariable(Symbols.Name, moduleName);
-            mod.Scope.SetVariable(Symbols.Package, null);
+            PythonModule mod = new PythonModule(dict); // CreateModule(null, new Scope(dict), null, options);
+            mod.__dict__["__name__"] = moduleName;
+            mod.__dict__["__package__"] = null;
             return mod;
-        }
-
-        public PythonModule/*!*/ CreateModule() {
-            return CreateModule(ModuleOptions.None);
-        }
-
-        public PythonModule/*!*/ CreateModule(ModuleOptions options) {
-            return CreateModule(null, new Scope(PythonDictionary.MakeSymbolDictionary()), null, options);
-        }
-
-        public PythonModule/*!*/ CreateModule(string fileName, Scope scope, ScriptCode scriptCode, ModuleOptions options) {
-            if (scope == null) {
-                scope = new Scope(PythonDictionary.MakeSymbolDictionary());
-            }
-
-            PythonModule module = CreatePythonModule(fileName, scope, options);
-            module.ShowCls = (options & ModuleOptions.ShowClsMethods) != 0;
-            module.TrueDivision = (options & ModuleOptions.TrueDivision) != 0;
-            module.AllowWithStatement = (options & ModuleOptions.WithStatement) != 0;
-            module.AbsoluteImports = (options & ModuleOptions.AbsoluteImports) != 0;
-            module.PrintFunction = (options & ModuleOptions.PrintFunction) != 0;
-
-            module.IsPythonCreatedModule = true;
-
-            if ((options & ModuleOptions.Initialize) != 0) {
-                scriptCode.Run(module.Scope);
-                
-                if (!scope.ContainsVariable(Symbols.Package)) {
-                    scope.SetVariable(Symbols.Package, null);
-                }
-            }
-
-            return module;
-        }
-
-        private PythonModule/*!*/ CreatePythonModule(string fileName, Scope/*!*/ scope, ModuleOptions options) {
-            ContractUtils.RequiresNotNull(scope, "scope");
-
-            PythonModule module = new PythonModule(scope);
-            module = (PythonModule)scope.SetExtension(ContextId, module);
-
-            // adds __builtin__ variable if necessary.  Python adds the module directly to
-            // __main__ and __builtin__'s dictionary for all other modules.  Our callers
-            // pass the appropriate flags to control this behavior.
-            if ((options & ModuleOptions.NoBuiltins) == 0 && !scope.Dict.ContainsKey(Symbols.Builtins)) {
-                if ((options & ModuleOptions.ModuleBuiltins) != 0) {
-                    module.Scope.SetVariable(Symbols.Builtins, BuiltinModuleInstance);
-                } else {
-                    module.Scope.SetVariable(Symbols.Builtins, BuiltinModuleInstance.Dict);
-                }
-            }
-
-            // If the filename is __init__.py then this is the initialization code
-            // for a package and we need to set the __path__ variable appropriately
-            if (fileName != null && Path.GetFileName(fileName) == "__init__.py") {
-                string dirname = Path.GetDirectoryName(fileName);
-                string dir_path = DomainManager.Platform.GetFullPath(dirname);
-                module.Scope.SetVariable(Symbols.Path, PythonOps.MakeList(dir_path));
-            }
-
-            return module;
         }
 
         public void PublishModule(string/*!*/ name, PythonModule/*!*/ module) {
             ContractUtils.RequiresNotNull(name, "name");
             ContractUtils.RequiresNotNull(module, "module");
-            SystemStateModules[name] = module.Scope;
+            SystemStateModules[name] = module;
         }
 
-        internal PythonModule GetReloadableModule(Scope/*!*/ scope) {
-            Assert.NotNull(scope);
-
-            PythonModule module = (PythonModule)scope.GetExtension(ContextId);
-
-            if (module == null || !module.IsPythonCreatedModule) {
-                throw PythonOps.TypeError("can only reload Python modules");
-            }
+        internal PythonModule GetReloadableModule(PythonModule/*!*/ module) {
+            Assert.NotNull(module);
 
             object name;
-            if (!scope.TryGetVariable(Symbols.Name, out name) || !(name is string)) {
+            if (!module.__dict__._storage.TryGetName(out name) || !(name is string)) {
                 throw PythonOps.SystemError("nameless module");
             }
 
@@ -1110,7 +1081,7 @@ namespace IronPython.Runtime {
             }
         }
 
-        internal ModuleGlobalCache GetModuleGlobalCache(SymbolId name) {
+        internal ModuleGlobalCache GetModuleGlobalCache(string name) {
             ModuleGlobalCache res;
             if (!TryGetModuleGlobalCache(name, out res)) {
                 res = ModuleGlobalCache.NoCache;
@@ -1144,7 +1115,8 @@ namespace IronPython.Runtime {
         }
 
 #if !SILVERLIGHT // AssemblyResolve, files, path
-        private bool TryLoadAssemblyFromFileWithPath(string path, out Assembly res) {
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Reliability", "CA2001:AvoidCallingProblematicMethods", MessageId = "System.Reflection.Assembly.LoadFile")]
+        private static bool TryLoadAssemblyFromFileWithPath(string path, out Assembly res) {
             if (File.Exists(path) && Path.IsPathRooted(path)) {
                 try {
                     res = Assembly.LoadFile(path);
@@ -1226,8 +1198,8 @@ namespace IronPython.Runtime {
 #endif
 
             try {
-                if (_systemState.TryGetVariable(Symbols.SysExitFunc, out callable)) {
-                    PythonCalls.Call(new CodeContext(new Scope(), this), callable);
+                if (_systemState.__dict__.TryGetValue("exitfunc", out callable)) {
+                    PythonCalls.Call(SharedContext, callable);
                 }
             } finally {
                 if (PythonOptions.PerfStats) {
@@ -1454,7 +1426,7 @@ namespace IronPython.Runtime {
             return result;
         }
 
-        private string FrameToString(DynamicStackFrame frame) {
+        private static string FrameToString(DynamicStackFrame frame) {
             string methodName = frame.GetMethodName();
             int lineNumber = frame.GetFileLineNumber();
 
@@ -1479,21 +1451,7 @@ namespace IronPython.Runtime {
             return result;
         }
 
-        /// <summary>
-        /// Gets Python module for the module scope the context holds on to.
-        /// Returns null if there is no PythonModule associated with teh global scope.
-        /// </summary>
-        internal static PythonModule GetModule(CodeContext/*!*/ context) {
-            return context.GlobalScope.GetExtension(context.LanguageContext.ContextId) as PythonModule;
-        }
-
-        /// <summary>
-        /// Ensures the module scope is associated with a Python module and returns it.
-        /// </summary>
-        internal static PythonModule/*!*/ EnsureModule(CodeContext/*!*/ context) {
-            return GetContext(context).EnsurePythonModule(context.GlobalScope);
-        }
-
+       
         public override TService GetService<TService>(params object[] args) {
             if (typeof(TService) == typeof(TokenizerService)) {
                 return (TService)(object)new Tokenizer(ErrorSink.Null, GetPythonCompilerOptions(), true);
@@ -1535,10 +1493,10 @@ namespace IronPython.Runtime {
         }
 
         internal PythonCompilerOptions GetPythonCompilerOptions() {
-            PythonLanguageFeatures features = PythonLanguageFeatures.Default;
+            ModuleOptions features = ModuleOptions.None;
 
             if (PythonOptions.DivisionOptions == PythonDivisionOptions.New) {
-                features |= PythonLanguageFeatures.TrueDivision;
+                features |= ModuleOptions.TrueDivision;
             }
 
             return new PythonCompilerOptions(features);
@@ -1553,9 +1511,9 @@ namespace IronPython.Runtime {
 
             PythonCompilerOptions res = GetPythonCompilerOptions();
 
-            PythonModule module = GetPythonModule(scope);
+            PythonScopeExtension module = (PythonScopeExtension)scope.GetExtension(ContextId);
             if (module != null) {
-                res.LanguageFeatures |= module.LanguageFeatures;
+                res.Module |= module.ModuleContext.Features;
             }
 
             return res;
@@ -1583,9 +1541,9 @@ namespace IronPython.Runtime {
         /// <summary>
         /// Dictionary from name to type of all known built-in module names.
         /// </summary>
-        internal Dictionary<string, Type> Builtins {
+        internal Dictionary<string, Type> BuiltinModules {
             get {
-                return _builtinsDict;
+                return _builtinModulesDict;
             }
         }
 
@@ -1604,11 +1562,11 @@ namespace IronPython.Runtime {
             PythonDictionary dict = new PythonDictionary(storage);
 
             Builtin.PerformModuleReload(this, dict);
+            _builtinDict = dict;
 
-            //IronPython.Runtime.Types.PythonModuleOps.PopulateModuleDictionary(this, dict, type);
-            Scope builtinModule = CreateModule(null, new Scope(dict), null, ModuleOptions.NoBuiltins).Scope;
+            _builtins = new PythonModule(dict);
 
-            _modulesDict["__builtin__"] = builtinModule;
+            _modulesDict["__builtin__"] = _builtins;
         }
 
         private Dictionary<string, Type> CreateBuiltinTable() {
@@ -1664,15 +1622,15 @@ namespace IronPython.Runtime {
         /// <summary>
         /// TODO: Remove me, or stop caching built-ins.  This is broken if the user changes __builtin__
         /// </summary>
-        public Scope BuiltinModuleInstance {
+        public PythonModule BuiltinModuleInstance {
             get {
-                lock (this) {
-                    Scope res = _builtins;
-                    if (res == null) {
-                        res = _builtins = (Scope)SystemStateModules["__builtin__"];
-                    }
-                    return res;
-                }
+                return _builtins;
+            }
+        }
+
+        public PythonDictionary BuiltinModuleDict {
+            get {
+                return _builtinDict;
             }
         }
 
@@ -1692,13 +1650,13 @@ namespace IronPython.Runtime {
             }
         }
 
-        internal bool TryGetModuleGlobalCache(SymbolId name, out ModuleGlobalCache cache) {
+        internal bool TryGetModuleGlobalCache(string name, out ModuleGlobalCache cache) {
             lock (_builtinCache) {
                 if (!_builtinCache.TryGetValue(name, out cache)) {
                     // only cache values currently in built-ins, everything else will have
                     // no caching policy and will fall back to the LanguageContext.
                     object value;
-                    if (BuiltinModuleInstance.TryGetVariable(name, out value)) {
+                    if (BuiltinModuleInstance.__dict__.TryGetValue(name, out value)) {
                         _builtinCache[name] = cache = new ModuleGlobalCache(value);
                     }
                 }
@@ -1715,7 +1673,7 @@ namespace IronPython.Runtime {
             AddToPath(prefix);
 #endif
 
-            SetHostVariables(SystemState.Dict);
+            SetHostVariables(SystemState.__dict__);
         }
 
         internal string InitialPrefix {
@@ -1726,11 +1684,12 @@ namespace IronPython.Runtime {
 
         internal void SetHostVariables(IAttributesCollection dict) {
             dict[SymbolTable.StringToId("executable")] = _initialExecutable;
-            dict[SymbolTable.StringToId("exec_prefix")] = SystemState.Dict[SymbolTable.StringToId("prefix")] = _initialPrefix;
+            SystemState.__dict__["prefix"] =  _initialPrefix;
+            dict[SymbolTable.StringToId("exec_prefix")] = _initialPrefix;
             SetVersionVariables(dict, 2, 6, 0, "release", _initialVersionString);
         }
 
-        private void SetVersionVariables(IAttributesCollection dict, byte major, byte minor, byte build, string level, string versionString) {
+        private static void SetVersionVariables(IAttributesCollection dict, byte major, byte minor, byte build, string level, string versionString) {
             dict[SymbolTable.StringToId("hexversion")] = ((int)major << 24) + ((int)minor << 16) + ((int)build << 8);
             dict[SymbolTable.StringToId("version_info")] = PythonTuple.MakeTuple((int)major, (int)minor, (int)build, level, 0);
             dict[SymbolTable.StringToId("version")] = String.Format("{0}.{1}.{2} ({3})", major, minor, build, versionString);
@@ -1753,7 +1712,7 @@ namespace IronPython.Runtime {
         /// Gets the member names associated with the object
         /// TODO: Move "GetMemberNames" functionality into MetaObject implementations
         /// </summary>
-        protected override IList<string> GetMemberNames(object obj) {
+        public override IList<string> GetMemberNames(object obj) {
             List<string> res = new List<string>();
             foreach (object o in PythonOps.GetAttrNames(SharedContext, obj)) {
                 if (o is string) {
@@ -1763,24 +1722,24 @@ namespace IronPython.Runtime {
             return res;
         }
 
-        protected override string/*!*/ FormatObject(DynamicOperations/*!*/ operations, object obj) {
+        public override string/*!*/ FormatObject(DynamicOperations/*!*/ operations, object obj) {
             return PythonOps.Repr(_defaultContext, obj) ?? "None";
         }
 
         internal object GetSystemStateValue(string name) {
             object val;
-            if (SystemState.Dict.TryGetValue(SymbolTable.StringToId(name), out val)) {
+            if (SystemState.__dict__.TryGetValue(name, out val)) {
                 return val;
             }
             return null;
         }
 
         internal void SetSystemStateValue(string name, object value) {
-            SystemState.Dict[SymbolTable.StringToId(name)] = value;
+            SystemState.__dict__[name] = value;
         }
 
-        internal void DelSystemStateValue(string name) {
-            SystemState.Dict.Remove(SymbolTable.StringToId(name));
+        internal void DelSystemStateValue(string name) {            
+            SystemState.__dict__.Remove(name);
         }
 
         private void SetStandardIO() {
@@ -1879,8 +1838,8 @@ namespace IronPython.Runtime {
             return GetGenericSiteStorage<CallSite<Func<CallSite, CodeContext, object, object>>>();
         }
 
-        internal SiteLocalStorage<CallSite<Func<CallSite, CodeContext, object, object[], IAttributesCollection, object>>> GetGenericKeywordCallSiteStorage() {
-            return GetGenericSiteStorage<CallSite<Func<CallSite, CodeContext, object, object[], IAttributesCollection, object>>>();
+        internal SiteLocalStorage<CallSite<Func<CallSite, CodeContext, object, object[], IDictionary<object, object>, object>>> GetGenericKeywordCallSiteStorage() {
+            return GetGenericSiteStorage<CallSite<Func<CallSite, CodeContext, object, object[], IDictionary<object, object>, object>>>();
 
         }
 
@@ -1977,7 +1936,7 @@ namespace IronPython.Runtime {
                 case UnaryOperators.Length: symbol = Symbols.Length; break;
                 case UnaryOperators.Hash: symbol = Symbols.Hash; break;
                 case UnaryOperators.String: symbol = Symbols.String; break;
-                default: throw new ArgumentException();
+                default: throw new ArgumentException("unknown unary symbol");
             }
             return symbol;
         }
@@ -2026,7 +1985,7 @@ namespace IronPython.Runtime {
             switch (oper) {
                 case TernaryOperators.SetDescriptor: symbol = Symbols.SetDescriptor; break;
                 case TernaryOperators.GetDescriptor: symbol = Symbols.GetDescriptor; break;
-                default: throw new ArgumentException();
+                default: throw new ArgumentException("unknown ternary operator");
             }
             return symbol;
         }
@@ -2278,16 +2237,10 @@ namespace IronPython.Runtime {
         class AttrKey : IEquatable<AttrKey> {
             private Type _type;
             private SymbolId _name;
-            private bool _showCls;
 
             public AttrKey(Type type, SymbolId name) {
                 _type = type;
                 _name = name;
-            }
-
-            public AttrKey(Type type, SymbolId name, bool showCls)
-                : this(type, name) {
-                _showCls = showCls;
             }
 
             #region IEquatable<AttrKey> Members
@@ -2295,7 +2248,7 @@ namespace IronPython.Runtime {
             public bool Equals(AttrKey other) {
                 if (other == null) return false;
 
-                return _type == other._type && _name == other._name && _showCls == other._showCls;
+                return _type == other._type && _name == other._name;
             }
 
             #endregion
@@ -2305,7 +2258,7 @@ namespace IronPython.Runtime {
             }
 
             public override int GetHashCode() {
-                return _type.GetHashCode() ^ _name.GetHashCode() ^ (_showCls ? 1 : 0);
+                return _type.GetHashCode() ^ _name.GetHashCode();
             }
         }
 
@@ -2487,11 +2440,11 @@ namespace IronPython.Runtime {
             return Comparison(self, other, PythonOperationKind.Contains, ref _containsSite);
         }
 
-        internal bool Equal(object self, object other) {
+        internal static bool Equal(object self, object other) {
             return DynamicHelpers.GetPythonType(self).EqualRetBool(self, other);
         }
 
-        internal bool NotEqual(object self, object other) {
+        internal static bool NotEqual(object self, object other) {
             return !Equal(self, other);
         }
 
@@ -2611,7 +2564,7 @@ namespace IronPython.Runtime {
             }
         }
 
-        internal object CallWithKeywords(object func, object[] args, IAttributesCollection dict) {
+        internal object CallWithKeywords(object func, object[] args, IDictionary<object, object> dict) {
             if (_callDictSite == null) {
                 Interlocked.CompareExchange(
                     ref _callDictSite,
@@ -2623,8 +2576,8 @@ namespace IronPython.Runtime {
             return _callDictSite.Target(_callDictSite, SharedContext, func, args, dict);
         }
 
-        internal CallSite<Func<CallSite, CodeContext, object, object[], IAttributesCollection, object>> MakeKeywordSplatSite() {
-            return CallSite<Func<CallSite, CodeContext, object, object[], IAttributesCollection, object>>.Create(Binders.InvokeKeywords(this));
+        internal CallSite<Func<CallSite, CodeContext, object, object[], IDictionary<object, object>, object>> MakeKeywordSplatSite() {
+            return CallSite<Func<CallSite, CodeContext, object, object[], IDictionary<object, object>, object>>.Create(Binders.InvokeKeywords(this));
         }
 
         internal CallSite<Func<CallSite, CodeContext, object, string, IAttributesCollection, IAttributesCollection, PythonTuple, int, object>> ImportSite {
@@ -2679,7 +2632,7 @@ namespace IronPython.Runtime {
             return _isCallableSite.Target(_isCallableSite, obj);
         }
 
-        internal int Hash(object o) {
+        internal static int Hash(object o) {
             if (o != null) {
                 switch (Type.GetTypeCode(o.GetType())) {
                     case TypeCode.Int32: return Int32Ops.__hash__((int)o);
@@ -2758,12 +2711,11 @@ namespace IronPython.Runtime {
         internal CompiledLoader GetCompiledLoader() {
             if (_compiledLoader == null) {
                 if (Interlocked.CompareExchange(ref _compiledLoader, new CompiledLoader(), null) == null) {
-                    SymbolId meta_path = SymbolTable.StringToId("meta_path");
                     object path;
                     List lstPath;
 
-                    if (!SystemState.Dict.TryGetValue(meta_path, out path) || ((lstPath = path as List) == null)) {
-                        SystemState.Dict[meta_path] = lstPath = new List();
+                    if (!SystemState.__dict__.TryGetValue("meta_path", out path) || ((lstPath = path as List) == null)) {
+                        SystemState.__dict__["meta_path"] = lstPath = new List();
                     }
 
                     lstPath.append(_compiledLoader);
@@ -2953,12 +2905,9 @@ namespace IronPython.Runtime {
             }
         }
 
-        internal new PythonBinder Binder {
+        internal PythonBinder Binder {
             get {
-                return (PythonBinder)base.Binder;
-            }
-            set {
-                base.Binder = value;
+                return _binder;
             }
         }
 
@@ -3097,7 +3046,7 @@ namespace IronPython.Runtime {
             return CreateComparisonSite(ExpressionType.Equal);
         }
 
-        internal CallSite<Func<CallSite, object, int>> GetHashSite(PythonType/*!*/ type) {
+        internal static CallSite<Func<CallSite, object, int>> GetHashSite(PythonType/*!*/ type) {
             return type.HashSite;
         }
 
@@ -3126,6 +3075,7 @@ namespace IronPython.Runtime {
         /// Performs a GC collection including the possibility of freeing weak data structures held onto by the Python runtime.
         /// </summary>
         /// <param name="generation"></param>
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Reliability", "CA2001:AvoidCallingProblematicMethods", MessageId = "System.GC.Collect")]
         internal int Collect(int generation) {
             if (generation > GC.MaxGeneration || generation < 0) {
                 throw PythonOps.ValueError("invalid generation {0}", generation);
@@ -3151,6 +3101,16 @@ namespace IronPython.Runtime {
             }
 
             return (int)Math.Max(start - GC.GetTotalMemory(false), 0);
+        }
+
+        public DynamicDelegateCreator DelegateCreator {
+            get {
+                if (_delegateCreator == null) {
+                    Interlocked.CompareExchange(ref _delegateCreator, new DynamicDelegateCreator(this), null);
+                }
+
+                return _delegateCreator;
+            }
         }
 
         #region Binder Factories

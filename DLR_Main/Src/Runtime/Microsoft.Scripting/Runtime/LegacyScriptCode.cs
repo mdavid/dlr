@@ -13,18 +13,15 @@
  *
  * ***************************************************************************/
 
-#if CODEPLEX_40
-using System;
-#else
-using System; using Microsoft;
-#endif
-using System.Collections.Generic;
-using System.Text;
-#if CODEPLEX_40
+#if !CLR2
 using System.Linq.Expressions;
 #else
-using Microsoft.Linq.Expressions;
+using Microsoft.Scripting.Ast;
 #endif
+
+using System;
+using System.Collections.Generic;
+using System.Text;
 using Microsoft.Scripting.Utils;
 using System.Threading;
 using Microsoft.Scripting.Generation;
@@ -32,7 +29,7 @@ using System.Reflection.Emit;
 using System.Reflection;
 
 namespace Microsoft.Scripting.Runtime {
-    public class LegacyScriptCode : ScriptCode {
+    public class LegacyScriptCode : SavableScriptCode {
         private DlrMainCallTarget _target;
         private LambdaExpression _code;
 
@@ -76,7 +73,7 @@ namespace Microsoft.Scripting.Runtime {
             return _target;
         }
 
-        protected override KeyValuePair<MethodBuilder, Type> CompileForSave(TypeGen typeGen, Dictionary<SymbolId, FieldBuilder> symbolDict) {
+        protected override KeyValuePair<MethodBuilder, Type> CompileForSave(TypeGen typeGen) {
             var lambda = RewriteForSave(typeGen, _code);
 
             MethodBuilder mb = typeGen.TypeBuilder.DefineMethod(lambda.Name ?? "lambda_method", CompilerHelpers.PublicStatic | MethodAttributes.SpecialName);

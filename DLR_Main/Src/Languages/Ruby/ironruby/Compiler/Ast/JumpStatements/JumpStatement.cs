@@ -12,24 +12,19 @@
  *
  *
  * ***************************************************************************/
-using System; using Microsoft;
 
+#if !CLR2
+using MSA = System.Linq.Expressions;
+#else
+using MSA = Microsoft.Scripting.Ast;
+#endif
 
 using Microsoft.Scripting;
 using Microsoft.Scripting.Ast;
 using Microsoft.Scripting.Utils;
-#if CODEPLEX_40
-using MSA = System.Linq.Expressions;
-#else
-using MSA = Microsoft.Linq.Expressions;
-#endif
 
 namespace IronRuby.Compiler.Ast {
-#if CODEPLEX_40
-    using Ast = System.Linq.Expressions.Expression;
-#else
-    using Ast = Microsoft.Linq.Expressions.Expression;
-#endif
+    using Ast = Expression;
 
     public abstract class JumpStatement : Expression {
         private readonly Arguments _arguments;

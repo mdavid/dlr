@@ -13,23 +13,12 @@
  *
  * ***************************************************************************/
 
-#if CODEPLEX_40
 using System;
-#else
-using System; using Microsoft;
-#endif
 using System.Collections.Generic;
 using System.Reflection;
 using System.Runtime.CompilerServices;
-#if !CODEPLEX_40
-using Microsoft.Runtime.CompilerServices;
-#endif
-
 using System.Runtime.InteropServices;
-#if CODEPLEX_40
 using System.Dynamic;
-#else
-#endif
 using IronPython.Runtime.Operations;
 using Microsoft.Scripting;
 using Microsoft.Scripting.Generation;
@@ -191,7 +180,7 @@ namespace IronPython.Runtime.Types {
 
                 MethodInfo add = _event.Tracker.GetCallableAddMethod();
                 if (CompilerHelpers.IsVisible(add) || context.LanguageContext.DomainManager.Configuration.PrivateBinding) {
-                    _event.Tracker.AddHandler(_instance, func, context.LanguageContext);
+                    _event.Tracker.AddHandler(_instance, func, context.LanguageContext.DelegateCreator);
                 } else {
                     throw new ArgumentTypeException("Cannot add handler to a private event.");
                 }

@@ -13,19 +13,13 @@
  *
  * ***************************************************************************/
 
-#if CODEPLEX_40
-using System;
-#else
-using System; using Microsoft;
-#endif
-using System.Diagnostics;
-#if CODEPLEX_40
+#if !CLR2
 using System.Linq.Expressions;
-using System.Dynamic;
-#else
-using Microsoft.Linq.Expressions;
-using Microsoft.Scripting;
 #endif
+
+using System;
+using System.Diagnostics;
+using System.Dynamic;
 using Microsoft.Scripting.Actions;
 using Microsoft.Scripting.Ast;
 using Microsoft.Scripting.Runtime;
@@ -33,11 +27,7 @@ using IronPython.Runtime.Types;
 using IronPython.Runtime.Operations;
 
 namespace IronPython.Runtime.Binding {
-#if CODEPLEX_40
-    using Ast = System.Linq.Expressions.Expression;
-#else
-    using Ast = Microsoft.Linq.Expressions.Expression;
-#endif
+    using Ast = Expression;
     using AstUtils = Microsoft.Scripting.Ast.Utils;
 
     partial class MetaPythonObject : DynamicMetaObject {
@@ -111,7 +101,7 @@ namespace IronPython.Runtime.Binding {
         /// 
         /// TODO: This should be specialized for each callable object
         /// </summary>
-        protected DynamicMetaObject/*!*/ MakeDelegateTarget(DynamicMetaObjectBinder/*!*/ action, Type/*!*/ toType, DynamicMetaObject/*!*/ arg) {
+        protected static DynamicMetaObject/*!*/ MakeDelegateTarget(DynamicMetaObjectBinder/*!*/ action, Type/*!*/ toType, DynamicMetaObject/*!*/ arg) {
             Debug.Assert(arg != null);
 
             PythonContext state = PythonContext.GetPythonContext(action);

@@ -13,39 +13,23 @@
  *
  * ***************************************************************************/
 
-#if CODEPLEX_40
-using EachSite = System.Func<System.Runtime.CompilerServices.CallSite, object, IronRuby.Builtins.Proc, object>;
+#if !CLR2
+using System.Linq.Expressions;
 #else
-using EachSite = Microsoft.Func<Microsoft.Runtime.CompilerServices.CallSite, object, IronRuby.Builtins.Proc, object>;
+using Microsoft.Scripting.Ast;
 #endif
 
-#if CODEPLEX_40
 using System;
-#else
-using System; using Microsoft;
-#endif
 using System.Collections.Generic;
 using System.Diagnostics;
 using Microsoft.Scripting;
-#if CODEPLEX_40
-using System.Dynamic;
-using System.Linq.Expressions;
-#else
-using Microsoft.Linq.Expressions;
-#endif
 using Microsoft.Scripting.Runtime;
 using Microsoft.Scripting.Utils;
-using Microsoft.Scripting.Actions;
 using IronRuby.Runtime;
-using IronRuby.Runtime.Calls;
-using System.Runtime.InteropServices;
-#if CODEPLEX_40
-using Ast = System.Linq.Expressions.Expression;
-#else
-using Ast = Microsoft.Linq.Expressions.Expression;
-#endif
+using System.Runtime.CompilerServices;
 
 namespace IronRuby.Builtins {
+    using EachSite = Func<CallSite, object, Proc, object>;
 
     [RubyClass("Struct", Extends = typeof(RubyStruct), Inherits = typeof(object)), Includes(typeof(Enumerable))]
     public static partial class RubyStructOps {
@@ -95,7 +79,7 @@ namespace IronRuby.Builtins {
             var result = RubyStruct.DefineStruct(self, className, attributeNames);
 
             if (block != null) {
-                return RubyUtils.EvaluateInModule(result, block, result);
+                return RubyUtils.EvaluateInModule(result, block, null, result);
             }
 
             return result;

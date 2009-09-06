@@ -13,17 +13,14 @@
  *
  * ***************************************************************************/
 
-#if CODEPLEX_40
-using System;
-#else
-using System; using Microsoft;
-#endif
-using System.IO;
-#if CODEPLEX_40
+#if !CLR2
 using System.Linq.Expressions;
 #else
-using Microsoft.Linq.Expressions;
+using Microsoft.Scripting.Ast;
 #endif
+
+using System;
+using System.IO;
 using System.Text;
 using System.Threading;
 using Microsoft.Scripting.Utils;

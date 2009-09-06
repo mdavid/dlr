@@ -13,11 +13,13 @@
  *
  * ***************************************************************************/
 
-#if CODEPLEX_40
-using System;
+#if !CLR2
+using MSA = System.Linq.Expressions;
 #else
-using System; using Microsoft;
+using MSA = Microsoft.Scripting.Ast;
 #endif
+
+using System;
 using System.Diagnostics;
 using System.Reflection;
 using Microsoft.Scripting;
@@ -26,22 +28,13 @@ using Microsoft.Scripting.Runtime;
 using Microsoft.Scripting.Utils;
 using IronRuby.Builtins;
 using IronRuby.Runtime.Calls;
-#if CODEPLEX_40
-using MSA = System.Linq.Expressions;
-using Ast = System.Linq.Expressions.Expression;
-#else
-using MSA = Microsoft.Linq.Expressions;
-using Ast = Microsoft.Linq.Expressions.Expression;
-#endif
 using AstFactory = IronRuby.Compiler.Ast.AstFactory;
 using AstUtils = Microsoft.Scripting.Ast.Utils;
 using IronRuby.Compiler.Generation;
-#if CODEPLEX_40
 using System.Dynamic;
-#else
-#endif
 
 namespace IronRuby.Runtime {
+    using Ast = MSA.Expression;
     
     public enum BlockReturnReason {
         Undefined = 0,
@@ -195,16 +188,7 @@ namespace IronRuby.Runtime {
         }
 
         public bool Yield(object[]/*!*/ args, out object blockResult) {
-            ContractUtils.RequiresNotNull(args, "args");
-            switch (args.Length) {
-                case 0: blockResult = RubyOps.Yield0(Self, this); break;
-                case 1: blockResult = RubyOps.Yield1(args[0], Self, this); break;
-                case 2: blockResult = RubyOps.Yield2(args[0], args[1], Self, this); break;
-                case 3: blockResult = RubyOps.Yield3(args[0], args[1], args[2], Self, this); break;
-                case 4: blockResult = RubyOps.Yield4(args[0], args[1], args[2], args[3], Self, this); break;
-                default: blockResult = RubyOps.YieldN(args, Self, this); break;
-            }
-            return BlockJumped(blockResult);
+            return BlockJumped(blockResult = RubyOps.Yield(args, Self, this));
         }
 
         #endregion

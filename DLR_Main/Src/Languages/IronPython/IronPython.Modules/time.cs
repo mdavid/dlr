@@ -18,20 +18,12 @@ extern alias systemcore;
 using TimeZoneInfo = systemcore::System.TimeZoneInfo;
 #endif
 
-#if CODEPLEX_40
 using System;
-#else
-using System; using Microsoft;
-#endif
 using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Globalization;
 using System.Runtime.CompilerServices;
-#if !CODEPLEX_40
-using Microsoft.Runtime.CompilerServices;
-#endif
-
 using System.Text;
 using System.Threading;
 
@@ -64,6 +56,7 @@ namespace IronPython.Modules {
         public static readonly int altzone;
         public static readonly int daylight;
         public static readonly int timezone;
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Security", "CA2104:DoNotDeclareReadOnlyMutableReferenceTypes")]
         public static readonly PythonTuple tzname;
         public const bool accept2dyear = true;
 

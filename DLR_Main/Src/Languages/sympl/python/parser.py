@@ -5,7 +5,7 @@ import lexer
 import clr
 if clr.use35:
     clr.AddReference("Microsoft.Scripting.Core")
-    from Microsoft.Linq.Expressions import ExpressionType
+    from Microsoft.Scripting.Ast import ExpressionType
 else:
     clr.AddReference("System.Core")
     from System.Linq.Expressions import ExpressionType

@@ -13,11 +13,7 @@
  *
  * ***************************************************************************/
 
-#if CODEPLEX_40
 using System;
-#else
-using System; using Microsoft;
-#endif
 using System.CodeDom.Compiler;
 using System.Collections;
 using System.Collections.Generic;
@@ -40,10 +36,10 @@ internal class LibraryDef {
 
     private bool Builtins { get { return _namespace == typeof(RubyClass).Namespace; } }
 
-    public static readonly string/*!*/ TypeAction0 = TypeName(typeof(Action));
-    public static readonly string/*!*/ TypeAction1 = GenericTypeName(typeof(Action<>));
-    public static readonly string/*!*/ TypeActionN = GenericTypeName(typeof(Action<,>));
-    public static readonly string/*!*/ TypeFunction = GenericTypeName(typeof(Func<>));
+    public static readonly string/*!*/ TypeAction0 = "Action"; // TODO: TypeName(typeof(Action));
+    public static readonly string/*!*/ TypeAction1 = "Action";// TODO: GenericTypeName(typeof(Action<>));
+    public static readonly string/*!*/ TypeActionN = "Action";// TODO: GenericTypeName(typeof(Action<,>));
+    public static readonly string/*!*/ TypeFunction = "Func";// TODO: GenericTypeName(typeof(Func<>));
     public static readonly string/*!*/ TypeDelegate = TypeName(typeof(Delegate));
     public static readonly string/*!*/ TypeRubyModule = TypeName(typeof(RubyModule));
     public static readonly string/*!*/ TypeRubyClass = TypeName(typeof(RubyClass));
@@ -854,6 +850,8 @@ internal class LibraryDef {
 
         _output.WriteLine("namespace {0} {{", _namespace);
         _output.Indent++;
+        _output.WriteLine("using System;");
+        _output.WriteLine();
 
         _output.WriteLine("public sealed class {0} : {1} {{", _initializerName, TypeLibraryInitializer);
         _output.Indent++;

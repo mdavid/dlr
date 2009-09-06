@@ -1,17 +1,7 @@
-#if CODEPLEX_40
 using System;
-#else
-using System; using Microsoft;
-#endif
 using System.Collections.Generic;
-#if CODEPLEX_40
-using System.Linq;
-using System.Linq.Expressions;
-#else
-using Microsoft.Linq;
-using Microsoft.Linq.Expressions;
-#endif
 using System.Text;
+using Microsoft.Scripting.Ast;
 
 namespace Samples {
     class CIsFalse {
@@ -19,11 +9,7 @@ namespace Samples {
         static public void IsFalse1() {
             //<Snippet1>
             // add the following directive to your file
-#if CODEPLEX_40
-            // using System.Linq.Expressions;  
-#else
-            // using Microsoft.Linq.Expressions;  
-#endif
+            // using Microsoft.Scripting.Ast;  
 
             //This element defines an IsFalse expression. It searches for an IsFalse operator in the 
             //object supplied.
@@ -49,11 +35,7 @@ namespace Samples {
         static public void IsFalse2() {
             //<Snippet2>
             // add the following directive to your file
-#if CODEPLEX_40
-            // using System.Linq.Expressions;  
-#else
-            // using Microsoft.Linq.Expressions;  
-#endif
+            // using Microsoft.Scripting.Ast;  
 
             //This element defines an IsFalse expression through a user defined operator.
             Expression MyIsFalse = Expression.IsFalse(

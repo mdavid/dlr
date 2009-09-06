@@ -13,18 +13,10 @@
  *
  * ***************************************************************************/
 
-#if CODEPLEX_40
 using System;
-#else
-using System; using Microsoft;
-#endif
 using System.Collections.Generic;
 using System.Globalization;
 using System.Runtime.CompilerServices;
-#if !CODEPLEX_40
-using Microsoft.Runtime.CompilerServices;
-#endif
-
 using System.Runtime.InteropServices;
 using System.Text;
 
@@ -55,8 +47,11 @@ namespace IronPython.Modules {
 
             internal static readonly timedelta _DayResolution = new timedelta(1, 0, 0);
             // class attributes:
+            [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Security", "CA2104:DoNotDeclareReadOnlyMutableReferenceTypes")]
             public static readonly timedelta resolution = new timedelta(0, 0, 1);
+            [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Security", "CA2104:DoNotDeclareReadOnlyMutableReferenceTypes")]
             public static readonly timedelta min = new timedelta(-MAXDAYS, 0, 0);
+            [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Security", "CA2104:DoNotDeclareReadOnlyMutableReferenceTypes")]
             public static readonly timedelta max = new timedelta(MAXDAYS, 86399, 999999);
 
             private const int MAXDAYS = 999999999;
@@ -366,8 +361,11 @@ namespace IronPython.Modules {
         public class date : ICodeFormattable {
             internal DateTime _dateTime;
             // class attributes
+            [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Security", "CA2104:DoNotDeclareReadOnlyMutableReferenceTypes")]
             public static readonly date min = new date(new DateTime(1, 1, 1));
+            [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Security", "CA2104:DoNotDeclareReadOnlyMutableReferenceTypes")]
             public static readonly date max = new date(new DateTime(9999, 12, 31));
+            [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Security", "CA2104:DoNotDeclareReadOnlyMutableReferenceTypes")]
             public static readonly timedelta resolution = timedelta._DayResolution;
 
             protected date() { }
@@ -390,7 +388,7 @@ namespace IronPython.Modules {
             }
 
             public static date fromordinal(int d) {
-                return new date(min._dateTime.AddDays(d - 1));
+                return new date(min._dateTime.AddDays(checked(d - 1)));
             }
 
             public static date fromtimestamp(double timestamp) {
@@ -460,7 +458,7 @@ namespace IronPython.Modules {
             }
 
             // instance methods
-            public virtual date replace(CodeContext/*!*/ context, [ParamDictionary]IAttributesCollection dict) {
+            public virtual date replace(CodeContext/*!*/ context, [ParamDictionary]IDictionary<object, object> dict) {
                 int year2 = _dateTime.Year;
                 int month2 = _dateTime.Month;
                 int day2 = _dateTime.Day;
@@ -654,8 +652,11 @@ namespace IronPython.Modules {
             internal tzinfo _tz;
 
             // class attributes
+            [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Security", "CA2104:DoNotDeclareReadOnlyMutableReferenceTypes")]
             public new static readonly datetime max = new datetime(DateTime.MaxValue, 999, null);
+            [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Security", "CA2104:DoNotDeclareReadOnlyMutableReferenceTypes")]
             public new static readonly datetime min = new datetime(DateTime.MinValue, 0, null);
+            [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Security", "CA2104:DoNotDeclareReadOnlyMutableReferenceTypes")]
             public new static readonly timedelta resolution = timedelta.resolution;
 
 
@@ -770,7 +771,7 @@ namespace IronPython.Modules {
             }
 
             public new static datetime fromordinal(int d) {
-                return new datetime(DateTime.MinValue + new TimeSpan(d - 1, 0, 0, 0), 0, null);
+                return new datetime(DateTime.MinValue + new TimeSpan(checked(d - 1), 0, 0, 0), 0, null);
             }
 
             public static object combine(date date, time time) {
@@ -861,7 +862,7 @@ namespace IronPython.Modules {
             }
 
             [Documentation("gets a new datetime object with the fields provided as keyword arguments replaced.")]
-            public override date replace(CodeContext/*!*/ context, [ParamDictionary]IAttributesCollection dict) {
+            public override date replace(CodeContext/*!*/ context, [ParamDictionary]IDictionary<object, object> dict) {
                 int lyear = year;
                 int lmonth = month;
                 int lday = day;
@@ -1120,8 +1121,11 @@ namespace IronPython.Modules {
             private UnifiedTime _utcTime;
 
             // class attributes:
+            [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Security", "CA2104:DoNotDeclareReadOnlyMutableReferenceTypes")]
             public static readonly time max = new time(23, 59, 59, 999999, null);
+            [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Security", "CA2104:DoNotDeclareReadOnlyMutableReferenceTypes")]
             public static readonly time min = new time(0, 0, 0, 0, null);
+            [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Security", "CA2104:DoNotDeclareReadOnlyMutableReferenceTypes")]
             public static readonly timedelta resolution = timedelta.resolution;
 
             public time([DefaultParameterValue(0)]int hour,
@@ -1205,7 +1209,7 @@ namespace IronPython.Modules {
                 return this;
             }
 
-            public object replace([ParamDictionary]IAttributesCollection dict) {
+            public object replace([ParamDictionary]IDictionary<object, object> dict) {
                 int lhour = hour;
                 int lminute = minute;
                 int lsecond = second;

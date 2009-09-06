@@ -12,24 +12,19 @@
  *
  *
  * ***************************************************************************/
-using System; using Microsoft;
-
 
 #if !SILVERLIGHT
 
-#if CODEPLEX_40
+#if !MICROSOFT_DYNAMIC
 using System.Linq.Expressions;
 #else
-using Microsoft.Linq.Expressions;
+using Microsoft.Scripting.Ast;
 #endif
+
 using System.Security;
 using System.Security.Permissions;
 
-#if CODEPLEX_40
 namespace System.Dynamic {
-#else
-namespace Microsoft.Scripting {
-#endif
     internal class DispCallableMetaObject : DynamicMetaObject {
         private readonly DispCallable _callable;
 

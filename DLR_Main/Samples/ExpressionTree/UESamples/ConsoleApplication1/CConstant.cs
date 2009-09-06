@@ -1,16 +1,6 @@
-#if CODEPLEX_40
 using System;
-#else
-using System; using Microsoft;
-#endif
 using System.Collections.Generic;
-#if CODEPLEX_40
-using System.Linq;
-using System.Linq.Expressions;
-#else
-using Microsoft.Linq;
-using Microsoft.Linq.Expressions;
-#endif
+using Microsoft.Scripting.Ast;
 using System.Text;
 
 namespace Samples {
@@ -19,11 +9,7 @@ namespace Samples {
         static public void Constant1() {
             //<Snippet1>
             // add the following directive to your file
-#if CODEPLEX_40
-            // using System.Linq.Expressions;  
-#else
-            // using Microsoft.Linq.Expressions;  
-#endif
+            // using Microsoft.Scripting.Ast;  
 
             //This Expression represents a Constant value.
             Expression MyConstant = Expression.Constant(
@@ -43,11 +29,7 @@ namespace Samples {
         static public void Constant2() {
             //<Snippet1>
             // add the following directive to your file
-#if CODEPLEX_40
-            // using System.Linq.Expressions;  
-#else
-            // using Microsoft.Linq.Expressions;  
-#endif
+            // using Microsoft.Scripting.Ast;  
 
             //This Expression represents a Constant value.
             //The type can explicitly be given. This can be used, for example, for defining constants of a nullable type.

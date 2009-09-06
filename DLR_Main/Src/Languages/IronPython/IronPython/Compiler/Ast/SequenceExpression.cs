@@ -12,11 +12,10 @@
  *
  *
  * ***************************************************************************/
-using System; using Microsoft;
-
 
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.Runtime.CompilerServices;
 
 using Microsoft.Scripting;
 using Microsoft.Scripting.Runtime;
@@ -24,19 +23,16 @@ using Microsoft.Scripting.Runtime;
 using IronPython.Runtime.Binding;
 using IronPython.Runtime.Operations;
 
-using AstUtils = Microsoft.Scripting.Ast.Utils;
-#if CODEPLEX_40
+#if !CLR2
 using MSAst = System.Linq.Expressions;
 #else
-using MSAst = Microsoft.Linq.Expressions;
+using MSAst = Microsoft.Scripting.Ast;
 #endif
 
+using AstUtils = Microsoft.Scripting.Ast.Utils;
+
 namespace IronPython.Compiler.Ast {
-#if CODEPLEX_40
-    using Ast = System.Linq.Expressions.Expression;
-#else
-    using Ast = Microsoft.Linq.Expressions.Expression;
-#endif
+    using Ast = MSAst.Expression;
 
     public abstract class SequenceExpression : Expression {
         private readonly Expression[] _items;
@@ -45,7 +41,7 @@ namespace IronPython.Compiler.Ast {
             _items = items;
         }
 
-        public Expression[] Items {
+        public IList<Expression> Items {
             get { return _items; }
         }
 
@@ -78,13 +74,11 @@ namespace IronPython.Compiler.Ast {
                     SourceSpan.None;
             }
 
-            MSAst.Expression[] statements = new MSAst.Expression[4];
-
             // 1. Evaluate the expression and assign the value to the temp.
             MSAst.ParameterExpression right_temp = ag.GetTemporary("unpacking");
 
             // 2. Add the assignment "right_temp = right" into the suite/block
-            statements[0] = ag.MakeAssignment(right_temp, right);
+            MSAst.Expression assignStmt1 = AstGenerator.MakeAssignment(right_temp, right);
 
             // 3. Call GetEnumeratorValues on the right side (stored in temp)
             MSAst.Expression enumeratorValues = Ast.Call(
@@ -100,13 +94,13 @@ namespace IronPython.Compiler.Ast {
 
             // 5. Assign the value of the method call (mce) into the array temp
             // And add the assignment "array_temp = Ops.GetEnumeratorValues(...)" into the block
-            statements[1] = ag.MakeAssignment(
+            MSAst.Expression assignStmt2 = ag.MakeAssignment(
                 array_temp, 
                 enumeratorValues, 
                 rightSpan
             );
 
-            MSAst.Expression[] sets = new MSAst.Expression[_items.Length + 1];
+            ReadOnlyCollectionBuilder<MSAst.Expression> sets = new ReadOnlyCollectionBuilder<MSAst.Expression>(_items.Length + 1);
             for (int i = 0; i < _items.Length; i ++) {
                 // target = array_temp[i]
 
@@ -130,20 +124,18 @@ namespace IronPython.Compiler.Ast {
                     element,
                     PythonOperationKind.None
                 );
-
-                sets[i] = set;
+                sets.Add(set);
             }
             // 9. add the sets as their own block so they can be marked as a single span, if necessary.
-            sets[_items.Length] = AstUtils.Empty();
-            statements[2] = ag.AddDebugInfo(Ast.Block(sets), leftSpan);
+            sets.Add(AstUtils.Empty());
+            MSAst.Expression itemSet = ag.AddDebugInfo(Ast.Block(sets.ToReadOnlyCollection()), leftSpan);
 
             // 10. Free the temps
             ag.FreeTemp(array_temp);
             ag.FreeTemp(right_temp);
 
             // 11. Return the suite statement (block)
-            statements[3] = AstUtils.Empty();
-            return ag.AddDebugInfo(Ast.Block(statements), totalSpan);
+            return ag.AddDebugInfo(Ast.Block(assignStmt1, assignStmt2, itemSet, AstUtils.Empty()), totalSpan);
         }
 
         internal override string CheckAssign() {

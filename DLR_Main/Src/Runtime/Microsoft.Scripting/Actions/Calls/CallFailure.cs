@@ -12,15 +12,9 @@
  *
  *
  * ***************************************************************************/
-using System; using Microsoft;
-
 
 using System.Collections.Generic;
-#if CODEPLEX_40
 using System.Dynamic;
-#else
-using Microsoft.Scripting;
-#endif
 
 namespace Microsoft.Scripting.Actions.Calls {
     /// <summary>

@@ -12,8 +12,6 @@
  *
  *
  * ***************************************************************************/
-using System; using Microsoft;
-
 
 namespace IronRuby.Builtins {
     public sealed partial class BuiltinsInitializer : IronRuby.Builtins.LibraryInitializer {

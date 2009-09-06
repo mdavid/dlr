@@ -13,20 +13,15 @@
  *
  * ***************************************************************************/
 
-#if CODEPLEX_40
-using System;
-using System.Dynamic;
+#if !CLR2
 using System.Linq.Expressions;
 #else
-using System; using Microsoft;
-using Microsoft.Scripting;
-using Microsoft.Linq.Expressions;
-#endif
-using System.Runtime.CompilerServices;
-#if !CODEPLEX_40
-using Microsoft.Runtime.CompilerServices;
+using Microsoft.Scripting.Ast;
 #endif
 
+using System;
+using System.Dynamic;
+using System.Runtime.CompilerServices;
 
 using Microsoft.Scripting.Runtime;
 
@@ -35,11 +30,7 @@ using IronPython.Runtime.Operations;
 using AstUtils = Microsoft.Scripting.Ast.Utils;
 
 namespace IronPython.Runtime.Binding {
-#if CODEPLEX_40
-    using Ast = System.Linq.Expressions.Expression;
-#else
-    using Ast = Microsoft.Linq.Expressions.Expression;
-#endif
+    using Ast = Expression;
 
     class PythonSetIndexBinder : SetIndexBinder, IPythonSite, IExpressionSerializable {
         private readonly PythonContext/*!*/ _context;
@@ -52,11 +43,7 @@ namespace IronPython.Runtime.Binding {
         public override DynamicMetaObject FallbackSetIndex(DynamicMetaObject target, DynamicMetaObject[] indexes, DynamicMetaObject value, DynamicMetaObject errorSuggestion) {
 #if !SILVERLIGHT
             DynamicMetaObject com;
-#if CODEPLEX_40
-            if (System.Dynamic.ComBinder.TryBindSetIndex(this, target, BindingHelpers.GetComArguments(indexes), BindingHelpers.GetComArgument(value), out com)) {
-#else
-            if (Microsoft.Scripting.ComBinder.TryBindSetIndex(this, target, BindingHelpers.GetComArguments(indexes), BindingHelpers.GetComArgument(value), out com)) {
-#endif
+            if (Microsoft.Scripting.ComInterop.ComBinder.TryBindSetIndex(this, target, BindingHelpers.GetComArguments(indexes), BindingHelpers.GetComArgument(value), out com)) {
                 return com;
             }
 #endif

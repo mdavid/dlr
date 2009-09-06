@@ -13,24 +13,17 @@
  *
  * ***************************************************************************/
 
-#if CODEPLEX_40
-using System;
-#else
-using System; using Microsoft;
-#endif
-using System.Collections.Generic;
-using System.Diagnostics;
-#if CODEPLEX_40
-using System.Dynamic;
+#if !CLR2
 using System.Linq.Expressions;
 #else
-using Microsoft.Linq.Expressions;
-#endif
-using System.Runtime.CompilerServices;
-#if !CODEPLEX_40
-using Microsoft.Runtime.CompilerServices;
+using Microsoft.Scripting.Ast;
 #endif
 
+using System;
+using System.Collections.Generic;
+using System.Diagnostics;
+using System.Dynamic;
+using System.Runtime.CompilerServices;
 
 using Microsoft.Scripting;
 using Microsoft.Scripting.Actions;
@@ -95,7 +88,7 @@ namespace IronPython.Runtime.Binding {
                 return InvokeForeignObject(target, args);
             }
 #if !SILVERLIGHT
-            else if (ComOps.IsComObject(target.Value)) {
+            else if (Microsoft.Scripting.ComInterop.ComBinder.CanComBind(target.Value)) {
                 return InvokeForeignObject(target, args);
             }
 #endif
@@ -187,15 +180,6 @@ namespace IronPython.Runtime.Binding {
             List<Expression> metaArgs;
             Expression test;
             BindingRestrictions restrictions;
-
-#if !SILVERLIGHT
-            // TODO: This should go away long term and instead DispCallable should not be
-            // an IDynamicMetaObjectProvider and should be bound only through the ComBinder.
-            // Until that happens we need this ugly hack.
-            if (target.GetType().Assembly == typeof(ComBinder).Assembly) {
-                args = BindingHelpers.GetComArguments(args);
-            }
-#endif
 
             TranslateArguments(target, args, out callInfo, out metaArgs, out test, out restrictions);
 

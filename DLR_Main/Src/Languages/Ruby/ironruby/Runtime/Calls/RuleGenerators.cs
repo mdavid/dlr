@@ -18,11 +18,7 @@ using Microsoft.Scripting.Runtime;
 using IronRuby.Builtins;
 using IronRuby.Compiler;
 using System.Diagnostics;
-#if CODEPLEX_40
 using System;
-#else
-using System; using Microsoft;
-#endif
 
 namespace IronRuby.Runtime.Calls {
 

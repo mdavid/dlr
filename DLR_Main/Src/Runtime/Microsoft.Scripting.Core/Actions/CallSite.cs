@@ -12,34 +12,27 @@
  *
  *
  * ***************************************************************************/
-using System; using Microsoft;
 
+#if CLR2
+using Microsoft.Scripting.Ast;
+using Microsoft.Scripting.Ast.Compiler;
+#else
+using System.Linq.Expressions;
+using System.Linq.Expressions.Compiler;
+#endif
+
+#if SILVERLIGHT
+using System.Core;
+#endif
 
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Diagnostics;
-#if CODEPLEX_40
 using System.Dynamic;
 using System.Dynamic.Utils;
-using System.Linq.Expressions;
-using System.Linq.Expressions.Compiler;
-#else
-using Microsoft.Scripting;
-using Microsoft.Scripting.Utils;
-using Microsoft.Linq.Expressions;
-using Microsoft.Linq.Expressions.Compiler;
-#endif
 using System.Reflection;
 
-#if SILVERLIGHT
-using System.Core;
-#endif //SILVERLIGHT
-
-#if CODEPLEX_40
 namespace System.Runtime.CompilerServices {
-#else
-namespace Microsoft.Runtime.CompilerServices {
-#endif
 
     //
     // A CallSite provides a fast mechanism for call-site caching of dynamic dispatch

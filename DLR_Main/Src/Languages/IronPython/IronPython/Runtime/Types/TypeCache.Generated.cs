@@ -13,11 +13,7 @@
  *
  * ***************************************************************************/
 
-#if CODEPLEX_40
 using System;
-#else
-using System; using Microsoft;
-#endif
 
 using Microsoft.Scripting.Math;
 using Microsoft.Scripting.Runtime;
@@ -46,7 +42,7 @@ namespace IronPython.Runtime.Types {
         private static PythonType weakreference;
         private static PythonType list;
         private static PythonType pythonfile;
-        private static PythonType scope;
+        private static PythonType pythonmodule;
         private static PythonType method;
         private static PythonType enumerate;
         private static PythonType intType;
@@ -170,8 +166,8 @@ namespace IronPython.Runtime.Types {
 
         public static PythonType Module {
             get {
-                if (scope == null) scope = DynamicHelpers.GetPythonTypeFromType(typeof(Scope));
-                return scope;
+                if (pythonmodule == null) pythonmodule = DynamicHelpers.GetPythonTypeFromType(typeof(PythonModule));
+                return pythonmodule;
             }
         }
 

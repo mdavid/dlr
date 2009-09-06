@@ -13,19 +13,16 @@
  *
  * ***************************************************************************/
 
-#if CODEPLEX_40
-using System;
+#if !CLR2
+using System.Linq.Expressions;
 #else
-using System; using Microsoft;
+using Microsoft.Scripting.Ast;
 #endif
+
+using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Diagnostics;
-#if CODEPLEX_40
-using System.Linq.Expressions;
-#else
-using Microsoft.Linq.Expressions;
-#endif
 using Microsoft.Scripting.Utils;
 
 namespace Microsoft.Scripting.Ast {

@@ -12,22 +12,15 @@
  *
  *
  * ***************************************************************************/
-using System; using Microsoft;
-
 
 #if !SILVERLIGHT
-
-#if CODEPLEX_40
+#if !MICROSOFT_DYNAMIC
 using System.Linq.Expressions;
 #else
-using Microsoft.Linq.Expressions;
+using Microsoft.Scripting.Ast;
 #endif
 
-#if CODEPLEX_40
 namespace System.Dynamic {
-#else
-namespace Microsoft.Scripting {
-#endif
     /// <summary>
     /// ArgBuilder provides an argument value used by the MethodBinder.  One ArgBuilder exists for each
     /// physical parameter defined on a method.  

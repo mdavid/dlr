@@ -13,11 +13,7 @@
  *
  * ***************************************************************************/
 
-#if CODEPLEX_40
 using System;
-#else
-using System; using Microsoft;
-#endif
 using System.Diagnostics;
 using System.Reflection;
 
@@ -25,13 +21,14 @@ using Microsoft.Scripting;
 using Microsoft.Scripting.Runtime;
 using Microsoft.Scripting.Utils;
 
-using IronPython.Runtime;
-using IronPython.Runtime.Operations;
-#if CODEPLEX_40
+#if !CLR2
 using System.Linq.Expressions;
 #else
-using Microsoft.Linq.Expressions;
+using Microsoft.Scripting.Ast;
 #endif
+
+using IronPython.Runtime;
+using IronPython.Runtime.Operations;
 using System.Threading;
 
 namespace IronPython.Compiler {
@@ -78,11 +75,7 @@ namespace IronPython.Compiler {
 
         #region IExpressionSerializable Members
 
-#if CODEPLEX_40
-        public System.Linq.Expressions.Expression CreateExpression() {
-#else
-        public Microsoft.Linq.Expressions.Expression CreateExpression() {
-#endif
+        public Expression CreateExpression() {
             return Code;
         }
 

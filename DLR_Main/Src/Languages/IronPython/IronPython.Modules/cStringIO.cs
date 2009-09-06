@@ -13,11 +13,7 @@
  *
  * ***************************************************************************/
 
-#if CODEPLEX_40
 using System;
-#else
-using System; using Microsoft;
-#endif
 using System.Collections;
 using System.Collections.Generic;
 using System.IO;
@@ -61,14 +57,6 @@ namespace IronPython.Modules {
         public string Prefix {
             get {
                 return _data.ToString(0, _position);
-            }
-        }
-
-        public int Read() {
-            if (_position < _data.Length) {
-                return _data[_position++];
-            } else {
-                return -1;
             }
         }
 

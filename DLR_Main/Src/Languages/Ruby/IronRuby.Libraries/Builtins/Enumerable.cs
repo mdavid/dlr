@@ -13,32 +13,20 @@
  *
  * ***************************************************************************/
 
-#if CODEPLEX_40
 using System;
-#else
-using System; using Microsoft;
-#endif
 using System.Collections;
 using System.Collections.Generic;
 using System.Reflection;
 using System.Runtime.CompilerServices;
-#if !CODEPLEX_40
-using Microsoft.Runtime.CompilerServices;
-#endif
-
 using System.Runtime.InteropServices;
 using IronRuby.Runtime;
 using Microsoft.Scripting.Generation;
 using Microsoft.Scripting.Runtime;
 using IronRuby.Runtime.Calls;
 
-#if CODEPLEX_40
-using EachSite = System.Func<System.Runtime.CompilerServices.CallSite, object, IronRuby.Builtins.Proc, object>;
-#else
-using EachSite = Microsoft.Func<Microsoft.Runtime.CompilerServices.CallSite, object, IronRuby.Builtins.Proc, object>;
-#endif
-
 namespace IronRuby.Builtins {
+    using EachSite = Func<CallSite, object, Proc, object>;
+
     [RubyModule("Enumerable")]
     public static class Enumerable {
         internal static object Each(CallSiteStorage<EachSite>/*!*/ each, object self, Proc/*!*/ block) {

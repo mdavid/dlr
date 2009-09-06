@@ -12,29 +12,24 @@
  *
  *
  * ***************************************************************************/
-using System; using Microsoft;
 
-
-#if CODEPLEX_40
-using System.Dynamic;
+#if !CLR2
 using System.Linq.Expressions;
 #else
-using Microsoft.Scripting;
-using Microsoft.Linq.Expressions;
+using Microsoft.Scripting.Ast;
 #endif
+
+using System.Dynamic;
 using System.Runtime.InteropServices;
 
 using IronPython.Runtime.Binding;
 using IronPython.Runtime.Operations;
 
-#if CODEPLEX_40
-using Ast = System.Linq.Expressions.Expression;
-#else
-using Ast = Microsoft.Linq.Expressions.Expression;
-#endif
 using AstUtils = Microsoft.Scripting.Ast.Utils;
 
 namespace IronPython.Runtime.Types {
+    using Ast = Expression;
+
     /// <summary>
     /// A TypeSlot is an item that gets stored in a type's dictionary.  Slots provide an 
     /// opportunity to customize access at runtime when a value is get or set from a dictionary.

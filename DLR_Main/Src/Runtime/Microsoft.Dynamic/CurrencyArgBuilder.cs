@@ -12,25 +12,20 @@
  *
  *
  * ***************************************************************************/
-using System; using Microsoft;
-
 
 
 #if !SILVERLIGHT // ComObject
 
-using System.Diagnostics;
-#if CODEPLEX_40
+#if !MICROSOFT_DYNAMIC
 using System.Linq.Expressions;
 #else
-using Microsoft.Linq.Expressions;
+using Microsoft.Scripting.Ast;
 #endif
+
+using System.Diagnostics;
 using System.Runtime.InteropServices;
 
-#if CODEPLEX_40
 namespace System.Dynamic {
-#else
-namespace Microsoft.Scripting {
-#endif
     internal sealed class CurrencyArgBuilder : SimpleArgBuilder {
         internal CurrencyArgBuilder(Type parameterType)
             : base(parameterType) {

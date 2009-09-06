@@ -13,18 +13,10 @@
  *
  * ***************************************************************************/
 
-#if CODEPLEX_40
 using System;
-#else
-using System; using Microsoft;
-#endif
 using System.Collections.Generic;
-#if CODEPLEX_40
 using System.Dynamic;
 using System.Dynamic.Utils;
-#else
-using Microsoft.Scripting.Utils;
-#endif
 using Microsoft.Scripting;
 using System.Collections.ObjectModel;
 

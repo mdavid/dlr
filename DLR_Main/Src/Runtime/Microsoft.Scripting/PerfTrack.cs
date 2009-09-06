@@ -13,24 +13,17 @@
  *
  * ***************************************************************************/
 
-#if CODEPLEX_40
-using System;
-#else
-using System; using Microsoft;
-#endif
-using System.Collections.Generic;
-using System.Diagnostics;
-#if CODEPLEX_40
+#if !CLR2
 using System.Linq.Expressions;
 #else
-using Microsoft.Linq.Expressions;
+using Microsoft.Scripting.Ast;
 #endif
+
+using System;
+using System.Collections.Generic;
+using System.Diagnostics;
 using Microsoft.Scripting.Utils;
-#if CODEPLEX_40
 using System.Dynamic;
-#else
-using Microsoft.Scripting;
-#endif
 using System.IO;
 
 namespace Microsoft.Scripting {

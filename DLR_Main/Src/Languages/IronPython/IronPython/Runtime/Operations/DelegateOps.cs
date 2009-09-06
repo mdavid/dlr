@@ -13,15 +13,14 @@
  *
  * ***************************************************************************/
 
-#if CODEPLEX_40
 using System;
-#else
-using System; using Microsoft;
-#endif
-using IronPython.Runtime.Types;
+using System.Collections.Generic;
+
+using Microsoft.Scripting;
 using Microsoft.Scripting.Runtime;
 using Microsoft.Scripting.Utils;
-using Microsoft.Scripting;
+
+using IronPython.Runtime.Types;
 
 namespace IronPython.Runtime.Operations {
 
@@ -38,7 +37,7 @@ namespace IronPython.Runtime.Operations {
                 }
             }
 
-            return context.LanguageContext.GetDelegate(function, type.UnderlyingSystemType);
+            return context.LanguageContext.DelegateCreator.GetDelegate(function, type.UnderlyingSystemType);
         }
 
         public static Delegate/*!*/ InPlaceAdd(Delegate/*!*/ self, Delegate/*!*/ other) {
@@ -59,7 +58,7 @@ namespace IronPython.Runtime.Operations {
             return PythonContext.GetContext(context).CallSplat(@delegate, args);
         }
 
-        public static object Call(CodeContext/*!*/ context, Delegate @delegate, [ParamDictionary]IAttributesCollection dict, params object[] args) {
+        public static object Call(CodeContext/*!*/ context, Delegate @delegate, [ParamDictionary]IDictionary<object, object> dict, params object[] args) {
             return PythonContext.GetContext(context).CallWithKeywords(@delegate, args, dict);
         }
 

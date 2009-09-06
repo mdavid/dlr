@@ -1,17 +1,7 @@
-#if CODEPLEX_40
 using System;
-#else
-using System; using Microsoft;
-#endif
 using System.Collections.Generic;
-#if CODEPLEX_40
-using System.Linq;
-using System.Linq.Expressions;
-#else
-using Microsoft.Linq;
-using Microsoft.Linq.Expressions;
-#endif
 using System.Text;
+using Microsoft.Scripting.Ast;
 
 namespace Samples {
     class CLeftShift {
@@ -19,11 +9,7 @@ namespace Samples {
         public static void LeftShift1() {
             //<Snippet1>
             // add the following directive to your file
-#if CODEPLEX_40
-            // using System.Linq.Expressions;  
-#else
-            // using Microsoft.Linq.Expressions;  
-#endif
+            // using Microsoft.Scripting.Ast;  
 
             // This expression represents left shifting the value of the first argument the number
             // of bits specified by the value of the second argument (i.e. 4 << 1).
@@ -54,11 +40,7 @@ namespace Samples {
         public static void LeftShift2() {
             //<Snippet2>
             // add the following directive to your file
-#if CODEPLEX_40
-            // using System.Linq.Expressions;  
-#else
-            // using Microsoft.Linq.Expressions;  
-#endif
+            // using Microsoft.Scripting.Ast;  
 
             // This expression represents left shifting using a user-defined operator.
             // The parameters to the LeftShift should be reference convertible to the MethodInfo's arguments.
@@ -81,11 +63,7 @@ namespace Samples {
         public static void LeftShiftAssign1() {
             //<Snippet3>
             // add the following directive to your file
-#if CODEPLEX_40
-            // using System.Linq.Expressions;  
-#else
-            // using Microsoft.Linq.Expressions;  
-#endif
+            // using Microsoft.Scripting.Ast;  
 
             // LeftShiftAssign requires an assignable expression to be used as the left argument.
             ParameterExpression Variable = Expression.Variable(typeof(int), "Variable");
@@ -120,11 +98,7 @@ namespace Samples {
         public static void LeftShiftAssign2() {
             //<Snippet6>
             // add the following directive to your file
-#if CODEPLEX_40
-            // using System.Linq.Expressions;  
-#else
-            // using Microsoft.Linq.Expressions;  
-#endif
+            // using Microsoft.Scripting.Ast;  
 
             // LeftShiftAssign requires an assignable expression to be used as the left argument.
             ParameterExpression Variable = Expression.Variable(typeof(int), "Variable");
@@ -159,11 +133,7 @@ namespace Samples {
         public static void LeftShiftAssign3() {
             //<Snippet7>
             // add the following directive to your file
-#if CODEPLEX_40
-            // using System.Linq.Expressions;  
-#else
-            // using Microsoft.Linq.Expressions;  
-#endif
+            // using Microsoft.Scripting.Ast;  
 
             //LeftShiftAssign requires an assignable expression to be used as the left argument.
             ParameterExpression Variable = Expression.Variable(typeof(int), "Variable");

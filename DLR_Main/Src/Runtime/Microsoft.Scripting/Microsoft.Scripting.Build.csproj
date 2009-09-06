@@ -214,11 +214,26 @@
       <!--                              -->
       <!--          ComInterop          -->
       <!--                              -->
+      <Compile Include="ComInterop\ArgBuilder.cs" />
+      <Compile Include="ComInterop\BoolArgBuilder.cs" />
+      <Compile Include="ComInterop\BoundDispEvent.cs" />
+      <Compile Include="ComInterop\CollectionExtensions.cs" />
+      <Compile Include="ComInterop\ComBinder.cs" />
+      <Compile Include="ComInterop\ComBinderHelpers.cs" />
       <Compile Include="ComInterop\ComClassMetaObject.cs" />
+      <Compile Include="ComInterop\ComDispIds.cs" />
       <Compile Include="ComInterop\ComEventDesc.cs" />
+      <Compile Include="ComInterop\ComEventSink.cs" />
+      <Compile Include="ComInterop\ComEventSinkProxy.cs" />
+      <Compile Include="ComInterop\ComEventSinksContainer.cs" />
+      <Compile Include="ComInterop\ComFallbackMetaObject.cs" />
       <Compile Include="ComInterop\ComHresults.cs" />
       <Compile Include="ComInterop\ComInterop.cs" />
+      <Compile Include="ComInterop\ComInvokeAction.cs" />
+      <Compile Include="ComInterop\ComInvokeBinder.cs" />
+      <Compile Include="ComInterop\ComMetaObject.cs" />
       <Compile Include="ComInterop\ComMethodDesc.cs" />
+      <Compile Include="ComInterop\ComObject.cs" />
       <Compile Include="ComInterop\ComParamDesc.cs" />
       <Compile Include="ComInterop\ComRuntimeHelpers.cs" />
       <Compile Include="ComInterop\ComType.cs" />
@@ -228,10 +243,35 @@
       <Compile Include="ComInterop\ComTypeLibDesc.cs" />
       <Compile Include="ComInterop\ComTypeLibInfo.cs" />
       <Compile Include="ComInterop\ComTypeLibMemberDesc.cs" />
+      <Compile Include="ComInterop\ConversionArgBuilder.cs" />
+      <Compile Include="ComInterop\ConvertArgBuilder.cs" />
+      <Compile Include="ComInterop\ConvertibleArgBuilder.cs" />
+      <Compile Include="ComInterop\CurrencyArgBuilder.cs" />
+      <Compile Include="ComInterop\DateTimeArgBuilder.cs" />
+      <Compile Include="ComInterop\DispatchArgBuilder.cs" />
+      <Compile Include="ComInterop\DispCallable.cs" />
+      <Compile Include="ComInterop\DispCallableMetaObject.cs" />
+      <Compile Include="ComInterop\ErrorArgBuilder.cs" />
+      <Compile Include="ComInterop\Errors.cs" />
+      <Compile Include="ComInterop\ExcepInfo.cs" />
+      <Compile Include="ComInterop\Helpers.cs" />
+      <Compile Include="ComInterop\IDispatchComObject.cs" />
+      <Compile Include="ComInterop\IDispatchMetaObject.cs" />
+      <Compile Include="ComInterop\IPseudoComObject.cs" />
+      <Compile Include="ComInterop\NullArgBuilder.cs" />
+      <Compile Include="ComInterop\SimpleArgBuilder.cs" />
+      <Compile Include="ComInterop\SplatCallSite.cs" />
+      <Compile Include="ComInterop\StringArgBuilder.cs" />
       <Compile Include="ComInterop\TypeEnumMetaObject.cs" />
       <Compile Include="ComInterop\TypeLibInfoMetaObject.cs" />
       <Compile Include="ComInterop\TypeLibMetaObject.cs" />
+      <Compile Include="ComInterop\TypeUtils.cs" />
+      <Compile Include="ComInterop\UnknownArgBuilder.cs" />
       <Compile Include="ComInterop\VarEnumSelector.cs" />
+      <Compile Include="ComInterop\Variant.cs" />
+      <Compile Include="ComInterop\VariantArgBuilder.cs" />
+      <Compile Include="ComInterop\VariantArray.cs" />
+      <Compile Include="ComInterop\VariantBuilder.cs" />
     </ItemGroup>
     <ItemGroup>
       <!--                              -->
@@ -370,6 +410,7 @@
       <Compile Include="Runtime\DlrCachedCodeAttribute.cs" />
       <Compile Include="Runtime\DlrConfiguration.cs" />
       <Compile Include="Runtime\DocumentationAttribute.cs" />
+      <Compile Include="Runtime\DynamicDelegateCreator.cs" />
       <Compile Include="Runtime\DynamicLanguageProviderAttribute.cs" />
       <Compile Include="Runtime\DynamicNull.cs" />
       <Compile Include="Runtime\DynamicOperations.cs" />
@@ -408,8 +449,10 @@
       <Compile Include="Runtime\ReflectionCache.cs" />
       <Compile Include="Runtime\RestrictedMetaObject.cs" />
       <Compile Include="Runtime\ReturnFixer.cs" />
+      <Compile Include="Runtime\SavableScriptCode.cs" />
       <Compile Include="Runtime\Scope.cs" />
       <Compile Include="Runtime\ScopeExtension.cs" />
+      <Compile Include="Runtime\ScopeStorage.cs" />
       <Compile Include="Runtime\ScriptCode.cs" />
       <Compile Include="Runtime\ScriptDomainManager.cs" />
       <Compile Include="Runtime\ScriptingRuntimeHelpers.cs" />

@@ -13,25 +13,21 @@
  *
  * ***************************************************************************/
 
-#if CODEPLEX_40
 using System;
-#else
-using System; using Microsoft;
-#endif
 
 namespace Microsoft.Scripting.Runtime {
     /// <summary>
     /// Event args for when a ScriptScope has had its contents changed.  
     /// </summary>
     public class ModuleChangeEventArgs : EventArgs {
-        private SymbolId _name;
+        private string _name;
         private ModuleChangeType _type;
         private object _value;
 
         /// <summary>
         /// Creates a new ModuleChangeEventArgs object with the specified name and type.
         /// </summary>
-        public ModuleChangeEventArgs(SymbolId name, ModuleChangeType changeType) {
+        public ModuleChangeEventArgs(string name, ModuleChangeType changeType) {
             _name = name;
             _type = changeType;
         }
@@ -39,7 +35,7 @@ namespace Microsoft.Scripting.Runtime {
         /// <summary>
         /// Creates a nwe ModuleChangeEventArgs with the specified name, type, and changed value.
         /// </summary>
-        public ModuleChangeEventArgs(SymbolId name, ModuleChangeType changeType, object value) {
+        public ModuleChangeEventArgs(string name, ModuleChangeType changeType, object value) {
             _name = name;
             _type = changeType;
             _value = value;
@@ -48,7 +44,7 @@ namespace Microsoft.Scripting.Runtime {
         /// <summary>
         /// Gets the name of the symbol that has changed.
         /// </summary>
-        public SymbolId Name {
+        public string Name {
             get {
                 return _name;
             }

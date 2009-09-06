@@ -13,11 +13,7 @@
  *
  * ***************************************************************************/
 
-#if CODEPLEX_40
 using System;
-#else
-using System; using Microsoft;
-#endif
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
@@ -553,13 +549,6 @@ namespace IronPython.Runtime.Types {
                 }
             }
         }        
-
-        /// <summary>
-        /// Gets the Xml documentation for the specified Field.
-        /// </summary>
-        private static void GetXmlDoc(PropertyInfo prop, out string summary, out string returns) {
-            GetXmlDocForProperty(prop.DeclaringType, prop.Name, out summary, out returns);
-        }
 
         /// <summary>
         /// Gets the Xml documentation for the specified Field.

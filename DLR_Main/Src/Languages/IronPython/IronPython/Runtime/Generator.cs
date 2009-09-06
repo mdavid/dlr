@@ -13,11 +13,7 @@
  *
  * ***************************************************************************/
 
-#if CODEPLEX_40
 using System;
-#else
-using System; using Microsoft;
-#endif
 using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -203,7 +199,7 @@ namespace IronPython.Runtime {
 
         public TraceBackFrame gi_frame {
             get {
-                return new TraceBackFrame(_function.Context, _function.Context.GlobalScope, new PythonDictionary(), gi_code);
+                return new TraceBackFrame(_function.Context, _function.Context.GlobalDict, new PythonDictionary(), gi_code);
             }
         }
 

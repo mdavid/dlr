@@ -14,18 +14,10 @@
  * ***************************************************************************/
 //#define DUMP_TOKENS
 
-#if CODEPLEX_40
 using System;
-#else
-using System; using Microsoft;
-#endif
 using System.Diagnostics;
 using System.IO;
-#if CODEPLEX_40
 using System.Dynamic;
-#else
-using Microsoft.Scripting;
-#endif
 using Microsoft.Scripting.Utils;
 
 namespace Microsoft.Scripting.Runtime {

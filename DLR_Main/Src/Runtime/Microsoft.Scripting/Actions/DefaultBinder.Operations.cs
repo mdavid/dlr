@@ -13,24 +13,17 @@
  *
  * ***************************************************************************/
 
-#if CODEPLEX_40
-using System;
-#else
-using System; using Microsoft;
-#endif
-using System.Collections.Generic;
-using System.Diagnostics;
-#if CODEPLEX_40
+#if !CLR2
 using System.Linq.Expressions;
 #else
-using Microsoft.Linq.Expressions;
+using Microsoft.Scripting.Ast;
 #endif
+
+using System;
+using System.Collections.Generic;
+using System.Diagnostics;
 using System.Reflection;
-#if CODEPLEX_40
 using System.Dynamic;
-#else
-using Microsoft.Scripting;
-#endif
 using System.Text;
 using Microsoft.Scripting.Generation;
 using Microsoft.Scripting.Runtime;
@@ -39,11 +32,7 @@ using Microsoft.Scripting.Actions.Calls;
 using AstUtils = Microsoft.Scripting.Ast.Utils;
 
 namespace Microsoft.Scripting.Actions {
-#if CODEPLEX_40
-    using Ast = System.Linq.Expressions.Expression;
-#else
-    using Ast = Microsoft.Linq.Expressions.Expression;
-#endif
+    using Ast = Expression;
 
     public partial class DefaultBinder : ActionBinder {
         public DynamicMetaObject DoOperation(string operation, params DynamicMetaObject[] args) {
@@ -327,7 +316,7 @@ namespace Microsoft.Scripting.Actions {
                 TryForwardOperator(info, resolverFactory, args) ??
                 TryReverseOperator(info, resolverFactory, args) ??
                 TryPrimitiveOperator(info, args) ??
-                TryMakeDefaultUnaryRule(info, resolverFactory, args) ??
+                TryMakeDefaultUnaryRule(info, args) ??
                 MakeOperatorError(info, args);
         }
 
@@ -386,7 +375,7 @@ namespace Microsoft.Scripting.Actions {
             return null;
         }
 
-        private static DynamicMetaObject TryMakeDefaultUnaryRule(OperatorInfo info, OverloadResolverFactory resolverFactory, DynamicMetaObject[] args) {
+        private static DynamicMetaObject TryMakeDefaultUnaryRule(OperatorInfo info, DynamicMetaObject[] args) {
             if (args.Length == 1) {
                 BindingRestrictions restrictions = BindingRestrictionsHelpers.GetRuntimeTypeRestriction(args[0].Expression, args[0].GetLimitType()).Merge(BindingRestrictions.Combine(args));
                 switch (info.Operator) {

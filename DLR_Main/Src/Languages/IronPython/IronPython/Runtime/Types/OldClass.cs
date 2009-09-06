@@ -13,23 +13,17 @@
  *
  * ***************************************************************************/
 
-#if CODEPLEX_40
-using System;
-#else
-using System; using Microsoft;
-#endif
-using System.Collections.Generic;
-using System.ComponentModel;
-#if CODEPLEX_40
+#if !CLR2
 using System.Linq.Expressions;
 #else
-using Microsoft.Linq.Expressions;
+using Microsoft.Scripting.Ast;
 #endif
+
+using System;
+using System.Collections.Generic;
+using System.ComponentModel;
 using System.Runtime.Serialization;
-#if CODEPLEX_40
 using System.Dynamic;
-#else
-#endif
 using System.Threading;
 
 using Microsoft.Scripting;
@@ -89,7 +83,7 @@ namespace IronPython.Runtime.Types {
 
             if (!dict.ContainsKey(Symbols.Module)) {
                 object moduleValue;
-                if (context.GlobalScope.TryGetVariable(Symbols.Name, out moduleValue)) {
+                if (context.TryGetGlobalVariable(Symbols.Name, out moduleValue)) {
                     dict[Symbols.Module] = moduleValue;
                 }
             }
@@ -321,7 +315,7 @@ namespace IronPython.Runtime.Types {
         }
 
         [SpecialName]
-        public object Call(CodeContext context, [ParamDictionary] IAttributesCollection dict\u00F8, [NotNull]params object[] args\u00F8) {
+        public object Call(CodeContext context, [ParamDictionary]IDictionary<object, object> dict\u00F8, [NotNull]params object[] args\u00F8) {
             OldInstance inst = new OldInstance(context, this);
             object meth;
             if (PythonOps.TryGetBoundAttr(inst, Symbols.Init, out meth)) {
@@ -521,7 +515,7 @@ namespace IronPython.Runtime.Types {
             return false;
         }
 
-        internal object MakeCallError() {
+        internal static object MakeCallError() {
             // Normally, if we have an __init__ method, the method binder detects signature mismatches.
             // This can happen when a class does not define __init__ and therefore does not take any arguments.
             // Beware that calls like F(*(), **{}) have 2 arguments but they're empty and so it should still

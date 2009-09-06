@@ -12,15 +12,9 @@
  *
  *
  * ***************************************************************************/
-using System; using Microsoft;
 
 
-
-#if CODEPLEX_40
 namespace System.Dynamic {
-#else
-namespace Microsoft.Scripting {
-#endif
 
 #if CLR2
     internal static partial class Strings {

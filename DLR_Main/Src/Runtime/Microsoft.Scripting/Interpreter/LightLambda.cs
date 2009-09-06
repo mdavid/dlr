@@ -13,19 +13,15 @@
  *
  * ***************************************************************************/
 
-#if CODEPLEX_40
-using System;
+#if !CLR2
 using System.Linq.Expressions;
 #else
-using System; using Microsoft;
-using Microsoft.Linq.Expressions;
-#endif
-using System.Reflection;
-using System.Runtime.CompilerServices;
-#if !CODEPLEX_40
-using Microsoft.Runtime.CompilerServices;
+using Microsoft.Scripting.Ast;
 #endif
 
+using System;
+using System.Reflection;
+using System.Runtime.CompilerServices;
 
 using Microsoft.Scripting.Generation;
 using Microsoft.Scripting.Utils;

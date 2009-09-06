@@ -13,24 +13,13 @@
  *
  * ***************************************************************************/
 
-#if CODEPLEX_40
 using System;
-#else
-using System; using Microsoft;
-#endif
 using System.Collections;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Reflection;
 using System.Runtime.CompilerServices;
-#if !CODEPLEX_40
-using Microsoft.Runtime.CompilerServices;
-#endif
-
-#if CODEPLEX_40
 using System.Dynamic;
-#else
-#endif
 using IronPython.Runtime.Binding;
 using IronPython.Runtime.Operations;
 using IronPython.Runtime.Types;
@@ -478,7 +467,7 @@ namespace IronPython.Runtime {
 
         public static object ConvertToDelegate(object value, Type to) {
             if (value == null) return null;
-            return DefaultContext.DefaultCLS.LanguageContext.GetDelegate(value, to);
+            return DefaultContext.DefaultCLS.LanguageContext.DelegateCreator.GetDelegate(value, to);
         }
 
 

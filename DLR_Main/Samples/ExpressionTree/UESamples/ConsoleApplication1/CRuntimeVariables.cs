@@ -1,25 +1,8 @@
-#if CODEPLEX_40
 using System;
-#else
-using System; using Microsoft;
-#endif
 using System.Collections.Generic;
-#if CODEPLEX_40
-using System.Linq;
-#else
-using Microsoft.Linq;
-#endif
 using System.Text;
 using System.Runtime.CompilerServices;
-#if !CODEPLEX_40
-using Microsoft.Runtime.CompilerServices;
-#endif
-
-#if CODEPLEX_40
-using System.Linq.Expressions;
-#else
-using Microsoft.Linq.Expressions;
-#endif
+using Microsoft.Scripting.Ast;
 
 namespace Samples {
     class CRuntimeVariables {
@@ -27,11 +10,7 @@ namespace Samples {
         static public void RuntimeVariables1() {
             //<Snippet1>
             // Add the following directive to your file
-#if CODEPLEX_40
-            // using System.Linq.Expressions;  
-#else
-            // using Microsoft.Linq.Expressions;  
-#endif
+            // using Microsoft.Scripting.Ast;  
 
             ParameterExpression MyVariable = Expression.Variable(typeof(int));
 
@@ -61,11 +40,7 @@ namespace Samples {
         static public void RuntimeVariables2() {
             //<Snippet1>
             // Add the following directive to your file
-#if CODEPLEX_40
-            // using System.Linq.Expressions;  
-#else
-            // using Microsoft.Linq.Expressions;  
-#endif
+            // using Microsoft.Scripting.Ast;  
 
             ParameterExpression MyVariable = Expression.Variable(typeof(int));
 

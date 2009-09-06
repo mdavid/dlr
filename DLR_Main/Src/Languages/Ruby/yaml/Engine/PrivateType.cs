@@ -15,8 +15,6 @@
  * Copyright (c) Microsoft Corporation.
  * 
  ***** END LICENSE BLOCK *****/
-using System; using Microsoft;
-
 
 namespace IronRuby.StandardLibrary.Yaml {
 

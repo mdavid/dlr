@@ -1,20 +1,7 @@
-#if CODEPLEX_40
 using System;
-#else
-using System; using Microsoft;
-#endif
 using System.Collections.Generic;
-#if CODEPLEX_40
-using System.Linq;
-#else
-using Microsoft.Linq;
-#endif
 using System.Text;
-#if CODEPLEX_40
-using System.Linq.Expressions;
-#else
-using Microsoft.Linq.Expressions;
-#endif
+using Microsoft.Scripting.Ast;
 
 namespace Samples {
     public class CExclusiveOr {
@@ -22,11 +9,7 @@ namespace Samples {
         static public void ExclusiveOr1() {
             //<Snippet1>
             // Add the following directive to your file
-#if CODEPLEX_40
-            // using System.Linq.Expressions;  
-#else
-            // using Microsoft.Linq.Expressions;  
-#endif
+            // using Microsoft.Scripting.Ast;  
 
             //This expression represents an exclusive or of the values of its two arguments.
             //Both arguments need to be of the same type, either an integer type or boolean.
@@ -54,11 +37,7 @@ namespace Samples {
         public static void ExclusiveOr2() {
             //<Snippet2>
             // add the following directive to your file
-#if CODEPLEX_40
-            // using System.Linq.Expressions;
-#else
-            // using Microsoft.Linq.Expressions;
-#endif
+            // using Microsoft.Scripting.Ast;
 
             //This expression represents a boolean or bitwise exclusive or of two arguments using a user defined operator.
             //The parameters to the ExclusiveOr should be reference convertible to the MethodInfo's arguments
@@ -81,11 +60,7 @@ namespace Samples {
         public static void ExclusiveOrAssign1() {
             //<Snippet5>
             // add the following directive to your file
-#if CODEPLEX_40
-            // using System.Linq.Expressions;
-#else
-            // using Microsoft.Linq.Expressions;
-#endif
+            // using Microsoft.Scripting.Ast;
 
             //ExclusiveOrAssign requires an assignable expression to be used as the left argument.
             ParameterExpression Variable = Expression.Variable(typeof(bool), "Variable");
@@ -120,11 +95,7 @@ namespace Samples {
         public static void ExclusiveOrAssign2() {
             //<Snippet6>
             // add the following directive to your file
-#if CODEPLEX_40
-            // using System.Linq.Expressions;
-#else
-            // using Microsoft.Linq.Expressions;
-#endif
+            // using Microsoft.Scripting.Ast;
 
             //ExclusiveOrAssign requires an assignable expression to be used as the left argument.
             ParameterExpression Variable = Expression.Variable(typeof(bool), "Variable");
@@ -159,11 +130,7 @@ namespace Samples {
         public static void ExclusiveOrAssign3() {
             //<Snippet7>
             // add the following directive to your file
-#if CODEPLEX_40
-            // using System.Linq.Expressions;
-#else
-            // using Microsoft.Linq.Expressions;
-#endif
+            // using Microsoft.Scripting.Ast;
 
             //ExclusiveOrAssign requires an assignable expression to be used as the left argument.
             ParameterExpression Variable = Expression.Variable(typeof(long), "Variable");

@@ -13,19 +13,15 @@
  *
  * ***************************************************************************/
 
-#if CODEPLEX_40
-using System;
+#if !CLR2
 using System.Linq.Expressions;
 #else
-using System; using Microsoft;
-using Microsoft.Linq.Expressions;
+using Microsoft.Scripting.Ast;
 #endif
+
+using System;
 using System.Reflection;
-#if CODEPLEX_40
 using System.Dynamic;
-#else
-using Microsoft.Scripting;
-#endif
 using Microsoft.Scripting.Generation;
 using Microsoft.Scripting.Runtime;
 
@@ -248,7 +244,7 @@ namespace Microsoft.Scripting.Utils {
 
         // keep in sync with System.Core version
         internal static bool AreEquivalent(Type t1, Type t2) {
-#if !CLR4
+#if CLR2
             return t1 == t2;
 #else
             return t1 == t2 || t1.IsEquivalentTo(t2);

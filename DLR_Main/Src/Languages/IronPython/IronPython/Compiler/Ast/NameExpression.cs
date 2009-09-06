@@ -13,40 +13,33 @@
  *
  * ***************************************************************************/
 
-#if CODEPLEX_40
+#if !CLR2
+using MSAst = System.Linq.Expressions;
+#else
+using MSAst = Microsoft.Scripting.Ast;
+#endif
+
 using System;
 using System.Dynamic;
-#else
-using System; using Microsoft;
-#endif
 using IronPython.Runtime.Binding;
 using Microsoft.Scripting;
 using Microsoft.Scripting.Runtime;
 using AstUtils = Microsoft.Scripting.Ast.Utils;
-#if CODEPLEX_40
-using MSAst = System.Linq.Expressions;
-#else
-using MSAst = Microsoft.Linq.Expressions;
-#endif
 using IronPython.Runtime.Operations;
 
 namespace IronPython.Compiler.Ast {
-#if CODEPLEX_40
-    using Ast = System.Linq.Expressions.Expression;
-#else
-    using Ast = Microsoft.Linq.Expressions.Expression;
-#endif
+    using Ast = MSAst.Expression;
 
     public class NameExpression : Expression {
-        private readonly SymbolId _name;
+        private readonly string _name;
         private PythonReference _reference;
         private bool _assigned;                  // definitely assigned
 
-        public NameExpression(SymbolId name) {
+        public NameExpression(string name) {
             _name = name;
         }
 
-        public SymbolId Name {
+        public string Name {
             get { return _name; }
         }
 
@@ -61,7 +54,7 @@ namespace IronPython.Compiler.Ast {
         }
 
         public override string ToString() {
-            return base.ToString() + ":" + SymbolTable.IdToString(_name);
+            return base.ToString() + ":" + _name;
         }
 
         internal override MSAst.Expression Transform(AstGenerator ag, Type type) {
@@ -70,7 +63,7 @@ namespace IronPython.Compiler.Ast {
                 read = Ast.Call(
                     typeof(PythonOps).GetMethod("LookupName"),
                     ag.LocalContext,
-                    ag.Globals.GetSymbol(_name)
+                    ag.Globals.GetConstant(_name)                    
                 );
             } else {
                 read = ag.Globals.GetVariable(ag, _reference.PythonVariable);
@@ -80,7 +73,7 @@ namespace IronPython.Compiler.Ast {
                 read = Ast.Call(
                     AstGenerator.GetHelperMethod("CheckUninitialized"),
                     read,
-                    ag.Globals.GetSymbol(_name)
+                    ag.Globals.GetConstant(_name)
                 );
             }
 
@@ -100,7 +93,7 @@ namespace IronPython.Compiler.Ast {
             }
 
             if (_reference.PythonVariable != null) {
-                assignment = ag.Globals.Assign(
+                assignment = GlobalAllocator.Assign(
                     ag.Globals.GetVariable(ag, _reference.PythonVariable), 
                     AstGenerator.ConvertIfNeeded(right, typeof(object))
                 );
@@ -110,7 +103,7 @@ namespace IronPython.Compiler.Ast {
                     typeof(PythonOps).GetMethod("SetName"),
                     new [] {
                         ag.LocalContext, 
-                        ag.Globals.GetSymbol(_name),
+                        ag.Globals.GetConstant(_name),
                         AstUtils.Convert(right, typeof(object))
                         }
                 );
@@ -138,7 +131,7 @@ namespace IronPython.Compiler.Ast {
                         typeof(GC).GetMethod("KeepAlive"),
                         variable
                     ),
-                    ag.Globals.Delete(variable)
+                    GlobalAllocator.Delete(variable)
                 );
 
                 if (!_assigned) {
@@ -154,7 +147,7 @@ namespace IronPython.Compiler.Ast {
                     typeof(PythonOps).GetMethod("RemoveName"),
                     new[] {
                         ag.LocalContext,
-                        ag.Globals.GetSymbol(_name)
+                        ag.Globals.GetConstant(_name)
                     }
                 );
             }

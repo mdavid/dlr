@@ -13,35 +13,26 @@
  *
  * ***************************************************************************/
 
-#if CODEPLEX_40
-using System;
+#if !CLR2
 using System.Linq.Expressions;
 #else
-using System; using Microsoft;
-using Microsoft.Linq.Expressions;
-#endif
-using System.Runtime.CompilerServices;
-#if !CODEPLEX_40
-using Microsoft.Runtime.CompilerServices;
+using Microsoft.Scripting.Ast;
 #endif
 
-#if CODEPLEX_40
+using System;
+using System.Collections.Generic;
 using System.Dynamic;
-#else
-#endif
-using IronPython.Runtime.Binding;
-using IronPython.Runtime.Operations;
+using System.Runtime.CompilerServices;
+
 using Microsoft.Scripting;
 using Microsoft.Scripting.Generation;
-using Microsoft.Scripting.Runtime;
-#if CODEPLEX_40
-using Ast = System.Linq.Expressions.Expression;
-#else
-using Ast = Microsoft.Linq.Expressions.Expression;
-#endif
-using AstUtils = Microsoft.Scripting.Ast.Utils;
+
+using IronPython.Runtime.Binding;
+using IronPython.Runtime.Operations;
 
 namespace IronPython.Runtime.Types {
+    using Ast = Expression;
+    using AstUtils = Microsoft.Scripting.Ast.Utils;
 
     [PythonType("method_descriptor"), DontMapGetMemberNamesToDir]
     public sealed class BuiltinMethodDescriptor : PythonTypeSlot, IDynamicMetaObjectProvider, ICodeFormattable {
@@ -141,7 +132,7 @@ namespace IronPython.Runtime.Types {
             }
         }
 
-        public object __call__(CodeContext context, SiteLocalStorage<CallSite<Func<CallSite, CodeContext, object, object[], IAttributesCollection, object>>> storage, [ParamDictionary]IAttributesCollection dictArgs, params object[] args) {
+        public object __call__(CodeContext context, SiteLocalStorage<CallSite<Func<CallSite, CodeContext, object, object[], IDictionary<object, object>, object>>> storage, [ParamDictionary]IDictionary<object, object> dictArgs, params object[] args) {
             return _template.__call__(context, storage, dictArgs, args);
         }
 

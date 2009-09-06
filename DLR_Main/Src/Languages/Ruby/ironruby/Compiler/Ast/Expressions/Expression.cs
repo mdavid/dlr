@@ -12,25 +12,20 @@
  *
  *
  * ***************************************************************************/
-using System; using Microsoft;
 
+#if !CLR2
+using MSA = System.Linq.Expressions;
+#else
+using MSA = Microsoft.Scripting.Ast;
+#endif
 
 using System.Collections.Generic;
 using System.Diagnostics;
 using Microsoft.Scripting;
-#if CODEPLEX_40
-using MSA = System.Linq.Expressions;
-#else
-using MSA = Microsoft.Linq.Expressions;
-#endif
 using AstUtils = Microsoft.Scripting.Ast.Utils;
 
 namespace IronRuby.Compiler.Ast {
-#if CODEPLEX_40
-    using Ast = System.Linq.Expressions.Expression;
-#else
-    using Ast = Microsoft.Linq.Expressions.Expression;
-#endif
+    using Ast = MSA.Expression;
 
     /// <summary>
     /// Represents expressions. Statements are considered special cases of expressions in AST class hierarchy.
@@ -40,6 +35,7 @@ namespace IronRuby.Compiler.Ast {
     /// although some syntactic statements evaluate to a non-null value (e.g. if/unless-statements).
     /// </summary>
     public abstract class Expression : Node {
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Security", "CA2105:ArrayFieldsShouldNotBeReadOnly")]
         public static readonly Expression[]/*!*/ EmptyArray = new Expression[0];
         internal static readonly List<Expression>/*!*/ _EmptyList = new List<Expression>();
         internal static readonly Statements/*!*/ _EmptyStatements = new Statements();   

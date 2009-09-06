@@ -13,20 +13,15 @@
  *
  * ***************************************************************************/
 
-#if CODEPLEX_40
-using System;
-using System.Dynamic;
+#if !CLR2
 using System.Linq.Expressions;
 #else
-using System; using Microsoft;
-using Microsoft.Scripting;
-using Microsoft.Linq.Expressions;
-#endif
-using System.Runtime.CompilerServices;
-#if !CODEPLEX_40
-using Microsoft.Runtime.CompilerServices;
+using Microsoft.Scripting.Ast;
 #endif
 
+using System;
+using System.Dynamic;
+using System.Runtime.CompilerServices;
 using IronRuby.Builtins;
 using Microsoft.Scripting.Hosting;
 using Microsoft.Scripting.Math;
@@ -784,7 +779,8 @@ class C
 end
 ");
             var classC = Runtime.Globals.GetVariable("C");
-            var c = Engine.Operations.CreateInstance(classC);
+            // TODO: CLR4 bug #772803 - c can't be dynamic:
+            object c = Engine.Operations.CreateInstance(classC);
 
             AssertExceptionThrown<MissingMethodException>(() => MyInvokeMemberBinder.Invoke(c, "private_m"));
             AssertExceptionThrown<MissingMethodException>(() => MyInvokeMemberBinder.Invoke(c, "protected_m"));

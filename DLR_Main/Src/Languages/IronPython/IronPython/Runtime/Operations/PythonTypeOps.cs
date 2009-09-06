@@ -13,18 +13,11 @@
  *
  * ***************************************************************************/
 
-#if CODEPLEX_40
 using System;
-#else
-using System; using Microsoft;
-#endif
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Reflection;
-#if CODEPLEX_40
 using System.Dynamic;
-#else
-#endif
 using IronPython.Runtime.Binding;
 using IronPython.Runtime.Types;
 using Microsoft.Scripting;
@@ -98,17 +91,18 @@ namespace IronPython.Runtime.Operations {
             return newObject;
         }
 
-        internal static object CallWorker(CodeContext/*!*/ context, PythonType dt, IAttributesCollection kwArgs, object[] args) {
+        internal static object CallWorker(CodeContext/*!*/ context, PythonType dt, IDictionary<string, object> kwArgs, object[] args) {
             object[] allArgs = ArrayOps.CopyArray(args, kwArgs.Count + args.Length);
             string[] argNames = new string[kwArgs.Count];
 
             int i = args.Length;
-            foreach (KeyValuePair<SymbolId, object> kvp in kwArgs.SymbolAttributes) {
+            foreach (KeyValuePair<string, object> kvp in kwArgs) {
                 allArgs[i] = kvp.Value;
-                argNames[i++ - args.Length] = SymbolTable.IdToString(kvp.Key);
+                argNames[i++ - args.Length] = kvp.Key;
             }
 
-            return CallWorker(context, dt, new KwCallInfo(allArgs, argNames));        }
+            return CallWorker(context, dt, new KwCallInfo(allArgs, argNames));        
+        }
 
         internal static object CallWorker(CodeContext/*!*/ context, PythonType dt, KwCallInfo args) {
             object[] clsArgs = ArrayUtils.Insert<object>(dt, args.Arguments);
@@ -187,19 +181,8 @@ namespace IronPython.Runtime.Operations {
 
         internal static bool IsRuntimeAssembly(Assembly assembly) {
             if (assembly == typeof(PythonOps).Assembly || // IronPython.dll
-                assembly == typeof(Microsoft.Scripting.Math.BigInteger).Assembly || // Microsoft.Scripting.dll
-#if !SILVERLIGHT
-#if CODEPLEX_40
-                assembly == typeof(System.Dynamic.ComBinder).Assembly || // Microsoft.Dynamic.ComInterop.dll
-#else
-                assembly == typeof(Microsoft.Scripting.ComBinder).Assembly || // Microsoft.Dynamic.ComInterop.dll
-#endif
-#endif                
-#if CODEPLEX_40
-                assembly == typeof(System.Linq.Expressions.Expression).Assembly) {  // Microsoft.Scripting.Core.dll
-#else
-                assembly == typeof(Microsoft.Linq.Expressions.Expression).Assembly) {  // Microsoft.Scripting.Core.dll
-#endif
+                assembly == typeof(Microsoft.Scripting.Interpreter.LightCompiler).Assembly || // Microsoft.Scripting.dll
+                assembly == typeof(DynamicMetaObject).Assembly) {  // Microsoft.Scripting.Core.dll
                 return true;
             }
 

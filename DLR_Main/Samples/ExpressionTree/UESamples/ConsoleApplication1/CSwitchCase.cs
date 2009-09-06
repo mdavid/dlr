@@ -1,17 +1,7 @@
-#if CODEPLEX_40
 using System;
-#else
-using System; using Microsoft;
-#endif
 using System.Collections.Generic;
-#if CODEPLEX_40
-using System.Linq;
-using System.Linq.Expressions;
-#else
-using Microsoft.Linq;
-using Microsoft.Linq.Expressions;
-#endif
 using System.Text;
+using Microsoft.Scripting.Ast;
 
 namespace Samples {
     class CSwitchCase {
@@ -19,11 +9,7 @@ namespace Samples {
         public static void SwitchCaseSample() {
             //<Snippet13>
             //Add the following directive to your file
-#if CODEPLEX_40
-            //using System.Linq.Expressions;
-#else
-            //using Microsoft.Linq.Expressions;
-#endif
+            //using Microsoft.Scripting.Ast;
 
             ConstantExpression switchValue = Expression.Constant(4);
 
@@ -60,11 +46,7 @@ namespace Samples {
         public static void SwitchCaseSample2() {
             //<Snippet14>
             //Add the following directive to your file
-#if CODEPLEX_40
-            //using System.Linq.Expressions;
-#else
-            //using Microsoft.Linq.Expressions;
-#endif
+            //using Microsoft.Scripting.Ast;
 
             ConstantExpression switchValue = Expression.Constant(1);
 

@@ -16,11 +16,7 @@
 using System.Collections.Generic;
 using System.Diagnostics;
 using IronPython.Runtime.Operations;
-#if CODEPLEX_40
 using System;
-#else
-using System; using Microsoft;
-#endif
 
 namespace IronPython.Runtime.Types {
     /// <summary>

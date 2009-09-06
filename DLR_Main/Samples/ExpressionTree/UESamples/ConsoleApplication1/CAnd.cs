@@ -1,20 +1,7 @@
-#if CODEPLEX_40
 using System;
-#else
-using System; using Microsoft;
-#endif
 using System.Collections.Generic;
-#if CODEPLEX_40
-using System.Linq;
-#else
-using Microsoft.Linq;
-#endif
 using System.Text;
-#if CODEPLEX_40
-using System.Linq.Expressions;
-#else
-using Microsoft.Linq.Expressions;
-#endif
+using Microsoft.Scripting.Ast;
 
 namespace Samples {
     public class CAnd {
@@ -22,11 +9,7 @@ namespace Samples {
         static public void And1() {
             //<Snippet1>
             // add the following directive to your file
-#if CODEPLEX_40
-            // using System.Linq.Expressions;  
-#else
-            // using Microsoft.Linq.Expressions;  
-#endif
+            // using Microsoft.Scripting.Ast;  
 
             //This expression ands the values of its two arguments.
             //Both arguments need to be of the same type, either an 
@@ -55,11 +38,7 @@ namespace Samples {
         public static void And2() {
             //<Snippet2>
             // add the following directive to your file
-#if CODEPLEX_40
-            // using System.Linq.Expressions;
-#else
-            // using Microsoft.Linq.Expressions;
-#endif
+            // using Microsoft.Scripting.Ast;
 
             //This expression represents a boolean or bitwise and of two arguments using a user defined operator.
             //The parameters to the and should be reference convertible to the MethodInfo's arguments
@@ -81,11 +60,7 @@ namespace Samples {
         static public void AndAlso1() {
             //<Snippet3>
             // add the following directive to your file
-#if CODEPLEX_40
-            // using System.Linq.Expressions;  
-#else
-            // using Microsoft.Linq.Expressions;  
-#endif
+            // using Microsoft.Scripting.Ast;  
 
             //This expression ands the values of its two arguments, 
             //but will not evaluate the second if the first is false.
@@ -125,11 +100,7 @@ namespace Samples {
         public static void AndAlso2() {
             //<Snippet4>
             // add the following directive to your file
-#if CODEPLEX_40
-            // using System.Linq.Expressions;
-#else
-            // using Microsoft.Linq.Expressions;
-#endif
+            // using Microsoft.Scripting.Ast;
 
             //This expression represents a boolean or bitwise and of two arguments using a user defined operator.
             //The parameters to the and should be reference convertible to the MethodInfo's arguments
@@ -151,11 +122,7 @@ namespace Samples {
         public static void AndAssign1() {
             //<Snippet5>
             // add the following directive to your file
-#if CODEPLEX_40
-            // using System.Linq.Expressions;
-#else
-            // using Microsoft.Linq.Expressions;
-#endif
+            // using Microsoft.Scripting.Ast;
 
             //AndAssign requires an assignable expression to be used as the left argument.
             ParameterExpression Variable = Expression.Variable(typeof(bool), "Variable");
@@ -190,11 +157,7 @@ namespace Samples {
         public static void AndAssign2() {
             //<Snippet6>
             // add the following directive to your file
-#if CODEPLEX_40
-            // using System.Linq.Expressions;
-#else
-            // using Microsoft.Linq.Expressions;
-#endif
+            // using Microsoft.Scripting.Ast;
 
             //AndAssign requires an assignable expression to be used as the left argument.
             ParameterExpression Variable = Expression.Variable(typeof(bool), "Variable");
@@ -229,11 +192,7 @@ namespace Samples {
         public static void AndAssign3() {
             //<Snippet7>
             // add the following directive to your file
-#if CODEPLEX_40
-            // using System.Linq.Expressions;
-#else
-            // using Microsoft.Linq.Expressions;
-#endif
+            // using Microsoft.Scripting.Ast;
 
             //AndAssign requires an assignable expression to be used as the left argument.
             ParameterExpression Variable = Expression.Variable(typeof(double), "Variable");

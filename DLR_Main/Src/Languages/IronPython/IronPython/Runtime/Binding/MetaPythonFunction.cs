@@ -13,24 +13,18 @@
  *
  * ***************************************************************************/
 
-#if CODEPLEX_40
-using System;
+#if !CLR2
+using System.Linq.Expressions;
 #else
-using System; using Microsoft;
+using Microsoft.Scripting.Ast;
 #endif
+
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics;
-#if CODEPLEX_40
-using System.Linq.Expressions;
-#else
-using Microsoft.Linq.Expressions;
-#endif
 using System.Reflection;
-#if CODEPLEX_40
 using System.Dynamic;
-#else
-#endif
 
 using Microsoft.Scripting;
 using Microsoft.Scripting.Actions;
@@ -42,11 +36,7 @@ using IronPython.Runtime.Operations;
 using IronPython.Runtime.Types;
 
 namespace IronPython.Runtime.Binding {
-#if CODEPLEX_40
-    using Ast = System.Linq.Expressions.Expression;
-#else
-    using Ast = Microsoft.Linq.Expressions.Expression;
-#endif
+    using Ast = Expression;
     using AstUtils = Microsoft.Scripting.Ast.Utils;
 
     class MetaPythonFunction : MetaPythonObject, IPythonInvokable, IPythonOperable, IPythonConvertible, IInferableInvokable, IConvertibleMetaObject, IPythonGetable {
@@ -184,11 +174,11 @@ namespace IronPython.Runtime.Binding {
             );
         }
 
-        private DynamicMetaObject FallbackGetMember(DynamicMetaObjectBinder binder, DynamicMetaObject self, DynamicMetaObject codeContext) {
+        private static DynamicMetaObject FallbackGetMember(DynamicMetaObjectBinder binder, DynamicMetaObject self, DynamicMetaObject codeContext) {
             return FallbackGetMember(binder, self, codeContext, null);
         }
 
-        private DynamicMetaObject FallbackGetMember(DynamicMetaObjectBinder binder, DynamicMetaObject self, DynamicMetaObject codeContext, DynamicMetaObject errorSuggestion) {
+        private static DynamicMetaObject FallbackGetMember(DynamicMetaObjectBinder binder, DynamicMetaObject self, DynamicMetaObject codeContext, DynamicMetaObject errorSuggestion) {
             PythonGetMemberBinder pyGetMem = binder as PythonGetMemberBinder;
             if (pyGetMem != null) {
                 return pyGetMem.Fallback(self, codeContext, errorSuggestion);
@@ -822,7 +812,7 @@ namespace IronPython.Runtime.Binding {
                 );
             }
 
-            private Expression VariableOrNull(ParameterExpression var, Type type) {
+            private static Expression VariableOrNull(ParameterExpression var, Type type) {
                 if (var != null) {
                     return AstUtils.Convert(
                         var,
@@ -964,7 +954,7 @@ namespace IronPython.Runtime.Binding {
             /// <summary>
             /// Helper function to create the expression for creating the actual tuple passed through.
             /// </summary>
-            private Expression/*!*/ MakeParamsTuple(List<Expression> extraArgs) {
+            private static Expression/*!*/ MakeParamsTuple(List<Expression> extraArgs) {
                 if (extraArgs != null) {
                     return AstUtils.ComplexCallHelper(
                         typeof(PythonOps).GetMethod("MakeTuple"),
@@ -1044,7 +1034,7 @@ namespace IronPython.Runtime.Binding {
 
         #region Operations
 
-        private DynamicMetaObject/*!*/ MakeCallSignatureRule(DynamicMetaObject self) {
+        private static DynamicMetaObject/*!*/ MakeCallSignatureRule(DynamicMetaObject self) {
             return new DynamicMetaObject(
                 Ast.Call(
                     typeof(PythonOps).GetMethod("GetFunctionSignature"),
@@ -1057,7 +1047,7 @@ namespace IronPython.Runtime.Binding {
             );
         }
 
-        private DynamicMetaObject MakeIsCallableRule(DynamicMetaObject/*!*/ self) {
+        private static DynamicMetaObject MakeIsCallableRule(DynamicMetaObject/*!*/ self) {
             return new DynamicMetaObject(
                 AstUtils.Constant(true),
                 BindingRestrictionsHelpers.GetRuntimeTypeRestriction(self.Expression, typeof(PythonFunction))

@@ -13,24 +13,14 @@
  *
  * ***************************************************************************/
 
-#if CODEPLEX_40
-using System;
-#else
-using System; using Microsoft;
-#endif
-using System.Collections.Generic;
-#if CODEPLEX_40
-using System.Dynamic;
+#if !CLR2
 using System.Linq.Expressions;
-#else
-using Microsoft.Scripting;
-using Microsoft.Linq.Expressions;
-#endif
-using System.Runtime.CompilerServices;
-#if !CODEPLEX_40
-using Microsoft.Runtime.CompilerServices;
 #endif
 
+using System;
+using System.Collections.Generic;
+using System.Dynamic;
+using System.Runtime.CompilerServices;
 
 using Microsoft.Scripting.Ast;
 using Microsoft.Scripting.Runtime;
@@ -124,6 +114,8 @@ namespace IronPython.Runtime {
                 return PythonOps.MakeString((ByteArray)res);
             } else if (res is IPythonBufferable) {
                 return PythonOps.MakeString((IList<byte>)GetSelectedRange());
+            } else if (res is byte[]) {
+                return ((byte[])GetSelectedRange()).MakeString();
             }
 
             return res.ToString();
@@ -138,9 +130,11 @@ namespace IronPython.Runtime {
         [PythonHidden]
         public override bool Equals(object obj) {
             PythonBuffer b = obj as PythonBuffer;
-            if (b == null) return false;
+            if (b == null) {
+                return false;
+            }
 
-            return this == b;
+            return __cmp__(b) == 0;
         }
 
         public override int GetHashCode() {
@@ -159,18 +153,21 @@ namespace IronPython.Runtime {
             return this[new Slice(start, stop)];
         }
 
-        private Exception ReadOnlyError() {
+        private static Exception ReadOnlyError() {
             return PythonOps.TypeError("buffer is read-only");
         }
 
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Performance", "CA1822:MarkMembersAsStatic")]
         public object __setslice__(object start, object stop, object value) {
             throw ReadOnlyError();
         }
 
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Performance", "CA1822:MarkMembersAsStatic")]
         public void __delitem__(int index) {
             throw ReadOnlyError();
         }
 
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Performance", "CA1822:MarkMembersAsStatic")]
         public void __delslice__(object start, object stop) {
            throw ReadOnlyError();
         }
@@ -269,7 +266,6 @@ namespace IronPython.Runtime {
             #region IComConvertible Members
 
             DynamicMetaObject IComConvertible.GetComMetaObject() {
-                Console.WriteLine("Com Convertible!");
                 return new DynamicMetaObject(
                     Expression.Call(
                         typeof(PythonOps).GetMethod("ConvertBufferToByteArray"),

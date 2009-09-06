@@ -13,11 +13,7 @@
  *
  * ***************************************************************************/
 
-#if CODEPLEX_40
 using System;
-#else
-using System; using Microsoft;
-#endif
 using System.Collections;
 
 using Microsoft.Scripting;
@@ -93,6 +89,7 @@ namespace IronPython.Runtime {
 
         #endregion
 
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Performance", "CA1822:MarkMembersAsStatic")]
         public int __hash__() {
             throw PythonOps.TypeErrorForUnhashableType("slice");
         }

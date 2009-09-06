@@ -14,11 +14,7 @@
  * ***************************************************************************/
 
 
-#if CODEPLEX_40
 using System;
-#else
-using System; using Microsoft;
-#endif
 using System.Collections;
 using System.Collections.Generic;
 using System.ComponentModel;
@@ -124,6 +120,7 @@ namespace IronPython.Modules {
         public static readonly object environ = new PythonDictionary(new EnvironmentDictionaryStorage());
 #endif
 
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Security", "CA2104:DoNotDeclareReadOnlyMutableReferenceTypes")]
         public static readonly PythonType error = Builtin.OSError;
 
         public static void _exit(CodeContext/*!*/ context, int code) {
@@ -1448,10 +1445,6 @@ namespace IronPython.Modules {
         [PythonType]
         private class POpenFile : PythonFile {
             private Process _process;
-
-            public static object __new__(CodeContext/*!*/ context, string command, Process process, Stream stream, string mode) {
-                return new POpenFile(context, command, process, stream, mode);
-            }
 
             internal POpenFile(CodeContext/*!*/ context, string command, Process process, Stream stream, string mode) 
                 : base(PythonContext.GetContext(context)) {

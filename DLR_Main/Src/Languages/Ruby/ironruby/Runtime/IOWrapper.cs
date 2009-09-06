@@ -13,17 +13,9 @@
  *
  * ***************************************************************************/
 
-#if CODEPLEX_40
 using System;
-#else
-using System; using Microsoft;
-#endif
 using System.IO;
 using System.Runtime.CompilerServices;
-#if !CODEPLEX_40
-using Microsoft.Runtime.CompilerServices;
-#endif
-
 using IronRuby.Builtins;
 using Microsoft.Scripting.Runtime;
 using Microsoft.Scripting.Generation;
@@ -39,7 +31,6 @@ namespace IronRuby.Runtime {
         private readonly CallSite<Func<CallSite, object, object>> _tellSite;
             
 
-        private readonly RubyContext/*!*/ _context;
         private readonly object _obj;
         private readonly bool _canRead;
         private readonly bool _canWrite;
@@ -55,8 +46,6 @@ namespace IronRuby.Runtime {
 
         public IOWrapper(RubyContext/*!*/ context, object io, bool canRead, bool canWrite, bool canSeek, bool canFlush, bool canBeClosed) {
             Assert.NotNull(context);
-
-            _context = context;
 
             _writeSite = CallSite<Func<CallSite, object, MutableString, object>>.Create(
                 RubyCallAction.Make(context, "write", RubyCallSignature.WithImplicitSelf(1))

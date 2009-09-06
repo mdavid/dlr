@@ -13,13 +13,13 @@
  *
  * ***************************************************************************/
 
-#if CODEPLEX_40
-using System;
+#if !CLR2
 using MSAst = System.Linq.Expressions;
 #else
-using System; using Microsoft;
-using MSAst = Microsoft.Linq.Expressions;
+using MSAst = Microsoft.Scripting.Ast;
 #endif
+
+using System;
 
 namespace IronPython.Compiler.Ast {
     public class LambdaExpression : Expression {

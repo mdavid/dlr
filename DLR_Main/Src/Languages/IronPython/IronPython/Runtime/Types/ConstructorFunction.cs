@@ -12,8 +12,6 @@
  *
  *
  * ***************************************************************************/
-using System; using Microsoft;
-
 
 using System.Collections.Generic;
 using System.Reflection;
@@ -53,6 +51,7 @@ namespace IronPython.Runtime.Types {
             return realTarget.Targets;
         }
 
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Performance", "CA1822:MarkMembersAsStatic")]
         public new string __name__ {
             get {
                 return "__new__";

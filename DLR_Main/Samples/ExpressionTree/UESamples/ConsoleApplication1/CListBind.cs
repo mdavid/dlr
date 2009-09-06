@@ -1,17 +1,7 @@
-#if CODEPLEX_40
 using System;
-#else
-using System; using Microsoft;
-#endif
 using System.Collections.Generic;
-#if CODEPLEX_40
-using System.Linq;
-using System.Linq.Expressions;
-#else
-using Microsoft.Linq;
-using Microsoft.Linq.Expressions;
-#endif
 using System.Text;
+using Microsoft.Scripting.Ast;
 
 namespace Samples {
     class CListBind {
@@ -24,11 +14,7 @@ namespace Samples {
         static public void ListBind1() {
             //<Snippet1>
             // add the following directive to your file
-#if CODEPLEX_40
-            // using System.Linq.Expressions;  
-#else
-            // using Microsoft.Linq.Expressions;  
-#endif
+            // using Microsoft.Scripting.Ast;  
 
             //First we create a variable of the containing type
             ParameterExpression MyClass = Expression.Variable(typeof(LB1));
@@ -87,11 +73,7 @@ namespace Samples {
         static public void ListBind2() {
             //<Snippet2>
             // add the following directive to your file
-#if CODEPLEX_40
-            // using System.Linq.Expressions;  
-#else
-            // using Microsoft.Linq.Expressions;  
-#endif
+            // using Microsoft.Scripting.Ast;  
 
             //First we create a variable of the containing type
             ParameterExpression MyClass = Expression.Variable(typeof(LB2));
@@ -164,11 +146,7 @@ namespace Samples {
         static public void ListBind3() {
             //<Snippet3>
             // add the following directive to your file
-#if CODEPLEX_40
-            // using System.Linq.Expressions;  
-#else
-            // using Microsoft.Linq.Expressions;  
-#endif
+            // using Microsoft.Scripting.Ast;  
 
             //First we create a variable of the containing type
             ParameterExpression MyClass = Expression.Variable(typeof(LB3));
@@ -239,11 +217,7 @@ namespace Samples {
         static public void ListBind4() {
             //<Snippet4>
             // add the following directive to your file
-#if CODEPLEX_40
-            // using System.Linq.Expressions;  
-#else
-            // using Microsoft.Linq.Expressions;  
-#endif
+            // using Microsoft.Scripting.Ast;  
 
             //First we create a variable of the containing type
             ParameterExpression MyClass = Expression.Variable(typeof(LB4));

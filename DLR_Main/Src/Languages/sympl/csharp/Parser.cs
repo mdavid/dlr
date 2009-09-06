@@ -1,12 +1,10 @@
 using System;
+using System.Dynamic;
 using System.Collections.Generic;
 using System.IO;
 #if USE35
-using Microsoft.Scripting;
-using Microsoft.Linq.Expressions;
+using Microsoft.Scripting.Ast;
 #else
-using System.Dynamic;
-using System.Linq;
 using System.Linq.Expressions;
 #endif
 

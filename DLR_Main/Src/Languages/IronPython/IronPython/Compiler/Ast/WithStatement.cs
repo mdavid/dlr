@@ -13,17 +13,9 @@
  *
  * ***************************************************************************/
 
-#if CODEPLEX_40
 using System;
-#else
-using System; using Microsoft;
-#endif
 using System.Collections.Generic;
 using System.Runtime.CompilerServices;
-#if !CODEPLEX_40
-using Microsoft.Runtime.CompilerServices;
-#endif
-
 
 using Microsoft.Scripting;
 using Microsoft.Scripting.Actions;
@@ -31,19 +23,16 @@ using Microsoft.Scripting.Runtime;
 
 using IronPython.Runtime.Binding;
 
-using AstUtils = Microsoft.Scripting.Ast.Utils;
-#if CODEPLEX_40
+#if !CLR2
 using MSAst = System.Linq.Expressions;
 #else
-using MSAst = Microsoft.Linq.Expressions;
+using MSAst = Microsoft.Scripting.Ast;
 #endif
 
+using AstUtils = Microsoft.Scripting.Ast.Utils;
+
 namespace IronPython.Compiler.Ast {
-#if CODEPLEX_40
-    using Ast = System.Linq.Expressions.Expression;
-#else
-    using Ast = Microsoft.Linq.Expressions.Expression;
-#endif
+    using Ast = MSAst.Expression;
 
     public class WithStatement : Statement {
         private SourceLocation _header;
@@ -119,7 +108,7 @@ namespace IronPython.Compiler.Ast {
             //******************************************************************
             MSAst.ParameterExpression exit = ag.GetTemporary("with_exit");
             statements.Add(
-                ag.MakeAssignment(
+                AstGenerator.MakeAssignment(
                     exit,
                     ag.Get(
                         typeof(object),
@@ -134,8 +123,8 @@ namespace IronPython.Compiler.Ast {
             //******************************************************************
             MSAst.ParameterExpression value = ag.GetTemporary("with_value");
             statements.Add(
-                ag.AddDebugInfo(
-                    ag.MakeAssignment(
+                ag.AddDebugInfoAndVoid(
+                    AstGenerator.MakeAssignment(
                         value,
                         ag.Invoke(
                             typeof(object),
@@ -156,7 +145,7 @@ namespace IronPython.Compiler.Ast {
             //******************************************************************
             MSAst.ParameterExpression exc = ag.GetTemporary("with_exc", typeof(bool));
             statements.Add(
-                ag.MakeAssignment(
+                AstGenerator.MakeAssignment(
                     exc,
                     AstUtils.Constant(true)
                 )
@@ -202,10 +191,10 @@ namespace IronPython.Compiler.Ast {
                         TryStatement.GetTracebackHeader(                        
                             ag,
                             exception,
-                            ag.AddDebugInfo(
+                            ag.AddDebugInfoAndVoid(
                                 Ast.Block(
                                     // exc = False
-                                    ag.MakeAssignment(
+                                    AstGenerator.MakeAssignment(
                                         exc,
                                         AstUtils.Constant(false)
                                     ),
@@ -254,7 +243,7 @@ namespace IronPython.Compiler.Ast {
                 //      exit(None, None, None)
                     AstUtils.IfThen(
                         exc,
-                        ag.AddDebugInfo(
+                        ag.AddDebugInfoAndVoid(
                             Ast.Block(
                                 Ast.Dynamic(
                                     ag.PyContext.Invoke(
@@ -281,7 +270,7 @@ namespace IronPython.Compiler.Ast {
             return Ast.Block(statements.ToReadOnlyCollection());
         }
 
-        private MSAst.Expression MakeExitCall(AstGenerator ag, MSAst.ParameterExpression exit, MSAst.Expression exception) {
+        private static MSAst.Expression MakeExitCall(AstGenerator ag, MSAst.ParameterExpression exit, MSAst.Expression exception) {
             // The 'with' statement's exceptional clause explicitly does not set the thread's current exception information.
             // So while the pseudo code says:
             //    exit(*sys.exc_info())

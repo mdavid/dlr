@@ -12,17 +12,11 @@
  *
  *
  * ***************************************************************************/
-using System; using Microsoft;
-
 
 #if !SILVERLIGHT // XML
 
 using System.Collections.Generic;
 using System.Runtime.CompilerServices;
-#if !CODEPLEX_40
-using Microsoft.Runtime.CompilerServices;
-#endif
-
 using System.Xml;
 using IronPython.Runtime;
 using IronPython.Runtime.Types;

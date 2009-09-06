@@ -13,266 +13,267 @@
  *
  * ***************************************************************************/
 
-#if CODEPLEX_40
-using System;
-#else
-using System; using Microsoft;
-#endif
-using System.Collections.Generic;
-#if CODEPLEX_40
+#if !CLR2
 using System.Linq.Expressions;
 #else
-using Microsoft.Linq.Expressions;
+using dynamic = System.Object;
+using Microsoft.Scripting.Ast;
 #endif
+
+using System;
+using System.Collections.Generic;
 using Microsoft.Scripting.Utils;
-using System.Threading;
+using System.Dynamic;
+using AstUtils = Microsoft.Scripting.Ast.Utils;
 
 namespace Microsoft.Scripting.Runtime {
-
     /// <summary>
-    /// Represents a context of execution.  A context of execution has a set of variables
-    /// associated with it (its dictionary) and a parent context.  
+    /// Represents a host-provided variables for executable code.  The variables are
+    /// typically backed by a host-provided dictionary. Languages can also associate per-language
+    /// information with the context by using scope extensions.  This can be used for tracking
+    /// state which is used across multiple executions, for providing custom forms of 
+    /// storage (for example object keyed access), or other language specific semantics.
     /// 
-    /// When looking up a name from a context first the local context is searched.  If the
-    /// name is not found there the name lookup will be done against the parent context.
+    /// Scope objects are thread-safe as long as their underlying storage is thread safe.
     /// 
-    /// Scopes, like IAttrbibuteCollections, support both being indexed by SymbolId for fast
-    /// access as well as being indexed by object.  The preferred access is via SymbolId and
-    /// object access is provided for languages which require additional semantics.  All
-    /// features supported for feature IDs are also supported for objects (e.g. context-sentsitivity
-    /// and attributes) but the object API does not contain all the same sets of overloads provided
-    /// for convenience.
-    /// 
-    /// TODO: Thread safety
+    /// Script hosts can choose to use thread safe or thread unsafe modules but must be sure
+    /// to constrain the code they right to be single-threaded if using thread unsafe
+    /// storage.
     /// </summary>
-    public class Scope {
+    public sealed class Scope : IDynamicMetaObjectProvider {
         private ScopeExtension[] _extensions; // resizable
-        private IAttributesCollection _dict;
-
-        // TODO: remove
-        private readonly Scope _parent;
-        private bool _isVisible;
+        private readonly IDynamicMetaObjectProvider _storage;
 
         /// <summary>
-        /// Creates a new top-level scope with a new empty dictionary.  The scope
-        /// is marked as being visible.
+        /// Creates a new scope with a new empty thread-safe dictionary.  
         /// </summary>
-        public Scope()
-            : this(null, null) {
-        }
-
-        /// <summary>
-        /// Creates a new top-level Scope with the provided dictionary
-        /// </summary>
-        public Scope(IAttributesCollection dictionary)
-            : this(null, dictionary) {
-        }
-
-        /// <summary>
-        /// Creates a new Scope with the provided parent and dictionary.
-        /// </summary>
-        public Scope(Scope parent, IAttributesCollection dictionary)
-            : this(parent, dictionary, true) {
-        }
-
-        /// <summary>
-        /// Creates a new Scope with the provided parent, dictionary and visibility.
-        /// </summary>
-        public Scope(Scope parent, IAttributesCollection dictionary, bool isVisible) {
-            _parent = parent;
-            _dict = dictionary ?? new SymbolDictionary();
-            _isVisible = isVisible;
+        public Scope() {
             _extensions = ScopeExtension.EmptyArray;
+            _storage = new ScopeStorage();
         }
 
+        /// <summary>
+        /// Creates a new scope with the provided dictionary.
+        /// </summary>
+        public Scope(IAttributesCollection dictionary) {
+            _extensions = ScopeExtension.EmptyArray;
+            _storage = new AttributesAdapter(dictionary);
+        }
+
+        /// <summary>
+        /// Creates a new scope which is backed by an arbitrary object for it's storage.
+        /// </summary>
+        /// <param name="storage"></param>
+        public Scope(IDynamicMetaObjectProvider storage) {
+            _extensions = ScopeExtension.EmptyArray;
+            _storage = storage;
+        }
+
+        /// <summary>
+        /// Gets the ScopeExtension associated with the provided ContextId.
+        /// </summary>
         public ScopeExtension GetExtension(ContextId languageContextId) {
             return (languageContextId.Id < _extensions.Length) ? _extensions[languageContextId.Id] : null;
         }
-
+        
+        /// <summary>
+        /// Sets the ScopeExtension to the provided value for the given ContextId.  
+        /// 
+        /// The extension can only be set once.  The returned value is either the new ScopeExtension
+        /// if no value was previously set or the previous value.
+        /// </summary>
         public ScopeExtension SetExtension(ContextId languageContextId, ScopeExtension extension) {
             ContractUtils.RequiresNotNull(extension, "extension");
 
-            if (languageContextId.Id >= _extensions.Length) {
-                Array.Resize(ref _extensions, languageContextId.Id + 1);
-            }
+            lock (_extensions) {
+                if (languageContextId.Id >= _extensions.Length) {
+                    Array.Resize(ref _extensions, languageContextId.Id + 1);
+                }
 
-            ScopeExtension original = Interlocked.CompareExchange(ref _extensions[languageContextId.Id], extension, null);
-            return original ?? extension;
-        }
-
-        /// <summary>
-        /// Gets the parent of this Scope or null if the Scope has no parent.
-        /// </summary>
-        public Scope Parent {
-            get {
-                return _parent;
+                return _extensions[languageContextId.Id] ?? (_extensions[languageContextId.Id] = extension);
             }
         }
 
-        /// <summary>
-        /// Gets if the context is visible at this scope.  Visibility is a per-language feature that enables
-        /// languages to include members in the Scope chain but hide them when directly exposed to the user.
-        /// </summary>
-        public bool IsVisible {
+        public dynamic Storage {
             get {
-                return _isVisible;
+                return _storage;
             }
         }
 
-        /// <summary>
-        /// Returns the list of keys which are available to all languages.  Keys marked with the
-        /// DontEnumerate flag will not be returned.
-        /// </summary>
-        [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Naming", "CA1721:PropertyNamesShouldNotMatchGetMethods")] // TODO: fix
-        public IEnumerable<SymbolId> Keys {
-            get {
-                foreach (object name in _dict.Keys) {
-                    string strName = name as string;
-                    if (strName == null) continue;
+        class MetaScope : DynamicMetaObject {
+            public MetaScope(Expression parameter, Scope scope)
+                : base(parameter, BindingRestrictions.Empty, scope) {
+            }
 
-                    yield return SymbolTable.StringToId(strName);
+            public override DynamicMetaObject BindGetMember(GetMemberBinder binder) {
+                return Restrict(binder.Bind(StorageMetaObject, DynamicMetaObject.EmptyMetaObjects));
+            }
+
+            public override DynamicMetaObject BindSetMember(SetMemberBinder binder, DynamicMetaObject value) {                
+                return Restrict(binder.Bind(StorageMetaObject, new DynamicMetaObject[] { value }));
+            }
+
+            public override DynamicMetaObject BindDeleteMember(DeleteMemberBinder binder) {
+                return Restrict(binder.Bind(StorageMetaObject, DynamicMetaObject.EmptyMetaObjects));
+            }
+
+            private DynamicMetaObject Restrict(DynamicMetaObject result) {
+                if (Expression.Type == typeof(Scope)) {
+                    // ideal binding, we add no new restrictions if we're binding against a strongly typed Scope
+                    return result;
+                }
+
+                // Un-ideal binding: we add restrictions.
+                return new DynamicMetaObject(result.Expression, BindingRestrictions.GetTypeRestriction(Expression, typeof(Scope)).Merge(result.Restrictions));
+            }
+
+            private DynamicMetaObject StorageMetaObject {
+                get {
+                    return DynamicMetaObject.Create(Value._storage, StorageExpression);
+                }
+            }
+
+            private MemberExpression StorageExpression {
+                get {
+                    return Expression.Property(
+                        AstUtils.Convert(Expression, typeof(Scope)),
+                        typeof(Scope).GetProperty("Storage")
+                    );
+                }
+            }
+
+            public override IEnumerable<string> GetDynamicMemberNames() {
+                return StorageMetaObject.GetDynamicMemberNames();
+            }
+
+            public new Scope Value {
+                get {
+                    return (Scope)base.Value;
                 }
             }
         }
 
-        /// <summary>
-        /// Returns the list of Keys and Items which are available to all languages.  Keys marked
-        /// with the DontEnumerate flag will not be returned.
-        /// </summary>
-        public IEnumerable<KeyValuePair<SymbolId, object>> Items {
-            get {
-                foreach (KeyValuePair<SymbolId, object> kvp in _dict.SymbolAttributes) {
-                    yield return kvp;
+        #region IDynamicMetaObjectProvider Members
+
+        DynamicMetaObject IDynamicMetaObjectProvider.GetMetaObject(Expression parameter) {
+            return new MetaScope(parameter, this);
+        }
+
+        #endregion
+
+        class AttributesAdapter : IDynamicMetaObjectProvider {
+            private readonly IAttributesCollection _data;
+
+            public AttributesAdapter(IAttributesCollection data) {
+                _data = data;
+            }
+
+            private static object TryGetMember(object adapter, SymbolId name) {
+                object result;
+                if (((AttributesAdapter)adapter)._data.TryGetValue(name, out result)) {
+                    return result;
+                }
+                return OperationFailed.Value;
+            }
+
+            private static void TrySetMember(object adapter, SymbolId name, object value) {
+                ((AttributesAdapter)adapter)._data[name] = value;
+            }
+
+            private static bool TryDeleteMember(object adapter, SymbolId name) {
+                return ((AttributesAdapter)adapter)._data.Remove(name);
+            }
+
+            #region IDynamicMetaObjectProvider Members
+
+            DynamicMetaObject IDynamicMetaObjectProvider.GetMetaObject(Expression parameter) {
+                return new Meta(parameter, this);
+            }
+
+            #endregion
+
+            class Meta : DynamicMetaObject {
+                public Meta(Expression parameter, AttributesAdapter storage)
+                    : base(parameter, BindingRestrictions.Empty, storage) {
+                }
+
+                public override DynamicMetaObject BindGetMember(GetMemberBinder binder) {
+                    var tmp = Expression.Parameter(typeof(object));
+                    return new DynamicMetaObject(
+                        Expression.Block(
+                            new[] { tmp },
+                            Expression.Condition(
+                                Expression.NotEqual(
+                                    Expression.Assign(
+                                        tmp,
+                                        Expression.Invoke(
+                                            Expression.Constant(new Func<object, SymbolId, object>(AttributesAdapter.TryGetMember)),
+                                            Expression,
+                                            Expression.Constant(SymbolTable.StringToId(binder.Name))
+                                        )
+                                    ),
+                                    Expression.Constant(OperationFailed.Value, typeof(object))
+                                ),
+                                tmp,
+                                Expression.Convert(binder.FallbackGetMember(this).Expression, typeof(object))
+                            )
+                        ),
+                        GetRestrictions()
+                    );
+                }
+
+                private BindingRestrictions GetRestrictions() {
+                    return BindingRestrictions.GetTypeRestriction(Expression, typeof(AttributesAdapter));
+                }
+
+                public override DynamicMetaObject BindSetMember(SetMemberBinder binder, DynamicMetaObject value) {
+                    return new DynamicMetaObject(
+                        Expression.Block(
+                            Expression.Invoke(
+                                Expression.Constant(new Action<object, SymbolId, object>(AttributesAdapter.TrySetMember)),
+                                Expression,
+                                Expression.Constant(SymbolTable.StringToId(binder.Name)),
+                                Expression.Convert(
+                                    value.Expression,
+                                    typeof(object)
+                                )
+                            ),
+                            value.Expression
+                        ),
+                        GetRestrictions()
+                    );
+                }
+
+                public override DynamicMetaObject BindDeleteMember(DeleteMemberBinder binder) {
+                    return new DynamicMetaObject(
+                        Expression.Condition(
+                            Expression.Invoke(
+                                Expression.Constant(new Func<object, SymbolId, bool>(AttributesAdapter.TryDeleteMember)),
+                                Expression,
+                                Expression.Constant(SymbolTable.StringToId(binder.Name))
+                            ),
+                            Expression.Default(binder.ReturnType),
+                            binder.FallbackDeleteMember(this).Expression
+                        ),
+                        GetRestrictions()
+                    );
+                }
+
+                public new AttributesAdapter Value {
+                    get {
+                        return (AttributesAdapter)base.Value;
+                    }
+                }
+
+                public override IEnumerable<string> GetDynamicMemberNames() {
+                    foreach (object o in Value._data.Keys) {
+                        if (o is string) {
+                            yield return (string)o;
+                        }
+                    }
                 }
             }
+
         }
-
-        /// <summary>
-        /// Trys to lookup the provided name in the current scope.  Search includes
-        /// names that are only visible to the provided LanguageContext.
-        /// </summary>
-        public bool TryGetVariable(SymbolId name, out object value) {
-            return _dict.TryGetValue(name, out value);
-        }
-		
-		public object GetVariable(SymbolId name) {
-            object value;
-            if (!TryGetVariable(name, out value)) {
-                throw Error.NameNotDefined(SymbolTable.IdToString(name));
-            }
-            return value;
-        }
-
-        /// <summary>
-        /// Sets the name to the specified value for the current context.
-        /// </summary>
-        /// <exception cref="MemberAccessException">The name has already been published and marked as ReadOnly</exception>
-        public void SetVariable(SymbolId name, object value) {
-            _dict[name] = value;
-        }
-		
-        /// <summary>
-        /// Removes all members from the dictionary and any context-sensitive dictionaries.
-        /// </summary>
-        public void Clear() {
-            List<object> ids = new List<object>(_dict.Keys);
-            foreach (object name in ids) {
-                _dict.RemoveObjectKey(name);
-            }
-        }
-
-        public bool ContainsVariable(SymbolId name) {
-            return _dict.ContainsKey(name);
-        }
-
-        /// <summary>
-        /// Attemps to remove the provided name from this scope removing names visible
-        /// to both the current context and all contexts.
-        /// </summary>
-        public bool TryRemoveVariable(SymbolId name) {
-            bool fRemoved = false;
-
-            // TODO: Ideally, we could do this without having to do two lookups.
-            object removedObject;
-            if (_dict.TryGetValue(name, out removedObject) && removedObject != Uninitialized.Instance) {
-                fRemoved = _dict.Remove(name) || fRemoved;
-            }
-
-            return fRemoved;
-        }
-
-        /// <summary>
-        /// Default scope dictionary
-        /// </summary>
-        public IAttributesCollection Dict {
-            get {
-                return _dict;
-            }
-        }
-
-        #region Object key access
-
-        /// <summary>
-        /// Attemps to remove the provided object name from this scope removing names visible
-        /// to both the current context and all contexts.
-        /// </summary>
-        public bool TryRemoveObjectName(object name) {
-            return _dict.RemoveObjectKey(name);
-        }
-
-        public bool TryGetObjectName(object name, out object value) {
-            if (_dict.TryGetObjectValue(name, out value)) return true;
-
-            value = null;
-            return false;
-        }
-
-        /// <summary>
-        /// Sets the name to the specified value for the current context.
-        /// 
-        /// The name is an arbitrary object.
-        /// </summary>
-        public void SetObjectName(object name, object value) {
-            _dict.AddObjectKey(name, value);                
-        }
-
-        public IEnumerable<object> GetAllKeys() {
-            foreach (object key in _dict.Keys) {
-                yield return key;
-            }
-        }
-
-        /// <summary>
-        /// Returns the list of Keys and Values available to all languages in addition to those
-        /// keys which are only available to the provided LanguageContext.
-        /// 
-        /// Keys marked with DontEnumerate flag will not be returned.
-        /// </summary>
-        public IEnumerable<KeyValuePair<object, object>> GetAllItems() {
-            foreach (KeyValuePair<object, object> kvp in _dict) {
-                yield return kvp;
-            }
-        }
-
-        #endregion
-
-        #region Obsolete
-
-        [Obsolete("Use SetVariable instead")]
-        public void SetName(SymbolId name, object value) {
-            SetVariable(name, value);
-        }
-
-        [Obsolete("Use TryGetVariable instead")]
-        public bool TryGetName(SymbolId name, out object value) {
-            return TryGetVariable(name, out value);
-        }
-
-        [Obsolete("Use ContainsVariable instead")]
-        public bool ContainsName(SymbolId name) {
-            return ContainsVariable(name);
-        }
-
-        #endregion
     }
 }

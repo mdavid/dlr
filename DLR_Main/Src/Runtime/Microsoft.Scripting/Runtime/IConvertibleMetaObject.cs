@@ -13,17 +13,13 @@
  *
  * ***************************************************************************/
 
-#if CODEPLEX_40
 using System;
-#else
-using System; using Microsoft;
-#endif
 
 namespace Microsoft.Scripting.Runtime {
     /// <summary>
     /// Indicates that a DynamicMetaObject might be convertible to a CLR type.
     /// </summary>
     public interface IConvertibleMetaObject {
-        bool CanConvertTo(Type type, bool @explicit);
+        bool CanConvertTo(Type type, bool isExplicit);
     }
 }

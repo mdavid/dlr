@@ -1,20 +1,7 @@
-#if CODEPLEX_40
 using System;
-#else
-using System; using Microsoft;
-#endif
 using System.Collections.Generic;
-#if CODEPLEX_40
-using System.Linq;
-#else
-using Microsoft.Linq;
-#endif
 using System.Text;
-#if CODEPLEX_40
-using System.Linq.Expressions;
-#else
-using Microsoft.Linq.Expressions;
-#endif
+using Microsoft.Scripting.Ast;
 
 namespace Samples {
     class CLessThan {
@@ -22,11 +9,7 @@ namespace Samples {
         static public void LessThan1() {
             //<Snippet1>
             // Add the following directive to your file
-#if CODEPLEX_40
-            // using System.Linq.Expressions;  
-#else
-            // using Microsoft.Linq.Expressions;  
-#endif
+            // using Microsoft.Scripting.Ast;  
 
             //This expression compares the values of its two arguments.
             //Both arguments need to be of the same type.
@@ -54,11 +37,7 @@ namespace Samples {
         public static void LessThan2() {
             //<Snippet2>
             // Add the following directive to your file
-#if CODEPLEX_40
-            // using System.Linq.Expressions;
-#else
-            // using Microsoft.Linq.Expressions;
-#endif
+            // using Microsoft.Scripting.Ast;
 
             //This expression represents a LessThan comparison of two arguments using a user defined operator.
             //The parameters to the LessThan should be reference convertible to the MethodInfo's arguments

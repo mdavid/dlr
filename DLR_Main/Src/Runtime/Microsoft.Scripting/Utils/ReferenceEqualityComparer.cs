@@ -12,15 +12,9 @@
  *
  *
  * ***************************************************************************/
-using System; using Microsoft;
-
 
 using System.Collections.Generic;
 using System.Runtime.CompilerServices;
-#if !CODEPLEX_40
-using Microsoft.Runtime.CompilerServices;
-#endif
-
 
 namespace Microsoft.Scripting.Utils {
     internal sealed class ReferenceEqualityComparer<T> : IEqualityComparer<T> {

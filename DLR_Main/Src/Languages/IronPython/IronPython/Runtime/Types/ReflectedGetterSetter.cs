@@ -13,19 +13,11 @@
  *
  * ***************************************************************************/
 
-#if CODEPLEX_40
 using System;
-#else
-using System; using Microsoft;
-#endif
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Reflection;
 using System.Runtime.CompilerServices;
-#if !CODEPLEX_40
-using Microsoft.Runtime.CompilerServices;
-#endif
-
 using IronPython.Runtime.Operations;
 using Microsoft.Scripting.Generation;
 using Microsoft.Scripting.Runtime;
@@ -184,7 +176,7 @@ namespace IronPython.Runtime.Types {
             }
         }
 
-        private MethodInfo[] RemoveNullEntries(MethodInfo[] mis) {
+        private static MethodInfo[] RemoveNullEntries(MethodInfo[] mis) {
             List<MethodInfo> res = null;
             for (int i = 0; i < mis.Length; i++) {
                 if (mis[i] == null) {

@@ -14,29 +14,24 @@
  * ***************************************************************************/
 
 #if !SILVERLIGHT // ComObject
-
-#if CODEPLEX_40
-using System;
-#else
-using System; using Microsoft;
-#endif
-using System.Collections.Generic;
-#if CODEPLEX_40
+#if !CLR2
 using System.Linq.Expressions;
-using System.Dynamic;
 #else
-using Microsoft.Linq.Expressions;
-using Microsoft.Scripting;
+using Microsoft.Scripting.Ast;
 #endif
+
+using System;
+using System.Collections.Generic;
+using System.Dynamic;
 using ComTypes = System.Runtime.InteropServices.ComTypes;
 
 namespace Microsoft.Scripting.ComInterop {
 
     public class ComTypeClassDesc : ComTypeDesc, IDynamicMetaObjectProvider {
-        LinkedList<string> _itfs; // implemented interfaces
-        LinkedList<string> _sourceItfs; // source interfaces supported by this coclass
+        private LinkedList<string> _itfs; // implemented interfaces
+        private LinkedList<string> _sourceItfs; // source interfaces supported by this coclass
         private Type _typeObj;
-
+        
         public object CreateInstance() {
             if (_typeObj == null) {
                 _typeObj = System.Type.GetTypeFromCLSID(Guid);

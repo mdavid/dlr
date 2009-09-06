@@ -13,19 +13,11 @@
  *
  * ***************************************************************************/
 
-#if CODEPLEX_40
 using System;
-#else
-using System; using Microsoft;
-#endif
 using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Runtime.CompilerServices;
-#if !CODEPLEX_40
-using Microsoft.Runtime.CompilerServices;
-#endif
-
 using Microsoft.Scripting;
 using Microsoft.Scripting.Math;
 using Microsoft.Scripting.Runtime;
@@ -66,6 +58,24 @@ namespace IronRuby.Runtime {
 
         public static object Normalize(long x) {
             if (x >= Int32.MinValue && x <= Int32.MaxValue) {
+                return ScriptingRuntimeHelpers.Int32ToObject((int)x);
+            } else {
+                return BigInteger.Create(x);
+            }
+        }
+
+        [CLSCompliant(false)]
+        public static object Normalize(ulong x) {
+            if (x <= Int32.MaxValue) {
+                return ScriptingRuntimeHelpers.Int32ToObject((int)x);
+            } else {
+                return BigInteger.Create(x);
+            }
+        }
+
+        [CLSCompliant(false)]
+        public static object Normalize(uint x) {
+            if (x <= Int32.MaxValue) {
                 return ScriptingRuntimeHelpers.Int32ToObject((int)x);
             } else {
                 return BigInteger.Create(x);
@@ -147,6 +157,12 @@ namespace IronRuby.Runtime {
             return site.Target(site, value);
         }
 
+        public static double CastToFloat(ConversionStorage<double>/*!*/ floatConversion, object value) {
+            var site = floatConversion.GetSite(ConvertToFAction.Make(floatConversion.Context));
+            return site.Target(site, value);
+        }
+
+
         public static int CastToFixnum(ConversionStorage<int>/*!*/ conversionStorage, object value) {
             var site = conversionStorage.GetSite(ConvertToFixnumAction.Make(conversionStorage.Context));
             return site.Target(site, value);
@@ -170,28 +186,19 @@ namespace IronRuby.Runtime {
             if (integer.Bignum.AsUInt32(out u)) {
                 return u;
             }
-            throw RubyExceptions.CreateRangeError("bignum too big to convert into `unsigned long'");
+            throw RubyExceptions.CreateRangeError("bignum too big to convert into 32-bit unsigned integer");
         }
 
         /// <summary>
         /// Like CastToInteger, but converts the result to an unsigned int.
         /// </summary>
         [CLSCompliant(false)]
-        public static ulong CastToUInt64Unchecked(ConversionStorage<IntegerValue>/*!*/ integerConversion, object obj) {
+        public static long CastToInt64Unchecked(ConversionStorage<IntegerValue>/*!*/ integerConversion, object obj) {
             if (obj == null) {
                 throw RubyExceptions.CreateTypeError("no implicit conversion from nil to integer");
             }
 
-            IntegerValue integer = CastToInteger(integerConversion, obj);
-            if (integer.IsFixnum) {
-                return unchecked((ulong)integer.Fixnum);
-            }
-
-            ulong u;
-            if (integer.Bignum.AsUInt64(out u)) {
-                return u;
-            }
-            throw RubyExceptions.CreateRangeError("bignum too big to convert into `quad long'");
+            return CastToInteger(integerConversion, obj).ToInt64();
         }
 
         #endregion

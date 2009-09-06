@@ -13,24 +13,17 @@
  *
  * ***************************************************************************/
 
-#if CODEPLEX_40
-using System;
-#else
-using System; using Microsoft;
-#endif
-using System.Collections.Generic;
-using System.Diagnostics;
-#if CODEPLEX_40
+#if !CLR2
 using System.Linq.Expressions;
 #else
-using Microsoft.Linq.Expressions;
+using Microsoft.Scripting.Ast;
 #endif
+
+using System;
+using System.Collections.Generic;
+using System.Diagnostics;
 using System.Reflection;
-#if CODEPLEX_40
 using System.Dynamic;
-#else
-using Microsoft.Scripting;
-#endif
 using Microsoft.Scripting.Generation;
 using Microsoft.Scripting.Runtime;
 using Microsoft.Scripting.Utils;
@@ -38,11 +31,7 @@ using Microsoft.Scripting.Actions.Calls;
 using AstUtils = Microsoft.Scripting.Ast.Utils;
 
 namespace Microsoft.Scripting.Actions {
-#if CODEPLEX_40
-    using Ast = System.Linq.Expressions.Expression;
-#else
-    using Ast = Microsoft.Linq.Expressions.Expression;
-#endif
+    using Ast = Expression;
 
     public partial class DefaultBinder : ActionBinder {
         /// <summary>
@@ -59,7 +48,7 @@ namespace Microsoft.Scripting.Actions {
             ContractUtils.RequiresNotNullItems(args, "args");
             ContractUtils.RequiresNotNull(resolverFactory, "resolverFactory");
 
-            TargetInfo targetInfo = GetTargetInfo(signature, target, args);
+            TargetInfo targetInfo = GetTargetInfo(target, args);
 
             if (targetInfo != null) {
                 // we're calling a well-known MethodBase
@@ -111,7 +100,7 @@ namespace Microsoft.Scripting.Actions {
         /// If this object is a BoundMemberTracker we bind to the methods with the bound instance.
         /// If the underlying type has defined an operator Call method we'll bind to that method.
         /// </summary>
-        private TargetInfo GetTargetInfo(CallSignature signature, DynamicMetaObject target, DynamicMetaObject[] args) {
+        private TargetInfo GetTargetInfo(DynamicMetaObject target, DynamicMetaObject[] args) {
             Debug.Assert(target.HasValue);
             object objTarget = target.Value;
 
@@ -120,7 +109,7 @@ namespace Microsoft.Scripting.Actions {
                 TryGetMemberGroupTargets(target, args, objTarget as MemberGroup) ??
                 TryGetMethodGroupTargets(target, args, objTarget as MethodGroup) ??
                 TryGetBoundMemberTargets(target, args, objTarget as BoundMemberTracker) ??
-                TryGetOperatorTargets(target, args, target, signature);
+                TryGetOperatorTargets(target, args, target);
         }
 
         /// <summary>
@@ -222,7 +211,7 @@ namespace Microsoft.Scripting.Actions {
         /// <summary>
         /// Attempts to bind to an operator Call method.
         /// </summary>
-        private TargetInfo TryGetOperatorTargets(DynamicMetaObject self, DynamicMetaObject[] args, object target, CallSignature signature) {
+        private TargetInfo TryGetOperatorTargets(DynamicMetaObject self, DynamicMetaObject[] args, object target) {
             MethodBase[] targets;
 
             Type targetType = CompilerHelpers.GetType(target);

@@ -13,18 +13,15 @@
  *
  * ***************************************************************************/
 
-#if CODEPLEX_40
-using System;
-#else
-using System; using Microsoft;
-#endif
-using System.Collections.Generic;
-using System.Diagnostics;
-#if CODEPLEX_40
+#if !CLR2
 using System.Linq.Expressions;
 #else
-using Microsoft.Linq.Expressions;
+using Microsoft.Scripting.Ast;
 #endif
+
+using System;
+using System.Collections.Generic;
+using System.Diagnostics;
 using System.Reflection;
 using System.Threading;
 using Microsoft.Scripting.Utils;
@@ -191,7 +188,8 @@ namespace Microsoft.Scripting.Interpreter {
 #endif
         #endregion
     }
-    
+
+    [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Maintainability", "CA1506:AvoidExcessiveClassCoupling")]
     public class LightCompiler {
         private static readonly MethodInfo _RunMethod = typeof(Interpreter).GetMethod("Run");
         private static readonly MethodInfo _GetCurrentMethod = typeof(MethodBase).GetMethod("GetCurrentMethod");
@@ -235,11 +233,15 @@ namespace Microsoft.Scripting.Interpreter {
         private bool _forceCompile;
 
         private readonly LightCompiler _parent;
+        private readonly bool _compileLoops;
 
-        internal LightCompiler() {}
+        internal LightCompiler(bool compileLoops) {
+            _compileLoops = compileLoops;
+        }
 
         private LightCompiler(LightCompiler parent) {
-            this._parent = parent;
+            _parent = parent;
+            _compileLoops = parent._compileLoops;
         }
 
         internal LightDelegateCreator CompileTop(LambdaExpression node) {
@@ -248,6 +250,12 @@ namespace Microsoft.Scripting.Interpreter {
             }
 
             Compile(node.Body);
+            
+            // pop the result of the last expression:
+            if (node.Body.Type != typeof(void) && node.ReturnType == typeof(void)) {
+                AddInstruction(PopInstruction.Instance);
+            }
+
             Debug.Assert(_currentStackDepth == (node.ReturnType != typeof(void) ? 1 : 0));
 
             return new LightDelegateCreator(MakeInterpreter(node), node, _closureVariables);
@@ -743,19 +751,19 @@ namespace Microsoft.Scripting.Interpreter {
         private void CompileArrayIndex(Expression array, Expression index) {
             if (index.Type == typeof(int)) {
                 Type elemType = array.Type.GetElementType();
+                Compile(array);
+                Compile(index);
                 if (elemType.IsClass || elemType.IsInterface) {
-                    Compile(array);
-                    Compile(index);
                     AddInstruction(GetArrayItemInstruction<object>.Instance);
                 } else if (elemType == typeof(bool)) {
-                    Compile(array);
-                    Compile(index);
                     AddInstruction(GetArrayItemInstruction<bool>.Instance);
+                } else if (elemType == typeof(SymbolId)) {
+                    AddInstruction(GetArrayItemInstruction<SymbolId>.Instance);
                 } else {
-                    throw new NotImplementedException("ArrayIndex index type " + elemType);
+                    AddInstruction((Instruction)typeof(GetArrayItemInstruction<>).MakeGenericType(elemType).GetField("Instance").GetValue(null));
                 }
             } else {
-                throw new NotImplementedException("ArrayIndex element type " + index.Type);
+                throw new NotImplementedException("ArrayIndex index type " + index.Type);
             }
         }
 
@@ -928,14 +936,16 @@ namespace Microsoft.Scripting.Interpreter {
             // As it is, you can open code using GotoExpression and still have
             // the lambda be interpreted.
             //
-            _forceCompile = true;
+            if (_compileLoops) {
+                _forceCompile = true;
+            }
 
             var continueLabel = node.ContinueLabel == null ? 
                 MakeLabel() : ReferenceLabel(node.ContinueLabel);
 
             continueLabel.Mark();
-            this.CompileAsVoid(node.Body);
-            AddBranch(new BranchInstruction(), continueLabel);
+            CompileAsVoid(node.Body);
+            AddBranch(new BranchInstruction(expr.Type != typeof(void), false), continueLabel);
 
             if (node.BreakLabel != null) {
                 ReferenceLabel(node.BreakLabel).Mark();
@@ -1457,14 +1467,17 @@ namespace Microsoft.Scripting.Interpreter {
             CompileMethodCallExpression(Expression.Call(node.Expression, node.Expression.Type.GetMethod("Invoke"), node.Arguments));
         }
 
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Usage", "CA1801:ReviewUnusedParameters", MessageId = "expr")]
         private void CompileListInitExpression(Expression expr) {
             throw new System.NotImplementedException();
         }
 
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Usage", "CA1801:ReviewUnusedParameters", MessageId = "expr")]
         private void CompileMemberInitExpression(Expression expr) {
             throw new System.NotImplementedException();
         }
 
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Usage", "CA1801:ReviewUnusedParameters", MessageId = "expr")]
         private void CompileQuoteUnaryExpression(Expression expr) {
             throw new System.NotImplementedException();
         }
@@ -1500,6 +1513,7 @@ namespace Microsoft.Scripting.Interpreter {
             throw new System.NotImplementedException();
         }
 
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Usage", "CA1801:ReviewUnusedParameters", MessageId = "expr")]
         private void CompileReducibleExpression(Expression expr) {
             throw new System.NotImplementedException();
         }

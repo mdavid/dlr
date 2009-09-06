@@ -13,17 +13,9 @@
  *
  * ***************************************************************************/
 
-#if CODEPLEX_40
 using System;
-#else
-using System; using Microsoft;
-#endif
 using System.Collections.Generic;
 using System.Runtime.CompilerServices;
-#if !CODEPLEX_40
-using Microsoft.Runtime.CompilerServices;
-#endif
-
 
 using Microsoft.Scripting;
 using Microsoft.Scripting.Runtime;
@@ -83,7 +75,7 @@ namespace IronPython.Runtime.Exceptions {
         private object _traceObject;
         internal int _lineNo;
         private readonly PythonDebuggingPayload _debugProperties;
-        private readonly Func<Scope> _scopeCallback;
+        private readonly Func<IAttributesCollection> _scopeCallback;
 
         private readonly object _globals;
         private readonly object _locals;
@@ -106,7 +98,7 @@ namespace IronPython.Runtime.Exceptions {
             _back = back;
         }
 
-        internal TraceBackFrame(PythonTracebackListener traceAdapter, object code, TraceBackFrame back, PythonDebuggingPayload debugProperties, Func<Scope> scopeCallback) {
+        internal TraceBackFrame(PythonTracebackListener traceAdapter, object code, TraceBackFrame back, PythonDebuggingPayload debugProperties, Func<IAttributesCollection> scopeCallback) {
             _traceAdapter = traceAdapter;
             _code = code;
             _back = back;
@@ -149,7 +141,7 @@ namespace IronPython.Runtime.Exceptions {
         public object f_globals {
             get {
                 if (_traceAdapter != null && _scopeCallback != null) {
-                    return new PythonDictionary(new GlobalScopeDictionaryStorage(_scopeCallback()));
+                    return new PythonDictionary(new AttributesDictionaryStorage(_scopeCallback()));
                 } else {
                     return _globals;
                 }
@@ -159,7 +151,7 @@ namespace IronPython.Runtime.Exceptions {
         public object f_locals {
             get {
                 if (_traceAdapter != null && _scopeCallback != null) {
-                    return new PythonDictionary(new GlobalScopeDictionaryStorage(_scopeCallback()));
+                    return new PythonDictionary(new AttributesDictionaryStorage(_scopeCallback()));
                 } else {
                     return _locals;
                 }
@@ -174,7 +166,7 @@ namespace IronPython.Runtime.Exceptions {
 
         public object f_builtins {
             get {
-                return PythonContext.GetContext(_context).BuiltinModuleInstance.Dict;
+                return PythonContext.GetContext(_context).BuiltinModuleDict;
             }
         }
 

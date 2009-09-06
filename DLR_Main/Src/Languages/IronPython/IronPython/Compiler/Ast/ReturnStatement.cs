@@ -13,20 +13,16 @@
  *
  * ***************************************************************************/
 
-#if CODEPLEX_40
 using System;    
+#if !CLR2
 using MSAst = System.Linq.Expressions;
 #else
-using System; using Microsoft;    
-using MSAst = Microsoft.Linq.Expressions;
+using MSAst = Microsoft.Scripting.Ast;
 #endif
 
+
 namespace IronPython.Compiler.Ast {
-#if CODEPLEX_40
-    using Ast = System.Linq.Expressions.Expression;
-#else
-    using Ast = Microsoft.Linq.Expressions.Expression;
-#endif
+    using Ast = MSAst.Expression;
     using AstUtils = Microsoft.Scripting.Ast.Utils;
 
     public class ReturnStatement : Statement {

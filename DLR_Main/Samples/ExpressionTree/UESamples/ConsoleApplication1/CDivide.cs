@@ -1,20 +1,7 @@
-#if CODEPLEX_40
 using System;
-#else
-using System; using Microsoft;
-#endif
 using System.Collections.Generic;
-#if CODEPLEX_40
-using System.Linq;
-#else
-using Microsoft.Linq;
-#endif
 using System.Text;
-#if CODEPLEX_40
-using System.Linq.Expressions;
-#else
-using Microsoft.Linq.Expressions;
-#endif
+using Microsoft.Scripting.Ast;
 
 namespace Samples {
     class CDivide {
@@ -22,11 +9,7 @@ namespace Samples {
         public static void Divide1() {
             //<Snippet1>
             // Add the following directive to your file
-#if CODEPLEX_40
-            // using System.Linq.Expressions;  
-#else
-            // using Microsoft.Linq.Expressions;  
-#endif
+            // using Microsoft.Scripting.Ast;  
 
             //This expression Divides the values of its two arguments.
             //Both arguments need to be of the same type.
@@ -54,11 +37,7 @@ namespace Samples {
         public static void Divide2() {
             //<Snippet2>
             // Add the following directive to your file
-#if CODEPLEX_40
-            // using System.Linq.Expressions;
-#else
-            // using Microsoft.Linq.Expressions;
-#endif
+            // using Microsoft.Scripting.Ast;
 
             //This expression represents a division of two arguments using a user defined operator.
             //The parameters to the division should be reference convertible to the MethodInfo's arguments
@@ -81,11 +60,7 @@ namespace Samples {
         static public void DivideChecked1() {
             //<Snippet3>
             // Add the following directive to your file
-#if CODEPLEX_40
-            // using System.Linq.Expressions;
-#else
-            // using Microsoft.Linq.Expressions;
-#endif
+            // using Microsoft.Scripting.Ast;
 
             //This expression divides the values of its two arguments.
             //Both arguments need to be of the same type.
@@ -125,11 +100,7 @@ namespace Samples {
         public static void DivideChecked2() {
             //<Snippet4>
             // Add the following directive to your file
-#if CODEPLEX_40
-            // using System.Linq.Expressions;
-#else
-            // using Microsoft.Linq.Expressions;
-#endif
+            // using Microsoft.Scripting.Ast;
 
             //This expression represents a division of two arguments using a user defined operator.
             //The parameters to the division should be reference convertible to the MethodInfo's arguments
@@ -160,11 +131,7 @@ namespace Samples {
         public static void DivideAssign1() {
             //<Snippet5>
             // Add the following directive to your file
-#if CODEPLEX_40
-            // using System.Linq.Expressions;
-#else
-            // using Microsoft.Linq.Expressions;
-#endif
+            // using Microsoft.Scripting.Ast;
 
             //DivideAssign requires an assignable expression to be used as the left argument.
             ParameterExpression Variable = Expression.Variable(typeof(int), "Variable");
@@ -199,11 +166,7 @@ namespace Samples {
         public static void DivideAssign2() {
             //<Snippet6>
             // Add the following directive to your file
-#if CODEPLEX_40
-            // using System.Linq.Expressions;
-#else
-            // using Microsoft.Linq.Expressions;
-#endif
+            // using Microsoft.Scripting.Ast;
 
             //DivideAssign requires an assignable expression to be used as the left argument.
             ParameterExpression Variable = Expression.Variable(typeof(int), "Variable");
@@ -238,11 +201,7 @@ namespace Samples {
         public static void DivideAssign3() {
             //<Snippet7>
             // Add the following directive to your file
-#if CODEPLEX_40
-            // using System.Linq.Expressions;
-#else
-            // using Microsoft.Linq.Expressions;
-#endif
+            // using Microsoft.Scripting.Ast;
 
             //DivideAssign requires an assignable expression to be used as the left argument.
             ParameterExpression Variable = Expression.Variable(typeof(int), "Variable");
@@ -286,11 +245,7 @@ namespace Samples {
         public static void DivideAssignChecked1() {
             //<Snippet8>
             // Add the following directive to your file
-#if CODEPLEX_40
-            // using System.Linq.Expressions;
-#else
-            // using Microsoft.Linq.Expressions;
-#endif
+            // using Microsoft.Scripting.Ast;
 
             //DivideAssign requires an assignable expression to be used as the left argument.
             ParameterExpression Variable = Expression.Variable(typeof(int), "Variable");
@@ -325,11 +280,7 @@ namespace Samples {
         public static void DivideAssignChecked2() {
             //<Snippet9>
             // Add the following directive to your file
-#if CODEPLEX_40
-            // using System.Linq.Expressions;
-#else
-            // using Microsoft.Linq.Expressions;
-#endif
+            // using Microsoft.Scripting.Ast;
 
             //DivideAssign requires an assignable expression to be used as the left argument.
             ParameterExpression Variable = Expression.Variable(typeof(int), "Variable");
@@ -364,11 +315,7 @@ namespace Samples {
         public static void DivideAssignChecked3() {
             //<Snippet10>
             // Add the following directive to your file
-#if CODEPLEX_40
-            // using System.Linq.Expressions;
-#else
-            // using Microsoft.Linq.Expressions;
-#endif
+            // using Microsoft.Scripting.Ast;
 
             //DivideAssign requires an assignable expression to be used as the left argument.
             ParameterExpression Variable = Expression.Variable(typeof(int), "Variable");

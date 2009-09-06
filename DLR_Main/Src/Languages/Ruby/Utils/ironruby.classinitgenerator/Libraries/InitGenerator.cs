@@ -13,24 +13,15 @@
  *
  * ***************************************************************************/
 
-#if CODEPLEX_40
 using System;
-#else
-using System; using Microsoft;
-#endif
 using System.CodeDom.Compiler;
 using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Reflection;
-#if CODEPLEX_40
 using System.Dynamic;
 using System.Dynamic.Utils;
-#else
-using Microsoft.Scripting;
-using Microsoft.Scripting.Utils;
-#endif
 using System.Text;
 using IronRuby;
 using IronRuby.Builtins;

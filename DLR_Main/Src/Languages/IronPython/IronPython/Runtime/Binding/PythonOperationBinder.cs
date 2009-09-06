@@ -13,25 +13,17 @@
  *
  * ***************************************************************************/
 
-#if CODEPLEX_40
-using System;
-#else
-using System; using Microsoft;
-#endif
-using System.Collections;
-using System.Collections.Generic;
-#if CODEPLEX_40
-using System.Dynamic;
+#if !CLR2
 using System.Linq.Expressions;
 #else
-using Microsoft.Scripting;
-using Microsoft.Linq.Expressions;
-#endif
-using System.Runtime.CompilerServices;
-#if !CODEPLEX_40
-using Microsoft.Runtime.CompilerServices;
+using Microsoft.Scripting.Ast;
 #endif
 
+using System;
+using System.Collections;
+using System.Collections.Generic;
+using System.Dynamic;
+using System.Runtime.CompilerServices;
 
 using Microsoft.Scripting.Generation;
 using Microsoft.Scripting.Runtime;
@@ -43,11 +35,7 @@ using IronPython.Runtime.Types;
 using AstUtils = Microsoft.Scripting.Ast.Utils;
 
 namespace IronPython.Runtime.Binding {
-#if CODEPLEX_40
-    using Ast = System.Linq.Expressions.Expression;
-#else
-    using Ast = Microsoft.Linq.Expressions.Expression;
-#endif
+    using Ast = Expression;
 
     class PythonOperationBinder : DynamicMetaObjectBinder, IPythonSite, IExpressionSerializable {
         private readonly PythonContext/*!*/ _context;
@@ -417,74 +405,6 @@ namespace IronPython.Runtime.Binding {
                 BindingHelpers.CreateBinderStateExpression(),
                 AstUtils.Constant((int)Operation)
             );
-        }
-
-        #endregion
-
-        #region GetIndex/SetIndex adapters
-
-        // TODO: remove when Python uses the SetIndexBinder for real
-        class SetIndexAdapter : SetIndexBinder {
-            private readonly PythonOperationBinder _opBinder;
-
-            internal SetIndexAdapter(PythonOperationBinder opBinder)
-                : base(new CallInfo(0)) {
-                _opBinder = opBinder;
-            }
-
-            public override DynamicMetaObject FallbackSetIndex(DynamicMetaObject target, DynamicMetaObject[] indexes, DynamicMetaObject value, DynamicMetaObject errorSuggestion) {
-#if !SILVERLIGHT
-                DynamicMetaObject com;
-#if CODEPLEX_40
-                if (System.Dynamic.ComBinder.TryBindSetIndex(this, target, BindingHelpers.GetComArguments(indexes), BindingHelpers.GetComArgument(value), out com)) {
-#else
-                if (Microsoft.Scripting.ComBinder.TryBindSetIndex(this, target, BindingHelpers.GetComArguments(indexes), BindingHelpers.GetComArgument(value), out com)) {
-#endif
-                    return com;
-                }
-#endif
-                return PythonProtocol.Operation(_opBinder, ArrayUtils.Append(ArrayUtils.Insert(target, indexes), value));
-            }
-
-            public override int GetHashCode() {
-                return _opBinder.GetHashCode();
-            }
-
-            public override bool Equals(object obj) {
-                return obj != null && obj.Equals(_opBinder);
-            }
-        }
-
-        // TODO: remove when Python uses the GetIndexBinder for real
-        class GetIndexAdapter : GetIndexBinder {
-            private readonly PythonOperationBinder _opBinder;
-
-            internal GetIndexAdapter(PythonOperationBinder opBinder)
-                : base(new CallInfo(0)) {
-                _opBinder = opBinder;
-            }
-
-            public override DynamicMetaObject FallbackGetIndex(DynamicMetaObject target, DynamicMetaObject[] indexes, DynamicMetaObject errorSuggestion) {
-#if !SILVERLIGHT
-                DynamicMetaObject com;
-#if CODEPLEX_40
-                if (System.Dynamic.ComBinder.TryBindGetIndex(this, target, BindingHelpers.GetComArguments(indexes), out com)) {
-#else
-                if (Microsoft.Scripting.ComBinder.TryBindGetIndex(this, target, BindingHelpers.GetComArguments(indexes), out com)) {
-#endif
-                    return com;
-                }
-#endif
-                return PythonProtocol.Operation(_opBinder, ArrayUtils.Insert(target, indexes));
-            }
-
-            public override int GetHashCode() {
-                return _opBinder.GetHashCode();
-            }
-
-            public override bool Equals(object obj) {
-                return obj != null && obj.Equals(_opBinder);
-            }
         }
 
         #endregion

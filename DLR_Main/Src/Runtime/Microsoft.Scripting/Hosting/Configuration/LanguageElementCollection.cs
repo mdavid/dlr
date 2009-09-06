@@ -16,11 +16,7 @@
 #if !SILVERLIGHT
 
 using System.Configuration;
-#if CODEPLEX_40
 using System;
-#else
-using System; using Microsoft;
-#endif
 using System.Collections.Generic;
 
 namespace Microsoft.Scripting.Hosting.Configuration {

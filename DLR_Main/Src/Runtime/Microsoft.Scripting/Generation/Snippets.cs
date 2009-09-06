@@ -13,11 +13,13 @@
  *
  * ***************************************************************************/
 
-#if CODEPLEX_40
-using System;
+#if !CLR2
+using System.Linq.Expressions;
 #else
-using System; using Microsoft;
+using Microsoft.Scripting.Ast;
 #endif
+
+using System;
 using System.IO;
 using System.Reflection;
 using System.Reflection.Emit;
@@ -103,13 +105,8 @@ namespace Microsoft.Scripting.Generation {
 
         public static void SetSaveAssemblies(bool enable, string directory) {
             //Set SaveAssemblies on for inner ring by calling SetSaveAssemblies via Reflection.
-#if CODEPLEX_40
-            Assembly core = typeof(System.Linq.Expressions.Expression).Assembly;
-            Type assemblyGen = core.GetType("System.Linq.Expressions.Compiler.AssemblyGen");
-#else
-            Assembly core = typeof(Microsoft.Linq.Expressions.Expression).Assembly;
-            Type assemblyGen = core.GetType("Microsoft.Linq.Expressions.Compiler.AssemblyGen");
-#endif
+            Assembly core = typeof(Expression).Assembly;
+            Type assemblyGen = core.GetType(typeof(Expression).Namespace + ".Compiler.AssemblyGen");
             //The type may not exist.
             if (assemblyGen != null) {
                 MethodInfo configSaveAssemblies = assemblyGen.GetMethod("SetSaveAssemblies", BindingFlags.NonPublic | BindingFlags.Static);
@@ -140,13 +137,8 @@ namespace Microsoft.Scripting.Generation {
             //    inner ring assemblies have dependency on outer ring assemlies via generated IL.
             // 3) Verify inner ring assemblies.
             // 4) Verify outer ring assemblies.
-#if CODEPLEX_40
-            Assembly core = typeof(System.Linq.Expressions.Expression).Assembly;
-            Type assemblyGen = core.GetType("System.Linq.Expressions.Compiler.AssemblyGen");
-#else
-            Assembly core = typeof(Microsoft.Linq.Expressions.Expression).Assembly;
-            Type assemblyGen = core.GetType("Microsoft.Linq.Expressions.Compiler.AssemblyGen");
-#endif
+            Assembly core = typeof(Expression).Assembly;
+            Type assemblyGen = core.GetType(typeof(Expression).Namespace + ".Compiler.AssemblyGen");
             //The type may not exist.
             string[] coreAssemblyLocations = null;
             if (assemblyGen != null) {
@@ -257,6 +249,7 @@ namespace Microsoft.Scripting.Generation {
                    (_debugAssembly != null && asm == _debugAssembly.AssemblyBuilder);
         }
 
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Portability", "CA1903:UseOnlyApiFromTargetedFramework")]
         private static DynamicMethod RawCreateDynamicMethod(string name, Type returnType, Type[] parameterTypes) {
 #if SILVERLIGHT // Module-hosted DynamicMethod is not available in SILVERLIGHT
             return new DynamicMethod(name, returnType, parameterTypes);

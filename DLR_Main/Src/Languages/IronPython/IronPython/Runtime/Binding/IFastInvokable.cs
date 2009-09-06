@@ -13,29 +13,17 @@
  *
  * ***************************************************************************/
 
-#if CODEPLEX_40
-using System;
-using System.Dynamic;
+#if !CLR2
 using System.Linq.Expressions;
 #else
-using System; using Microsoft;
-using Microsoft.Scripting;
-using Microsoft.Linq.Expressions;
+using Microsoft.Scripting.Ast;
 #endif
 
-using Microsoft.Scripting.Actions;
-
-#if CODEPLEX_40
-using Ast = System.Linq.Expressions.Expression;
-#else
-using Ast = Microsoft.Linq.Expressions.Expression;
-#endif
-using Microsoft.Scripting.Runtime;
+using System;
+using System.Dynamic;
 using System.Runtime.CompilerServices;
-#if !CODEPLEX_40
-using Microsoft.Runtime.CompilerServices;
-#endif
-
+using Microsoft.Scripting.Actions;
+using Microsoft.Scripting.Runtime;
 
 namespace IronPython.Runtime.Binding {
     interface IFastInvokable {

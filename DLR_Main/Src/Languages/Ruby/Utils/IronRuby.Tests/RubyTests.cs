@@ -13,11 +13,7 @@
  *
  * ***************************************************************************/
 
-#if CODEPLEX_40
 using System;
-#else
-using System; using Microsoft;
-#endif
 
 namespace IronRuby.Tests {    
     public partial class Tests {
@@ -103,7 +99,6 @@ namespace IronRuby.Tests {
                 Scenario_RubySingletonConstants1,
                 Scenario_RubyMath1,
 
-                File1,
                 StringsPlus,
                 Strings0,
                 Strings1,
@@ -119,7 +114,9 @@ namespace IronRuby.Tests {
                 ToSConversion2,
                 Inspect1,
                 Inspect2,
-
+                File1,
+                File2,
+                
                 Regex1,
                 Regex2,
                 RegexTransform1,
@@ -580,6 +577,8 @@ namespace IronRuby.Tests {
                 Eval2,
                 Eval3,
                 Eval4,
+                Eval5,
+                Eval6,
                 EvalReturn1,
                 EvalReturn2,
                 EvalReturn3,

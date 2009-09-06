@@ -1,17 +1,7 @@
-#if CODEPLEX_40
 using System;
-#else
-using System; using Microsoft;
-#endif
 using System.Collections.Generic;
-#if CODEPLEX_40
-using System.Linq;
-using System.Linq.Expressions;
-#else
-using Microsoft.Linq;
-using Microsoft.Linq.Expressions;
-#endif
 using System.Text;
+using Microsoft.Scripting.Ast;
 
 namespace Samples {
     class CLoop {
@@ -19,11 +9,7 @@ namespace Samples {
         static public void Loop1() {
             //<Snippet1>
             // add the following directive to your file
-#if CODEPLEX_40
-            // using System.Linq.Expressions;  
-#else
-            // using Microsoft.Linq.Expressions;  
-#endif
+            // using Microsoft.Scripting.Ast;  
 
             //A simple loop loops forever, so we need to handle the jump out of the loop.
             //For that we'll create a label to jump out to.
@@ -72,11 +58,7 @@ namespace Samples {
         static public void Loop2() {
             //<Snippet1>
             // add the following directive to your file
-#if CODEPLEX_40
-            // using System.Linq.Expressions;  
-#else
-            // using Microsoft.Linq.Expressions;  
-#endif
+            // using Microsoft.Scripting.Ast;  
 
             //A simple loop loops forever, so we need to handle the jump out of the loop.
             //For that we'll create a break label.
@@ -127,11 +109,7 @@ namespace Samples {
         static public void Loop3() {
             //<Snippet1>
             // add the following directive to your file
-#if CODEPLEX_40
-            // using System.Linq.Expressions;  
-#else
-            // using Microsoft.Linq.Expressions;  
-#endif
+            // using Microsoft.Scripting.Ast;  
 
             //A simple loop loops forever, so we need to handle the jump out of the loop.
             //For that we'll create a break label.

@@ -109,6 +109,7 @@
       <Compile Include="Builtins\PrintOps.cs" />
       <Compile Include="Builtins\ProcOps.cs" />
       <Compile Include="Builtins\RangeOps.cs" />
+      <Compile Include="Builtins\RubyEncoder.cs" />
       <Compile Include="Builtins\RubyEncodingOps.cs" />
       <Compile Include="Builtins\RubyGC.cs" />
       <Compile Include="Builtins\RubyMath.cs" />

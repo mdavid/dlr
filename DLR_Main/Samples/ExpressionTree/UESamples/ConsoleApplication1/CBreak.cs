@@ -1,17 +1,7 @@
-#if CODEPLEX_40
 using System;
-#else
-using System; using Microsoft;
-#endif
 using System.Collections.Generic;
-#if CODEPLEX_40
-using System.Linq;
-using System.Linq.Expressions;
-#else
-using Microsoft.Linq;
-using Microsoft.Linq.Expressions;
-#endif
 using System.Text;
+using Microsoft.Scripting.Ast;
 
 namespace Samples {
     class CBreak {
@@ -19,11 +9,7 @@ namespace Samples {
         static public void Break1() {
             //<Snippet1>
             // add the following directive to your file
-#if CODEPLEX_40
-            // using System.Linq.Expressions;  
-#else
-            // using Microsoft.Linq.Expressions;  
-#endif
+            // using Microsoft.Scripting.Ast;  
 
             //We need to identify a label that will be used by the break statement and the loop. 
             //This allows a break to go to the end of an enclosing loop if needed.
@@ -48,11 +34,7 @@ namespace Samples {
         static public void Break2() {
             //<Snippet1>
             // add the following directive to your file
-#if CODEPLEX_40
-            // using System.Linq.Expressions;  
-#else
-            // using Microsoft.Linq.Expressions;  
-#endif
+            // using Microsoft.Scripting.Ast;  
 
             //We need to identify a label that will be used by the break statement and the loop. 
             //This allows a break to go to the end of an enclosing loop if needed.
@@ -85,11 +67,7 @@ namespace Samples {
         {
             //<Snippet1>
             // add the following directive to your file
-#if CODEPLEX_40
-            // using System.Linq.Expressions;  
-#else
-            // using Microsoft.Linq.Expressions;  
-#endif
+            // using Microsoft.Scripting.Ast;  
 
             //We need to identify a label that will be used by the break statement and the loop. 
             //This allows a break to go to the end of an enclosing loop if needed.
@@ -121,11 +99,7 @@ namespace Samples {
         {
             //<Snippet1>
             // add the following directive to your file
-#if CODEPLEX_40
-            // using System.Linq.Expressions;  
-#else
-            // using Microsoft.Linq.Expressions;  
-#endif
+            // using Microsoft.Scripting.Ast;  
 
             //We need to identify a label that will be used by the break statement and the loop. 
             //This allows a break to go to the end of an enclosing loop if needed.

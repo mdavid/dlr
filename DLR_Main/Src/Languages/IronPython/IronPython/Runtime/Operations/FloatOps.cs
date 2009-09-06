@@ -13,11 +13,7 @@
  *
  * ***************************************************************************/
 
-#if CODEPLEX_40
 using System;
-#else
-using System; using Microsoft;
-#endif
 using System.Collections.Generic;
 using System.Globalization;
 using System.Text;
@@ -508,7 +504,7 @@ namespace IronPython.Runtime.Operations {
         [SpecialName]
         public static bool LessThanOrEqual(double x, double y) {
             if (x == y) {
-                return x != Double.NaN;
+                return !Double.IsNaN(x);
             }
 
             return x < y;
@@ -528,7 +524,7 @@ namespace IronPython.Runtime.Operations {
         [SpecialName]
         public static bool GreaterThanOrEqual(double x, double y) {
             if (x == y) {
-                return x != Double.NaN;
+                return !Double.IsNaN(x);
             }
 
             return x > y;
@@ -537,7 +533,7 @@ namespace IronPython.Runtime.Operations {
         [SpecialName]
         public static bool Equals(double x, double y) {
             if (x == y) {
-                return x != Double.NaN;
+                return !Double.IsNaN(x);
             }
             return x == y;
         }
@@ -968,7 +964,7 @@ namespace IronPython.Runtime.Operations {
         [SpecialName]
         public static bool LessThanOrEqual(float x, float y) {
             if (x == y) {
-                return x != Single.NaN;
+                return !Single.IsNaN(x);
             }
 
             return x < y;
@@ -982,7 +978,7 @@ namespace IronPython.Runtime.Operations {
         [SpecialName]
         public static bool GreaterThanOrEqual(float x, float y) {
             if (x == y) {
-                return x != Single.NaN;
+                return !Single.IsNaN(x);
             }
 
             return x > y;
@@ -991,7 +987,7 @@ namespace IronPython.Runtime.Operations {
         [SpecialName]
         public static bool Equals(float x, float y) {
             if (x == y) {
-                return x != Single.NaN;
+                return !Single.IsNaN(x);
             }
             return x == y;
         }

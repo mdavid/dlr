@@ -13,11 +13,13 @@
  *
  * ***************************************************************************/
 
-#if CODEPLEX_40
-using System;
+#if !CLR2
+using MSAst = System.Linq.Expressions;
 #else
-using System; using Microsoft;
+using MSAst = Microsoft.Scripting.Ast;
 #endif
+
+using System;
 using System.Collections.Generic;
 
 using Microsoft.Scripting;
@@ -27,40 +29,19 @@ using Microsoft.Scripting.Runtime;
 using IronPython.Runtime;
 using IronPython.Runtime.Operations;
 
-#if CODEPLEX_40
-using MSAst = System.Linq.Expressions;
-#else
-using MSAst = Microsoft.Linq.Expressions;
-#endif
-
 namespace IronPython.Compiler.Ast {
-#if CODEPLEX_40
-    using Ast = System.Linq.Expressions.Expression;
-#else
-    using Ast = Microsoft.Linq.Expressions.Expression;
-#endif
+    using Ast = MSAst.Expression;
 
     class SavableGlobalAllocator : ArrayGlobalAllocator {
-        private readonly List<MSAst.Expression/*!*/>/*!*/ _constants;
-
         public SavableGlobalAllocator(PythonContext/*!*/ context)
             : base(context) {
-            _constants = new List<MSAst.Expression>();
         }
 
-#if CODEPLEX_40
-        public override System.Linq.Expressions.Expression GetConstant(object value) {
-#else
-        public override Microsoft.Linq.Expressions.Expression GetConstant(object value) {
-#endif
+        public override MSAst.Expression GetConstant(object value) {
             return Utils.Constant(value);
         }
 
-#if CODEPLEX_40
-        public override System.Linq.Expressions.Expression[] PrepareScope(AstGenerator gen) {
-#else
-        public override Microsoft.Linq.Expressions.Expression[] PrepareScope(AstGenerator gen) {
-#endif
+        public override MSAst.Expression[] PrepareScope(AstGenerator gen) {
             gen.AddHiddenVariable(GlobalArray);
             return new MSAst.Expression[] {
                 Ast.Assign(
@@ -73,7 +54,7 @@ namespace IronPython.Compiler.Ast {
             };
         }
 
-        public override ScriptCode/*!*/ MakeScriptCode(MSAst.Expression/*!*/ body, CompilerContext/*!*/ context, PythonAst/*!*/ ast) {
+        public override ScriptCode/*!*/ MakeScriptCode(MSAst.Expression/*!*/ body, CompilerContext/*!*/ context, PythonAst/*!*/ ast, Dictionary<int, bool> handlerLocations, Dictionary<int, Dictionary<int, bool>> loopAndFinallyLocations) {
             // finally build the funcion that's closed over the array
             var func = Ast.Lambda<Func<CodeContext, FunctionCode, object>>(
                 Ast.Block(
@@ -94,7 +75,7 @@ namespace IronPython.Compiler.Ast {
 
             PythonCompilerOptions pco = context.Options as PythonCompilerOptions;
 
-            return new SavableScriptCode(func, context.SourceUnit, GetNames(), pco.ModuleName);
+            return new PythonSavableScriptCode(func, context.SourceUnit, GetNames(), pco.ModuleName);
         }
     }
 }

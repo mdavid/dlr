@@ -13,11 +13,7 @@
  *
  * ***************************************************************************/
 
-#if CODEPLEX_40
 using System;
-#else
-using System; using Microsoft;
-#endif
 using System.Collections.Generic;
 using System.Text;
 using System.Diagnostics;
@@ -53,7 +49,7 @@ namespace IronPython.Runtime {
         /// <summary>
         /// Runs the formatting operation on the given format and keyword arguments
         /// </summary>
-        public static string/*!*/ FormatString(PythonContext/*!*/ context, string/*!*/ format, PythonTuple/*!*/ args, IAttributesCollection/*!*/ kwArgs) {
+        public static string/*!*/ FormatString(PythonContext/*!*/ context, string/*!*/ format, PythonTuple/*!*/ args, IDictionary<object, object>/*!*/ kwArgs) {
             ContractUtils.RequiresNotNull(context, "context");
             ContractUtils.RequiresNotNull(format, "format");
             ContractUtils.RequiresNotNull(args, "args");
@@ -315,15 +311,15 @@ namespace IronPython.Runtime {
         private class Formatter {
             private readonly PythonContext/*!*/ _context;
             private readonly PythonTuple/*!*/ _args;
-            private readonly IAttributesCollection/*!*/ _kwArgs;
+            private readonly IDictionary<object, object>/*!*/ _kwArgs;
             private readonly int _depth;
 
-            private Formatter(PythonContext/*!*/ context, PythonTuple/*!*/ args, IAttributesCollection/*!*/ kwArgs, int depth)
+            private Formatter(PythonContext/*!*/ context, PythonTuple/*!*/ args, IDictionary<object, object>/*!*/ kwArgs, int depth)
                 : this(context, args, kwArgs) {
                 _depth = depth;
             }
 
-            private Formatter(PythonContext/*!*/ context, PythonTuple/*!*/ args, IAttributesCollection/*!*/ kwArgs) {
+            private Formatter(PythonContext/*!*/ context, PythonTuple/*!*/ args, IDictionary<object, object>/*!*/ kwArgs) {
                 Assert.NotNull(context, args, kwArgs);
 
                 _context = context;
@@ -331,13 +327,13 @@ namespace IronPython.Runtime {
                 _kwArgs = kwArgs;
             }
 
-            public static string/*!*/ FormatString(PythonContext/*!*/ context, string/*!*/ format, PythonTuple/*!*/ args, IAttributesCollection/*!*/ kwArgs) {
+            public static string/*!*/ FormatString(PythonContext/*!*/ context, string/*!*/ format, PythonTuple/*!*/ args, IDictionary<object, object>/*!*/ kwArgs) {
                 Assert.NotNull(context, args, kwArgs, format);
 
                 return new Formatter(context, args, kwArgs).ReplaceText(format);
             }
 
-            public static string/*!*/ FormatString(PythonContext/*!*/ context, string/*!*/ format, PythonTuple/*!*/ args, IAttributesCollection/*!*/ kwArgs, int depth) {
+            public static string/*!*/ FormatString(PythonContext/*!*/ context, string/*!*/ format, PythonTuple/*!*/ args, IDictionary<object, object>/*!*/ kwArgs, int depth) {
                 Assert.NotNull(context, args, kwArgs, format);
 
                 if (depth == 2) {
@@ -452,7 +448,7 @@ namespace IronPython.Runtime {
                 if (Int32.TryParse(fieldName.ArgumentName, out argIndex)) {
                     argValue = _args[argIndex];
                 } else {
-                    argValue = _kwArgs[SymbolTable.StringToId(fieldName.ArgumentName)];
+                    argValue = _kwArgs[fieldName.ArgumentName];
                 }
 
                 return argValue;

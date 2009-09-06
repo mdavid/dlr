@@ -13,17 +13,9 @@
  *
  * ***************************************************************************/
 
-#if CODEPLEX_40
 using System;
-#else
-using System; using Microsoft;
-#endif
 using System.Reflection;
 using System.Runtime.CompilerServices;
-#if !CODEPLEX_40
-using Microsoft.Runtime.CompilerServices;
-#endif
-
 using System.Runtime.InteropServices;
 using System.Security;
 
@@ -59,7 +51,7 @@ using System.Security;
 // You can specify all the values or you can default the Revision and Build Numbers 
 // by using the '*' as shown below:
 [assembly: SecurityTransparent]
-#if CLR4
+#if !CLR2
 [assembly: SecurityRules(SecurityRuleSet.Level1)]
 #endif
 

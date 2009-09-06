@@ -13,26 +13,20 @@
  *
  * ***************************************************************************/
 
-#if CODEPLEX_40
-using System;
-#else
-using System; using Microsoft;
-#endif
-using System.Collections.ObjectModel;
-using System.Diagnostics;
-#if CODEPLEX_40
+#if !CLR2
 using System.Linq.Expressions;
 #else
-using Microsoft.Linq.Expressions;
+using Microsoft.Scripting.Ast;
 #endif
+
+using System;
+using System.Collections.ObjectModel;
+using System.Diagnostics;
 using System.Reflection;
-#if CODEPLEX_40
 using System.Dynamic;
-#else
-using Microsoft.Scripting;
-#endif
 using Microsoft.Scripting.Utils;
 using AstUtils = Microsoft.Scripting.Ast.Utils;
+using Microsoft.Scripting.Generation;
 
 namespace Microsoft.Scripting.Ast {
     [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Maintainability", "CA1506:AvoidExcessiveClassCoupling")]
@@ -150,7 +144,7 @@ namespace Microsoft.Scripting.Ast {
             ContractUtils.Requires(instance != null ^ method.IsStatic, "instance");
 
             ParameterInfo[] parameters = method.GetParameters();
-            bool hasParamArray = parameters.Length > 0 && parameters[parameters.Length - 1].IsParamArray();
+            bool hasParamArray = parameters.Length > 0 && CompilerHelpers.IsParamArray(parameters[parameters.Length - 1]);
 
             if (instance != null) {
                 instance = Convert(instance, method.DeclaringType);

@@ -13,13 +13,9 @@
  *
  * ***************************************************************************/
 
-#if CODEPLEX_40
 using System;
-#else
-using System; using Microsoft;
-#endif
 
-namespace Microsoft.Scripting {
+namespace IronPython.Runtime.Types {
     /// <summary>
     /// Represents a set of attributes that different functions can have.
     /// </summary>

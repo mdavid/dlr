@@ -13,29 +13,22 @@
  *
  * ***************************************************************************/
 
-#if CODEPLEX_40
 using System;
-#else
-using System; using Microsoft;
-#endif
 using System.Collections.Generic;
 using System.Text;
-#if CODEPLEX_40
 using System.Dynamic;
-#else
-#endif
 using System.Diagnostics;
 using Microsoft.Scripting;
 using AstUtils = Microsoft.Scripting.Ast.Utils;
 
 namespace IronRuby.Compiler.Ast {
-#if CODEPLEX_40
-    using Ast = System.Linq.Expressions.Expression;
-    using MSA = System.Linq.Expressions;
+    using Ast = Expression;
+    #if !CLR2
+using MSA = System.Linq.Expressions;
 #else
-    using Ast = Microsoft.Linq.Expressions.Expression;
-    using MSA = Microsoft.Linq.Expressions;
+using MSA = Microsoft.Scripting.Ast;
 #endif
+
     
     public partial class SymbolLiteral : StringLiteral {
         internal SymbolLiteral(object/*!*/ value, SourceSpan location) 

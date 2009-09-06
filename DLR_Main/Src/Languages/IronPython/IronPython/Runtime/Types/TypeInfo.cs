@@ -13,19 +13,12 @@
  *
  * ***************************************************************************/
 
-#if CODEPLEX_40
 using System;
-#else
-using System; using Microsoft;
-#endif
 using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Reflection;
-#if CODEPLEX_40
 using System.Dynamic;
-#else
-#endif
 using System.Threading;
 
 using Microsoft.Scripting;
@@ -337,7 +330,7 @@ namespace IronPython.Runtime.Types {
             /// <summary>
             /// Removes Object.Equals methods as we never return these for PythonOperationKind.
             /// </summary>
-            private MemberGroup/*!*/ FilterObjectEquality(MemberGroup/*!*/ group) {
+            private static MemberGroup/*!*/ FilterObjectEquality(MemberGroup/*!*/ group) {
                 List<MemberTracker> res = null;
 
                 for (int i = 0; i < group.Count; i++) {
@@ -928,7 +921,7 @@ namespace IronPython.Runtime.Types {
         class DocumentationDescriptor : PythonTypeSlot {
             internal override bool TryGetValue(CodeContext context, object instance, PythonType owner, out object value) {
                 if (owner.IsSystemType) {
-                    if (instance is IDynamicMetaObjectProvider && !(instance is IPythonObject)) {
+                    if (instance is IDynamicMetaObjectProvider && !(instance is IPythonObject) && !DynamicHelpers.GetPythonType(instance).IsPythonType) {
                         // ask the foreign IDO for it's documentation
                         value = PythonContext.GetContext(context).GetDocumentation(instance);
                     } else {

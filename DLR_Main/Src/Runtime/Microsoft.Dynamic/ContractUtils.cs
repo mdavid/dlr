@@ -12,23 +12,18 @@
  *
  *
  * ***************************************************************************/
-using System; using Microsoft;
 
+#if !MICROSOFT_DYNAMIC
+using System.Linq.Expressions;
+#else
+using Microsoft.Scripting.Ast;
+#endif
 
 using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics;
-#if CODEPLEX_40
-using System.Linq.Expressions;
-#else
-using Microsoft.Linq.Expressions;
-#endif
 
-#if CODEPLEX_40
 namespace System.Dynamic {
-#else
-namespace Microsoft.Scripting {
-#endif
     internal static class ContractUtils {
         internal static void Requires(bool precondition, string paramName) {
             Assert.NotEmpty(paramName);

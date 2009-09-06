@@ -13,17 +13,10 @@
  *
  * ***************************************************************************/
 
-#if CODEPLEX_40
 using System;
-#else
-using System; using Microsoft;
-#endif
 using System.Collections.Generic;
 using System.Diagnostics;
-#if CODEPLEX_40
 using System.Dynamic;
-#else
-#endif
 using Microsoft.Scripting;
 using Microsoft.Scripting.Actions;
 using Microsoft.Scripting.Utils;
@@ -31,13 +24,13 @@ using IronRuby.Compiler.Ast;
 using IronRuby.Runtime;
 
 namespace IronRuby.Compiler {
-#if CODEPLEX_40
-    using MSA = System.Linq.Expressions;
-    using Ast = System.Linq.Expressions.Expression;
+    #if !CLR2
+using MSA = System.Linq.Expressions;
 #else
-    using MSA = Microsoft.Linq.Expressions;
-    using Ast = Microsoft.Linq.Expressions.Expression;
+using MSA = Microsoft.Scripting.Ast;
 #endif
+
+    using Ast = Expression;
 
     public abstract class LexicalScope : HybridStringDictionary<LocalVariable> {
         // Null if there is no parent lexical scopes whose local variables are visible eto this scope.

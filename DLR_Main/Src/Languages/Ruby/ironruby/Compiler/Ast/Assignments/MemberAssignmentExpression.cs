@@ -13,26 +13,19 @@
  *
  * ***************************************************************************/
 
-#if CODEPLEX_40
-using System;
-using System.Dynamic;
-#else
-using System; using Microsoft;
-#endif
-using Microsoft.Scripting;
-using Microsoft.Scripting.Utils;
-#if CODEPLEX_40
+#if !CLR2
 using MSA = System.Linq.Expressions;
 #else
-using MSA = Microsoft.Linq.Expressions;
+using MSA = Microsoft.Scripting.Ast;
 #endif
 
+using System;
+using System.Dynamic;
+using Microsoft.Scripting;
+using Microsoft.Scripting.Utils;
+
 namespace IronRuby.Compiler.Ast {
-#if CODEPLEX_40
-    using Ast = System.Linq.Expressions.Expression;
-#else
-    using Ast = Microsoft.Linq.Expressions.Expression;
-#endif
+    using Ast = MSA.Expression;
 
     // left.id op= rigth
     public partial class MemberAssignmentExpression : AssignmentExpression {

@@ -12,16 +12,14 @@
  *
  *
  * ***************************************************************************/
-using System; using Microsoft;
 
-
-#if CODEPLEX_40
-using System.Dynamic;
+#if !CLR2
 using System.Linq.Expressions;
 #else
-using Microsoft.Scripting;
-using Microsoft.Linq.Expressions;
+using Microsoft.Scripting.Ast;
 #endif
+
+using System.Dynamic;
 
 namespace Microsoft.Scripting.Utils {
     public static class DynamicUtils {

@@ -15,8 +15,6 @@
  * Copyright (c) Microsoft Corporation.
  * 
  ***** END LICENSE BLOCK *****/
-using System; using Microsoft;
-
 
 // line 1 "src/org/jvyamlb/resolver_scanner.rl"
 

@@ -13,24 +13,17 @@
  *
  * ***************************************************************************/
 
-#if CODEPLEX_40
-using System;
-#else
-using System; using Microsoft;
-#endif
-using AstUtils = Microsoft.Scripting.Ast.Utils;
-#if CODEPLEX_40
+#if !CLR2
 using MSA = System.Linq.Expressions;
 #else
-using MSA = Microsoft.Linq.Expressions;
+using MSA = Microsoft.Scripting.Ast;
 #endif
 
+using System;
+using AstUtils = Microsoft.Scripting.Ast.Utils;
+
 namespace IronRuby.Compiler.Ast {
-#if CODEPLEX_40
-    using Ast = System.Linq.Expressions.Expression;
-#else
-    using Ast = Microsoft.Linq.Expressions.Expression;
-#endif
+    using Ast = MSA.Expression;
 
     internal abstract class ReducibleEmptyExpression : MSA.Expression {
         public sealed override MSA.ExpressionType NodeType {

@@ -13,11 +13,7 @@
  *
  * ***************************************************************************/
 
-#if CODEPLEX_40
 using System;
-#else
-using System; using Microsoft;
-#endif
 using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -211,7 +207,7 @@ namespace IronPython.Modules {
                 }
 
                 _Array arr = (_Array)CreateInstance(Context.SharedContext);
-                arr._memHolder = new MemoryHolder(owner.UnsafeAddress.Add(offset), ((INativeType)this).Size);
+                arr._memHolder = new MemoryHolder(owner.UnsafeAddress.Add(offset), ((INativeType)this).Size, owner);
                 return arr;
             }
 

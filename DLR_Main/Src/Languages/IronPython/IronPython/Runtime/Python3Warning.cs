@@ -13,18 +13,14 @@
  *
  * ***************************************************************************/
 
-#if CODEPLEX_40
 using System;
-#else
-using System; using Microsoft;
-#endif
 using System.Collections.Generic;
 using System.Text;
 using Microsoft.Scripting.Utils;
 
 namespace IronPython.Runtime {
     [AttributeUsage(AttributeTargets.Method)]
-    class Python3WarningAttribute : Attribute  {
+    sealed class Python3WarningAttribute : Attribute  {
         private readonly string/*!*/ _message;
         
         public Python3WarningAttribute(string/*!*/ message) {

@@ -13,24 +13,9 @@
  *
  * ***************************************************************************/
 
-#if CODEPLEX_40
-using EachSite = System.Func<System.Runtime.CompilerServices.CallSite, object, IronRuby.Builtins.Proc, object>;
-#else
-using EachSite = Microsoft.Func<Microsoft.Runtime.CompilerServices.CallSite, object, IronRuby.Builtins.Proc, object>;
-#endif
-using EnumerableModule = IronRuby.Builtins.Enumerable;
-
-#if CODEPLEX_40
 using System;
-#else
-using System; using Microsoft;
-#endif
 using System.Collections.Generic;
 using System.Runtime.CompilerServices;
-#if !CODEPLEX_40
-using Microsoft.Runtime.CompilerServices;
-#endif
-
 using System.Runtime.InteropServices;
 using IronRuby.Builtins;
 using IronRuby.Runtime;
@@ -40,6 +25,8 @@ using Microsoft.Scripting.Utils;
 using Microsoft.Scripting.Runtime;
 
 namespace IronRuby.StandardLibrary.Enumerator {
+    using EachSite = Func<CallSite, object, Proc, object>;
+    using EnumerableModule = IronRuby.Builtins.Enumerable;
 
     [RubyModule(Extends = typeof(Kernel))]
     public static class EnumerableKernelOps {

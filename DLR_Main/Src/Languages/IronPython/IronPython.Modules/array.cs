@@ -13,11 +13,7 @@
  *
  * ***************************************************************************/
 
-#if CODEPLEX_40
 using System;
-#else
-using System; using Microsoft;
-#endif
 using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -36,6 +32,7 @@ using SpecialName = System.Runtime.CompilerServices.SpecialNameAttribute;
 namespace IronPython.Modules {
     public static class ArrayModule {
         public const string __doc__ = "Provides arrays for native data types.  These can be used for compact storage or native interop via ctypes";
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Security", "CA2104:DoNotDeclareReadOnlyMutableReferenceTypes")]
         public static readonly PythonType/*!*/ ArrayType = DynamicHelpers.GetPythonTypeFromType(typeof(array));
 
         [PythonType]

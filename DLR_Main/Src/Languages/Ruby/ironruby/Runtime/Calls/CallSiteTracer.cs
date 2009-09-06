@@ -13,17 +13,16 @@
  *
  * ***************************************************************************/
 
-#if CODEPLEX_40
-using System;
+#if !CLR2
+using MSA = System.Linq.Expressions;
 #else
-using System; using Microsoft;
+using MSA = Microsoft.Scripting.Ast;
 #endif
+
+using System;
 using System.Collections.Generic;
 using System.Text;
-#if CODEPLEX_40
 using System.Dynamic;
-#else
-#endif
 using System.Reflection;
 using System.Diagnostics;
 
@@ -31,23 +30,18 @@ using Microsoft.Scripting.Generation;
 using Microsoft.Scripting.Runtime;
 using Microsoft.Scripting.Utils;
 
+using IronRuby.Builtins;
 using IronRuby.Compiler;
 using IronRuby.Compiler.Ast;
 using IronRuby.Compiler.Generation;
 using IronRuby.Runtime.Calls;
 
-#if CODEPLEX_40
-using MSA = System.Linq.Expressions;
-using Ast = System.Linq.Expressions.Expression;
-#else
-using MSA = Microsoft.Linq.Expressions;
-using Ast = Microsoft.Linq.Expressions.Expression;
-#endif
 using Microsoft.Scripting;
-using AstUtils = Microsoft.Scripting.Ast.Utils;
-using IronRuby.Builtins;
 
 namespace IronRuby.Runtime.Calls {
+    using Ast = MSA.Expression;
+    using AstUtils = Microsoft.Scripting.Ast.Utils;
+
     public sealed class CallSiteTracer {
         /// <summary>
         /// Registers a call site tracer associated with the current thread.

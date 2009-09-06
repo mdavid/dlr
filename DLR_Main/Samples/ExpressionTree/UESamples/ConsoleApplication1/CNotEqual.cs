@@ -1,20 +1,7 @@
-#if CODEPLEX_40
 using System;
-#else
-using System; using Microsoft;
-#endif
 using System.Collections.Generic;
-#if CODEPLEX_40
-using System.Linq;
-#else
-using Microsoft.Linq;
-#endif
 using System.Text;
-#if CODEPLEX_40
-using System.Linq.Expressions;
-#else
-using Microsoft.Linq.Expressions;
-#endif
+using Microsoft.Scripting.Ast;
 
 namespace Samples {
     class CNotEqual {
@@ -22,11 +9,7 @@ namespace Samples {
         static public void NotEqual1() {
             //<Snippet1>
             // Add the following directive to your file
-#if CODEPLEX_40
-            // using System.Linq.Expressions;  
-#else
-            // using Microsoft.Linq.Expressions;  
-#endif
+            // using Microsoft.Scripting.Ast;  
 
             //This expression compares whether the values of its two arguments are different.
             //Both arguments need to be of the same type.
@@ -54,11 +37,7 @@ namespace Samples {
         public static void NotEqual2() {
             //<Snippet2>
             // Add the following directive to your file
-#if CODEPLEX_40
-            // using System.Linq.Expressions;
-#else
-            // using Microsoft.Linq.Expressions;
-#endif
+            // using Microsoft.Scripting.Ast;
 
             //This expression represents a comparison of whether the two arguments are different using a user defined operator.
             //The parameters to the NotEqual operation should be reference convertible to the MethodInfo's arguments

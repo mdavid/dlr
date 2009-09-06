@@ -13,31 +13,24 @@
  *
  * ***************************************************************************/
 
-#if CODEPLEX_40
-using System;
-#else
-using System; using Microsoft;
-#endif
-using System.Collections.Generic;
-using System.Diagnostics;
-#if CODEPLEX_40
-using System.Dynamic;
+#if !CLR2
 using System.Linq.Expressions;
 #else
-using Microsoft.Scripting;
-using Microsoft.Linq.Expressions;
+using Microsoft.Scripting.Ast;
 #endif
+
+using System;
+using System.Collections.Generic;
+using System.Diagnostics;
+using System.Dynamic;
 using System.Reflection;
 using Microsoft.Scripting.Generation;
 using Microsoft.Scripting.Utils;
-#if CODEPLEX_40
-using Ast = System.Linq.Expressions.Expression;
-#else
-using Ast = Microsoft.Linq.Expressions.Expression;
-#endif
 using AstUtils = Microsoft.Scripting.Ast.Utils;
 
 namespace Microsoft.Scripting.Actions.Calls {
+    using Ast = Expression;
+    
     public class InstanceBuilder {
         // Index of actual argument expression or -1 if the instance is null.
         private readonly int _index;
@@ -58,6 +51,7 @@ namespace Microsoft.Scripting.Actions.Calls {
             get { return 1; }
         }
 
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Design", "CA1045:DoNotPassTypesByReference")] // TODO
         internal protected virtual Expression ToExpression(ref MethodInfo method, OverloadResolver resolver, RestrictedArguments args, bool[] hasBeenUsed) {
             if (_index == -1) {
                 return AstUtils.Constant(null);
@@ -72,6 +66,7 @@ namespace Microsoft.Scripting.Actions.Calls {
             return resolver.Convert(args.GetObject(_index), args.GetType(_index), null, method.DeclaringType);
         }
 
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Design", "CA1045:DoNotPassTypesByReference")] // TODO
         internal protected virtual Func<object[], object> ToDelegate(ref MethodInfo method, OverloadResolver resolver, RestrictedArguments args, bool[] hasBeenUsed) {
             if (_index == -1) {
                 return (_) => null;

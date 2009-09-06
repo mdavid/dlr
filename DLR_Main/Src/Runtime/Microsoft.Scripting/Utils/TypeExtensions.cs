@@ -13,11 +13,7 @@
  *
  * ***************************************************************************/
 
-#if CODEPLEX_40
 using System;
-#else
-using System; using Microsoft;
-#endif
 using System.Reflection;
 using System.Text;
 using System.Reflection.Emit;
@@ -42,10 +38,6 @@ namespace Microsoft.Scripting.Utils {
         /// </summary>
         internal static bool IsSealedOrValueType(this Type type) {
             return type.IsSealed || type.IsValueType;
-        }
-
-        internal static bool IsParamArray(this ParameterInfo parameter) {
-            return parameter.IsDefined(typeof(ParamArrayAttribute), false);
         }
 
         /// <summary>

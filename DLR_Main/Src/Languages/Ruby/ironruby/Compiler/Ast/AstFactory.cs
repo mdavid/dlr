@@ -13,20 +13,18 @@
  *
  * ***************************************************************************/
 
-#if CODEPLEX_40
-using System;
+#if !CLR2
+using MSA = System.Linq.Expressions;
 #else
-using System; using Microsoft;
+using MSA = Microsoft.Scripting.Ast;
 #endif
+
+using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Diagnostics;
 using System.Reflection;
-#if CODEPLEX_40
 using System.Dynamic;
-#else
-using Microsoft.Scripting;
-#endif
 using System.Threading;
 using Microsoft.Scripting.Actions;
 using Microsoft.Scripting.Ast;
@@ -38,25 +36,16 @@ using IronRuby.Runtime;
 using IronRuby.Runtime.Calls;
 
 using AstUtils = Microsoft.Scripting.Ast.Utils;
-#if CODEPLEX_40
-using MSA = System.Linq.Expressions;
-#else
-using MSA = Microsoft.Linq.Expressions;
-#endif
 
 namespace IronRuby.Compiler.Ast {
-#if CODEPLEX_40
-    using Ast = System.Linq.Expressions.Expression;
-#else
-    using Ast = Microsoft.Linq.Expressions.Expression;
-#endif
-    
+    using Ast = MSA.Expression;
+
     public static class AstFactory {
 
-        public static readonly MSA.Expression[] EmptyExpressions = new MSA.Expression[0];
-        public static readonly MSA.ParameterExpression[] EmptyParameters = new MSA.ParameterExpression[0];
-        public static readonly MSA.Expression NullOfMutableString = AstUtils.Constant(null, typeof(MutableString));
-        public static readonly MSA.Expression NullOfProc = AstUtils.Constant(null, typeof(Proc));
+        internal static readonly MSA.Expression[] EmptyExpressions = new MSA.Expression[0];
+        internal static readonly MSA.ParameterExpression[] EmptyParameters = new MSA.ParameterExpression[0];
+        internal static readonly MSA.Expression NullOfMutableString = AstUtils.Constant(null, typeof(MutableString));
+        internal static readonly MSA.Expression NullOfProc = AstUtils.Constant(null, typeof(Proc));
         internal static readonly MSA.Expression BlockReturnReasonBreak = AstUtils.Constant(BlockReturnReason.Break);
 
         public static MSA.Expression/*!*/ Infinite(MSA.LabelTarget @break, MSA.LabelTarget @continue, params MSA.Expression[]/*!*/ body) {

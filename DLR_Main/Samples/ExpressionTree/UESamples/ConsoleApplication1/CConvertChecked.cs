@@ -1,16 +1,6 @@
-#if CODEPLEX_40
 using System;
-#else
-using System; using Microsoft;
-#endif
 using System.Collections.Generic;
-#if CODEPLEX_40
-using System.Linq;
-using System.Linq.Expressions;
-#else
-using Microsoft.Linq;
-using Microsoft.Linq.Expressions;
-#endif
+using Microsoft.Scripting.Ast;
 using System.Text;
 
 namespace Samples {
@@ -19,11 +9,7 @@ namespace Samples {
         static public void ConvertChecked1() {
             //<Snippet1>
             // add the following directive to your file
-#if CODEPLEX_40
-            // using System.Linq.Expressions;  
-#else
-            // using Microsoft.Linq.Expressions;  
-#endif
+            // using Microsoft.Scripting.Ast;  
 
             //This Expression represents a ConvertChecked operation; It will attempt to find a conversion from the 
             //expression to the type specified. The conversion can overflow.
@@ -51,11 +37,7 @@ namespace Samples {
         static public void ConvertChecked2() {
             //<Snippet2>
             // add the following directive to your file
-#if CODEPLEX_40
-            // using System.Linq.Expressions;  
-#else
-            // using Microsoft.Linq.Expressions;  
-#endif
+            // using Microsoft.Scripting.Ast;  
 
             //This Expression represents a user defined ConvertChecked operation; It will use the specified user defined conversion.
             Expression MyConvertChecked = Expression.ConvertChecked(

@@ -14,15 +14,9 @@
  * Copyright (c) Microsoft Corporation.
  * 
  ***** END LICENSE BLOCK *****/
-using System; using Microsoft;
-
 
 using System.Collections.Generic;
 using System.Runtime.CompilerServices;
-#if !CODEPLEX_40
-using Microsoft.Runtime.CompilerServices;
-#endif
-
 
 namespace IronRuby.StandardLibrary.Yaml {
     internal class ReferenceEqualityComparer<T> : IEqualityComparer<T> where T : class {

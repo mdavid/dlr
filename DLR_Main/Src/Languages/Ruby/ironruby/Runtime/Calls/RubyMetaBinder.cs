@@ -13,39 +13,26 @@
  *
  * ***************************************************************************/
 
-#if CODEPLEX_40
+#if !CLR2
+using System.Linq.Expressions;
+#else
+using Microsoft.Scripting.Ast;
+#endif
+
 using System.Dynamic;
-#else
-#endif
 using System.Diagnostics;
-#if CODEPLEX_40
 using System;
-#else
-using System; using Microsoft;
-#endif
 using Microsoft.Scripting.Utils;
 using System.Collections.Generic;
-#if CODEPLEX_40
-using Ast = System.Linq.Expressions.Expression;
-#else
-using Ast = Microsoft.Linq.Expressions.Expression;
-#endif
 using AstUtils = Microsoft.Scripting.Ast.Utils;
 using System.Reflection;
 using Microsoft.Scripting;
 using Microsoft.Scripting.Runtime;
-#if CODEPLEX_40
-using System.Linq.Expressions;
-#else
-using Microsoft.Linq.Expressions;
-#endif
 using System.Runtime.CompilerServices;
-#if !CODEPLEX_40
-using Microsoft.Runtime.CompilerServices;
-#endif
-
 
 namespace IronRuby.Runtime.Calls {
+    using Ast = Expression;
+
     public abstract class RubyMetaBinder : DynamicMetaObjectBinder, IExpressionSerializable {
         /// <summary>
         /// Cross-runtime checks are emitted if the action is not bound to the context.
@@ -69,11 +56,7 @@ namespace IronRuby.Runtime.Calls {
         protected abstract bool Build(MetaObjectBuilder/*!*/ metaBuilder, CallArguments/*!*/ args, bool defaultFallback);
         public abstract Expression CreateExpression();
 
-#if CODEPLEX_40
         public override T BindDelegate<T>(System.Runtime.CompilerServices.CallSite<T> site, object[] args) {
-#else
-        public override T BindDelegate<T>(Microsoft.Runtime.CompilerServices.CallSite<T> site, object[] args) {
-#endif
             RubyContext context = _context ?? ((Signature.HasScope) ? ((RubyScope)args[0]).RubyContext : (RubyContext)args[0]);
 
             if (context.Options.NoAdaptiveCompilation) {

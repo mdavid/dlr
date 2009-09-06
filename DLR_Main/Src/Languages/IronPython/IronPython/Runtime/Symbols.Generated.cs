@@ -13,11 +13,7 @@
  *
  * ***************************************************************************/
 
-#if CODEPLEX_40
 using System;
-#else
-using System; using Microsoft;
-#endif
 using IronPython.Runtime.Binding;
 using Microsoft.Scripting;
 using Microsoft.Scripting.Generation;

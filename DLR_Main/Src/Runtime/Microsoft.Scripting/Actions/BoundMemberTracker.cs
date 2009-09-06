@@ -13,13 +13,8 @@
  *
  * ***************************************************************************/
 
-#if CODEPLEX_40
 using System;
 using System.Dynamic;
-#else
-using System; using Microsoft;
-using Microsoft.Scripting;
-#endif
 using Microsoft.Scripting.Actions.Calls;
 
 namespace Microsoft.Scripting.Actions {

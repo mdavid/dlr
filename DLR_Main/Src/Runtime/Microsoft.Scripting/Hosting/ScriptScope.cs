@@ -13,34 +13,23 @@
  *
  * ***************************************************************************/
 
-#if CODEPLEX_40
-using System;
+#if !CLR2
+using System.Linq.Expressions;
 #else
-using System; using Microsoft;
+using dynamic = System.Object;
+using Microsoft.Scripting.Ast;
 #endif
+
+using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Diagnostics;
-#if CODEPLEX_40
-using System.Linq.Expressions;
-#else
-using Microsoft.Linq.Expressions;
-#endif
 using System.Runtime.Remoting;
 using System.Runtime.Serialization;
 using System.Security.Permissions;
-#if CODEPLEX_40
 using System.Dynamic;
-#else
-using Microsoft.Scripting;
-#endif
 using Microsoft.Scripting.Runtime;
 using Microsoft.Scripting.Utils;
-using AstUtils = Microsoft.Scripting.Ast.Utils;
-
-#if !CLR4
-using dynamic = System.Object;
-#endif
 
 namespace Microsoft.Scripting.Hosting {
     /// <summary>
@@ -80,12 +69,6 @@ namespace Microsoft.Scripting.Hosting {
         /// </summary>
         public ScriptEngine Engine {
             get {
-                // InvariantContext should not have an engine
-                // TODO: If _engine itself could be set to null, we wouldn't
-                // need this check
-                if (_engine.LanguageContext is InvariantContext) {
-                    return null;
-                }
                 return _engine;
             }
         }
@@ -96,7 +79,7 @@ namespace Microsoft.Scripting.Hosting {
         /// <exception cref="MissingMemberException">The specified name is not defined in the scope.</exception>
         /// <exception cref="ArgumentNullException"><paramref name="name"/> is a <c>null</c> reference.</exception>
         public dynamic GetVariable(string name) {
-            return _scope.GetVariable(SymbolTable.StringToId(name));
+            return Engine.Operations.GetMember(Scope, name);
         }
 
         /// <summary>
@@ -115,7 +98,7 @@ namespace Microsoft.Scripting.Hosting {
         /// </summary>
         /// <exception cref="ArgumentNullException"><paramref name="name"/> is a <c>null</c> reference.</exception>
         public bool TryGetVariable(string name, out dynamic value) {
-            return _scope.TryGetVariable(SymbolTable.StringToId(name), out value);
+            return Engine.Operations.TryGetMember(Scope, name, out value);
         }
 
         /// <summary>
@@ -126,7 +109,7 @@ namespace Microsoft.Scripting.Hosting {
         /// <exception cref="ArgumentNullException"><paramref name="name"/> is a <c>null</c> reference.</exception>
         public bool TryGetVariable<T>(string name, out T value) {
             object result;
-            if (_scope.TryGetVariable(SymbolTable.StringToId(name), out result)) {
+            if (Engine.Operations.TryGetMember(Scope, name, out result)) {
                 value = _engine.Operations.ConvertTo<T>(result);
                 return true;
             }
@@ -139,7 +122,7 @@ namespace Microsoft.Scripting.Hosting {
         /// </summary>
         /// <exception cref="ArgumentNullException"><paramref name="name"/> is a <c>null</c> reference.</exception>
         public void SetVariable(string name, object value) {
-            _scope.SetVariable(SymbolTable.StringToId(name), value);
+            Engine.Operations.SetMember(Scope, name, value);
         }
 
 #if !SILVERLIGHT
@@ -186,7 +169,8 @@ namespace Microsoft.Scripting.Hosting {
         /// </summary>
         /// <exception cref="ArgumentNullException"><paramref name="name"/> is a <c>null</c> reference.</exception>
         public bool ContainsVariable(string name) {
-            return _scope.ContainsVariable(SymbolTable.StringToId(name));
+            object dummy;
+            return TryGetVariable(name, out dummy);
         }
 
         /// <summary>
@@ -195,7 +179,12 @@ namespace Microsoft.Scripting.Hosting {
         /// <returns><c>true</c> if the value existed in the scope before it has been removed.</returns>
         /// <exception cref="ArgumentNullException"><paramref name="name"/> is a <c>null</c> reference.</exception>
         public bool RemoveVariable(string name) {
-            return _scope.TryRemoveVariable(SymbolTable.StringToId(name));
+            if (Engine.Operations.ContainsMember(_scope, name)) {
+                Engine.Operations.RemoveMember(_scope, name);
+                return true;
+            }
+
+            return false;
         }
 
         /// <summary>
@@ -204,13 +193,7 @@ namespace Microsoft.Scripting.Hosting {
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Design", "CA1024:UsePropertiesWhereAppropriate")]
         public IEnumerable<string> GetVariableNames() {
             // Remoting: we eagerly enumerate all variables to avoid cross domain calls for each item.
-
-            var result = new List<string>();
-            foreach (var entry in _scope.Items) {
-                result.Add(SymbolTable.IdToString(entry.Key));
-            }
-            result.TrimExcess();
-            return result;
+            return Engine.Operations.GetMemberNames(_scope.Storage);
         }
 
         /// <summary>
@@ -219,11 +202,12 @@ namespace Microsoft.Scripting.Hosting {
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Design", "CA1024:UsePropertiesWhereAppropriate")]
         public IEnumerable<KeyValuePair<string, object>> GetItems() {
             // Remoting: we eagerly enumerate all variables to avoid cross domain calls for each item.
-
             var result = new List<KeyValuePair<string, object>>();
-            foreach (var entry in _scope.Items) {
-                result.Add(new KeyValuePair<string, object>(SymbolTable.IdToString(entry.Key), entry.Value));
+            
+            foreach (string name in GetVariableNames()) {
+                result.Add(new KeyValuePair<string, object>(name, Engine.Operations.GetMember(_scope.Storage, name)));
             }
+
             result.TrimExcess();
             return result;
         }
@@ -276,16 +260,16 @@ namespace Microsoft.Scripting.Hosting {
                         new ParameterExpression[] { result },
                         Expression.Condition(
                             Expression.Call(
-                                AstUtils.Convert(Expression, typeof(ScriptScope)),
+                                Expression.Convert(Expression, typeof(ScriptScope)),
                                 typeof(ScriptScope).GetMethod("TryGetVariable", new[] { typeof(string), typeof(object).MakeByRefType() }),
-                                AstUtils.Constant(action.Name),
+                                Expression.Constant(action.Name),
                                 result
                             ),
                             result,
-                            AstUtils.Convert(fallback.Expression, typeof(object))
+                            Expression.Convert(fallback.Expression, typeof(object))
                         )
                     ),
-                    BindingRestrictionsHelpers.GetRuntimeTypeRestriction(Expression, typeof(ScriptScope)).Merge(fallback.Restrictions)
+                    BindingRestrictions.GetTypeRestriction(Expression, typeof(ScriptScope)).Merge(fallback.Restrictions)
                 );
             }
 
@@ -294,14 +278,14 @@ namespace Microsoft.Scripting.Hosting {
                 return new DynamicMetaObject(
                     Expression.Block(
                         Expression.Call(
-                            AstUtils.Convert(Expression, typeof(ScriptScope)),
+                            Expression.Convert(Expression, typeof(ScriptScope)),
                             typeof(ScriptScope).GetMethod("SetVariable", new[] { typeof(string), typeof(object) }),
-                            AstUtils.Constant(action.Name),
-                            AstUtils.Convert(value.Expression, typeof(object))
+                            Expression.Constant(action.Name),
+                            Expression.Convert(value.Expression, typeof(object))
                         ),
                         value.Expression
                     ),
-                    Restrictions.Merge(value.Restrictions).Merge(BindingRestrictionsHelpers.GetRuntimeTypeRestriction(Expression, typeof(ScriptScope)))
+                    Restrictions.Merge(value.Restrictions).Merge(BindingRestrictions.GetTypeRestriction(Expression, typeof(ScriptScope)))
                 );
             }
 
@@ -311,14 +295,14 @@ namespace Microsoft.Scripting.Hosting {
                 return new DynamicMetaObject(
                     Expression.IfThenElse(
                         Expression.Call(
-                            AstUtils.Convert(Expression, typeof(ScriptScope)),
+                            Expression.Convert(Expression, typeof(ScriptScope)),
                             typeof(ScriptScope).GetMethod("RemoveVariable"),
-                            AstUtils.Constant(action.Name)
+                            Expression.Constant(action.Name)
                         ),
-                        AstUtils.Empty(),
+                        Expression.Empty(),
                         fallback.Expression
                     ),
-                    Restrictions.Merge(BindingRestrictionsHelpers.GetRuntimeTypeRestriction(Expression, typeof(ScriptScope))).Merge(fallback.Restrictions)
+                    Restrictions.Merge(BindingRestrictions.GetTypeRestriction(Expression, typeof(ScriptScope))).Merge(fallback.Restrictions)
                 );
             }
 
@@ -334,16 +318,16 @@ namespace Microsoft.Scripting.Hosting {
                         new ParameterExpression[] { result },
                         Expression.Condition(
                             Expression.Call(
-                                AstUtils.Convert(Expression, typeof(ScriptScope)),
+                                Expression.Convert(Expression, typeof(ScriptScope)),
                                 typeof(ScriptScope).GetMethod("TryGetVariable", new[] { typeof(string), typeof(object).MakeByRefType() }),
-                                AstUtils.Constant(action.Name),
+                                Expression.Constant(action.Name),
                                 result
                             ),
-                            AstUtils.Convert(fallbackInvoke.Expression, typeof(object)),
-                            AstUtils.Convert(fallback.Expression, typeof(object))
+                            Expression.Convert(fallbackInvoke.Expression, typeof(object)),
+                            Expression.Convert(fallback.Expression, typeof(object))
                         )
                     ),
-                    BindingRestrictions.Combine(args).Merge(BindingRestrictionsHelpers.GetRuntimeTypeRestriction(Expression, typeof(ScriptScope))).Merge(fallback.Restrictions)
+                    BindingRestrictions.Combine(args).Merge(BindingRestrictions.GetTypeRestriction(Expression, typeof(ScriptScope))).Merge(fallback.Restrictions)
                 );
             }
 

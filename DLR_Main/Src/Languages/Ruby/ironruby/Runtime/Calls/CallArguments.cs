@@ -12,31 +12,26 @@
  *
  *
  * ***************************************************************************/
-using System; using Microsoft;
 
+#if !CLR2
+using System.Linq.Expressions;
+#else
+using Microsoft.Scripting.Ast;
+#endif
 
 using System.Collections.Generic;
 using System.Diagnostics;
-#if CODEPLEX_40
 using System.Dynamic;
-using System.Linq.Expressions;
-#else
-using Microsoft.Linq.Expressions;
-#endif
 using Microsoft.Scripting.Utils;
 using IronRuby.Builtins;
 using Microsoft.Scripting.Runtime;
 using Microsoft.Scripting.Actions;
-#if CODEPLEX_40
-using Ast = System.Linq.Expressions.Expression;
-#else
-using Ast = Microsoft.Linq.Expressions.Expression;
-#endif
 using AstUtils = Microsoft.Scripting.Ast.Utils;
 using IronRuby.Compiler;
 using Microsoft.Scripting;
 
 namespace IronRuby.Runtime.Calls {
+    using Ast = Expression;
 
     /// <summary>
     /// Wraps the arguments of a dynamic call site

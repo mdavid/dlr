@@ -15,11 +15,7 @@
 
 #if !SILVERLIGHT // System.NET
 
-#if CODEPLEX_40
 using System;
-#else
-using System; using Microsoft;
-#endif
 using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -27,10 +23,7 @@ using System.IO;
 using System.Net;
 using System.Net.Sockets;
 using System.Runtime.InteropServices;
-#if CODEPLEX_40
 using System.Dynamic;
-#else
-#endif
 using System.Text;
 
 using Microsoft.Scripting.Actions;
@@ -1562,6 +1555,7 @@ namespace IronPython.Modules {
         public const int SO_USELOOPBACK = (int)SocketOptionName.UseLoopback;
         public const int TCP_NODELAY = (int)SocketOptionName.NoDelay;
 
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Security", "CA2104:DoNotDeclareReadOnlyMutableReferenceTypes")]
         public static readonly BigInteger SIO_RCVALL = (long)IOControlCode.ReceiveAll;
         public const int RCVALL_ON = 1;
         public const int RCVALL_OFF = 0;
@@ -1892,12 +1886,6 @@ namespace IronPython.Modules {
                 }                               
             }
 
-            public object _sock {
-                get {
-                    return _userSocket;
-                }
-            }
-
             protected override void Dispose(bool disposing) {
                 socket sock = _userSocket as socket;
                 if (sock != null) {
@@ -1932,7 +1920,7 @@ namespace IronPython.Modules {
             public void __init__(params object[] args) {
             }
 
-            public void __init__([ParamDictionary]IAttributesCollection kwargs, params object[] args) {
+            public void __init__([ParamDictionary]IDictionary<object, object> kwargs, params object[] args) {
             }
 
             public void __del__() {

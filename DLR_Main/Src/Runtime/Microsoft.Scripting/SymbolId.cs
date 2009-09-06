@@ -13,11 +13,7 @@
  *
  * ***************************************************************************/
 
-#if CODEPLEX_40
 using System;
-#else
-using System; using Microsoft;
-#endif
 using System.Runtime.Serialization;
 using System.Security.Permissions;
 using Microsoft.Contracts;
@@ -104,6 +100,14 @@ namespace Microsoft.Scripting {
 
         public static bool operator !=(SymbolId a, SymbolId b) {
             return !a.Equals(b);
+        }
+
+        public static bool operator <(SymbolId a, SymbolId b) {
+            return a.CompareTo(b) < 0;
+        }
+
+        public static bool operator >(SymbolId a, SymbolId b) {
+            return a.CompareTo(b) > 0;
         }
 
         #region IComparable Members

@@ -13,20 +13,12 @@
  *
  * ***************************************************************************/
 
-#if CODEPLEX_40
 using System;
-#else
-using System; using Microsoft;
-#endif
 using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Reflection;
 using System.Runtime.CompilerServices;
-#if !CODEPLEX_40
-using Microsoft.Runtime.CompilerServices;
-#endif
-
 using System.Runtime.InteropServices;
 using Microsoft.Scripting;
 using Microsoft.Scripting.Generation;
@@ -36,13 +28,8 @@ using IronRuby.Runtime;
 using IronRuby.Runtime.Calls;
 using IronRuby.Runtime.Conversions;
 
-#if CODEPLEX_40
-using EachSite = System.Func<System.Runtime.CompilerServices.CallSite, object, IronRuby.Builtins.Proc, object>;
-#else
-using EachSite = Microsoft.Func<Microsoft.Runtime.CompilerServices.CallSite, object, IronRuby.Builtins.Proc, object>;
-#endif
-
 namespace IronRuby.Builtins {
+    using EachSite = Func<CallSite, object, Proc, object>;
 
     [RubyModule(Extends = typeof(IList), Restrictions = ModuleRestrictions.None)]
     [Includes(typeof(Enumerable))]
@@ -1307,10 +1294,10 @@ namespace IronRuby.Builtins {
             }
 
             MutableString any = separator;
-            int length = (separator != null) ? (isBinary.Value ? separator.GetByteCount() : separator.GetCharCount()) * (parts.Count - 1) : 0;
+            int length = (separator != null) ? (isBinary.HasValue && isBinary.Value ? separator.GetByteCount() : separator.GetCharCount()) * (parts.Count - 1) : 0;
             foreach (MutableString part in parts) {
                 if (part != null) {
-                    length += (isBinary.Value) ? part.GetByteCount() : part.GetCharCount();
+                    length += (isBinary.HasValue && isBinary.Value) ? part.GetByteCount() : part.GetCharCount();
                     if (any == null) {
                         any = part;
                     }
@@ -1321,7 +1308,7 @@ namespace IronRuby.Builtins {
                 return MutableString.CreateEmpty();
             }
 
-            var result = isBinary.Value ? 
+            var result = isBinary.HasValue && isBinary.Value ? 
                 MutableString.CreateBinary(length, any.Encoding) :
                 MutableString.CreateMutable(length, any.Encoding);
 

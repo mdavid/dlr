@@ -12,75 +12,77 @@
  *
  *
  * ***************************************************************************/
-using System; using Microsoft;
 
-
+using System;
 using System.Collections.Generic;
+
 using Microsoft.Scripting;
 using Microsoft.Scripting.Runtime;
+using Microsoft.Scripting.Utils;
+
+using IronPython.Runtime.Operations;
 
 namespace IronPython.Runtime {
-    internal abstract class ScopeDictionaryStorage : DictionaryStorage {
-        private Scope/*!*/ _scope;
+    /// <summary>
+    /// Provides dictionary based storage which is backed by a Scope object.
+    /// </summary>
+    internal class ScopeDictionaryStorage : DictionaryStorage {
+        private readonly Scope/*!*/ _scope;
+        private readonly PythonContext/*!*/ _context;
 
-        public ScopeDictionaryStorage(Scope/*!*/ scope) {
+        public ScopeDictionaryStorage(PythonContext/*!*/ context, Scope/*!*/ scope) {
+            Assert.NotNull(context, scope);
+
             _scope = scope;
+            _context = context;
         }
 
         public override void Add(object key, object value) {
             string strKey = key as string;
             if (strKey != null) {
-                Scope.SetVariable(SymbolTable.StringToId(strKey), value);
+                PythonOps.ScopeSetMember(_context.SharedContext, _scope, strKey, value);
             } else {
-                Scope.SetObjectName(key, value);
+                PythonScopeExtension ext = (PythonScopeExtension)_context.EnsureScopeExtension(_scope);
+                ext.EnsureObjectKeys().Add(key, value);
             }
         }
 
         public override void Add(SymbolId key, object value) {
-            Scope.SetVariable(key, value);
+            Add(SymbolTable.IdToString(key), value);
         }
 
         public override bool Contains(object key) {
-            foreach (Scope scope in GetVisibleScopes()) {
-                if (ScopeContains(key, scope)) {
-                    return true;
-                }
-            }
-            return false;
+            object dummy;
+            return TryGetValue(key, out dummy);
         }
 
         public override bool Contains(SymbolId key) {
-            foreach (Scope scope in GetVisibleScopes()) {
-                if (scope.ContainsVariable(key)) {
-                    return true;
-                }
-            }
-            return false;
+            return Contains(SymbolTable.IdToString(key));
         }
-        
+
         public override bool Remove(object key) {
-            foreach (Scope scope in GetVisibleScopes()) {
-                string strKey = key as string;
-                if (strKey != null) {
-                    if (scope.TryRemoveVariable(SymbolTable.StringToId(strKey))) {
-                        return true;
-                    }
-                } else if (scope.TryRemoveObjectName(key)) {
-                    return true;
+
+            string strKey = key as string;
+            if (strKey != null) {
+                if (Contains(key)) {
+                    return PythonOps.ScopeDeleteMember(_context.SharedContext, Scope, strKey);
                 }
+            } else {
+                PythonScopeExtension ext = (PythonScopeExtension)_context.EnsureScopeExtension(_scope);
+
+                return ext.ObjectKeys != null && ext.ObjectKeys.Remove(key);
             }
 
             return false;
         }
 
         public override bool TryGetValue(object key, out object value) {
-            foreach (Scope scope in GetVisibleScopes()) {
-                string strKey = key as string;
-                if (strKey != null) {
-                    if (scope.TryGetVariable(SymbolTable.StringToId(strKey), out value)) {
-                        return true;
-                    }
-                } else if (scope.TryGetObjectName(key, out value)) {
+            string strKey = key as string;
+            if (strKey != null) {
+                return PythonOps.ScopeTryGetMember(_context.SharedContext, _scope, strKey, out value);
+            } else {
+                PythonScopeExtension ext = (PythonScopeExtension)_context.EnsureScopeExtension(_scope);
+                if (ext.ObjectKeys != null && ext.ObjectKeys.TryGetValue(key, out value)) {
                     return true;
                 }
             }
@@ -90,58 +92,38 @@ namespace IronPython.Runtime {
         }
 
         public override bool TryGetValue(SymbolId key, out object value) {
-            foreach (Scope scope in GetVisibleScopes()) {
-                if (scope.TryGetVariable(key, out value)) {
-                    return true;
-                }
-            }
-
-            value = null;
-            return false;
+            return TryGetValue(SymbolTable.IdToString(key), out value);
         }
 
         public override int Count {
             get {
-                int count = 0;
-                foreach (Scope scope in GetVisibleScopes()) {
-                    count += scope.Dict.Count;
-                }
-                return count;
+                return GetItems().Count;
             }
         }
 
         public override void Clear() {
-            foreach (Scope scope in GetVisibleScopes()) {
-                scope.Clear();
+            foreach (var item in GetItems()) {
+                Remove(item.Key);
             }
         }
 
         public override List<KeyValuePair<object, object>> GetItems() {
-            return new List<KeyValuePair<object, object>>(Scope.GetAllItems());
+            List<KeyValuePair<object, object>> res = new List<KeyValuePair<object, object>>();
+
+            foreach (object name in PythonOps.ScopeGetMemberNames(_context.SharedContext, _scope)) {
+                object value;
+                if (TryGetValue(name, out value)) {
+                    res.Add(new KeyValuePair<object, object>(name, value));
+                }
+            }
+
+            return res;
         }
 
-        protected Scope/*!*/ Scope {
+        internal Scope/*!*/ Scope {
             get {
                 return _scope;
             }
-        }
-
-        protected abstract IEnumerable<Scope>/*!*/ GetVisibleScopes();
-
-        private static bool ScopeContains(object key, Scope scope) {
-            string strKey = key as string;
-            if (strKey != null) {
-                object dummy;
-                if (scope.TryGetVariable(SymbolTable.StringToId(strKey), out dummy)) {
-                    return true;
-                }
-            } else {
-                object dummy;
-                if (scope.TryGetObjectName(key, out dummy)) {
-                    return true;
-                }
-            }
-            return false;
         }
     }
 }

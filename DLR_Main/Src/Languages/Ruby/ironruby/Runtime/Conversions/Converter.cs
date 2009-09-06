@@ -13,19 +13,15 @@
  *
  * ***************************************************************************/
 
-#if CODEPLEX_40
-using System;
-#else
-using System; using Microsoft;
-#endif
-using System.Diagnostics;
-#if CODEPLEX_40
-using System.Dynamic;
+#if !CLR2
 using System.Linq.Expressions;
 #else
-using Microsoft.Scripting;
-using Microsoft.Linq.Expressions;
+using Microsoft.Scripting.Ast;
 #endif
+
+using System;
+using System.Diagnostics;
+using System.Dynamic;
 using System.Reflection;
 using IronRuby.Compiler;
 using IronRuby.Runtime.Calls;
@@ -33,15 +29,12 @@ using Microsoft.Scripting.Actions.Calls;
 using Microsoft.Scripting.Generation;
 using Microsoft.Scripting.Math;
 using Microsoft.Scripting.Utils;
-#if CODEPLEX_40
-using Ast = System.Linq.Expressions.Expression;
-#else
-using Ast = Microsoft.Linq.Expressions.Expression;
-#endif
 using AstUtils = Microsoft.Scripting.Ast.Utils;
 using Microsoft.Scripting.Runtime;
 
 namespace IronRuby.Runtime.Conversions {
+    using Ast = Expression;
+
     internal static partial class Converter {
         internal static bool CanConvertFrom(DynamicMetaObject fromArg, Type/*!*/ fromType, Type/*!*/ toType, bool toNotNullable,
             NarrowingLevel level, bool explicitProtocolConversions, bool implicitProtocolConversions) {
@@ -238,10 +231,6 @@ namespace IronRuby.Runtime.Conversions {
         }
 
         internal static Candidate PreferConvert(Type t1, Type t2) {
-            if (t1 == typeof(bool) && t2 == typeof(int)) return Candidate.Two;
-            if (t1 == typeof(Decimal) && t2 == typeof(BigInteger)) return Candidate.Two;
-            //if (t1 == typeof(int) && t2 == typeof(BigInteger)) return Candidate.Two;
-
             switch (Type.GetTypeCode(t1)) {
                 case TypeCode.SByte:
                     switch (Type.GetTypeCode(t2)) {
@@ -280,6 +269,19 @@ namespace IronRuby.Runtime.Conversions {
                         default:
                             return Candidate.Equivalent;
                     }
+
+                case TypeCode.Boolean:
+                    if (t2 == typeof(int)) {
+                        return Candidate.Two;
+                    }
+                    return Candidate.Equivalent;
+
+                case TypeCode.Decimal:
+                case TypeCode.Double:
+                    if (t2 == typeof(BigInteger)) {
+                        return Candidate.Two;
+                    }
+                    return Candidate.Equivalent;
             }
             return Candidate.Equivalent;
         }

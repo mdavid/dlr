@@ -13,35 +13,25 @@
  *
  * ***************************************************************************/
 
-#if CODEPLEX_40
-using System;
-using System.Dynamic;
+#if !CLR2
 using System.Linq.Expressions;
 #else
-using System; using Microsoft;
-using Microsoft.Scripting;
-using Microsoft.Linq.Expressions;
-#endif
-using System.Reflection;
-using System.Runtime.CompilerServices;
-#if !CODEPLEX_40
-using Microsoft.Runtime.CompilerServices;
+using Microsoft.Scripting.Ast;
 #endif
 
+using System;
+using System.Dynamic;
+using System.Reflection;
+using System.Runtime.CompilerServices;
 
 using Microsoft.Scripting.Generation;
 using Microsoft.Scripting.Runtime;
 
 using IronPython.Runtime.Operations;
 
-using AstUtils = Microsoft.Scripting.Ast.Utils;
-
 namespace IronPython.Runtime.Binding {
-#if CODEPLEX_40
-    using Ast = System.Linq.Expressions.Expression;
-#else
-    using Ast = Microsoft.Linq.Expressions.Expression;
-#endif
+    using Ast = Expression;
+    using AstUtils = Microsoft.Scripting.Ast.Utils;
     
     class PythonBinaryOperationBinder : BinaryOperationBinder, IPythonSite, IExpressionSerializable {
         private readonly PythonContext/*!*/ _context;

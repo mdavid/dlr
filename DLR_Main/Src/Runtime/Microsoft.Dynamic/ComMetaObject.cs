@@ -12,27 +12,20 @@
  *
  *
  * ***************************************************************************/
-using System; using Microsoft;
-
 
 #if !SILVERLIGHT
 
-#if CODEPLEX_40
+#if !MICROSOFT_DYNAMIC
 using System.Linq.Expressions;
+#else
+using Microsoft.Scripting.Ast;
+#endif
+
 using System.Dynamic;
 using System.Dynamic.Utils;
-#else
-using Microsoft.Linq.Expressions;
-using Microsoft.Scripting;
-using Microsoft.Scripting.Utils;
-#endif
 using System.Collections.Generic;
 
-#if CODEPLEX_40
 namespace System.Dynamic {
-#else
-namespace Microsoft.Scripting {
-#endif
 
     // Note: we only need to support the operations used by ComBinder
     internal class ComMetaObject : DynamicMetaObject {

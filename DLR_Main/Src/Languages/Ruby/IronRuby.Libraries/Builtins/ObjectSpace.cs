@@ -13,11 +13,7 @@
  *
  * ***************************************************************************/
 
-#if CODEPLEX_40
 using System;
-#else
-using System; using Microsoft;
-#endif
 using System.Collections.Generic;
 using Microsoft.Scripting;
 using Microsoft.Scripting.Runtime;
@@ -77,6 +73,7 @@ namespace IronRuby.Builtins {
         }
 
         [RubyMethod("garbage_collect", RubyMethodAttributes.PublicSingleton)]
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Reliability", "CA2001:AvoidCallingProblematicMethods")]
         public static void GarbageCollect(RubyModule/*!*/ self) {
             GC.Collect();
         }

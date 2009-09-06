@@ -1,17 +1,7 @@
-#if CODEPLEX_40
 using System;
-#else
-using System; using Microsoft;
-#endif
 using System.Collections.Generic;
-#if CODEPLEX_40
-using System.Linq;
-using System.Linq.Expressions;
-#else
-using Microsoft.Linq;
-using Microsoft.Linq.Expressions;
-#endif
 using System.Text;
+using Microsoft.Scripting.Ast;
 
 namespace Samples {
     class CCondition {
@@ -19,11 +9,7 @@ namespace Samples {
         static public void Condition1() {
             //<Snippet1>
             // add the following directive to your file
-#if CODEPLEX_40
-            // using System.Linq.Expressions;  
-#else
-            // using Microsoft.Linq.Expressions;  
-#endif
+            // using Microsoft.Scripting.Ast;  
 
             //This Expression represents a condition operation; it will evaluate the test (first expression)
             //execute the if true block (second argument) if true, or the if false block (third argument) 
@@ -47,11 +33,7 @@ namespace Samples {
         static public void Condition2() {
             //<Snippet1>
             // add the following directive to your file
-#if CODEPLEX_40
-            // using System.Linq.Expressions;  
-#else
-            // using Microsoft.Linq.Expressions;  
-#endif
+            // using Microsoft.Scripting.Ast;  
 
             //This Expression represents a condition operation; it will evaluate the test (first expression) then
             //execute the ifTrue block (second argument) if true, or the ifFalse block (third argument) 

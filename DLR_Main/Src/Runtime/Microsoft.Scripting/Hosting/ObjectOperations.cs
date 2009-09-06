@@ -13,28 +13,21 @@
  *
  * ***************************************************************************/
 
-#if CODEPLEX_40
-using System;
+#if !CLR2
+using System.Linq.Expressions;
 #else
-using System; using Microsoft;
+using dynamic = System.Object;
+using Microsoft.Scripting.Ast;
 #endif
+
+using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Runtime.Remoting;
 using System.Security.Permissions;
 using Microsoft.Scripting.Runtime;
 using Microsoft.Scripting.Utils;
-#if CODEPLEX_40
-using System.Linq.Expressions;
 using System.Dynamic;
-#else
-using Microsoft.Linq.Expressions;
-using Microsoft.Scripting;
-#endif
-
-#if !CLR4
-using dynamic = System.Object;
-#endif
 
 namespace Microsoft.Scripting.Hosting {
 
@@ -490,10 +483,10 @@ namespace Microsoft.Scripting.Hosting {
             return _ops.Invoke(obj, parameters);
         }
 
-                /// <summary>
+        /// <summary>
         /// Performs a generic unary operation on the specified target and returns the result.
         /// </summary>
-        [Obsolete]
+        [Obsolete("Use method that implements the operation")]
         public object DoOperation(Operators op, object target) {
             ExpressionType newOp = GetLinqOp(op);
 
@@ -573,7 +566,7 @@ namespace Microsoft.Scripting.Hosting {
         /// Peforms the generic binary operation on the specified strongly typed targets and returns
         /// the strongly typed result.
         /// </summary>
-        [Obsolete]
+        [Obsolete("Use method that implements the operation")]
         public TResult DoOperation<TTarget, TOther, TResult>(Operators op, TTarget target, TOther other) {
             return _ops.DoOperation<TTarget, TOther, TResult>(GetLinqBinaryOp(op), target, other);
         }

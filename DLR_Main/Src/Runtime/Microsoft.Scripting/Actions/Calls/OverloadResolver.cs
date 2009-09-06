@@ -13,27 +13,19 @@
  *
  * ***************************************************************************/
 
-#if CODEPLEX_40
-using System;
+#if !CLR2
+using System.Linq.Expressions;
 #else
-using System; using Microsoft;
+using Microsoft.Scripting.Ast;
 #endif
+
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics;
-#if CODEPLEX_40
 using System.Dynamic;
-using System.Linq.Expressions;
-#else
-using Microsoft.Scripting;
-using Microsoft.Linq.Expressions;
-#endif
 using System.Reflection;
 using System.Runtime.CompilerServices;
-#if !CODEPLEX_40
-using Microsoft.Runtime.CompilerServices;
-#endif
-
 using System.Text;
 using Microsoft.Contracts;
 using Microsoft.Scripting.Generation;
@@ -42,11 +34,7 @@ using Microsoft.Scripting.Utils;
 using AstUtils = Microsoft.Scripting.Ast.Utils;
 
 namespace Microsoft.Scripting.Actions.Calls {
-#if CODEPLEX_40
-    using Ast = System.Linq.Expressions.Expression;
-#else
-    using Ast = Microsoft.Linq.Expressions.Expression;
-#endif
+    using Ast = Expression;
     
     /// <summary>
     /// Provides binding and overload resolution to .NET methods.
@@ -263,7 +251,7 @@ namespace Microsoft.Scripting.Actions.Calls {
         }
 
         private CandidateSet BuildExpandedTargetSet(int count) {
-            var set = new CandidateSet(this, count);
+            var set = new CandidateSet(count);
             if (_paramsCandidates != null) {
                 foreach (MethodCandidate maker in _paramsCandidates) {
                     MethodCandidate target = maker.MakeParamsExtended(count, _argNames);
@@ -280,7 +268,7 @@ namespace Microsoft.Scripting.Actions.Calls {
             int count = target.ParameterCount;
             CandidateSet set;
             if (!_candidateSets.TryGetValue(count, out set)) {
-                set = new CandidateSet(this, count);
+                set = new CandidateSet(count);
                 _candidateSets[count] = set;
             }
             set.Add(target);

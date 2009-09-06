@@ -13,23 +13,9 @@
  *
  * ***************************************************************************/
 
-#if CODEPLEX_40
-using BinaryOpSite = System.Runtime.CompilerServices.CallSite<System.Func<System.Runtime.CompilerServices.CallSite, object, object, object>>;
-#else
-using BinaryOpSite = Microsoft.Runtime.CompilerServices.CallSite<Microsoft.Func<Microsoft.Runtime.CompilerServices.CallSite, object, object, object>>;
-#endif
-
-#if CODEPLEX_40
 using System;
-#else
-using System; using Microsoft;
-#endif
 using System.Runtime.InteropServices;
 using System.Runtime.CompilerServices;
-#if !CODEPLEX_40
-using Microsoft.Runtime.CompilerServices;
-#endif
-
 using System.Reflection;
 using Microsoft.Scripting.Runtime;
 using Microsoft.Scripting.Actions;
@@ -38,6 +24,8 @@ using IronRuby.Runtime;
 using IronRuby.Runtime.Calls;
 
 namespace IronRuby.Builtins {
+    using BinaryOpSite = CallSite<Func<CallSite, object, object, object>>;
+
     /// <summary>
     /// A Range represents an interval�a set of values with a start and an end.
     /// Ranges may be constructed using the s..e and s�e literals, or with Range::new.

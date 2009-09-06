@@ -15,11 +15,7 @@
 
 using Microsoft.Scripting;
 using IronRuby.Compiler.Ast;
-#if CODEPLEX_40
 using System;
-#else
-using System; using Microsoft;
-#endif
 
 namespace IronRuby.Compiler {
     public static class Symbols {

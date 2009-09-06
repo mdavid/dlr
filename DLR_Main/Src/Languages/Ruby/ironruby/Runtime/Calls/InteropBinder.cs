@@ -13,33 +13,27 @@
  *
  * ***************************************************************************/
 
-#if CODEPLEX_40
-using System;
-#else
-using System; using Microsoft;
-#endif
-using System.Diagnostics;
-#if CODEPLEX_40
-using System.Dynamic;
+#if !CLR2
 using System.Linq.Expressions;
 #else
-using Microsoft.Scripting;
-using Microsoft.Linq.Expressions;
+using Microsoft.Scripting.Ast;
 #endif
+
+using System;
+using System.Diagnostics;
+using System.Dynamic;
 using System.Reflection;
 using IronRuby.Builtins;
 using IronRuby.Compiler;
 using Microsoft.Scripting.Runtime;
 using Microsoft.Scripting.Utils;
-#if CODEPLEX_40
-using Ast = System.Linq.Expressions.Expression;
-#else
-using Ast = Microsoft.Linq.Expressions.Expression;
-#endif
 using AstUtils = Microsoft.Scripting.Ast.Utils;
 using IronRuby.Runtime.Conversions;
+using Microsoft.Scripting.Generation;
 
 namespace IronRuby.Runtime.Calls {
+    using Ast = Expression;
+
     internal interface IInteropBinder {
         RubyContext Context { get; }
     }
@@ -146,11 +140,7 @@ namespace IronRuby.Runtime.Calls {
                 DynamicMetaObject errorSuggestion) {
 #if !SILVERLIGHT
                 DynamicMetaObject result;
-#if CODEPLEX_40
-                if (System.Dynamic.ComBinder.TryBindInvoke(this, target, args, out result)) {
-#else
-                if (Microsoft.Scripting.ComBinder.TryBindInvoke(this, target, args, out result)) {
-#endif
+                if (Microsoft.Scripting.ComInterop.ComBinder.TryBindInvoke(this, target, args, out result)) {
                     return result;
                 }
 #endif
@@ -210,11 +200,7 @@ namespace IronRuby.Runtime.Calls {
                 DynamicMetaObject errorSuggestion) {
 #if !SILVERLIGHT
                 DynamicMetaObject result;
-#if CODEPLEX_40
-                if (System.Dynamic.ComBinder.TryBindInvokeMember(this, target, args, out result)) {
-#else
-                if (Microsoft.Scripting.ComBinder.TryBindInvokeMember(this, target, args, out result)) {
-#endif
+                if (Microsoft.Scripting.ComInterop.ComBinder.TryBindInvokeMember(this, target, args, out result)) {
                     return result;
                 }
 #endif
@@ -308,15 +294,21 @@ namespace IronRuby.Runtime.Calls {
             public override DynamicMetaObject/*!*/ FallbackGetMember(DynamicMetaObject/*!*/ target, DynamicMetaObject errorSuggestion) {
 #if !SILVERLIGHT
                 DynamicMetaObject result;
-#if CODEPLEX_40
-                if (System.Dynamic.ComBinder.TryBindGetMember(this, target, out result)) {
-#else
-                if (Microsoft.Scripting.ComBinder.TryBindGetMember(this, target, out result)) {
-#endif
+                if (Microsoft.Scripting.ComInterop.ComBinder.TryBindGetMember(this, target, out result)) {
                     return result;
                 }
 #endif
-                throw new NotImplementedException("TODO");
+                
+                return errorSuggestion ?? new DynamicMetaObject(
+                    Expression.Throw(
+                        Expression.New(
+                            typeof(MissingMemberException).GetConstructor(new[] { typeof(string) }),
+                            Expression.Constant(String.Format("unknown member: {0}", Name))
+                        ),
+                        typeof(object)
+                    ),
+                    target.Restrict(CompilerHelpers.GetType(target.Value)).Restrictions
+                );
             }
 
             #endregion
@@ -347,13 +339,24 @@ namespace IronRuby.Runtime.Calls {
             }
         }
 
-        internal sealed class SetMember : SetMemberBinder, IInteropBinder {
+        internal sealed class SetMember : DynamicMetaObjectBinder, IInteropBinder {
             private readonly RubyContext/*!*/ _context;
+            private readonly ContainsMember/*!*/ _contains;
+            private readonly RealSetMember/*!*/ _setMember;
+            private readonly string/*!*/ _name;
+            private readonly RealSetMember _setMemberUnmangled;
 
-            internal SetMember(RubyContext/*!*/ context, string/*!*/ name)
-                : base(name, false) {
-                Assert.NotNull(context);
+            internal SetMember(RubyContext/*!*/ context, string/*!*/ name) {
+                Assert.NotNull(context, name);
+
+                _name = name;
                 _context = context;
+                _contains = new ContainsMember(context, name);
+                _setMember = new RealSetMember(name);
+                string unmanagled = RubyUtils.TryUnmangleName(name);
+                if (unmanagled != null) {
+                    _setMemberUnmangled = new RealSetMember(unmanagled);
+                }
             }
 
             public RubyContext Context {
@@ -362,20 +365,24 @@ namespace IronRuby.Runtime.Calls {
 
             #region Ruby -> DLR
 
-            public override DynamicMetaObject/*!*/ FallbackSetMember(DynamicMetaObject/*!*/ target, DynamicMetaObject/*!*/ value, 
-                DynamicMetaObject errorSuggestion) {
-
-#if !SILVERLIGHT
-                DynamicMetaObject result;
-#if CODEPLEX_40
-                if (System.Dynamic.ComBinder.TryBindSetMember(this, target, value, out result)) {
-#else
-                if (Microsoft.Scripting.ComBinder.TryBindSetMember(this, target, value, out result)) {
-#endif
-                    return result;
+            public override DynamicMetaObject Bind(DynamicMetaObject target, DynamicMetaObject[] args) {
+                if (_setMemberUnmangled == null) {
+                    // no unmangled name, just do the set member binding
+                    return _setMember.Bind(target, args);
                 }
-#endif
-                throw new NotImplementedException("TODO");
+
+                // first try the specific name provided, then try the unmanaged name
+                return new DynamicMetaObject(
+                    Expression.Condition(
+                        Expression.NotEqual(
+                            Expression.Dynamic(_contains, typeof(object), target.Expression),
+                            Expression.Constant(OperationFailed.Value)
+                        ),
+                        Expression.Dynamic(_setMember, typeof(object), target.Expression, args[0].Expression),
+                        Expression.Dynamic(_setMemberUnmangled, typeof(object), target.Expression, args[0].Expression)
+                    ),
+                    target.Restrict(CompilerHelpers.GetType(target.Value)).Restrictions
+                );
             }
 
             #endregion
@@ -401,9 +408,85 @@ namespace IronRuby.Runtime.Calls {
 
             public override string/*!*/ ToString() {
                 return String.Format("Interop.SetMember({0}){1}",
-                    Name,
+                    _name,
                     (_context != null ? " @" + Context.RuntimeId.ToString() : null)
                 );
+            }
+            
+            /// <summary>
+            /// Checks to see if a member is defined - fallback is defined to return OperationFailed.Value
+            /// which we check for.
+            /// </summary>
+            internal sealed class ContainsMember : GetMemberBinder, IInteropBinder {
+                private readonly RubyContext/*!*/ _context;
+
+                internal ContainsMember(RubyContext/*!*/ context, string/*!*/ name)
+                    : base(name, false) {
+                    Assert.NotNull(context);
+                    _context = context;
+                }
+
+                public RubyContext Context {
+                    get { return _context; }
+                }
+
+                #region Ruby -> DLR
+
+                public override DynamicMetaObject/*!*/ FallbackGetMember(DynamicMetaObject/*!*/ target, DynamicMetaObject errorSuggestion) {
+#if !SILVERLIGHT
+                    DynamicMetaObject result;
+                    if (Microsoft.Scripting.ComInterop.ComBinder.TryBindGetMember(this, target, out result)) {
+                        return result;
+                    }
+#endif
+
+                    return errorSuggestion ?? 
+                        new DynamicMetaObject(
+                            Expression.Constant(OperationFailed.Value, typeof(object)), 
+                            target.Restrict(CompilerHelpers.GetType(target.Value)).Restrictions
+                        );
+                }
+
+                #endregion
+
+                
+                public override string/*!*/ ToString() {
+                    return String.Format("Interop.GetMember({0}){1}",
+                        Name,
+                        (_context != null ? " @" + Context.RuntimeId.ToString() : null)
+                    );
+                }
+            }
+
+            /// <summary>
+            /// A standard SetMember binder which gets used for the normal and mangled names.
+            /// </summary>
+            sealed class RealSetMember : SetMemberBinder {
+                internal RealSetMember(string/*!*/ name) : base(name, false){
+                }
+
+                public override DynamicMetaObject/*!*/ FallbackSetMember(DynamicMetaObject/*!*/ target, DynamicMetaObject/*!*/ value,
+                DynamicMetaObject errorSuggestion) {
+
+#if !SILVERLIGHT
+                    DynamicMetaObject result;
+                    if (Microsoft.Scripting.ComInterop.ComBinder.TryBindSetMember(this, target, value, out result)) {
+                        return result;
+                    }
+#endif
+
+                    return errorSuggestion ?? new DynamicMetaObject(
+                        Expression.Throw(
+                            Expression.New(
+                                typeof(MissingMemberException).GetConstructor(new[] { typeof(string) }),
+                                Expression.Constant(String.Format("unknown member: {0}", Name))
+                            ),
+                            typeof(object)
+                        ),
+                        target.Restrict(CompilerHelpers.GetType(target.Value)).Restrictions
+                    );
+                }
+
             }
         }
 
@@ -426,11 +509,7 @@ namespace IronRuby.Runtime.Calls {
                 DynamicMetaObject errorSuggestion) {
 #if !SILVERLIGHT
                 DynamicMetaObject result;
-#if CODEPLEX_40
-                if (System.Dynamic.ComBinder.TryBindGetIndex(this, target, indexes, out result)) {
-#else
-                if (Microsoft.Scripting.ComBinder.TryBindGetIndex(this, target, indexes, out result)) {
-#endif
+                if (Microsoft.Scripting.ComInterop.ComBinder.TryBindGetIndex(this, target, indexes, out result)) {
                     return result;
                 }
 #endif
@@ -488,11 +567,7 @@ namespace IronRuby.Runtime.Calls {
 
 #if !SILVERLIGHT
                 DynamicMetaObject result;
-#if CODEPLEX_40
-                if (System.Dynamic.ComBinder.TryBindSetIndex(this, target, indexes, value, out result)) {
-#else
-                if (Microsoft.Scripting.ComBinder.TryBindSetIndex(this, target, indexes, value, out result)) {
-#endif
+                if (Microsoft.Scripting.ComInterop.ComBinder.TryBindSetIndex(this, target, indexes, value, out result)) {
                     return result;
                 }
 #endif
@@ -620,11 +695,7 @@ namespace IronRuby.Runtime.Calls {
             public override DynamicMetaObject/*!*/ FallbackConvert(DynamicMetaObject/*!*/ target, DynamicMetaObject errorSuggestion) {
 #if !SILVERLIGHT
                 DynamicMetaObject result;
-#if CODEPLEX_40
-                if (System.Dynamic.ComBinder.TryConvert(this, target, out result)) {
-#else
-                if (Microsoft.Scripting.ComBinder.TryConvert(this, target, out result)) {
-#endif
+                if (Microsoft.Scripting.ComInterop.ComBinder.TryConvert(this, target, out result)) {
                     return result;
                 }
 #endif

@@ -12,14 +12,8 @@
  *
  *
  * ***************************************************************************/
-using System; using Microsoft;
-
 using System.Reflection;
 using System.Runtime.CompilerServices;
-#if !CODEPLEX_40
-using Microsoft.Runtime.CompilerServices;
-#endif
-
 using System.Runtime.InteropServices;
 using System.Security;
 
@@ -64,6 +58,6 @@ using System.Security;
 #endif
 #endif
 
-#if CLR4
+#if !CLR2
 [assembly: SecurityRules(SecurityRuleSet.Level1)]
 #endif

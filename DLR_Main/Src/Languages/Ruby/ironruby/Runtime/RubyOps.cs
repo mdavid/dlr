@@ -13,25 +13,20 @@
  *
  * ***************************************************************************/
 
-#if CODEPLEX_40
-using System;
+#if !CLR2
+using MSA = System.Linq.Expressions;
 #else
-using System; using Microsoft;
+using MSA = Microsoft.Scripting.Ast;
 #endif
+
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics;
-#if CODEPLEX_40
 using System.Dynamic;
-#else
-#endif
 using System.IO;
 using System.Reflection;
 using System.Runtime.CompilerServices;
-#if !CODEPLEX_40
-using Microsoft.Runtime.CompilerServices;
-#endif
-
 using System.Runtime.Serialization;
 using System.Threading;
 using IronRuby.Builtins;
@@ -44,11 +39,6 @@ using Microsoft.Scripting.Math;
 using Microsoft.Scripting.Runtime;
 using Microsoft.Scripting.Utils;
 using IronRuby.Compiler.Ast;
-#if CODEPLEX_40
-using MSA = System.Linq.Expressions;
-#else
-using MSA = Microsoft.Linq.Expressions;
-#endif
 using IronRuby.Runtime.Conversions;
 
 namespace IronRuby.Runtime {
@@ -98,11 +88,11 @@ namespace IronRuby.Runtime {
         }
 
         [Emitted]
-        public static void InitializeScope(RubyScope/*!*/ scope, MutableTuple locals, SymbolId[]/*!*/ variableNames, 
+        public static void InitializeScope(RubyScope/*!*/ scope, MutableTuple locals, SymbolId[] variableNames, 
             InterpretedFrame interpretedFrame) {
 
             if (!scope.LocalsInitialized) {
-                scope.SetLocals(locals, variableNames);
+                scope.SetLocals(locals, variableNames ?? SymbolId.EmptySymbols);
             }
             scope.InterpretedFrame = interpretedFrame;
         }
@@ -128,32 +118,32 @@ namespace IronRuby.Runtime {
         }
 
         [Emitted]
-        public static RubyModuleScope/*!*/ CreateModuleScope(MutableTuple locals, SymbolId[]/*!*/ variableNames, 
+        public static RubyModuleScope/*!*/ CreateModuleScope(MutableTuple locals, SymbolId[] variableNames, 
             RubyScope/*!*/ parent, RubyModule/*!*/ module) {
 
-            RubyModuleScope scope = new RubyModuleScope(parent, module, false, module);
+            RubyModuleScope scope = new RubyModuleScope(parent, module, module);
             scope.SetDebugName((module.IsClass ? "class" : "module") + " " + module.Name);
-            scope.SetLocals(locals, variableNames);
+            scope.SetLocals(locals, variableNames ?? SymbolId.EmptySymbols);
             return scope;
         }
 
         [Emitted]
-        public static RubyMethodScope/*!*/ CreateMethodScope(MutableTuple locals, SymbolId[]/*!*/ variableNames, 
+        public static RubyMethodScope/*!*/ CreateMethodScope(MutableTuple locals, SymbolId[] variableNames, 
             RubyScope/*!*/ parentScope, RubyModule/*!*/ declaringModule, string/*!*/ definitionName,
             object selfObject, Proc blockParameter, InterpretedFrame interpretedFrame) {
 
             return new RubyMethodScope(
-                locals, variableNames,
+                locals, variableNames ?? SymbolId.EmptySymbols,
                 parentScope, declaringModule, definitionName, selfObject, blockParameter,
                 interpretedFrame
             );            
         }
 
         [Emitted]
-        public static RubyBlockScope/*!*/ CreateBlockScope(MutableTuple locals, SymbolId[]/*!*/ variableNames, 
+        public static RubyBlockScope/*!*/ CreateBlockScope(MutableTuple locals, SymbolId[] variableNames, 
             BlockParam/*!*/ blockParam, object selfObject, InterpretedFrame interpretedFrame) {
 
-            return new RubyBlockScope(locals, variableNames, blockParam, selfObject, interpretedFrame);
+            return new RubyBlockScope(locals, variableNames ?? SymbolId.EmptySymbols, blockParam, selfObject, interpretedFrame);
         }
 
         [Emitted]
@@ -374,6 +364,17 @@ namespace IronRuby.Runtime {
             return result;
         }
 
+        internal static object Yield(object[]/*!*/ args, object self, BlockParam/*!*/ blockParam) {
+            switch (args.Length) {
+                case 0: return RubyOps.Yield0(self, blockParam);
+                case 1: return RubyOps.Yield1(args[0], self, blockParam);
+                case 2: return RubyOps.Yield2(args[0], args[1], self, blockParam);
+                case 3: return RubyOps.Yield3(args[0], args[1], args[2], self, blockParam);
+                case 4: return RubyOps.Yield4(args[0], args[1], args[2], args[3], self, blockParam);
+                default: return RubyOps.YieldN(args, self, blockParam); 
+            }
+        }
+
         [Emitted] 
         public static object YieldSplat0(object splattee, object self, BlockParam/*!*/ blockParam) {
             object result;
@@ -553,8 +554,9 @@ namespace IronRuby.Runtime {
 
             // expose RubyMethod in the scope (the method is bound to the main singleton instance):
             if (owner.GlobalScope != null) {
-                owner.GlobalScope.Scope.SetVariable(
-                    SymbolTable.StringToId(method.DefinitionName),
+                RubyOps.ScopeSetMember(
+                    owner.GlobalScope.Scope,
+                    method.DefinitionName,
                     new RubyMethod(owner.GlobalScope.MainObject, method, method.DefinitionName)
                 );
             }
@@ -956,6 +958,61 @@ namespace IronRuby.Runtime {
         [Emitted]
         public static void AliasGlobalVariable(RubyScope/*!*/ scope, string/*!*/ newName, string/*!*/ oldName) {
             scope.RubyContext.AliasGlobalVariable(newName, oldName);
+        }
+
+        internal static void ScopeSetMember(Scope scope, string name, object value) {
+            ScopeStorage scopeStorage = scope.Storage as ScopeStorage;
+            if (scopeStorage != null) {
+                scopeStorage.SetValue(name, false, value);
+                return;
+            }
+
+            throw new NotImplementedException();
+        }
+        
+        internal static bool ScopeTryGetMember(RubyContext context, Scope scope, string name, out object value) {
+            ScopeStorage scopeStorage = scope.Storage as ScopeStorage;
+            if (scopeStorage != null) {
+                return scopeStorage.TryGetValue(name, false, out value);
+            }
+
+            if (context.Operations.TryGetMember(scope, name, out value)) {
+                return true;
+            }
+
+            string unmangled = RubyUtils.TryUnmangleName(name);
+            if (unmangled != null) {
+                return context.Operations.TryGetMember(scope, unmangled, out value);
+            }
+
+            return false;
+        }
+
+        internal static bool ScopeContainsMember(Scope scope, string name) {
+            ScopeStorage scopeStorage = scope.Storage as ScopeStorage;
+            if (scopeStorage != null) {
+                return scopeStorage.HasValue(name, false);
+            }
+
+            throw new NotImplementedException();
+        }
+
+        internal static bool ScopeDeleteMember(Scope scope, string name) {
+            ScopeStorage scopeStorage = scope.Storage as ScopeStorage;
+            if (scopeStorage != null) {
+                return scopeStorage.DeleteValue(name, false);
+            }
+
+            throw new NotImplementedException();
+        }
+
+        internal static IList<KeyValuePair<string, object>> ScopeGetItems(Scope scope) {
+            ScopeStorage scopeStorage = scope.Storage as ScopeStorage;
+            if (scopeStorage != null) {
+                return scopeStorage.GetItems();
+            }
+
+            throw new NotImplementedException();
         }
 
         #endregion
@@ -1947,7 +2004,7 @@ namespace IronRuby.Runtime {
         /// </summary>
         [Emitted]
         public static Proc/*!*/ HookupEvent(RubyEventInfo/*!*/ eventInfo, object/*!*/ target, Proc/*!*/ proc) {
-            eventInfo.Tracker.AddHandler(target, proc, eventInfo.Context);
+            eventInfo.Tracker.AddHandler(target, proc, eventInfo.Context.DelegateCreator);
             return proc;
         }
 
@@ -1957,14 +2014,17 @@ namespace IronRuby.Runtime {
         }
 
         [Emitted]
-        public static Delegate/*!*/ CreateDelegateFromProc(Type/*!*/ type, Proc/*!*/ proc) {
+        public static Delegate/*!*/ CreateDelegateFromProc(Type/*!*/ type, Proc proc) {
+            if (proc == null) {
+                throw RubyExceptions.NoBlockGiven();
+            }
             BlockParam bp = CreateBfcForProcCall(proc);
-            return proc.LocalScope.RubyContext.GetDelegate(bp, type);
+            return proc.LocalScope.RubyContext.DelegateCreator.GetDelegate(bp, type);
         }
 
         [Emitted]
         public static Delegate/*!*/ CreateDelegateFromMethod(Type/*!*/ type, RubyMethod/*!*/ method) {
-            return method.Info.Context.GetDelegate(method, type);
+            return method.Info.Context.DelegateCreator.GetDelegate(method, type);
         }
 
         #endregion

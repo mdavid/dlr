@@ -13,16 +13,9 @@
  *
  * ***************************************************************************/
 
-#if CODEPLEX_40
 using System;
-#else
-using System; using Microsoft;
-#endif
+using System.Collections.Generic;
 using System.Runtime.CompilerServices;
-#if !CODEPLEX_40
-using Microsoft.Runtime.CompilerServices;
-#endif
-
 using System.Runtime.InteropServices;
 
 using Microsoft.Scripting;
@@ -109,7 +102,7 @@ namespace IronPython.Runtime {
         }
 
         public PythonProperty(
-            [ParamDictionary]IAttributesCollection dict, params object[] args) {
+            [ParamDictionary]IDictionary<object, object> dict, params object[] args) {
         }
 
         public void __init__([DefaultParameterValue(null)]object fget,

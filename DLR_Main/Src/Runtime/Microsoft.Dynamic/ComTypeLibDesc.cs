@@ -12,8 +12,6 @@
  *
  *
  * ***************************************************************************/
-using System; using Microsoft;
-
 
 #if !SILVERLIGHT // ComObject
 
@@ -22,11 +20,7 @@ using System.Globalization;
 using System.Security;
 using ComTypes = System.Runtime.InteropServices.ComTypes;
 
-#if CODEPLEX_40
 namespace System.Dynamic {
-#else
-namespace Microsoft.Scripting {
-#endif
 
     internal sealed class ComTypeLibDesc {
 

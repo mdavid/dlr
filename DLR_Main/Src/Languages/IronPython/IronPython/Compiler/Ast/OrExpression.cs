@@ -13,26 +13,19 @@
  *
  * ***************************************************************************/
 
-#if CODEPLEX_40
-using System;
+#if !CLR2
+using MSAst = System.Linq.Expressions;
 #else
-using System; using Microsoft;
+using MSAst = Microsoft.Scripting.Ast;
 #endif
+
+using System;
 using IronPython.Runtime.Binding;
 using Microsoft.Scripting.Actions;
 using Microsoft.Scripting.Utils;
-#if CODEPLEX_40
-using MSAst = System.Linq.Expressions;
-#else
-using MSAst = Microsoft.Linq.Expressions;
-#endif
 
 namespace IronPython.Compiler.Ast {
-#if CODEPLEX_40
-    using Ast = System.Linq.Expressions.Expression;
-#else
-    using Ast = Microsoft.Linq.Expressions.Expression;
-#endif
+    using Ast = MSAst.Expression;
     using AstUtils = Microsoft.Scripting.Ast.Utils;
 
     public class OrExpression : Expression {

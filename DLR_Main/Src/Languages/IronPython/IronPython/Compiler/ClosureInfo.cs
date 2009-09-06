@@ -13,21 +13,18 @@
  *
  * ***************************************************************************/
 
-#if CODEPLEX_40
 using System;
-#else
-using System; using Microsoft;
-#endif
 
 using Microsoft.Scripting;
 
 using IronPython.Compiler.Ast;
 
-#if CODEPLEX_40
+#if !CLR2
 using MSAst = System.Linq.Expressions;
 #else
-using MSAst = Microsoft.Linq.Expressions;
+using MSAst = Microsoft.Scripting.Ast;
 #endif
+
 using Microsoft.Scripting.Utils;
 
 namespace IronPython.Compiler {
@@ -55,7 +52,7 @@ namespace IronPython.Compiler {
         public abstract PythonVariable/*!*/ PythonVariable {
             get;
         }
-        public abstract SymbolId/*!*/ Name {
+        public abstract string/*!*/ Name {
             get;
         }
     }
@@ -84,7 +81,7 @@ namespace IronPython.Compiler {
             }
         }
 
-        public override SymbolId/*!*/ Name {
+        public override string/*!*/ Name {
             get {
                 return Variable.Name;
             }
@@ -122,7 +119,7 @@ namespace IronPython.Compiler {
             }
         }
 
-        public override SymbolId Name {
+        public override string Name {
             get { return Variable.Name; }
         }
     }

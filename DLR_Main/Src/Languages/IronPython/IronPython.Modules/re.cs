@@ -13,19 +13,11 @@
  *
  * ***************************************************************************/
 
-#if CODEPLEX_40
 using System;
-#else
-using System; using Microsoft;
-#endif
 using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Runtime.CompilerServices;
-#if !CODEPLEX_40
-using Microsoft.Runtime.CompilerServices;
-#endif
-
 using System.Runtime.InteropServices;
 using System.Text;
 using System.Text.RegularExpressions;
@@ -503,6 +495,19 @@ namespace IronPython.Modules {
                 }
             }
 
+            public override bool Equals(object obj) {
+                RE_Pattern other = obj as RE_Pattern;
+                if (other == null) {
+                    return false;
+                }
+
+                return other.pattern == pattern && other.flags == flags;
+            }
+
+            public override int GetHashCode() {
+                return pattern.GetHashCode() ^ flags;
+            }
+
             #region IWeakReferenceable Members
 
             WeakRefTracker IWeakReferenceable.GetWeakRef() {
@@ -524,7 +529,7 @@ namespace IronPython.Modules {
         public static PythonTuple _pickle(CodeContext/*!*/ context, RE_Pattern pattern) {
             object scope = Importer.ImportModule(context, new PythonDictionary(), "re", false, 0);
             object compile;
-            if (scope is Scope && ((Scope)scope).TryGetVariable(SymbolTable.StringToId("compile"), out compile)) {
+            if (scope is PythonModule && ((PythonModule)scope).__dict__.TryGetValue("compile", out compile)) {
                 return PythonTuple.MakeTuple(compile, PythonTuple.MakeTuple(pattern.pattern, pattern.flags));
             }
             throw new InvalidOperationException("couldn't find compile method");
@@ -988,7 +993,11 @@ namespace IronPython.Modules {
                                         case '<': break; // positive look behind assertion
                                         case '!': break; // negative look ahead assertion
                                         case '#': break; // inline comment
-                                        case '(':  // yes/no if group exists, we don't support this
+                                        case '(':
+                                            // conditional match alternation (?(id/name)yes-pattern|no-pattern)
+                                            // move past ?( so we don't preparse the name.
+                                            nameIndex++;
+                                            break;
                                         default: throw PythonExceptions.CreateThrowable(error(context), "Unrecognized extension " + pattern[nameIndex]);
                                     }
                                     break;

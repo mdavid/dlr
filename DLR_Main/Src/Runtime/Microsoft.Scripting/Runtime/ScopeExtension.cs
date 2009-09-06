@@ -12,8 +12,6 @@
  *
  *
  * ***************************************************************************/
-using System; using Microsoft;
-
 
 using Microsoft.Scripting.Utils;
 
@@ -33,12 +31,6 @@ namespace Microsoft.Scripting.Runtime {
         public ScopeExtension(Scope scope) {
             ContractUtils.RequiresNotNull(scope, "scope");
             _scope = scope;
-        }
-
-        internal protected virtual void ModuleReloading() {
-        }
-
-        internal protected virtual void ModuleReloaded() {
         }
     }
 }

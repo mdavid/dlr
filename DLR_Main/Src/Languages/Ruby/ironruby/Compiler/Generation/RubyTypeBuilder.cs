@@ -13,18 +13,10 @@
  *
  * ***************************************************************************/
 
-#if CODEPLEX_40
 using System;
-#else
-using System; using Microsoft;
-#endif
 using System.Collections.Generic;
 using System.ComponentModel;
-#if CODEPLEX_40
 using System.Dynamic;
-#else
-using Microsoft.Scripting;
-#endif
 using System.Reflection;
 using System.Reflection.Emit;
 using System.Runtime.Serialization;
@@ -101,8 +93,6 @@ namespace IronRuby.Compiler.Generation {
 #if !SILVERLIGHT
         private static readonly Type/*!*/[]/*!*/ _deserializerSignature = new Type[] { typeof(SerializationInfo), typeof(StreamingContext) };
 #endif
-        private static readonly Type/*!*/[]/*!*/ _classArgSignature = new Type[] { typeof(RubyClass) };
-
         private static readonly Type/*!*/[]/*!*/ _exceptionMessageSignature = new Type[] { typeof(string) };
 
         private static bool IsAvailable(MethodBase/*!*/ method) {
@@ -121,7 +111,6 @@ namespace IronRuby.Compiler.Generation {
             public ParameterInfo[] BaseParameters;
             public Type[] ParameterTypes;
             public int ContextArgIndex;
-            public int ClassArgIndex;
             public int ClassParamIndex;
             public SignatureAdjustment Adjustment;
         }
@@ -210,7 +199,6 @@ namespace IronRuby.Compiler.Generation {
                 BaseParameters = baseParams,
                 ParameterTypes = paramTypes,
                 ContextArgIndex = contextArgIndex,
-                ClassArgIndex = classArgIndex,
                 ClassParamIndex = classParamIndex,
                 Adjustment = adjustment,
             };

@@ -13,29 +13,19 @@
  *
  * ***************************************************************************/
 
-#if CODEPLEX_40
-using System;
+#if !CLR2
+using System.Linq.Expressions;
 #else
-using System; using Microsoft;
+using Microsoft.Scripting.Ast;
 #endif
+
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics;
-#if CODEPLEX_40
-using System.Linq.Expressions;
-#else
-using Microsoft.Linq.Expressions;
-#endif
 using System.Reflection;
 using System.Runtime.CompilerServices;
-#if !CODEPLEX_40
-using Microsoft.Runtime.CompilerServices;
-#endif
-
-#if CODEPLEX_40
 using System.Dynamic;
-#else
-#endif
 using System.Text;
 using System.Threading;
 
@@ -49,14 +39,9 @@ using Microsoft.Scripting.Utils;
 using IronPython.Runtime.Binding;
 using IronPython.Runtime.Operations;
 
-#if CODEPLEX_40
-using Ast = System.Linq.Expressions.Expression;
-#else
-using Ast = Microsoft.Linq.Expressions.Expression;
-#endif
-using AstUtils = Microsoft.Scripting.Ast.Utils;
-
 namespace IronPython.Runtime.Types {
+    using Ast = Expression;
+    using AstUtils = Microsoft.Scripting.Ast.Utils;
 
     /// <summary>
     /// BuiltinFunction represents any standard CLR function exposed to Python.
@@ -199,7 +184,7 @@ namespace IronPython.Runtime.Types {
             return storage;
         }
 
-        internal object Call(CodeContext context, SiteLocalStorage<CallSite<Func<CallSite, CodeContext, object, object[], IAttributesCollection, object>>> storage, object instance, object[] args, IAttributesCollection keywordArgs) {
+        internal object Call(CodeContext context, SiteLocalStorage<CallSite<Func<CallSite, CodeContext, object, object[], IDictionary<object, object>, object>>> storage, object instance, object[] args, IDictionary<object, object> keywordArgs) {
             if (storage == null) {
                 storage = PythonContext.GetContext(context).GetGenericKeywordCallSiteStorage();
             }
@@ -764,7 +749,7 @@ namespace IronPython.Runtime.Types {
             return null;
         }
 
-        [SpecialName, PropertyMethod]
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Performance", "CA1822:MarkMembersAsStatic"), SpecialName, PropertyMethod]
         public void Set__module__(string value) {
             // Do nothing but don't return an error
         }
@@ -831,7 +816,7 @@ namespace IronPython.Runtime.Types {
             }
         }
 
-        public object __call__(CodeContext/*!*/ context, SiteLocalStorage<CallSite<Func<CallSite, CodeContext, object, object[], IAttributesCollection, object>>> storage, [ParamDictionary]IAttributesCollection dictArgs, params object[] args) {
+        public object __call__(CodeContext/*!*/ context, SiteLocalStorage<CallSite<Func<CallSite, CodeContext, object, object[], IDictionary<object, object>, object>>> storage, [ParamDictionary]IDictionary<object, object> dictArgs, params object[] args) {
             return Call(context, storage, null, args, dictArgs);
         }
 
@@ -1076,18 +1061,17 @@ namespace IronPython.Runtime.Types {
                     if (callerType != null) {
                         callerType = callerType.MakeGenericType(typeParams);
 
-                        object[] createArgs = new object[argCount + 3 + (!IsUnbound ? 1 : 0)];
-                        createArgs[0] = site;
-                        createArgs[1] = optInfo;
-                        createArgs[2] = this;
+                        object[] createArgs = new object[argCount + 2 + (!IsUnbound ? 1 : 0)];
+                        createArgs[0] = optInfo;
+                        createArgs[1] = this;
                         if (optInfo.TypeTest != null) {
-                            for (int i = 3; i < createArgs.Length; i++) {
-                                createArgs[i] = optInfo.TypeTest[i - 3];
+                            for (int i = 2; i < createArgs.Length; i++) {
+                                createArgs[i] = optInfo.TypeTest[i - 2];
                             }
                         }
                         if (!IsUnbound) {
                             // force a type test on self
-                            createArgs[3] = CompilerHelpers.GetType(__self__);
+                            createArgs[2] = CompilerHelpers.GetType(__self__);
                         }
 
                         object fc = Activator.CreateInstance(callerType, createArgs);
@@ -1181,8 +1165,8 @@ namespace IronPython.Runtime.Types {
             }
             return call;
         }
-        
-        private DynamicMetaObject[] GetMetaObjects<T>(object[] args) {
+
+        private static DynamicMetaObject[] GetMetaObjects<T>(object[] args) {
             ParameterInfo[] pis = typeof(T).GetMethod("Invoke").GetParameters();
             DynamicMetaObject[] res = new DynamicMetaObject[args.Length];   // remove CodeContext, func
 

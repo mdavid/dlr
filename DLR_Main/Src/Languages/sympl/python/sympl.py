@@ -8,15 +8,13 @@ else:
 
 if clr.use35:
     clr.AddReference("Microsoft.Scripting.Core")
-    from Microsoft.Scripting import (ExpandoObject, IDynamicMetaObjectProvider,
-                                DynamicMetaObject, BindingRestrictions, CallInfo)
-    import Microsoft.Linq.Expressions as Exprs
+    import Microsoft.Scripting.Ast as Exprs
 else:
     clr.AddReference("System.Core")
-    from System.Dynamic import (ExpandoObject, IDynamicMetaObjectProvider,
-                                DynamicMetaObject, BindingRestrictions, CallInfo)
     import System.Linq.Expressions as Exprs
 
+from System.Dynamic import (ExpandoObject, IDynamicMetaObjectProvider,
+                             DynamicMetaObject, BindingRestrictions, CallInfo)
 from System.Collections.Generic import IEnumerable
 
 import runtime

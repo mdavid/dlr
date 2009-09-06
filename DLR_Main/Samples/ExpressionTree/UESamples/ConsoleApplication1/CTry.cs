@@ -1,17 +1,7 @@
-#if CODEPLEX_40
 using System;
-#else
-using System; using Microsoft;
-#endif
 using System.Collections.Generic;
-#if CODEPLEX_40
-using System.Linq;
-using System.Linq.Expressions;
-#else
-using Microsoft.Linq;
-using Microsoft.Linq.Expressions;
-#endif
 using System.Text;
+using Microsoft.Scripting.Ast;
 
 namespace Samples {
     class CTry {
@@ -19,11 +9,7 @@ namespace Samples {
         public static void TryFinallySample() {
             //<Snippet7>
             //Add the following directive to your file
-#if CODEPLEX_40
-            //using System.Linq.Expressions;
-#else
-            //using Microsoft.Linq.Expressions;
-#endif
+            //using Microsoft.Scripting.Ast;
 
             // Defines a TryExpression with a finally block and no catch statements
             Expression MyTry =
@@ -45,11 +31,7 @@ namespace Samples {
         public static void TryFault/*Sample*/() {
             //<Snippet8>
             //Add the following directive to your file
-#if CODEPLEX_40
-            //using System.Linq.Expressions;
-#else
-            //using Microsoft.Linq.Expressions;
-#endif
+            //using Microsoft.Scripting.Ast;
 
             // Defines a TryExpression with a fault block and no catch statements
             // Fault blocks are only executed if an Exception is thrown
@@ -72,11 +54,7 @@ namespace Samples {
         public static void TryCatchFinallySample() {
             //<Snippet9>
             //Add the following directive to your file
-#if CODEPLEX_40
-            //using System.Linq.Expressions;
-#else
-            //using Microsoft.Linq.Expressions;
-#endif
+            //using Microsoft.Scripting.Ast;
 
             // Defines a TryExpression with a finally block and one or more catch statements.
             // The return type of the try and catch blocks (i.e., the last expression in each) must match.
@@ -107,11 +85,7 @@ namespace Samples {
         public static void TryCatchSample() {
             //<Snippet10>
             //Add the following directive to your file
-#if CODEPLEX_40
-            //using System.Linq.Expressions;
-#else
-            //using Microsoft.Linq.Expressions;
-#endif
+            //using Microsoft.Scripting.Ast;
 
             // Defines a TryExpression with a finally block and one or more catch statements.
             // The return type of the try and catch blocks (i.e., the last expression in each) must match.

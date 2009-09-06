@@ -12,20 +12,16 @@
  *
  *
  * ***************************************************************************/
-using System; using Microsoft;
 
-
-using System.Diagnostics;
-#if CODEPLEX_40
-using System.Dynamic;
-#else
-#endif
-using Microsoft.Scripting;
-#if CODEPLEX_40
+#if !CLR2
 using MSA = System.Linq.Expressions;
 #else
-using MSA = Microsoft.Linq.Expressions;
+using MSA = Microsoft.Scripting.Ast;
 #endif
+
+using System.Diagnostics;
+using System.Dynamic;
+using Microsoft.Scripting;
 
 namespace IronRuby.Compiler.Ast {
     public partial class GlobalVariable : Variable {

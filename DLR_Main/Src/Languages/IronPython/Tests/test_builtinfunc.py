@@ -359,11 +359,15 @@ def test_dir():
     
     if is_cli:
         import clr
-        if System.Environment.Version.Major >=4:
-            clr.AddReference("System.Core")
-        else:
+        try:
             clr.AddReference("Microsoft.Scripting.Core")
-        from Microsoft.Scripting import ExpandoObject
+        except Exception, e:
+            if is_net40:
+                clr.AddReference("System.Core")
+            else:
+                raise e
+        
+        from System.Dynamic import ExpandoObject
         eo = ExpandoObject()
         eo.bill = 5
         Assert('bill' in dir(eo))

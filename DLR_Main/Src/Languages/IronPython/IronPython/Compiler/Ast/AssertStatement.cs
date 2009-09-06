@@ -12,22 +12,17 @@
  *
  *
  * ***************************************************************************/
-using System; using Microsoft;
 
-
-using AstUtils = Microsoft.Scripting.Ast.Utils;
-#if CODEPLEX_40
+#if !CLR2
 using MSAst = System.Linq.Expressions;
 #else
-using MSAst = Microsoft.Linq.Expressions;
+using MSAst = Microsoft.Scripting.Ast;
 #endif
 
+using AstUtils = Microsoft.Scripting.Ast.Utils;
+
 namespace IronPython.Compiler.Ast {
-#if CODEPLEX_40
-    using Ast = System.Linq.Expressions.Expression;
-#else
-    using Ast = Microsoft.Linq.Expressions.Expression;
-#endif
+    using Ast = MSAst.Expression;
 
     public class AssertStatement : Statement {
         private readonly Expression _test, _message;
@@ -48,7 +43,7 @@ namespace IronPython.Compiler.Ast {
         internal override MSAst.Expression Transform(AstGenerator ag) {
             // If debugging is off, return empty statement
             if (ag.Optimize) {
-                return ag.AddDebugInfo(AstUtils.Empty(), Span);
+                return AstUtils.Empty();
             }
 
             // Transform into:
@@ -56,7 +51,7 @@ namespace IronPython.Compiler.Ast {
             // } else {
             //     RaiseAssertionError(_message);
             // }
-            return ag.AddDebugInfo(
+            return ag.AddDebugInfoAndVoid(
                 AstUtils.Unless(                                 // if
                     ag.TransformAndDynamicConvert(_test, typeof(bool)), // _test
                     Ast.Call(                                           // else branch

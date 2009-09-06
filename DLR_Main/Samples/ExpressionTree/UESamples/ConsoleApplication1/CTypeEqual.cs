@@ -1,17 +1,7 @@
-#if CODEPLEX_40
 using System;
-#else
-using System; using Microsoft;
-#endif
 using System.Collections.Generic;
-#if CODEPLEX_40
-using System.Linq;
-using System.Linq.Expressions;
-#else
-using Microsoft.Linq;
-using Microsoft.Linq.Expressions;
-#endif
 using System.Text;
+using Microsoft.Scripting.Ast;
 
 namespace Samples {
     class CTypeEqual {
@@ -19,11 +9,7 @@ namespace Samples {
         public static void TypeEqualSample() {
             //<Snippet5>
             //Add the following directive to your file
-#if CODEPLEX_40
-            //using System.Linq.Expressions;
-#else
-            //using Microsoft.Linq.Expressions;
-#endif
+            //using Microsoft.Scripting.Ast;
 
             // Defines a TypeBinaryExpression representing an exact type equality check of the given value and type.
             // Equivalent C#: x.GetType() == T

@@ -12,8 +12,6 @@
  *
  *
  * ***************************************************************************/
-using System; using Microsoft;
-
 
 using System.Threading;
 using Microsoft.Scripting.Runtime;

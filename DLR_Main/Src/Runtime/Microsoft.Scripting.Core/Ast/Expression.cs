@@ -12,34 +12,25 @@
  *
  *
  * ***************************************************************************/
-using System; using Microsoft;
 
-
+using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
-#if CODEPLEX_40
 using System.Dynamic.Utils;
-#else
-using Microsoft.Scripting.Utils;
-#endif
 using System.Globalization;
 using System.IO;
 using System.Reflection;
 using System.Runtime.CompilerServices;
-#if !CODEPLEX_40
-using Microsoft.Runtime.CompilerServices;
-#endif
-
 using System.Threading;
 
 #if SILVERLIGHT
 using System.Core;
 #endif
 
-#if CODEPLEX_40
-namespace System.Linq.Expressions {
+#if CLR2
+namespace Microsoft.Scripting.Ast {
 #else
-namespace Microsoft.Linq.Expressions {
+namespace System.Linq.Expressions {
 #endif
     /// <summary>
     /// The base type for all nodes in Expression Trees.
@@ -53,7 +44,7 @@ namespace Microsoft.Linq.Expressions {
 
         // LINQ protected ctor from 3.5
 
-#if !MICROSOFT_SCRIPTING_CORE // needs ConditionWeakTable in 4.0
+#if !CLR2 // needs ConditionWeakTable in 4.0
 
         // For 4.0, many frequently used Expression nodes have had their memory
         // footprint reduced by removing the Type and NodeType fields. This has
@@ -105,7 +96,7 @@ namespace Microsoft.Linq.Expressions {
         /// </summary>
         public virtual ExpressionType NodeType {
             get {
-#if !MICROSOFT_SCRIPTING_CORE
+#if !CLR2
                 ExtensionInfo extInfo;
                 if (_legacyCtorSupportTable != null && _legacyCtorSupportTable.TryGetValue(this, out extInfo)) {
                     return extInfo.NodeType;
@@ -123,7 +114,7 @@ namespace Microsoft.Linq.Expressions {
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Naming", "CA1721:PropertyNamesShouldNotMatchGetMethods")]
         public virtual Type Type {
             get {
-#if !MICROSOFT_SCRIPTING_CORE
+#if !CLR2
                 ExtensionInfo extInfo;
                 if (_legacyCtorSupportTable != null && _legacyCtorSupportTable.TryGetValue(this, out extInfo)) {
                     return extInfo.Type;
@@ -232,7 +223,7 @@ namespace Microsoft.Linq.Expressions {
             return ExpressionStringBuilder.ExpressionToString(this);
         }
 
-#if MICROSOFT_SCRIPTING_CORE
+#if CLR2
         /// <summary>
         /// Writes a <see cref="String"/> representation of the <see cref="Expression"/> to a <see cref="TextWriter"/>.
         /// </summary>

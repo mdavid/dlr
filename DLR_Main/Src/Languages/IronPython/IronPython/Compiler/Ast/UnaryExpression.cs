@@ -13,27 +13,20 @@
  *
  * ***************************************************************************/
 
-#if CODEPLEX_40
-using System;
-#else
-using System; using Microsoft;
-#endif
-using System.Diagnostics;
-using Microsoft.Scripting.Runtime;
-#if CODEPLEX_40
+#if !CLR2
 using MSAst = System.Linq.Expressions;
 #else
-using MSAst = Microsoft.Linq.Expressions;
+using MSAst = Microsoft.Scripting.Ast;
 #endif
+
+using System;
+using System.Diagnostics;
+using Microsoft.Scripting.Runtime;
 
 using IronPython.Runtime.Binding;
 
 namespace IronPython.Compiler.Ast {
-#if CODEPLEX_40
-    using Ast = System.Linq.Expressions.Expression;
-#else
-    using Ast = Microsoft.Linq.Expressions.Expression;
-#endif
+    using Ast = MSAst.Expression;
     using AstUtils = Microsoft.Scripting.Ast.Utils;
 
     public class UnaryExpression : Expression {

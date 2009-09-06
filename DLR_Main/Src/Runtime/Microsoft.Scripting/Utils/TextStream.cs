@@ -15,11 +15,7 @@
 
 #if SILVERLIGHT // only needed in SL, see SharedIO
 
-#if CODEPLEX_40
 using System;
-#else
-using System; using Microsoft;
-#endif
 using System.IO;
 using System.Text;
 

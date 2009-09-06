@@ -13,11 +13,13 @@
  *
  * ***************************************************************************/
 
-#if CODEPLEX_40
-using System;
+#if !CLR2
+using System.Linq.Expressions;
 #else
-using System; using Microsoft;
+using Microsoft.Scripting.Ast;
 #endif
+
+using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Reflection;
@@ -241,12 +243,7 @@ namespace Microsoft.Scripting.Runtime {
                 } 
 
                 if (parentType != null) {
-                    string typeName = parentType.FullName;
-#if CODEPLEX_40
-                    if (typeName == "System.Linq.Expressions.LambdaExpression" && method.Name == "DoExecute") {
-#else
-                    if (typeName == "Microsoft.Linq.Expressions.LambdaExpression" && method.Name == "DoExecute") {
-#endif
+                    if (parentType == typeof(LambdaExpression) && method.Name == "DoExecute") {
                         // Evaluated frame -- Replace with dynamic frame
                         Debug.Assert(dynamicFrames.Count > 0);
                         //if (dynamicFrames.Count == 0) continue;

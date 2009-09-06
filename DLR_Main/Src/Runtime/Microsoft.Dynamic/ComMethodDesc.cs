@@ -12,8 +12,6 @@
  *
  *
  * ***************************************************************************/
-using System; using Microsoft;
-
 
 #if !SILVERLIGHT // ComObject
 
@@ -23,11 +21,7 @@ using System.Text;
 using System.Globalization;
 using Marshal = System.Runtime.InteropServices.Marshal;
 
-#if CODEPLEX_40
 namespace System.Dynamic {
-#else
-namespace Microsoft.Scripting {
-#endif
 
     internal sealed class ComMethodDesc {
         private readonly int _memid;  // this is the member id extracted from FUNCDESC.memid

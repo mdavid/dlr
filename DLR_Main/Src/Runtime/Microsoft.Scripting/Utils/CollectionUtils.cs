@@ -13,11 +13,7 @@
  *
  * ***************************************************************************/
 
-#if CODEPLEX_40
 using System;
-#else
-using System; using Microsoft;
-#endif
 using System.Collections;
 using System.Collections.Generic;
 using Microsoft.Contracts;
@@ -28,6 +24,7 @@ namespace Microsoft.Scripting.Utils {
     /// which is supported after casting to IEnumerable, even though Reflection will not indicate 
     /// IEnumerable as a supported interface
     /// </summary>
+    [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Design", "CA1010:CollectionsShouldImplementGenericInterface")] // TODO
     public class EnumerableWrapper : IEnumerable {
         private IEnumerable _wrappedObject;
         public EnumerableWrapper(IEnumerable o) {
@@ -52,6 +49,12 @@ namespace Microsoft.Scripting.Utils {
                 foreach (T item in items) {
                     collection.Add(item);
                 }
+            }
+        }
+
+        public static void AddRange<T>(this IList<T> list, IEnumerable<T> items) {
+            foreach (var item in items) {
+                list.Add(item);
             }
         }
 

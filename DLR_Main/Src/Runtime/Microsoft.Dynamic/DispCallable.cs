@@ -12,25 +12,19 @@
  *
  *
  * ***************************************************************************/
-using System; using Microsoft;
-
 
 #if !SILVERLIGHT // ComObject
 
-#if CODEPLEX_40
+#if !MICROSOFT_DYNAMIC
 using System.Linq.Expressions;
-using System.Dynamic;
 #else
-using Microsoft.Linq.Expressions;
-using Microsoft.Scripting;
+using Microsoft.Scripting.Ast;
 #endif
+
+using System.Dynamic;
 using System.Globalization;
 
-#if CODEPLEX_40
 namespace System.Dynamic {
-#else
-namespace Microsoft.Scripting {
-#endif
 
     /// <summary>
     /// This represents a bound dispmember on a IDispatch object.

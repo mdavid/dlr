@@ -12,14 +12,8 @@
  *
  *
  * ***************************************************************************/
-using System; using Microsoft;
 
-
-#if CODEPLEX_40
 using System.Dynamic;
-#else
-using Microsoft.Scripting;
-#endif
 
 namespace Microsoft.Scripting.Runtime {
 

@@ -12,33 +12,23 @@
  *
  *
  * ***************************************************************************/
-using System; using Microsoft;
-
 
 #if !SILVERLIGHT
 
-using System.Collections.Generic;
-using System.Diagnostics;
-#if CODEPLEX_40
+#if !MICROSOFT_DYNAMIC
 using System.Linq.Expressions;
 #else
-using Microsoft.Linq.Expressions;
+using Microsoft.Scripting.Ast;
 #endif
+
+using System.Collections.Generic;
+using System.Diagnostics;
 using System.Runtime.InteropServices;
-#if CODEPLEX_40
 using System.Dynamic;
 using System.Dynamic.Utils;
-#else
-using Microsoft.Scripting;
-using Microsoft.Scripting.Utils;
-#endif
 using ComTypes = System.Runtime.InteropServices.ComTypes;
 
-#if CODEPLEX_40
 namespace System.Dynamic {
-#else
-namespace Microsoft.Scripting {
-#endif
     internal sealed class ComInvokeBinder {
         private readonly ComMethodDesc _methodDesc;
         private readonly Expression _method;        // ComMethodDesc to be called

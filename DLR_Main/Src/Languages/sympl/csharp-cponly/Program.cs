@@ -1,12 +1,11 @@
 using System;
+using System.Dynamic;
 using System.IO;
 using System.Reflection;
 #if USE35
-using Microsoft.Scripting;
-using Microsoft.Linq.Expressions;
+using Microsoft.Scripting.Ast;
 using Microsoft.Scripting.Hosting;
 #else
-using System.Dynamic;
 using System.Linq.Expressions;
 #endif
 
@@ -35,7 +34,7 @@ namespace SymplSample
             
             // Get a Sympl engine and run stuff ...
             var engine = dlrRuntime.GetEngine("sympl");
-            string filename = @"..\..\Src\Languages\sympl\examples\test.sympl";
+            string filename = @"..\..\Languages\sympl\examples\test.sympl";
             var feo = engine.ExecuteFile(filename);
             Console.WriteLine("ExecuteExpr ... ");
             engine.Execute("(print 5)", feo);

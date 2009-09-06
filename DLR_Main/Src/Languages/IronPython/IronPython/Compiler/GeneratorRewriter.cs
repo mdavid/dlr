@@ -13,25 +13,16 @@
  *
  * ***************************************************************************/
 
-#if CODEPLEX_40
-using System;
-#else
-using System; using Microsoft;
+#if !CLR2
+using System.Linq.Expressions;
 #endif
+
+using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Diagnostics;
-#if CODEPLEX_40
-using System.Linq.Expressions;
-#else
-using Microsoft.Linq.Expressions;
-#endif
 using System.Reflection;
 using System.Runtime.CompilerServices;
-#if !CODEPLEX_40
-using Microsoft.Runtime.CompilerServices;
-#endif
-
 
 using Microsoft.Scripting;
 using Microsoft.Scripting.Ast;
@@ -888,7 +879,7 @@ namespace IronPython.Compiler {
         }
 
 
-        private Expression DelayedAssign(Expression lhs, Expression rhs) {
+        private static Expression DelayedAssign(Expression lhs, Expression rhs) {
             return new DelayedTupleAssign(lhs, rhs);
         }
 

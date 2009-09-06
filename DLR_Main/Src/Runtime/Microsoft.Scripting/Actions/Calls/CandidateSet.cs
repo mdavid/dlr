@@ -13,24 +13,12 @@
  *
  * ***************************************************************************/
 
-#if CODEPLEX_40
 using System;
-#else
-using System; using Microsoft;
-#endif
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Reflection;
 using System.Runtime.CompilerServices;
-#if !CODEPLEX_40
-using Microsoft.Runtime.CompilerServices;
-#endif
-
-#if CODEPLEX_40
 using System.Dynamic;
-#else
-using Microsoft.Scripting;
-#endif
 using Microsoft.Contracts;
 using Microsoft.Scripting.Actions;
 using Microsoft.Scripting.Runtime;
@@ -44,14 +32,12 @@ namespace Microsoft.Scripting.Actions.Calls {
     /// and a method with 3 parameters would both be a CandidateSet for 3 parameters.
     /// </summary>
     internal sealed class CandidateSet {
-        private readonly OverloadResolver _binder;
         private readonly int _arity;
         private readonly List<MethodCandidate> _candidates;
 
-        internal CandidateSet(OverloadResolver binder, int count) {
+        internal CandidateSet(int count) {
             _arity = count;
             _candidates = new List<MethodCandidate>();
-            _binder = binder;
         }
 
         internal List<MethodCandidate> Candidates {

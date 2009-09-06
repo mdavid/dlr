@@ -13,11 +13,7 @@
  *
  * ***************************************************************************/
 
-#if CODEPLEX_40
 using System;
-#else
-using System; using Microsoft;
-#endif
 using System.Diagnostics;
 using System.Globalization;
 using System.IO;
@@ -58,6 +54,8 @@ namespace Microsoft.Scripting.Generation {
             : this(name, outDir, outFileExtension, isDebuggable, PortableExecutableKinds.ILOnly, ImageFileMachine.I386) {
         }
 
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Portability", "CA1903:UseOnlyApiFromTargetedFramework")]
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Portability", "CA1903:UseOnlyApiFromTargetedFramework")]
         internal AssemblyGen(AssemblyName name, string outDir, string outFileExtension, bool isDebuggable,
             PortableExecutableKinds peKind, ImageFileMachine machine) {
 
@@ -93,7 +91,7 @@ namespace Microsoft.Scripting.Generation {
             };
 
             if (outDir != null) {
-#if CLR4
+#if !CLR2
                 _myAssembly = AppDomain.CurrentDomain.DefineDynamicAssembly(name, AssemblyBuilderAccess.RunAndSave, outDir, false, attributes);
 #else
                 //The API DefineDynamicAssembly is obsolete in Dev10.

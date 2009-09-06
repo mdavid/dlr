@@ -13,16 +13,16 @@
  *
  * ***************************************************************************/
 
+#if !CLR2
+using System.Linq.Expressions;
+#else
+using Microsoft.Scripting.Ast;
+#endif
+
 using System.Diagnostics;
 using Microsoft.Scripting.Utils;
 using Microsoft.Scripting.Runtime;
-#if CODEPLEX_40
-using System.Linq.Expressions;
 using System;
-#else
-using Microsoft.Linq.Expressions;
-using System; using Microsoft;
-#endif
 
 namespace IronPython.Runtime {
     /// <summary>
@@ -52,7 +52,7 @@ namespace IronPython.Runtime {
         }
 
         /// <summary>
-        /// True if their is currently a value associated with this global variable.  False if
+        /// True if there is currently a value associated with this global variable.  False if
         /// it is currently unassigned.
         /// </summary>
         public bool HasValue {

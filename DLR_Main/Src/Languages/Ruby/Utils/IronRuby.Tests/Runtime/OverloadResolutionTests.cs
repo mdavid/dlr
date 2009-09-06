@@ -13,16 +13,15 @@
  *
  * ***************************************************************************/
 
-#if CODEPLEX_40
+#if !CLR2
+using System.Linq.Expressions;
+#else
+using Microsoft.Scripting.Ast;
+#endif
+
 using System;
-#else
-using System; using Microsoft;
-#endif
 using System.Collections.Generic;
-#if CODEPLEX_40
 using System.Dynamic;
-#else
-#endif
 using System.Reflection;
 using IronRuby.Builtins;
 using IronRuby.Runtime;
@@ -31,13 +30,9 @@ using Microsoft.Scripting;
 using Microsoft.Scripting.Actions.Calls;
 using Microsoft.Scripting.Math;
 using Microsoft.Scripting.Runtime;
-#if CODEPLEX_40
-using Ast = System.Linq.Expressions.Expression;
-#else
-using Ast = Microsoft.Linq.Expressions.Expression;
-#endif
 
 namespace IronRuby.Tests {
+    using Ast = Expression;
     using BlockCallTarget0 = Func<BlockParam, object, object>;
 
     public partial class Tests {
@@ -148,7 +143,7 @@ namespace IronRuby.Tests {
             var metaBuilder = new MetaObjectBuilder(null);
             Context.ObjectClass.SetConstant("X", Context.GetClass(typeof(Overloads1.X)));
 
-            var c = Engine.Execute(@"class C < X; new; end");
+            object c = Engine.Execute(@"class C < X; new; end");
             var sym = SymbolTable.StringToId("x");
             var ms = MutableString.CreateAscii("x");
 

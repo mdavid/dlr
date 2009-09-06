@@ -13,18 +13,10 @@
  *
  * ***************************************************************************/
 
-#if CODEPLEX_40
 using System;
-#else
-using System; using Microsoft;
-#endif
 using System.Collections.Generic;
 using System.IO;
 using System.Runtime.CompilerServices;
-#if !CODEPLEX_40
-using Microsoft.Runtime.CompilerServices;
-#endif
-
 using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading;
@@ -88,7 +80,7 @@ namespace IronPython.Modules {
             }
 
             [Documentation("creates a new uninitialized struct object - all arguments are ignored")]
-            public Struct([ParamDictionary]IAttributesCollection kwArgs, params object[] args) {
+            public Struct([ParamDictionary]IDictionary<object, object> kwArgs, params object[] args) {
             }
 
             [Documentation("initializes or re-initializes the compiled struct object with a new format")]

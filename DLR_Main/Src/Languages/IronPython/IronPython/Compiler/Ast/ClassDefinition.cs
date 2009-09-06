@@ -13,11 +13,7 @@
  *
  * ***************************************************************************/
 
-#if CODEPLEX_40
 using System;
-#else
-using System; using Microsoft;
-#endif
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 
@@ -28,23 +24,20 @@ using Microsoft.Scripting.Utils;
 using IronPython.Runtime;
 using IronPython.Runtime.Operations;
 
-using AstUtils = Microsoft.Scripting.Ast.Utils;
-#if CODEPLEX_40
+#if !CLR2
 using MSAst = System.Linq.Expressions;
 #else
-using MSAst = Microsoft.Linq.Expressions;
+using MSAst = Microsoft.Scripting.Ast;
 #endif
 
+using AstUtils = Microsoft.Scripting.Ast.Utils;
+
 namespace IronPython.Compiler.Ast {
-#if CODEPLEX_40
-    using Ast = System.Linq.Expressions.Expression;
-#else
-    using Ast = Microsoft.Linq.Expressions.Expression;
-#endif
+    using Ast = MSAst.Expression;
 
     public class ClassDefinition : ScopeStatement {
         private SourceLocation _header;
-        private readonly SymbolId _name;
+        private readonly string _name;
         private readonly Statement _body;
         private readonly Expression[] _bases;
         private IList<Expression> _decorators;
@@ -58,7 +51,7 @@ namespace IronPython.Compiler.Ast {
 
         private static MSAst.ParameterExpression _parentContextParam = Ast.Parameter(typeof(CodeContext), "$parentContext");
 
-        public ClassDefinition(SymbolId name, Expression[] bases, Statement body) {
+        public ClassDefinition(string name, Expression[] bases, Statement body) {
             _name = name;
             _bases = bases;
             _body = body;
@@ -69,11 +62,11 @@ namespace IronPython.Compiler.Ast {
             set { _header = value; }
         }
 
-        public SymbolId Name {
+        public string Name {
             get { return _name; }
         }
 
-        public Expression[] Bases {
+        public IList<Expression> Bases {
             get { return _bases; }
         }
 
@@ -85,7 +78,7 @@ namespace IronPython.Compiler.Ast {
             get {
                 return _decorators;
             }
-            set {
+            internal set {
                 _decorators = value;
             }
         }
@@ -114,7 +107,7 @@ namespace IronPython.Compiler.Ast {
             return true;
         }
 
-        internal override PythonVariable BindName(PythonNameBinder binder, SymbolId name) {
+        internal override PythonVariable BindName(PythonNameBinder binder, string name) {
             PythonVariable variable;
 
             // Python semantics: The variables bound local in the class
@@ -140,7 +133,7 @@ namespace IronPython.Compiler.Ast {
         }
         
         internal override MSAst.Expression Transform(AstGenerator ag) {
-            string className = SymbolTable.IdToString(_name);
+            string className = _name;
             AstGenerator classGen = new AstGenerator(ag, className, false, "class " + className);
             classGen.Parameter(_parentContextParam);
             // we always need to create a nested context for class defs
@@ -159,14 +152,14 @@ namespace IronPython.Compiler.Ast {
             MSAst.Expression bodyStmt = classGen.Transform(_body);
             
             // __module__ = __name__
-            MSAst.Expression modStmt = classGen.Globals.Assign(
+            MSAst.Expression modStmt = GlobalAllocator.Assign(
                 classGen.Globals.GetVariable(classGen, _modVariable), 
                 classGen.Globals.GetVariable(classGen, _modNameVariable));
 
             string doc = classGen.GetDocumentation(_body);
             if (doc != null) {
                 statements.Add(
-                    classGen.Globals.Assign(
+                    GlobalAllocator.Assign(
                         classGen.Globals.GetVariable(classGen, _docVariable),
                         AstUtils.Constant(doc)
                     )
@@ -177,7 +170,7 @@ namespace IronPython.Compiler.Ast {
                 ag.PyContext,
                 null,
                 null,
-                SymbolTable.IdToString(Name),
+                Name,
                 ag.GetDocumentation(_body),
                 ArrayUtils.EmptyStrings,
                 FunctionAttributes.None,
@@ -188,7 +181,7 @@ namespace IronPython.Compiler.Ast {
                 FreeVariables,
                 GlobalVariables,
                 CellVariables,
-                AppendVariables(new List<SymbolId>()),
+                AppendVariables(new List<string>()),
                 Variables == null ? 0 : Variables.Count,
                 classGen.LoopLocationsNoCreate,
                 classGen.HandlerLocationsNoCreate
@@ -213,22 +206,20 @@ namespace IronPython.Compiler.Ast {
             );
 
             var lambda = Ast.Lambda<Func<CodeContext, CodeContext>>(
-                classGen.MakeBody(_parentContextParam, init.ToArray(), bodyStmt, false),
+                classGen.MakeBody(_parentContextParam, init.ToArray(), bodyStmt),
                 classGen.Name + "$" + _classId++,
                 classGen.Parameters
             );
             
-            if (funcCodeObj != null) {
-                funcCodeObj.Code = lambda;
-            }
+            funcCodeObj.Code = lambda;
 
             MSAst.Expression classDef = Ast.Call(
                 AstGenerator.GetHelperMethod("MakeClass"),
                 ag.EmitDebugSymbols ? 
                     (MSAst.Expression)lambda : 
-                    (MSAst.Expression)Ast.Constant(new LazyCode<Func<CodeContext, CodeContext>>(lambda, ag.ShouldInterpret), typeof(object)),
+                    Ast.Convert(funcCode, typeof(object)),
                 ag.LocalContext,
-                AstUtils.Constant(SymbolTable.IdToString(_name)),
+                AstUtils.Constant(_name),
                 Ast.NewArrayInit(
                     typeof(object),
                     ag.TransformAndConvert(_bases, typeof(object))
@@ -238,7 +229,7 @@ namespace IronPython.Compiler.Ast {
 
             classDef = ag.AddDecorators(classDef, _decorators);
 
-            return ag.AddDebugInfo(ag.Globals.Assign(ag.Globals.GetVariable(ag, _variable), classDef), new SourceSpan(Start, Header));
+            return ag.AddDebugInfoAndVoid(GlobalAllocator.Assign(ag.Globals.GetVariable(ag, _variable), classDef), new SourceSpan(Start, Header));
         }
 
         /// <summary>
@@ -276,7 +267,7 @@ namespace IronPython.Compiler.Ast {
 
             foreach (Statement stmt in stmts.Statements) {
                 FunctionDefinition def = stmt as FunctionDefinition;
-                if (def != null && def.Name == SymbolTable.StringToId("__init__")) {
+                if (def != null && def.Name == "__init__") {
                     return string.Join(",", SelfNameFinder.FindNames(def));
                 }
             }
@@ -293,19 +284,19 @@ namespace IronPython.Compiler.Ast {
             }
 
             public static string[] FindNames(FunctionDefinition function) {
-                Parameter[] parameters = function.Parameters;
+                var parameters = function.Parameters;
 
-                if (parameters.Length > 0) {
+                if (parameters.Count > 0) {
                     SelfNameFinder finder = new SelfNameFinder(function, parameters[0]);
                     function.Body.Walk(finder);
-                    return SymbolTable.IdsToStrings(new List<SymbolId>(finder._names.Keys));
+                    return ArrayUtils.ToArray(finder._names.Keys);
                 } else {
                     // no point analyzing function with no parameters
                     return ArrayUtils.EmptyStrings;
                 }
             }
 
-            private Dictionary<SymbolId, bool> _names = new Dictionary<SymbolId, bool>();
+            private Dictionary<string, bool> _names = new Dictionary<string, bool>(StringComparer.Ordinal);
 
             private bool IsSelfReference(Expression expr) {
                 NameExpression ne = expr as NameExpression;

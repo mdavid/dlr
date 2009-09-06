@@ -1,10 +1,8 @@
 using System;
-#if USE35
-using Microsoft.Scripting;
-using Microsoft.Linq.Expressions;
-#else
 using System.Dynamic;
-using System.Linq;
+#if USE35
+using Microsoft.Scripting.Ast;
+#else
 using System.Linq.Expressions;
 #endif
 using System.Collections.Generic;

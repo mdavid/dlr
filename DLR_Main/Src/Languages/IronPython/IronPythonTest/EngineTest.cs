@@ -13,24 +13,18 @@
  *
  * ***************************************************************************/
 
-#if CODEPLEX_40
-using System;
+#if !CLR2
+using System.Linq.Expressions;
 #else
-using System; using Microsoft;
+using Microsoft.Scripting.Ast;
 #endif
+
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics;
-#if CODEPLEX_40
 using System.Dynamic;
-#else
-#endif
 using System.IO;
-#if CODEPLEX_40
-using System.Linq.Expressions;
-#else
-using Microsoft.Linq.Expressions;
-#endif
 using System.Security;
 using System.Security.Policy;
 using System.Text;
@@ -45,10 +39,6 @@ using IronPython.Runtime;
 using IronPython.Runtime.Exceptions;
 using Microsoft.Scripting.Utils;
 using System.Runtime.CompilerServices;
-#if !CODEPLEX_40
-using Microsoft.Runtime.CompilerServices;
-#endif
-
 using Microsoft.Scripting.Math;
 
 namespace IronPythonTest {
@@ -1091,8 +1081,8 @@ k = KNew()", SourceCodeKind.Statements);
         public void ScenarioEvaluateInPublishedEngineModule() {
             PythonContext pc = DefaultContext.DefaultPythonContext;
 
-            PythonModule publishedModule = pc.CreateModule();
-            PythonModule otherModule = pc.CreateModule();
+            PythonModule publishedModule = new PythonModule();
+            PythonModule otherModule = new PythonModule();
             pc.PublishModule("published_context_test", publishedModule);
 
             pc.CreateSnippet("x = 0", SourceCodeKind.Statements).Execute(otherModule.Scope);

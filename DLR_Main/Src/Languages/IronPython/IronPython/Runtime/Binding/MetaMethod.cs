@@ -13,19 +13,16 @@
  *
  * ***************************************************************************/
 
-#if CODEPLEX_40
-using System;
-#else
-using System; using Microsoft;
-#endif
-using System.Collections;
-using System.Collections.Generic;
-#if CODEPLEX_40
-using System.Dynamic;
+#if !CLR2
 using System.Linq.Expressions;
 #else
-using Microsoft.Linq.Expressions;
+using Microsoft.Scripting.Ast;
 #endif
+
+using System;
+using System.Collections;
+using System.Collections.Generic;
+using System.Dynamic;
 
 using Microsoft.Scripting;
 using Microsoft.Scripting.Actions;
@@ -33,14 +30,9 @@ using Microsoft.Scripting.Utils;
 
 using IronPython.Runtime.Operations;
 
-#if CODEPLEX_40
-using Ast = System.Linq.Expressions.Expression;
-#else
-using Ast = Microsoft.Linq.Expressions.Expression;
-#endif
-using AstUtils = Microsoft.Scripting.Ast.Utils;
-
 namespace IronPython.Runtime.Binding {
+    using Ast = Expression;
+    using AstUtils = Microsoft.Scripting.Ast.Utils;
 
     class MetaMethod : MetaPythonObject, IPythonInvokable, IPythonConvertible {
         public MetaMethod(Expression/*!*/ expression, BindingRestrictions/*!*/ restrictions, Method/*!*/ value)
@@ -295,7 +287,7 @@ namespace IronPython.Runtime.Binding {
             return res;
         }
 
-        private Expression/*!*/ CheckSelf(DynamicMetaObjectBinder/*!*/ binder, Expression/*!*/ method, Expression/*!*/ inst) {
+        private static Expression/*!*/ CheckSelf(DynamicMetaObjectBinder/*!*/ binder, Expression/*!*/ method, Expression/*!*/ inst) {
             return Ast.Call(
                 typeof(PythonOps).GetMethod("MethodCheckSelf"),
                 PythonContext.GetCodeContext(binder),

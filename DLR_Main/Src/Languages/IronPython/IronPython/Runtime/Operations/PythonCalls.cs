@@ -12,20 +12,9 @@
  *
  *
  * ***************************************************************************/
-using System; using Microsoft;
 
-
-using Microsoft.Scripting;
-#if CODEPLEX_40
-using System.Dynamic;
-using System.Linq.Expressions;
-#else
-using Microsoft.Linq.Expressions;
-#endif
-using Microsoft.Scripting.Runtime;
-using Microsoft.Scripting.Actions;
-using DefaultContext = IronPython.Runtime.DefaultContext;
-using IronPython.Runtime.Binding;
+using System;
+using System.Collections.Generic;
 
 namespace IronPython.Runtime.Operations {
     public static partial class PythonCalls {
@@ -62,7 +51,7 @@ namespace IronPython.Runtime.Operations {
             return CallWithKeywordArgs(context, func, newargs, dict);
         }
 
-        public static object CallWithKeywordArgs(CodeContext context, object func, object[] args, IAttributesCollection dict) {
+        public static object CallWithKeywordArgs(CodeContext context, object func, object[] args, IDictionary<object, object> dict) {
             return PythonContext.GetContext(context).CallWithKeywords(func, args, dict);
         }        
     }

@@ -13,21 +13,13 @@
  *
  * ***************************************************************************/
 
-#if CODEPLEX_40
 using System;
-#else
-using System; using Microsoft;
-#endif
 using System.Runtime.Serialization;
 using Microsoft.Scripting.Runtime;
 using IronRuby.Runtime;
 using System.Security.Permissions;
 using Microsoft.Scripting.Generation;
 using System.Runtime.CompilerServices;
-#if !CODEPLEX_40
-using Microsoft.Runtime.CompilerServices;
-#endif
-
 using IronRuby.Runtime.Calls;
 using System.Text;
 

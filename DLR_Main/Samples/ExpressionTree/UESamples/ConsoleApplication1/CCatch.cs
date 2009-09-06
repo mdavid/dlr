@@ -1,20 +1,7 @@
-#if CODEPLEX_40
 using System;
-#else
-using System; using Microsoft;
-#endif
 using System.Collections.Generic;
-#if CODEPLEX_40
-using System.Linq;
-#else
-using Microsoft.Linq;
-#endif
 using System.Text;
-#if CODEPLEX_40
-using System.Linq.Expressions;
-#else
-using Microsoft.Linq.Expressions;
-#endif
+using Microsoft.Scripting.Ast;
 
 namespace Samples
 {
@@ -25,11 +12,7 @@ namespace Samples
         {
             //<Snippet1>
             // add the following directive to your file
-#if CODEPLEX_40
-            // using System.Linq.Expressions;  
-#else
-            // using Microsoft.Linq.Expressions;  
-#endif
+            // using Microsoft.Scripting.Ast;  
 
             //We'll use a ParameterExpression to hold the exception being caught
             ParameterExpression MyException = Expression.Parameter(typeof(ArgumentException), "MyException");
@@ -62,11 +45,7 @@ namespace Samples
         {
             //<Snippet1>
             // add the following directive to your file
-#if CODEPLEX_40
-            // using System.Linq.Expressions;  
-#else
-            // using Microsoft.Linq.Expressions;  
-#endif
+            // using Microsoft.Scripting.Ast;  
 
             //We'll use a ParameterExpression to hold the exception being caught
             ParameterExpression MyException = Expression.Parameter(typeof(ArgumentException), "MyException");
@@ -104,11 +83,7 @@ namespace Samples
         {
             //<Snippet1>
             // add the following directive to your file
-#if CODEPLEX_40
-            // using System.Linq.Expressions;  
-#else
-            // using Microsoft.Linq.Expressions;  
-#endif
+            // using Microsoft.Scripting.Ast;  
 
 
             //This Expression represents a catch block of a try statement that catches exceptions of a given type.
@@ -139,11 +114,7 @@ namespace Samples
         {
             //<Snippet1>
             // add the following directive to your file
-#if CODEPLEX_40
-            // using System.Linq.Expressions;  
-#else
-            // using Microsoft.Linq.Expressions;  
-#endif
+            // using Microsoft.Scripting.Ast;  
 
 
             //This Expression represents a catch block of a try statement that catches exceptions of a given type.

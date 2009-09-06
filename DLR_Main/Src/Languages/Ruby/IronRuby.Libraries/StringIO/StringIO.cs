@@ -20,11 +20,7 @@ using IronRuby.Builtins;
 using IronRuby.Runtime;
 using IronRuby.Runtime.Calls;
 using Microsoft.Scripting.Utils;
-#if CODEPLEX_40
 using System;
-#else
-using System; using Microsoft;
-#endif
 using System.IO;
 using Microsoft.Scripting.Math;
 using System.Diagnostics;
@@ -419,12 +415,7 @@ namespace IronRuby.StandardLibrary.StringIO {
             }
 
             try {
-                if (pos >= length) {
-                    content.Append(0, pos - length);
-                    content.Append(value);
-                } else {
-                    content.Replace(pos, Math.Min(bytesWritten, length -  pos), value);
-                }
+                content.WriteBytes(pos, value, 0, bytesWritten);
             } catch (InvalidOperationException) {
                 throw RubyExceptions.CreateIOError("not modifiable string");
             }

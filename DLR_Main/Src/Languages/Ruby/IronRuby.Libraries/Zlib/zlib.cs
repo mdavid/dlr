@@ -13,18 +13,10 @@
  *
  * ***************************************************************************/
 
-#if CODEPLEX_40
 using System;
-#else
-using System; using Microsoft;
-#endif
 using System.Collections.Generic;
 using System.IO;
 using System.Runtime.CompilerServices;
-#if !CODEPLEX_40
-using Microsoft.Runtime.CompilerServices;
-#endif
-
 using IronRuby.Builtins;
 using IronRuby.Runtime;
 using Microsoft.Scripting.Runtime;
@@ -1081,9 +1073,12 @@ namespace IronRuby.StandardLibrary.Zlib {
 #if !SILVERLIGHT
         [RubyClass("GzipWriter", BuildConfig="!SILVERLIGHT")]
         public class GzipWriter : GZipFile {
-            private int _level;
-            private int _strategy;
-            private GZipStream/*!*/ _gzipStream;
+            private readonly GZipStream/*!*/ _gzipStream;
+
+            // TODO:
+            [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Performance", "CA1823:AvoidUnusedPrivateFields")]
+            private int _level, _strategy;
+
             private GzipWriter(RespondToStorage/*!*/ respondToStorage, RubyContext/*!*/ context, IOWrapper/*!*/ ioWrapper, int level, int strategy) 
                 : base(ioWrapper) {
                 _level = level;

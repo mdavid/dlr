@@ -2,38 +2,27 @@
 import clr
 
 if clr.use35:
+    clr.AddReference("Microsoft.Scripting")
     clr.AddReference("Microsoft.Scripting.Core")
-    
-    import Microsoft.Linq.Expressions as Exprs
-    
-    from Microsoft.Scripting import (ExpandoObject, InvokeBinder, DynamicMetaObject,
-                                GetMemberBinder, SetMemberBinder, CallInfo,
-                                BindingRestrictions, IDynamicMetaObjectProvider,
-                                InvokeMemberBinder, CreateInstanceBinder,
-                                GetIndexBinder, SetIndexBinder, 
-                                BinaryOperationBinder, UnaryOperationBinder)
-    
-    from Microsoft.Runtime.CompilerServices import CallSite
-    
+
+    import Microsoft.Scripting.Ast as Exprs
+    from Microsoft.Scripting.ComInterop import ComBinder
     from Microsoft import (Action, Func)
 else:
     clr.AddReference("System.Core")
+    clr.AddReference("System.Dynamic")
     
     import System.Linq.Expressions as Exprs
-    
-    from System.Dynamic import (ExpandoObject, InvokeBinder, DynamicMetaObject,
-                                GetMemberBinder, SetMemberBinder, CallInfo,
-                                BindingRestrictions, IDynamicMetaObjectProvider,
-                                InvokeMemberBinder, CreateInstanceBinder,
-                                GetIndexBinder, SetIndexBinder, 
-                                BinaryOperationBinder, UnaryOperationBinder)
-    
-    from System.Runtime.CompilerServices import CallSite
-    
+    from System.Dynamic import ComBinder
     from System import (Action, Func)
 
-clr.AddReference("Microsoft.Dynamic")  ## For ComBinder only.
-from Microsoft.Scripting import ComBinder
+from System.Runtime.CompilerServices import CallSite
+from System.Dynamic import (ExpandoObject, InvokeBinder, DynamicMetaObject,
+                            GetMemberBinder, SetMemberBinder, CallInfo,
+                            BindingRestrictions, IDynamicMetaObjectProvider,
+                            InvokeMemberBinder, CreateInstanceBinder,
+                            GetIndexBinder, SetIndexBinder, 
+                            BinaryOperationBinder, UnaryOperationBinder)
 
 from System import (MissingMemberException,
                     InvalidOperationException, Boolean, MissingMemberException,

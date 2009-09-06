@@ -12,15 +12,9 @@
  *
  *
  * ***************************************************************************/
-using System; using Microsoft;
-
 
 using System.Reflection;
 using System.Runtime.CompilerServices;
-#if !CODEPLEX_40
-using Microsoft.Runtime.CompilerServices;
-#endif
-
 using System.Runtime.InteropServices;
 using IronRuby.Hosting;
 using IronRuby.Runtime;
@@ -45,9 +39,9 @@ using System.Security;
 #if CODEPLEX_40
 [assembly: SecurityRules(SecurityRuleSet.Level1)]
 #endif
-[assembly: SecurityTransparent]
 #endif
 
-#if CLR4
+[assembly: SecurityTransparent]
+#if !CLR2
 [assembly: SecurityRules(SecurityRuleSet.Level1)]
 #endif

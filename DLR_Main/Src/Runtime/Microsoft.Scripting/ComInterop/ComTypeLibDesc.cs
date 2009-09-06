@@ -14,24 +14,16 @@
  * ***************************************************************************/
 
 #if !SILVERLIGHT // ComObject
-
-#if CODEPLEX_40
-using System;
-#else
-using System; using Microsoft;
-#endif
-using System.Collections.Generic;
-#if CODEPLEX_40
+#if !CLR2
 using System.Linq.Expressions;
 #else
-using Microsoft.Linq.Expressions;
+using Microsoft.Scripting.Ast;
 #endif
+
+using System;
+using System.Collections.Generic;
 using System.Runtime.InteropServices;
-#if CODEPLEX_40
 using System.Dynamic;
-#else
-using Microsoft.Scripting;
-#endif
 using System.Globalization;
 using ComTypes = System.Runtime.InteropServices.ComTypes;
 
@@ -88,7 +80,7 @@ namespace Microsoft.Scripting.ComInterop {
         public static ComTypeLibInfo CreateFromGuid(Guid typeLibGuid) {
             // passing majorVersion = -1, minorVersion = -1 will always
             // load the latest typelib
-            ComTypes.ITypeLib typeLib = UnsafeNativeMethods.LoadRegTypeLib(ref typeLibGuid, -1, -1, 0);
+            ComTypes.ITypeLib typeLib = UnsafeMethods.LoadRegTypeLib(ref typeLibGuid, -1, -1, 0);
 
             return new ComTypeLibInfo(GetFromTypeLib(typeLib));
         }

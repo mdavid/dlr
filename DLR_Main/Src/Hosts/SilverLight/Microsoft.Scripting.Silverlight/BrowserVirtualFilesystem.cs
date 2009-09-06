@@ -13,11 +13,7 @@
  *
  * ***************************************************************************/
 
-#if CODEPLEX_40
 using System;
-#else
-using System; using Microsoft;
-#endif
 using System.Collections.Generic;
 using System.Text;
 using System.IO;
@@ -87,7 +83,7 @@ namespace Microsoft.Scripting.Silverlight {
         }
 
         public virtual string NormalizePath(string path) {
-            return path.Replace(Path.DirectorySeparatorChar, '/');
+            return path.Replace('\\', '/');
         }
 
         protected Stream GetFileInternal(object storageUnit, string relativePath) {

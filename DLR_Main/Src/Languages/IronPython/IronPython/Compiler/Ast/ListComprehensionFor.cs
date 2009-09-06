@@ -12,16 +12,15 @@
  *
  *
  * ***************************************************************************/
-using System; using Microsoft;
 
+#if !CLR2
+using MSAst = System.Linq.Expressions;
+#else
+using MSAst = Microsoft.Scripting.Ast;
+#endif
 
 using System.Collections;
 using Microsoft.Scripting;
-#if CODEPLEX_40
-using MSAst = System.Linq.Expressions;
-#else
-using MSAst = Microsoft.Linq.Expressions;
-#endif
 
 namespace IronPython.Compiler.Ast {
     public class ListComprehensionFor : ListComprehensionIterator {

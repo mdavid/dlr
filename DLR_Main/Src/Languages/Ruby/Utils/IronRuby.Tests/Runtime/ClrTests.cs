@@ -13,19 +13,11 @@
  *
  * ***************************************************************************/
 
-#if CODEPLEX_40
 using System;
-#else
-using System; using Microsoft;
-#endif
 using System.Collections;
 using System.Diagnostics;
 using System.Reflection;
 using System.Runtime.CompilerServices;
-#if !CODEPLEX_40
-using Microsoft.Runtime.CompilerServices;
-#endif
-
 using System.Runtime.InteropServices;
 using IronRuby.Builtins;
 using IronRuby.Runtime;
@@ -287,11 +279,7 @@ p c[0, 1]
             // TODO:
             // protected int Fld;
             // protected static int Fld;
-#if CODEPLEX_40
             // protected event System.Func<object> Evnt;
-#else
-            // protected event Microsoft.Func<object> Evnt;
-#endif
         }
 
         public void ClrVisibility1() {
@@ -1375,6 +1363,8 @@ $d = D.new { |foo, bar| $foo = foo; $bar = bar; 777 }
 
             Engine.Execute<Action<int>>(@"System::Action[Fixnum].new { |x| $x = x + 1 }")(10);
             Assert((int)Context.GetGlobalVariable("x") == 11);
+
+            AssertExceptionThrown<LocalJumpError>(() => Engine.Execute(@"System::Action.new(&nil)"));
         }
 
         public void ClrEvents1() {
@@ -1511,29 +1501,17 @@ F.new
 ");
             var handler = new Func<int, int>((i) => i + 1);
 
-#if CODEPLEX_40
             AssertOutput(() => f.OnEvent += handler, @"add System.Func`2[System.Int32,System.Int32]");
-#else
-            AssertOutput(() => f.OnEvent += handler, @"add Microsoft.Func`2[System.Int32,System.Int32]");
-#endif
             var r = f.Fire(10);
             Assert(r == 11);
-#if CODEPLEX_40
             AssertOutput(() => f.OnEvent -= handler, @"remove System.Func`2[System.Int32,System.Int32]");
-#else
-            AssertOutput(() => f.OnEvent -= handler, @"remove Microsoft.Func`2[System.Int32,System.Int32]");
-#endif
 
             TestOutput(@"
 f = F.new
 f.on_event { |x| x * 2 }
 puts f.fire(10)
 ", @"
-#if CODEPLEX_40
 add System.Func`2[System.Int32,System.Int32]
-#else
-add Microsoft.Func`2[System.Int32,System.Int32]
-#endif
 20
 ");
         }

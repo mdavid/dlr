@@ -15,11 +15,7 @@
 
 #if !SILVERLIGHT
 
-#if CODEPLEX_40
 using System;
-#else
-using System; using Microsoft;
-#endif
 using System.Collections.Generic;
 using System.Configuration;
 using System.IO;

@@ -13,15 +13,14 @@
  *
  * ***************************************************************************/
 
-#if CODEPLEX_40
-using System;
-using System.Dynamic;
+#if !CLR2
 using System.Linq.Expressions;
 #else
-using System; using Microsoft;
-using Microsoft.Scripting;
-using Microsoft.Linq.Expressions;
+using Microsoft.Scripting.Ast;
 #endif
+
+using System;
+using System.Dynamic;
 
 namespace Microsoft.Scripting.Runtime {
     /// <summary>
@@ -31,15 +30,13 @@ namespace Microsoft.Scripting.Runtime {
         // friend: ScriptDomainManager
         internal InvariantContext(ScriptDomainManager manager)
             : base(manager) {
-            // TODO: use InvariantBinder
-            Binder = new DefaultActionBinder(manager, Type.EmptyTypes);
         }
 
         public override bool CanCreateSourceCode {
             get { return false; }
         }
 
-        protected internal override ScriptCode CompileSourceCode(SourceUnit sourceUnit, CompilerOptions options, ErrorSink errorSink) {
+        public override ScriptCode CompileSourceCode(SourceUnit sourceUnit, CompilerOptions options, ErrorSink errorSink) {
             // invariant language doesn't have a grammar:
             throw new NotSupportedException();
         }

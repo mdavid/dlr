@@ -13,25 +13,18 @@
  *
  * ***************************************************************************/
 
-#if CODEPLEX_40
-using System;
-#else
-using System; using Microsoft;
-#endif
-using System.Collections.Generic;
-using System.Diagnostics;
-#if CODEPLEX_40
-using System.Dynamic;
+#if !CLR2
 using System.Linq.Expressions;
 #else
-using Microsoft.Linq.Expressions;
-#endif
-using System.Reflection;
-using System.Runtime.CompilerServices;
-#if !CODEPLEX_40
-using Microsoft.Runtime.CompilerServices;
+using Microsoft.Scripting.Ast;
 #endif
 
+using System;
+using System.Collections.Generic;
+using System.Diagnostics;
+using System.Dynamic;
+using System.Reflection;
+using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using System.Threading;
 using IronRuby.Compiler;
@@ -41,16 +34,14 @@ using IronRuby.Runtime.Calls;
 using Microsoft.Scripting;
 using Microsoft.Scripting.Actions;
 using Microsoft.Scripting.Utils;
-#if CODEPLEX_40
-using Ast = System.Linq.Expressions.Expression;
-#else
-using Ast = Microsoft.Linq.Expressions.Expression;
-#endif
 using AstUtils = Microsoft.Scripting.Ast.Utils;
 using Microsoft.Scripting.Generation;
 using IronRuby.Runtime.Conversions;
 
 namespace IronRuby.Builtins {
+    using Ast = Expression;
+    using Utils = IronRuby.Runtime.Utils;
+
     public sealed partial class RubyClass : RubyModule, IDuplicable {
         public const string/*!*/ ClassSingletonName = "__ClassSingleton";
         public const string/*!*/ ClassSingletonSingletonName = "__ClassSingletonSingleton";
@@ -594,7 +585,7 @@ namespace IronRuby.Builtins {
             // MRI is inconsistent here, it triggers "inherited" event after the body of the method is evaluated.
             // In all other cases the order is event first, body next.
             RubyClass newClass = context.DefineClass(owner, null, superClass ?? context.ObjectClass, null);
-            return (body != null) ? RubyUtils.EvaluateInModule(newClass, body, newClass) : newClass;
+            return (body != null) ? RubyUtils.EvaluateInModule(newClass, body, null, newClass) : newClass;
         }
 
         public override string/*!*/ ToString() {
@@ -1306,7 +1297,9 @@ namespace IronRuby.Builtins {
                     metaBuilder.Result = MarkNewException(metaBuilder.Result);
 
                     // we need to handle break, which unwinds to a proc-converter that could be this method's frame:
-                    metaBuilder.ControlFlowBuilder = RubyMethodGroupInfo.RuleControlFlowBuilder;
+                    if (args.Signature.HasBlock) {
+                        metaBuilder.ControlFlowBuilder = RubyMethodGroupInfo.RuleControlFlowBuilder;
+                    }
                 }
             }
         }

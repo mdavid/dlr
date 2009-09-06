@@ -13,27 +13,19 @@
  *
  * ***************************************************************************/
 
-#if CODEPLEX_40
-using System;
-#else
-using System; using Microsoft;
+#if CLR2
+using dynamic = System.Object;
 #endif
+
+using System;
 using System.IO;
 using System.Diagnostics;
 using System.Runtime.Remoting;
-#if CODEPLEX_40
 using System.Dynamic;
-#else
-using Microsoft.Scripting;
-#endif
 using System.Security.Permissions;
 using System.Text;
 using Microsoft.Scripting.Utils;
 using Microsoft.Scripting.Runtime;
-
-#if !CLR4
-using dynamic = System.Object;
-#endif
 
 namespace Microsoft.Scripting.Hosting {
     /// <summary>

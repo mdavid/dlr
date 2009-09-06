@@ -13,34 +13,23 @@
  *
  * ***************************************************************************/
 
-#if CODEPLEX_40
-using System;
+#if !CLR2
+using MSA = System.Linq.Expressions;
 #else
-using System; using Microsoft;
+using MSA = Microsoft.Scripting.Ast;
 #endif
+
+using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Runtime.CompilerServices;
-#if !CODEPLEX_40
-using Microsoft.Runtime.CompilerServices;
-#endif
-
 using System.Threading;
 using IronRuby.Runtime;
 using Microsoft.Scripting;
 
 namespace IronRuby.Compiler.Ast {
-#if CODEPLEX_40
-    using Ast = System.Linq.Expressions.Expression;
-#else
-    using Ast = Microsoft.Linq.Expressions.Expression;
-#endif
+    using Ast = MSA.Expression;
     using AstUtils = Microsoft.Scripting.Ast.Utils;
-#if CODEPLEX_40
-    using MSA = System.Linq.Expressions;
-#else
-    using MSA = Microsoft.Linq.Expressions;
-#endif
     
     internal sealed class ScopeBuilder {
         private readonly MSA.ParameterExpression/*!*/[] _parameters;
@@ -178,6 +167,10 @@ namespace IronRuby.Compiler.Ast {
         }
 
         public MSA.Expression/*!*/ GetVariableNamesExpression() {
+            if (LiftedVisibleVariableCount == 0) {
+                return Ast.Constant(null, typeof(SymbolId[]));
+            }
+
             SymbolId[] symbols = new SymbolId[LiftedVisibleVariableCount];
 
             foreach (var var in _lexicalScope) {

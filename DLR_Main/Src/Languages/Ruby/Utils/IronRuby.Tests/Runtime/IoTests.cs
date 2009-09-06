@@ -13,11 +13,7 @@
  *
  * ***************************************************************************/
 
-#if CODEPLEX_40
 using System;
-#else
-using System; using Microsoft;
-#endif
 using IronRuby.Builtins;
 using System.Text;
 using System.Diagnostics;
@@ -31,6 +27,15 @@ namespace IronRuby.Tests {
     public partial class Tests {
         public void File1() {
             Test_Read1();
+        }
+
+        public void File2() {
+            TestOutput(@"
+stdout = IO.open(1, 'w', &nil) 
+stdout.puts('hello')
+", @"
+hello
+");
         }
 
         private class TestStream : MemoryStream {

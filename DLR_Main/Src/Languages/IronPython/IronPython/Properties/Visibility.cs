@@ -14,17 +14,9 @@
  * ***************************************************************************/
 using System.Reflection;
 using System.Runtime.CompilerServices;
-#if !CODEPLEX_40
-using Microsoft.Runtime.CompilerServices;
-#endif
-
 using System.Runtime.InteropServices;
 using System.Security;
-#if CODEPLEX_40
 using System;
-#else
-using System; using Microsoft;
-#endif
 
 #if (SILVERLIGHT && SIGNED)
 // InternalsVisibleTo requires the full public key--it won't work with the public key token.

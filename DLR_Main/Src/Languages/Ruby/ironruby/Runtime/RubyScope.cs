@@ -13,18 +13,10 @@
  *
  * ***************************************************************************/
 
-#if CODEPLEX_40
 using System;
-#else
-using System; using Microsoft;
-#endif
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Runtime.CompilerServices;
-#if !CODEPLEX_40
-using Microsoft.Runtime.CompilerServices;
-#endif
-
 using System.Text.RegularExpressions;
 using IronRuby.Builtins;
 using Microsoft.Scripting;
@@ -305,16 +297,25 @@ namespace IronRuby.Runtime {
                 }
 
                 if (!scope.InheritsLocalVariables) {
-                    if (_dynamicLocals == null) {
-                        Interlocked.CompareExchange(ref _dynamicLocals, new Dictionary<SymbolId, object>(), null);
-                    }
-
-                    lock (_dynamicLocals) {
-                        return _dynamicLocals[name] = value;
-                    }
+                    DefineDynamicVariable(name, value);
+                    return value;
                 }
 
                 scope = scope.Parent;
+            }
+        }
+
+        /// <summary>
+        /// Defines dynamic variable in this scope.
+        /// module-eval scopes need to override this since they should set the variable in their parent scope.
+        /// </summary>
+        internal virtual void DefineDynamicVariable(SymbolId name, object value) {
+            if (_dynamicLocals == null) {
+                Interlocked.CompareExchange(ref _dynamicLocals, new Dictionary<SymbolId, object>(), null);
+            }
+
+            lock (_dynamicLocals) {
+                _dynamicLocals[name] = value;
             }
         }
 
@@ -740,18 +741,14 @@ var closureScope = scope as RubyClosureScope;
     }
 
     public sealed class RubyModuleScope : RubyClosureScope {
-        // TODO: readonly
-        private RubyModule _module;
-        private readonly bool _isEval;
+        private readonly RubyModule _module;
 
         public override ScopeKind Kind { get { return ScopeKind.Module; } }
-        public override bool InheritsLocalVariables { get { return _isEval; } }
+        public override bool InheritsLocalVariables { get { return false; } }
 
         public override RubyModule Module { get { return _module; } }
 
-        internal void SetModule(RubyModule/*!*/ module) { _module = module; }
-
-        internal RubyModuleScope(RubyScope/*!*/ parent, RubyModule module, bool isEval, object selfObject) {
+        internal RubyModuleScope(RubyScope/*!*/ parent, RubyModule module, object selfObject) {
             Assert.NotNull(parent);
 
             // RuntimeFlowControl:
@@ -765,10 +762,43 @@ var closureScope = scope as RubyClosureScope;
 
             // RubyModuleScope:
             _module = module;
-            _isEval = isEval;
             InLoop = parent.InLoop;
             InRescue = parent.InRescue;
             MethodAttributes = RubyMethodAttributes.PublicInstance;
+        }
+    }
+
+    public sealed class RubyModuleEvalScope : RubyClosureScope {
+        private readonly RubyModule _module;
+
+        public override ScopeKind Kind { get { return ScopeKind.Module; } }
+        public override bool InheritsLocalVariables { get { return true; } }
+
+        public override RubyModule Module { get { return _module; } }
+
+        internal RubyModuleEvalScope(RubyScope/*!*/ parent, RubyModule module, object selfObject) {
+            Assert.NotNull(parent);
+
+            // RuntimeFlowControl:
+            _activeFlowControlScope = parent.FlowControlScope;
+
+            // RubyScope:
+            _parent = parent;
+            _top = parent.Top;
+            _selfObject = selfObject;
+            _methodAttributes = RubyMethodAttributes.PrivateInstance;
+
+            // RubyModuleScope:
+            _module = module;
+            InLoop = parent.InLoop;
+            InRescue = parent.InRescue;
+            MethodAttributes = RubyMethodAttributes.PublicInstance;
+
+            SetEmptyLocals();
+        }
+
+        internal override void DefineDynamicVariable(SymbolId name, object value) {
+            _parent.DefineDynamicVariable(name, value);
         }
     }
 
@@ -940,17 +970,16 @@ var closureScope = scope as RubyClosureScope;
                 // Without name mangling this would result to {"Foo" -> 1, "foo" -> 2} while the expected result is {"Foo" -> 2}.
 
                 str = str.Substring(0, str.Length - 1);
-                name = SymbolTable.StringToId(str);
 
-                if (!globalScope.ContainsVariable(name)) {
-                    var unmangled = SymbolTable.StringToId(RubyUtils.TryUnmangleName(str));
-                    if (!unmangled.IsEmpty && globalScope.ContainsVariable(unmangled)) {
-                        name = unmangled;
+                if(!RubyOps.ScopeContainsMember(globalScope, str)) {
+                    var unmangled = RubyUtils.TryUnmangleName(str);
+                    if (!String.IsNullOrEmpty(unmangled) && RubyOps.ScopeContainsMember(globalScope, unmangled)) {
+                        str = unmangled;
                     }
                 }
 
                 var value = args[0];
-                globalScope.SetVariable(name, value);
+                RubyOps.ScopeSetMember(globalScope, str, value);
                 return value;
             } else {
                 if (args.Length != 0) {
@@ -958,12 +987,12 @@ var closureScope = scope as RubyClosureScope;
                 }
 
                 object value;
-                if (globalScope.TryGetVariable(name, out value)) {
+                if (RubyOps.ScopeTryGetMember(context, globalScope, str, out value)) {
                     return value;
                 }
 
                 string unmangled = RubyUtils.TryUnmangleName(str);
-                if (unmangled != null && globalScope.TryGetVariable(SymbolTable.StringToId(unmangled), out value)) {
+                if (unmangled != null && RubyOps.ScopeTryGetMember(context, globalScope, unmangled, out value)) {
                     return value;
                 }
 

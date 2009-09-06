@@ -13,11 +13,7 @@
  *
  * ***************************************************************************/
 
-#if CODEPLEX_40
 using System;
-#else
-using System; using Microsoft;
-#endif
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Reflection;
@@ -55,7 +51,6 @@ namespace Microsoft.Scripting.Runtime {
         /// <summary>
         /// Must not be called under a lock as it can potentially call a user code.
         /// </summary>
-        /// <exception cref="MissingTypeException"></exception>
         /// <exception cref="Microsoft.Scripting.InvalidImplementationException">The language context's implementation failed to instantiate.</exception>
         internal LanguageContext LoadLanguageContext(ScriptDomainManager domainManager, out bool alreadyLoaded) {
             if (_context == null) {

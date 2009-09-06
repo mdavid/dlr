@@ -13,25 +13,17 @@
  *
  * ***************************************************************************/
 
-#if CODEPLEX_40
-using System;
-#else
-using System; using Microsoft;
-#endif
-using System.Diagnostics;
-#if CODEPLEX_40
-using System.Dynamic;
+#if !CLR2
 using System.Linq.Expressions;
 #else
-using Microsoft.Scripting;
-using Microsoft.Linq.Expressions;
-#endif
-using System.Reflection;
-using System.Runtime.CompilerServices;
-#if !CODEPLEX_40
-using Microsoft.Runtime.CompilerServices;
+using Microsoft.Scripting.Ast;
 #endif
 
+using System;
+using System.Diagnostics;
+using System.Dynamic;
+using System.Reflection;
+using System.Runtime.CompilerServices;
 
 using Microsoft.Scripting.Actions.Calls;
 using Microsoft.Scripting.Generation;
@@ -41,11 +33,7 @@ using Microsoft.Scripting.Utils;
 using AstUtils = Microsoft.Scripting.Ast.Utils;
 
 namespace Microsoft.Scripting.Actions {
-#if CODEPLEX_40
-    using Ast = System.Linq.Expressions.Expression;
-#else
-    using Ast = Microsoft.Linq.Expressions.Expression;
-#endif
+    using Ast = Expression;
     
     public partial class DefaultBinder : ActionBinder {        
         /// <summary>
@@ -341,11 +329,8 @@ namespace Microsoft.Scripting.Actions {
                 );
             } else if (field.DeclaringType.IsValueType && !field.IsStatic) {
                 memInfo.Body.FinishCondition(
-                    Ast.Throw(
-                        Ast.New(
-                            typeof(ArgumentException).GetConstructor(new Type[] { typeof(string) }),
-                            AstUtils.Constant("cannot assign to value types")
-                        ),
+                    MakeError(
+                        MakeSetValueTypeFieldError(field, instance, target),
                         typeof(object)
                     )
                 );

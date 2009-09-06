@@ -12,33 +12,29 @@
  *
  *
  * ***************************************************************************/
-using System; using Microsoft;
 
-
-using System.Collections.Generic;
-using Microsoft.Scripting;
-using AstUtils = Microsoft.Scripting.Ast.Utils;
-#if CODEPLEX_40
+#if !CLR2
 using MSAst = System.Linq.Expressions;
 #else
-using MSAst = Microsoft.Linq.Expressions;
+using MSAst = Microsoft.Scripting.Ast;
 #endif
 
+using System.Collections.Generic;
+using System.Runtime.CompilerServices;
+using Microsoft.Scripting;
+using AstUtils = Microsoft.Scripting.Ast.Utils;
+
 namespace IronPython.Compiler.Ast {
-#if CODEPLEX_40
-    using Ast = System.Linq.Expressions.Expression;
-#else
-    using Ast = Microsoft.Linq.Expressions.Expression;
-#endif
+    using Ast = MSAst.Expression;
 
     public class ImportStatement : Statement {
         private readonly ModuleName[] _names;
-        private readonly SymbolId[] _asNames;
+        private readonly string[] _asNames;
         private readonly bool _forceAbsolute;
 
         private PythonVariable[] _variables;
 
-        public ImportStatement(ModuleName[] names, SymbolId[] asNames, bool forceAbsolute) {
+        public ImportStatement(ModuleName[] names, string[] asNames, bool forceAbsolute) {
             _names = names;
             _asNames = asNames;
             _forceAbsolute = forceAbsolute;
@@ -53,22 +49,22 @@ namespace IronPython.Compiler.Ast {
             get { return _names; }
         }
 
-        public IList<SymbolId> AsNames {
+        public IList<string> AsNames {
             get { return _asNames; }
         }
 
         internal override MSAst.Expression Transform(AstGenerator ag) {
-            List<MSAst.Expression> statements = new List<MSAst.Expression>();
+            ReadOnlyCollectionBuilder<MSAst.Expression> statements = new ReadOnlyCollectionBuilder<MSAst.Expression>();
 
             for (int i = 0; i < _names.Length; i++) {
                 statements.Add(
                     // _references[i] = PythonOps.Import(<code context>, _names[i])
-                    ag.AddDebugInfo(
-                        ag.Globals.Assign(
+                    ag.AddDebugInfoAndVoid(
+                        GlobalAllocator.Assign(
                             ag.Globals.GetVariable(ag, _variables[i]), 
                             Ast.Call(
                                 AstGenerator.GetHelperMethod(                           // helper
-                                    _asNames[i] == SymbolId.Empty ? "ImportTop" : "ImportBottom"
+                                    _asNames[i] == null ? "ImportTop" : "ImportBottom"
                                 ),
                                 ag.LocalContext,                                        // 1st arg - code context
                                 AstUtils.Constant(_names[i].MakeString()),                   // 2nd arg - module name
@@ -81,7 +77,7 @@ namespace IronPython.Compiler.Ast {
             }
 
             statements.Add(AstUtils.Empty());
-            return ag.AddDebugInfo(Ast.Block(statements.ToArray()), Span);
+            return ag.AddDebugInfo(Ast.Block(statements.ToReadOnlyCollection()), Span);
         }
 
         public override void Walk(PythonWalker walker) {

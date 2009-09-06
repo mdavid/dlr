@@ -13,17 +13,9 @@
  *
  * ***************************************************************************/
 
-#if CODEPLEX_40
 using System;
-#else
-using System; using Microsoft;
-#endif
 using System.Collections.Generic;
 using System.Runtime.CompilerServices;
-#if !CODEPLEX_40
-using Microsoft.Runtime.CompilerServices;
-#endif
-
 
 using IronPython.Runtime;
 using IronPython.Runtime.Exceptions;
@@ -66,8 +58,11 @@ namespace IronPython.Modules {
             }
         }
 
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Security", "CA2104:DoNotDeclareReadOnlyMutableReferenceTypes")]
         public static readonly PythonType CallableProxyType = DynamicHelpers.GetPythonTypeFromType(typeof(weakcallableproxy));
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Security", "CA2104:DoNotDeclareReadOnlyMutableReferenceTypes")]
         public static readonly PythonType ProxyType = DynamicHelpers.GetPythonTypeFromType(typeof(weakproxy));
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Security", "CA2104:DoNotDeclareReadOnlyMutableReferenceTypes")]
         public static readonly PythonType ReferenceType = DynamicHelpers.GetPythonTypeFromType(typeof(@ref));
 
         [PythonType]
@@ -609,7 +604,7 @@ namespace IronPython.Modules {
             }
                         
             [SpecialName]
-            public object Call(CodeContext/*!*/ context, [ParamDictionary] IAttributesCollection dict, params object[] args) {
+            public object Call(CodeContext/*!*/ context, [ParamDictionary]IDictionary<object, object> dict, params object[] args) {
                 return PythonCalls.CallWithKeywordArgs(context, GetObject(), args, dict);
             }
 
@@ -759,7 +754,7 @@ namespace IronPython.Modules {
 
 
         [SpecialName]
-        public object Call(CodeContext context, [ParamDictionary] IAttributesCollection dict, params object[] args) {
+        public object Call(CodeContext context, [ParamDictionary]IDictionary<object, object> dict, params object[] args) {
             object targetMethod;
             if (!DynamicHelpers.GetPythonType(target.Target).TryGetBoundMember(context, target.Target, name, out targetMethod))
                 throw PythonOps.AttributeError("type {0} has no attribute {1}",

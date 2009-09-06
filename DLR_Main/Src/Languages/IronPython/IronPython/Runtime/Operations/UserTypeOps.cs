@@ -13,23 +13,16 @@
  *
  * ***************************************************************************/
 
-#if CODEPLEX_40
-using System;
-#else
-using System; using Microsoft;
-#endif
-using System.Diagnostics;
-#if CODEPLEX_40
-using System.Dynamic;
+#if !CLR2
 using System.Linq.Expressions;
 #else
-using Microsoft.Linq.Expressions;
-#endif
-using System.Runtime.CompilerServices;
-#if !CODEPLEX_40
-using Microsoft.Runtime.CompilerServices;
+using Microsoft.Scripting.Ast;
 #endif
 
+using System;
+using System.Diagnostics;
+using System.Dynamic;
+using System.Runtime.CompilerServices;
 using System.Threading;
 
 using Microsoft.Scripting;
@@ -390,49 +383,42 @@ namespace IronPython.Runtime.Operations {
             if (setType == typeof(Func<CallSite, object, object, object>)) {
                 return (FastBindResult<T>)(object)new Binding.MetaUserObject.FastSetBinderHelper<object>(
                     codeContext,
-                    (CallSite<Func<CallSite, object, object, object>>)(object)site,
                     self,
                     value,
                     setBinder).MakeSet();
             } else if (setType == typeof(Func<CallSite, object, string, object>)) {
                 return (FastBindResult<T>)(object)new Binding.MetaUserObject.FastSetBinderHelper<string>(
                     codeContext,
-                    (CallSite<Func<CallSite, object, string, object>>)(object)site,
                     self,
                     value,
                     setBinder).MakeSet();
             } else if (setType == typeof(Func<CallSite, object, int, object>)) {
                 return (FastBindResult<T>)(object)new Binding.MetaUserObject.FastSetBinderHelper<int>(
                     codeContext,
-                    (CallSite<Func<CallSite, object, int, object>>)(object)site,
                     self,
                     value,
                     setBinder).MakeSet();
             } else if (setType == typeof(Func<CallSite, object, double, object>)) {
                 return (FastBindResult<T>)(object)new Binding.MetaUserObject.FastSetBinderHelper<double>(
                     codeContext,
-                    (CallSite<Func<CallSite, object, double, object>>)(object)site,
                     self,
                     value,
                     setBinder).MakeSet();
             } else if (setType == typeof(Func<CallSite, object, List, object>)) {
                 return (FastBindResult<T>)(object)new Binding.MetaUserObject.FastSetBinderHelper<List>(
                     codeContext,
-                    (CallSite<Func<CallSite, object, List, object>>)(object)site,
                     self,
                     value,
                     setBinder).MakeSet();
             } else if (setType == typeof(Func<CallSite, object, PythonTuple, object>)) {
                 return (FastBindResult<T>)(object)new Binding.MetaUserObject.FastSetBinderHelper<PythonTuple>(
                     codeContext,
-                    (CallSite<Func<CallSite, object, PythonTuple, object>>)(object)site,
                     self,
                     value,
                     setBinder).MakeSet();
             } else if (setType == typeof(Func<CallSite, object, PythonDictionary, object>)) {
                 return (FastBindResult<T>)(object)new Binding.MetaUserObject.FastSetBinderHelper<PythonDictionary>(
                     codeContext,
-                    (CallSite<Func<CallSite, object, PythonDictionary, object>>)(object)site,
                     self,
                     value,
                     setBinder).MakeSet();

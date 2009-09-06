@@ -13,33 +13,25 @@
  *
  * ***************************************************************************/
 
-#if CODEPLEX_40
+#if !CLR2
 using System.Linq.Expressions;
-using System.Dynamic;
 #else
-using Microsoft.Linq.Expressions;
-using Microsoft.Scripting;
+using Microsoft.Scripting.Ast;
 #endif
+
+using System.Dynamic;
 using Microsoft.Scripting.Runtime;
 using Microsoft.Scripting.Utils;
 using IronRuby.Runtime;
 using IronRuby.Runtime.Calls;
 
-#if CODEPLEX_40
-using Ast = System.Linq.Expressions.Expression;
-#else
-using Ast = Microsoft.Linq.Expressions.Expression;
-#endif
 using AstUtils = Microsoft.Scripting.Ast.Utils;
 using IronRuby.Compiler;
-#if CODEPLEX_40
 using System;
-#else
-using System; using Microsoft;
-#endif
 using System.Reflection;
 
 namespace IronRuby.Builtins {
+    using Ast = Expression;
 
     public partial class Proc : IRubyDynamicMetaObjectProvider {
         public DynamicMetaObject/*!*/ GetMetaObject(Expression/*!*/ parameter) {

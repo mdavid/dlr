@@ -12,16 +12,10 @@
  *
  *
  * ***************************************************************************/
-using System; using Microsoft;
-
 
 #if !SILVERLIGHT // ComObject
 
-#if CODEPLEX_40
 namespace System.Dynamic {
-#else
-namespace Microsoft.Scripting {
-#endif
     internal static class ComDispIds {
         internal const int DISPID_VALUE = 0;
         internal const int DISPID_PROPERTYPUT = -3;

@@ -13,20 +13,12 @@
  *
  * ***************************************************************************/
 
-#if CODEPLEX_40
 using System;
-#else
-using System; using Microsoft;
-#endif
 using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Globalization;
 using System.Runtime.CompilerServices;
-#if !CODEPLEX_40
-using Microsoft.Runtime.CompilerServices;
-#endif
-
 using Microsoft.Scripting.Debugging.CompilerServices;
 using Microsoft.Scripting.Hosting;
 using Microsoft.Scripting.Hosting.Providers;
@@ -83,23 +75,7 @@ namespace Microsoft.Scripting.Debugging {
             get { return _stackDepth; }
             set { _stackDepth = value; }
         }
-
-        /// <summary>
-        /// GetScriptScope
-        /// </summary>
-        internal ScriptScope GetScriptScope(ScriptEngine scriptEngine, ScriptScope parentScope) {
-            ScopeData scopeData = CurrentScopeData;
-            ScriptScope scriptScope = scopeData.ScriptScope;
-            if (scriptScope == null) {
-                scriptScope = HostingHelpers.CreateScriptScope(
-                    scriptEngine, 
-                    GetLocalsScope(parentScope != null ? HostingHelpers.GetScope(parentScope) : null ));
-                scopeData.ScriptScope = scriptScope;
-            }
-
-            return scriptScope;
-        }
-
+        
         /// <summary>
         /// Variables
         /// </summary>
@@ -217,10 +193,10 @@ namespace Microsoft.Scripting.Debugging {
             set {
                 if (_thrownException != null && value == null) {
                     _thrownException = null;
-                    GetLocalsScope().Dict.Remove(_exceptionVariableSymbol);
-                } else if (value != null && !GetLocalsScope().Dict.ContainsKey(_exceptionVariableSymbol)) {
+                    GetLocalsScope().Remove(_exceptionVariableSymbol);
+                } else if (value != null && !GetLocalsScope().ContainsKey(_exceptionVariableSymbol)) {
                     _thrownException = value;
-                    GetLocalsScope().Dict.Add(_exceptionVariableSymbol, _thrownException);
+                    GetLocalsScope()[_exceptionVariableSymbol] = _thrownException;
                 }
             }
         }
@@ -303,13 +279,9 @@ namespace Microsoft.Scripting.Debugging {
             ((IEnumerator)_generator).MoveNext();
         }
 
-        internal Scope GetLocalsScope() {
-            return GetLocalsScope(null);
-        }
-
-        internal Scope GetLocalsScope(Scope parentScope) {
+        internal IAttributesCollection GetLocalsScope() {
             ScopeData scopeData = CurrentScopeData;
-            Scope scope = scopeData.Scope;
+            IAttributesCollection scope = scopeData.Scope;
             if (scope == null) {
                 Debug.Assert(_liftedLocals != null);
 
@@ -334,10 +306,7 @@ namespace Microsoft.Scripting.Debugging {
 
                 IRuntimeVariables scopedLocals = new ScopedRuntimeVariables(visibleLocals, _liftedLocals);
 
-                if (parentScope != null)
-                    scope = new Scope(parentScope, new LocalsDictionary(scopedLocals, visibleSymbols.ToArray()));
-                else
-                    scope = new Scope(new LocalsDictionary(scopedLocals, visibleSymbols.ToArray()));
+                scope = new LocalsDictionary(scopedLocals, visibleSymbols.ToArray());
 
                 scopeData.Scope = scope;
             }
@@ -440,8 +409,7 @@ namespace Microsoft.Scripting.Debugging {
         private class ScopeData {
             public VariableInfo[] VarInfos;
             public VariableInfo[] VarInfosWithException;
-            public Scope Scope;
-            public ScriptScope ScriptScope;
+            public IAttributesCollection Scope;
         }
     }
 }

@@ -12,13 +12,8 @@
  *
  *
  * ***************************************************************************/
-using System; using Microsoft;
 
-
-#if CODEPLEX_40
 using System.Dynamic;
-#else
-#endif
 using Microsoft.Scripting;
 using Microsoft.Scripting.Utils;
 using IronRuby.Compiler.Ast;

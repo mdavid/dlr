@@ -13,11 +13,7 @@
  *
  * ***************************************************************************/
 
-#if CODEPLEX_40
 using System;
-#else
-using System; using Microsoft;
-#endif
 using System.Collections.Generic;
 using System.Collections;
 using System.Text;
@@ -29,21 +25,18 @@ using IronRuby.Runtime;
 using IronRuby.Builtins;
 using Microsoft.Scripting.Utils;
 
-using AstUtils = Microsoft.Scripting.Ast.Utils;
-using AstFactory = IronRuby.Compiler.Ast.AstFactory;
-#if CODEPLEX_40
+#if !CLR2
 using MSA = System.Linq.Expressions;
 #else
-using MSA = Microsoft.Linq.Expressions;
+using MSA = Microsoft.Scripting.Ast;
 #endif
+
+using AstUtils = Microsoft.Scripting.Ast.Utils;
+using AstFactory = IronRuby.Compiler.Ast.AstFactory;
 using IronRuby.Runtime.Calls;
 using System.Collections.ObjectModel;
 using Microsoft.Scripting.Runtime;
 using System.Runtime.CompilerServices;
-#if !CODEPLEX_40
-using Microsoft.Runtime.CompilerServices;
-#endif
-
 
 namespace IronRuby.Compiler {
     internal static class Fields {

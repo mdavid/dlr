@@ -13,24 +13,17 @@
  *
  * ***************************************************************************/
 
-#if CODEPLEX_40
-using System;
-#else
-using System; using Microsoft;
-#endif
-using System.Diagnostics;
-#if CODEPLEX_40
-using System.Dynamic;
+#if !CLR2
 using System.Linq.Expressions;
 #else
-using Microsoft.Linq.Expressions;
-#endif
-using System.Reflection;
-using System.Runtime.CompilerServices;
-#if !CODEPLEX_40
-using Microsoft.Runtime.CompilerServices;
+using Microsoft.Scripting.Ast;
 #endif
 
+using System;
+using System.Diagnostics;
+using System.Dynamic;
+using System.Reflection;
+using System.Runtime.CompilerServices;
 using System.Text;
 
 using Microsoft.Scripting;
@@ -42,14 +35,9 @@ using Microsoft.Scripting.Utils;
 using IronPython.Runtime.Operations;
 using IronPython.Runtime.Types;
 
-#if CODEPLEX_40
-using Ast = System.Linq.Expressions.Expression;
-#else
-using Ast = Microsoft.Linq.Expressions.Expression;
-#endif
-using AstUtils = Microsoft.Scripting.Ast.Utils;
-
 namespace IronPython.Runtime.Binding {
+    using Ast = Expression;
+    using AstUtils = Microsoft.Scripting.Ast.Utils;
 
     class PythonGetMemberBinder : DynamicMetaObjectBinder, IPythonSite, IExpressionSerializable {
         private readonly PythonContext/*!*/ _context;
@@ -90,7 +78,7 @@ namespace IronPython.Runtime.Binding {
                 return GetForeignObject(target);
             }
 #if !SILVERLIGHT
- else if (ComOps.IsComObject(target.Value)) {
+ else if (Microsoft.Scripting.ComInterop.ComBinder.IsComObject(target.Value)) {
                 return GetForeignObject(target);
             }
 #endif
@@ -128,11 +116,11 @@ namespace IronPython.Runtime.Binding {
             }
 
             if (args[0] != null) {
-                if (args[0].GetType() == typeof(Scope)) {
+                if (args[0].GetType() == typeof(PythonModule)) {
                     if (!IsNoThrow) {
-                        return (T)(object)new Func<CallSite, object, CodeContext, object>(new ScopeDelegate(_name).Target);
+                        return (T)(object)new Func<CallSite, object, CodeContext, object>(new PythonModuleDelegate(_name).Target);
                     } else {
-                        return (T)(object)new Func<CallSite, object, CodeContext, object>(new ScopeDelegate(_name).NoThrowTarget);
+                        return (T)(object)new Func<CallSite, object, CodeContext, object>(new PythonModuleDelegate(_name).NoThrowTarget);
                     }
                 } else if (args[0].GetType() == typeof(NamespaceTracker)) {
                     switch (Name) {
@@ -154,7 +142,7 @@ namespace IronPython.Runtime.Binding {
 
             if (args[0] != null &&
 #if !SILVERLIGHT
- !ComOps.IsComObject(args[0]) &&
+ !Microsoft.Scripting.ComInterop.ComBinder.IsComObject(args[0]) &&
 #endif
  !(args[0] is IDynamicMetaObjectProvider)) {
                 Type selfType = typeof(T).GetMethod("Invoke").GetParameters()[1].ParameterType;
@@ -444,24 +432,24 @@ namespace IronPython.Runtime.Binding {
             }
         }
 
-        class ScopeDelegate : FastGetBase {
+        class PythonModuleDelegate : FastGetBase {
             private readonly string _name;
 
-            public ScopeDelegate(string name) {
+            public PythonModuleDelegate(string name) {
                 _name = name;
             }
 
             public object Target(CallSite site, object self, CodeContext context) {
-                if (self != null && self.GetType() == typeof(Scope)) {
-                    return ScopeOps.__getattribute__(context, (Scope)self, _name);
+                if (self != null && self.GetType() == typeof(PythonModule)) {
+                    return ((PythonModule)self).__getattribute__(context, _name);
                 }
 
                 return Update(site, self, context);
             }
 
             public object NoThrowTarget(CallSite site, object self, CodeContext context) {
-                if (self != null && self.GetType() == typeof(Scope)) {
-                    return ScopeOps.GetAttributeNoThrow(context, (Scope)self, _name);
+                if (self != null && self.GetType() == typeof(PythonModule)) {
+                    return ((PythonModule)self).GetAttributeNoThrow(context, _name);
                 }
 
                 return Update(site, self, context);
@@ -697,11 +685,7 @@ namespace IronPython.Runtime.Binding {
         public override DynamicMetaObject FallbackGetMember(DynamicMetaObject self, DynamicMetaObject errorSuggestion) {
 #if !SILVERLIGHT
             DynamicMetaObject com;
-#if CODEPLEX_40
-            if (System.Dynamic.ComBinder.TryBindGetMember(this, self, out com, true)) {
-#else
-            if (Microsoft.Scripting.ComBinder.TryBindGetMember(this, self, out com, true)) {
-#endif
+            if (Microsoft.Scripting.ComInterop.ComBinder.TryBindGetMember(this, self, out com, true)) {
                 return com;
             }
 #endif

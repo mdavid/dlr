@@ -13,18 +13,11 @@
  *
  * ***************************************************************************/
 
-#if CODEPLEX_40
 using System;
-#else
-using System; using Microsoft;
-#endif
 using System.Diagnostics;
 using System.Globalization;
 using System.IO;
-#if CODEPLEX_40
 using System.Dynamic;
-#else
-#endif
 using System.Text;
 using Microsoft.Scripting;
 using Microsoft.Scripting.Runtime;
@@ -124,6 +117,8 @@ namespace IronRuby.Compiler {
         // token positions set during tokenization (TODO: to be replaced by tokenizer buffer):
         private SourceLocation _currentTokenStart;
         private SourceLocation _currentTokenEnd;
+
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Performance", "CA1823:AvoidUnusedPrivateFields")]
         private int _currentTokenStartIndex;
 
         // last token span:
@@ -3707,6 +3702,13 @@ namespace IronRuby.Compiler {
                 && IsUpperLetter(name[0])
                 && IsVariableName(name, 1, 1, multiByteIdentifier)
                 && IsIdentifier(name[name.Length - 1], multiByteIdentifier);
+        }
+
+        public static bool IsVariableName(string name, bool allowMultiByteCharacters) {
+            int multiByteIdentifier = AllowMultiByteIdentifier(allowMultiByteCharacters);
+            return !String.IsNullOrEmpty(name)
+                && IsIdentifierInitial(name[0], multiByteIdentifier)
+                && IsVariableName(name, 1, 0, multiByteIdentifier);
         }
 
         public static bool IsMethodName(string name, bool allowMultiByteCharacters) {

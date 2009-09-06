@@ -13,28 +13,18 @@
  *
  * ***************************************************************************/
 
-#if CODEPLEX_40
-using System;
-#else
-using System; using Microsoft;
-#endif
-using System.Collections.Generic;
-using System.Diagnostics;
-#if CODEPLEX_40
-using System.Dynamic;
-#else
-#endif
-using System.IO;
-#if CODEPLEX_40
+#if !CLR2
 using System.Linq.Expressions;
 #else
-using Microsoft.Linq.Expressions;
-#endif
-using System.Runtime.CompilerServices;
-#if !CODEPLEX_40
-using Microsoft.Runtime.CompilerServices;
+using Microsoft.Scripting.Ast;
 #endif
 
+using System;
+using System.Collections.Generic;
+using System.Diagnostics;
+using System.Dynamic;
+using System.IO;
+using System.Runtime.CompilerServices;
 using System.Security;
 using System.Text;
 using System.Threading;
@@ -126,7 +116,7 @@ namespace IronPython.Runtime.Exceptions {
                 return Activator.CreateInstance(cls.UnderlyingSystemType, cls);
             }
 
-            public static object __new__(PythonType/*!*/ cls, [ParamDictionary] IAttributesCollection kwArgs, params object[] args) {
+            public static object __new__(PythonType/*!*/ cls, [ParamDictionary]IDictionary<object, object> kwArgs, params object[] args) {
                 return Activator.CreateInstance(cls.UnderlyingSystemType, cls);
             }
 

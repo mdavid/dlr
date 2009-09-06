@@ -13,11 +13,7 @@
  *
  * ***************************************************************************/
 
-#if CODEPLEX_40
 using System;
-#else
-using System; using Microsoft;
-#endif
 using System.Collections.Generic;
 using System.IO;
 using System.Reflection;
@@ -92,9 +88,9 @@ namespace Microsoft.Scripting.Silverlight {
         [Obsolete("Use Settings.ReportUnhandledErrors instead")]
         public bool ReportUnhandledErrors { get { return Settings.ReportUnhandledErrors; } }
 
-        [Obsolete("Use DynamicApplication.Current.Engine.CreateRuntimeSetup() instead")]
+        [Obsolete("Use DynamicEngine.CreateRuntimeSetup() instead")]
         public static ScriptRuntimeSetup CreateRuntimeSetup() {
-            return DynamicApplication.Current.Engine.CreateRuntimeSetup();
+            return DynamicEngine.CreateRuntimeSetup();
         }
         #endregion
 

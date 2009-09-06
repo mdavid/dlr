@@ -13,34 +13,22 @@
  *
  * ***************************************************************************/
 
-#if CODEPLEX_40
-using System;
+#if !CLR2
+using System.Linq.Expressions;
 #else
-using System; using Microsoft;
+using Microsoft.Scripting.Ast;
 #endif
+
+using System;
 using System.Collections.Generic;
 using System.Text;
 using Microsoft.Scripting;
-#if CODEPLEX_40
-using System.Linq.Expressions;
-#else
-using Microsoft.Linq.Expressions;
-#endif
 using Microsoft.Scripting.Runtime;
 using Microsoft.Scripting.Generation;
 using System.Threading;
-#if CODEPLEX_40
-using System.Linq.Expressions.Compiler;
-#else
-using Microsoft.Linq.Expressions.Compiler;
-#endif
 using System.Reflection;
 using Microsoft.Scripting.Utils;
 using System.Runtime.CompilerServices;
-#if !CODEPLEX_40
-using Microsoft.Runtime.CompilerServices;
-#endif
-
 using System.Security;
 using IronRuby.Compiler;
 using System.Diagnostics;
@@ -149,7 +137,7 @@ namespace IronRuby.Runtime {
                 Debug.Assert(!(result.Target is Closure) || ((Closure)result.Target).Locals == null);
                 return result;
             } else {
-                return lambda.LightCompile();
+                return lambda.LightCompile(false);
             }
         }
     }

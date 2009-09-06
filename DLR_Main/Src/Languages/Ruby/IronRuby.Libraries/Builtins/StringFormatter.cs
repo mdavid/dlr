@@ -13,11 +13,7 @@
  *
  * ***************************************************************************/
 
-#if CODEPLEX_40
 using System;
-#else
-using System; using Microsoft;
-#endif
 using System.Collections;
 using System.Diagnostics;
 using System.Globalization;
@@ -29,10 +25,6 @@ using IronRuby.Runtime;
 using SM = System.Math;
 using IronRuby.Runtime.Calls;
 using System.Runtime.CompilerServices;
-#if !CODEPLEX_40
-using Microsoft.Runtime.CompilerServices;
-#endif
-
 using Microsoft.Scripting.Generation;
 using IronRuby.Compiler.Generation;
 using IronRuby.Runtime.Conversions;

@@ -13,11 +13,13 @@
  *
  * ***************************************************************************/
 
-#if CODEPLEX_40
-using System;
+#if !CLR2
+using System.Linq.Expressions;
 #else
-using System; using Microsoft;
+using Microsoft.Scripting.Ast;
 #endif
+
+using System;
 using System.Diagnostics;
 using System.Reflection;
 using Microsoft.Scripting;
@@ -25,15 +27,12 @@ using Microsoft.Scripting.Actions;
 using Microsoft.Scripting.Runtime;
 using Microsoft.Scripting.Utils;
 using IronRuby.Runtime.Calls;
-#if CODEPLEX_40
-using Ast = System.Linq.Expressions.Expression;
+
 using System.Dynamic;
-#else
-using Ast = Microsoft.Linq.Expressions.Expression;
-#endif
 using System.Collections.Generic;
 
 namespace IronRuby.Builtins {
+    using Ast = Expression;
 
     public partial class RubyEvent {
         private readonly object/*!*/ _target;
@@ -63,7 +62,7 @@ namespace IronRuby.Builtins {
         }
 
         public void Add(object handler) {
-            _info.Tracker.AddHandler(_target, handler, _info.DeclaringModule.Context);
+            _info.Tracker.AddHandler(_target, handler, _info.DeclaringModule.Context.DelegateCreator);
         }
 
         public void Remove(object handler) {

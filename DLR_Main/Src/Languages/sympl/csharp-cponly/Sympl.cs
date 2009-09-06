@@ -1,19 +1,14 @@
 using System;
 using System.Collections.Generic;
+using System.Dynamic;
 
 #if USE35
-using Microsoft;
-using Microsoft.Scripting;
-using Microsoft.Linq.Expressions;
+using Microsoft.Scripting.Ast;
 #else
 using System.Linq.Expressions;
-using System.Dynamic;
-using System.Linq;
-using Expression = System.Linq.Expressions.Expression;
 #endif
 
 using Scope = Microsoft.Scripting.Runtime.Scope;
-using SymplModuleDlrScope = SymplSample.Hosting.SymplModuleDlrScope;
 
 using System.Reflection;
 using System.IO;
@@ -24,15 +19,15 @@ namespace SymplSample {
 
     public class Sympl {
 
-        private Assembly[] _assemblies;
+        private IList<Assembly> _assemblies;
         private ExpandoObject _globals = new ExpandoObject();
-        private SymplModuleDlrScope _dlrGlobals;
+        private Scope _dlrGlobals;
         private Dictionary<string, Symbol> Symbols = 
             new Dictionary<string, Symbol>();
 
-        public Sympl(Assembly[] assms, Scope dlrGlobals) {
+        public Sympl(IList<Assembly> assms, Scope dlrGlobals) {
             _assemblies = assms;
-            _dlrGlobals = new SymplModuleDlrScope(dlrGlobals);
+            _dlrGlobals = dlrGlobals;
             AddAssemblyNamesAndTypes();
         }
 

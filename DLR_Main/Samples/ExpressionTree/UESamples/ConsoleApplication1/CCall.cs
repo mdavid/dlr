@@ -1,20 +1,7 @@
-#if CODEPLEX_40
 using System;
-#else
-using System; using Microsoft;
-#endif
 using System.Collections.Generic;
-#if CODEPLEX_40
-using System.Linq;
-#else
-using Microsoft.Linq;
-#endif
 using System.Text;
-#if CODEPLEX_40
-using System.Linq.Expressions;
-#else
-using Microsoft.Linq.Expressions;
-#endif
+using Microsoft.Scripting.Ast;
 
 namespace Samples
 {
@@ -25,11 +12,7 @@ namespace Samples
         {
             //<Snippet1>
             // add the following directive to your file
-#if CODEPLEX_40
-            // using System.Linq.Expressions;  
-#else
-            // using Microsoft.Linq.Expressions;  
-#endif
+            // using Microsoft.Scripting.Ast;  
             
 
 
@@ -59,11 +42,7 @@ namespace Samples
         {
             //<Snippet1>
             // add the following directive to your file
-#if CODEPLEX_40
-            // using System.Linq.Expressions;  
-#else
-            // using Microsoft.Linq.Expressions;  
-#endif
+            // using Microsoft.Scripting.Ast;  
 
 
 
@@ -98,11 +77,7 @@ namespace Samples
         {
             //<Snippet1>
             // add the following directive to your file
-#if CODEPLEX_40
-            // using System.Linq.Expressions;  
-#else
-            // using Microsoft.Linq.Expressions;  
-#endif
+            // using Microsoft.Scripting.Ast;  
 
 
 
@@ -139,11 +114,7 @@ namespace Samples
         {
             //<Snippet1>
             // add the following directive to your file
-#if CODEPLEX_40
-            // using System.Linq.Expressions;  
-#else
-            // using Microsoft.Linq.Expressions;  
-#endif
+            // using Microsoft.Scripting.Ast;  
 
 
 
@@ -181,11 +152,7 @@ namespace Samples
         {
             //<Snippet1>
             // add the following directive to your file
-#if CODEPLEX_40
-            // using System.Linq.Expressions;  
-#else
-            // using Microsoft.Linq.Expressions;  
-#endif
+            // using Microsoft.Scripting.Ast;  
             
             //This list will represent the arguments we want to pass to the method call.
             List<Expression> Arguments = new List<Expression>();
@@ -224,11 +191,7 @@ namespace Samples
         {
             //<Snippet1>
             // add the following directive to your file
-#if CODEPLEX_40
-            // using System.Linq.Expressions;  
-#else
-            // using Microsoft.Linq.Expressions;  
-#endif
+            // using Microsoft.Scripting.Ast;  
 
             //This Expression represents a call to a generic method on an object - in this case CCall6.CallMe<int, int, int, int>(arg1, arg2, arg3, arg4)
             Expression MyCall = Expression.Call(
@@ -264,11 +227,7 @@ namespace Samples
         {
             //<Snippet1>
             // add the following directive to your file
-#if CODEPLEX_40
-            // using System.Linq.Expressions;  
-#else
-            // using Microsoft.Linq.Expressions;  
-#endif
+            // using Microsoft.Scripting.Ast;  
             
             //This Expression represents a call to a static method on an object with a single argument 
             Expression MyCall = Expression.Call(
@@ -299,11 +258,7 @@ namespace Samples
         {
             //<Snippet1>
             // add the following directive to your file
-#if CODEPLEX_40
-            // using System.Linq.Expressions;  
-#else
-            // using Microsoft.Linq.Expressions;  
-#endif
+            // using Microsoft.Scripting.Ast;  
 
             //This Expression represents a call to a static method on an object with two arguments
             Expression MyCall = Expression.Call(
@@ -335,11 +290,7 @@ namespace Samples
         {
             //<Snippet1>
             // add the following directive to your file
-#if CODEPLEX_40
-            // using System.Linq.Expressions;  
-#else
-            // using Microsoft.Linq.Expressions;  
-#endif
+            // using Microsoft.Scripting.Ast;  
 
             //This Expression represents a call to a static method on an object with three arguments
             Expression MyCall = Expression.Call(
@@ -372,11 +323,7 @@ namespace Samples
         {
             //<Snippet1>
             // add the following directive to your file
-#if CODEPLEX_40
-            // using System.Linq.Expressions;  
-#else
-            // using Microsoft.Linq.Expressions;  
-#endif
+            // using Microsoft.Scripting.Ast;  
 
             //This Expression represents a call to a static method on an object with four arguments
             Expression MyCall = Expression.Call(
@@ -410,11 +357,7 @@ namespace Samples
         {
             //<Snippet1>
             // add the following directive to your file
-#if CODEPLEX_40
-            // using System.Linq.Expressions;  
-#else
-            // using Microsoft.Linq.Expressions;  
-#endif
+            // using Microsoft.Scripting.Ast;  
 
             //This Expression represents a call to a static method on an object with five arguments
             Expression MyCall = Expression.Call(
@@ -449,11 +392,7 @@ namespace Samples
         {
             //<Snippet1>
             // add the following directive to your file:
-#if CODEPLEX_40
-            // using System.Linq.Expressions;  
-#else
-            // using Microsoft.Linq.Expressions;  
-#endif
+            // using Microsoft.Scripting.Ast;  
 
             //This Expression represents a call to a static method on an object with more than five arguments.
             Expression MyCall = Expression.Call(
@@ -489,11 +428,7 @@ namespace Samples
         {
             //<Snippet1>
             // add the following directive to your file:
-#if CODEPLEX_40
-            // using System.Linq.Expressions;  
-#else
-            // using Microsoft.Linq.Expressions;  
-#endif
+            // using Microsoft.Scripting.Ast;  
 
             //We need to create a list of the arguments we want to call.
             var Arguments = new List<Expression>();
@@ -529,11 +464,7 @@ namespace Samples
         {
             //<Snippet1>
             // add the following directive to your file
-#if CODEPLEX_40
-            // using System.Linq.Expressions;  
-#else
-            // using Microsoft.Linq.Expressions;  
-#endif
+            // using Microsoft.Scripting.Ast;  
 
             //This Expression represents a call to a static generic method on an object - in this case CCall14.CallMe<int, int, int, int>(arg1, arg2, arg3, arg4)
             Expression MyCall = Expression.Call(

@@ -13,11 +13,7 @@
  *
  * ***************************************************************************/
 
-#if CODEPLEX_40
 using System;
-#else
-using System; using Microsoft;
-#endif
 using System.Collections;
 using System.Collections.Generic;
 using System.Text;
@@ -627,8 +623,10 @@ namespace IronPython.Modules {
                 string str = DecodeString(PythonAsciiEncoding.Instance, ReadBytes(_myBytes.Current));
 
                 double res = 0;
-                double.TryParse(str, out res);
-                return res;
+                if (double.TryParse(str, out res)) {
+                    return res;
+                }
+                return 0;
             }
 
             private void MoveNext() {

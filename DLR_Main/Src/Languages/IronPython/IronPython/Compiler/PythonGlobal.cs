@@ -13,11 +13,7 @@
  *
  * ***************************************************************************/
 
-#if CODEPLEX_40
 using System;
-#else
-using System; using Microsoft;
-#endif
 using System.Diagnostics;
 using System.Reflection;
 
@@ -42,13 +38,13 @@ namespace IronPython.Compiler {
     public sealed class PythonGlobal {
         private object _value;
         private ModuleGlobalCache _global;
-        private SymbolId _name;
+        private string _name;
         private CodeContext/*!*/ _context;
 
         internal static PropertyInfo/*!*/ CurrentValueProperty = typeof(PythonGlobal).GetProperty("CurrentValue");
         internal static PropertyInfo/*!*/ RawValueProperty = typeof(PythonGlobal).GetProperty("RawValue");
 
-        public PythonGlobal(CodeContext/*!*/ context, SymbolId name) {
+        public PythonGlobal(CodeContext/*!*/ context, string name) {
             Assert.NotNull(context);
 
             _value = Uninitialized.Instance;
@@ -73,7 +69,7 @@ namespace IronPython.Compiler {
             }
         }
 
-        public SymbolId Name { get { return _name; } }
+        public string Name { get { return _name; } }
 
         private object GetCachedValue() {
             if (_global == null) {                

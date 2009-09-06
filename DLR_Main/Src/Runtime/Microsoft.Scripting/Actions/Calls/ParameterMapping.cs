@@ -13,20 +13,12 @@
  *
  * ***************************************************************************/
 
-#if CODEPLEX_40
 using System;
-#else
-using System; using Microsoft;
-#endif
 using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Reflection;
 using System.Runtime.CompilerServices;
-#if !CODEPLEX_40
-using Microsoft.Runtime.CompilerServices;
-#endif
-
 using Microsoft.Scripting.Generation;
 using Microsoft.Scripting.Utils;
 
@@ -53,6 +45,7 @@ namespace Microsoft.Scripting.Actions.Calls {
         private ParameterWrapper _paramsDict;
 
         public MethodBase Method { get { return _method; } }
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Performance", "CA1819:PropertiesShouldNotReturnArrays")] // TODO
         public ParameterInfo[] ParameterInfos { get { return _parameterInfos; } }
         public int ArgIndex { get { return _argIndex; } } 
 

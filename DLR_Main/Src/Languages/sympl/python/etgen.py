@@ -2,14 +2,13 @@
 import clr
 if clr.use35:
     clr.AddReference("Microsoft.Scripting.Core")
-    import Microsoft.Linq.Expressions as Exprs
-    from Microsoft.Scripting import CallInfo
+    import Microsoft.Scripting.Ast as Exprs
 else:
     clr.AddReference("System.Core")
     import System.Linq.Expressions as Exprs
-    from System.Dynamic import CallInfo
 
 from System.Collections.Generic import IEnumerable
+from System.Dynamic import CallInfo
 
 import System
 

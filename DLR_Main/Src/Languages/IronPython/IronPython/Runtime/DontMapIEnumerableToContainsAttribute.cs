@@ -13,11 +13,7 @@
  *
  * ***************************************************************************/
 
-#if CODEPLEX_40
 using System;
-#else
-using System; using Microsoft;
-#endif
 using System.Collections.Generic;
 using System.Text;
 
@@ -27,6 +23,6 @@ namespace IronPython.Runtime {
     /// __contains__
     /// </summary>
     [AttributeUsage(AttributeTargets.Class | AttributeTargets.Struct)]
-    class DontMapIEnumerableToContainsAttribute : Attribute {
+    sealed class DontMapIEnumerableToContainsAttribute : Attribute {
     }
 }

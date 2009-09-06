@@ -13,19 +13,11 @@
  *
  * ***************************************************************************/
 
-#if CODEPLEX_40
 using System;
-#else
-using System; using Microsoft;
-#endif
 using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Runtime.CompilerServices;
-#if !CODEPLEX_40
-using Microsoft.Runtime.CompilerServices;
-#endif
-
 
 using Microsoft.Scripting.Runtime;
 
@@ -105,8 +97,6 @@ namespace IronPython.Runtime {
         public SentinelIterator(CodeContext/*!*/ context, object target, object sentinel) {
             _target = target;
             _sentinel = sentinel;
-            _current = null;
-            _sinkState = false;
             _context = context;
         }
 

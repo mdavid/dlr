@@ -17,19 +17,11 @@ using System.Text;
 using IronRuby.Runtime;
 using Microsoft.Scripting.Runtime;
 using System.Collections;
-#if CODEPLEX_40
 using System;
-#else
-using System; using Microsoft;
-#endif
 using IronRuby.Compiler;
 using System.Runtime.InteropServices;
 using Microsoft.Scripting;
 using System.Runtime.CompilerServices;
-#if !CODEPLEX_40
-using Microsoft.Runtime.CompilerServices;
-#endif
-
 using IronRuby.Runtime.Calls;
 
 namespace IronRuby.Builtins {

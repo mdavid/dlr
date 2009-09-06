@@ -12,21 +12,29 @@
  *
  *
  * ***************************************************************************/
-using System; using Microsoft;
 
+#if !SILVERLIGHT
+#if !CLR2
+using System.Linq.Expressions;
+#else
+using Microsoft.Scripting.Ast;
+#endif
 
-using System.Collections.Generic;
-using Microsoft.Scripting.Runtime;
+using System;
+using System.Diagnostics;
 
-namespace IronPython.Runtime {
-    internal class GlobalScopeDictionaryStorage : ScopeDictionaryStorage {
-        public GlobalScopeDictionaryStorage(Scope scope)
-            : base(CodeContext.GetModuleScope(scope)) {
+namespace Microsoft.Scripting.ComInterop {
 
-        }
+    /// <summary>
+    /// ArgBuilder which always produces null.  
+    /// </summary>
+    internal sealed class NullArgBuilder : ArgBuilder {
+        internal NullArgBuilder() { }
 
-        protected override IEnumerable<Scope> GetVisibleScopes() {
-            yield return Scope;
+        internal override Expression Marshal(Expression parameter) {
+            return Expression.Constant(null);
         }
     }
 }
+
+#endif

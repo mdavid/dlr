@@ -14,11 +14,7 @@
  * ***************************************************************************/
 //#define DUMP_TOKENS
 
-#if CODEPLEX_40
 using System;
-#else
-using System; using Microsoft;
-#endif
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
@@ -56,14 +52,11 @@ namespace IronPython.Compiler {
             _errors = ErrorSink.Null;
             _verbatim = true;
             _state = new State(null);
-            _dontImplyDedent = false;
         }
 
         public Tokenizer(ErrorSink errorSink) {
             _errors = errorSink;
-            _verbatim = false;
             _state = new State(null);
-            _dontImplyDedent = false;
         }
 
         [Obsolete("Use the overload that takes a PythonCompilerOptions instead")]
@@ -183,7 +176,7 @@ namespace IronPython.Compiler {
             ContractUtils.RequiresNotNull(reader, "reader");
 
             if (state != null) {
-                if (!(state is State)) throw new ArgumentException();
+                if (!(state is State)) throw new ArgumentException("bad state provided");
                 _state = new State((State)state);
             } else {
                 _state = new State(null);
@@ -557,7 +550,7 @@ namespace IronPython.Compiler {
             return Tokens.EndOfFileToken;
         }
 
-        private ErrorToken BadChar(int ch) {
+        private static ErrorToken BadChar(int ch) {
             return new ErrorToken(StringUtils.AddSlashes(((char)ch).ToString()));
         }
 
@@ -990,8 +983,8 @@ namespace IronPython.Compiler {
 
             _buffer.MarkSingleLineTokenEnd();
 
-            SymbolId name = SymbolTable.StringToId(_buffer.GetTokenString());
-            if (name == Symbols.None) return Tokens.NoneToken;
+            string name = _buffer.GetTokenString();
+            if (name == "None") return Tokens.NoneToken;
 
             Token result;
             if (Tokens.Keywords.TryGetValue(name, out result)) {
@@ -1273,7 +1266,7 @@ namespace IronPython.Compiler {
         }
 
         [Conditional("DUMP_TOKENS")]
-        private void DumpToken(Token token) {
+        private static void DumpToken(Token token) {
             Console.WriteLine("{0} `{1}`", token.Kind, token.Image.Replace("\r", "\\r").Replace("\n", "\\n").Replace("\t", "\\t"));
         }
 

@@ -13,21 +13,17 @@
  *
  * ***************************************************************************/
 
-#if CODEPLEX_40
-using System;
+#if !CLR2
+using System.Linq.Expressions;
 #else
-using System; using Microsoft;
+using Microsoft.Scripting.Ast;
 #endif
+
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics;
-#if CODEPLEX_40
 using System.Dynamic;
-using System.Linq.Expressions;
-#else
-using Microsoft.Scripting;
-using Microsoft.Linq.Expressions;
-#endif
 using System.Reflection;
 using System.Text;
 using IronRuby.Builtins;
@@ -37,14 +33,11 @@ using Microsoft.Scripting.Actions.Calls;
 using Microsoft.Scripting.Generation;
 using Microsoft.Scripting.Runtime;
 using Microsoft.Scripting.Utils;
-#if CODEPLEX_40
-using Ast = System.Linq.Expressions.Expression;
-#else
-using Ast = Microsoft.Linq.Expressions.Expression;
-#endif
 using AstUtils = Microsoft.Scripting.Ast.Utils;
 
 namespace IronRuby.Runtime.Calls {
+    using Ast = Expression;
+
     internal sealed class RubyOverloadResolver : OverloadResolver {
         private readonly CallArguments/*!*/ _args;
         private readonly MetaObjectBuilder/*!*/ _metaBuilder;
@@ -443,7 +436,7 @@ namespace IronRuby.Runtime.Calls {
         private bool HasExplicitProtocolConversion(ParameterWrapper/*!*/ parameter) {
             return
                 parameter.ParameterInfo != null &&
-                parameter.ParameterInfo.IsDefined(typeof(DefaultProtocolAttribute), false) &&
+                parameter.ParameterInfo.IsAttributeDefined(typeof(DefaultProtocolAttribute), false) &&
                 !parameter.IsParamsArray; // default protocol doesn't apply on param-array/dict itself, only on the expanded parameters
         }
 
@@ -508,7 +501,7 @@ namespace IronRuby.Runtime.Calls {
             }
 
             // protocol conversions:
-            if (info != null && info.IsDefined(typeof(DefaultProtocolAttribute), false)) {
+            if (info != null && info.IsAttributeDefined(typeof(DefaultProtocolAttribute), false)) {
                 var action = RubyConversionAction.TryGetDefaultConversionAction(Context, toType);
                 if (action != null) {
                     // TODO: inline implicit conversions:

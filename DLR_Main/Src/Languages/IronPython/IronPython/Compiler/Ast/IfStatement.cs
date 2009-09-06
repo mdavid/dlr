@@ -12,28 +12,21 @@
  *
  *
  * ***************************************************************************/
-using System; using Microsoft;
 
-
-using System.Diagnostics;
-#if CODEPLEX_40
-using System.Dynamic;
-#else
-#endif
-using Microsoft.Scripting;
-using AstUtils = Microsoft.Scripting.Ast.Utils;
-#if CODEPLEX_40
+#if !CLR2
 using MSAst = System.Linq.Expressions;
 #else
-using MSAst = Microsoft.Linq.Expressions;
+using MSAst = Microsoft.Scripting.Ast;
 #endif
 
+using System.Diagnostics;
+using System.Collections.Generic;
+
+using Microsoft.Scripting;
+using AstUtils = Microsoft.Scripting.Ast.Utils;
+
 namespace IronPython.Compiler.Ast {
-#if CODEPLEX_40
-    using Ast = System.Linq.Expressions.Expression;
-#else
-    using Ast = Microsoft.Linq.Expressions.Expression;
-#endif
+    using Ast = MSAst.Expression;
 
     public class IfStatement : Statement {
         private readonly IfStatementTest[] _tests;
@@ -44,7 +37,7 @@ namespace IronPython.Compiler.Ast {
             _else = else_;
         }
 
-        public IfStatementTest[] Tests {
+        public IList<IfStatementTest> Tests {
             get { return _tests; }
         }
 
@@ -66,7 +59,7 @@ namespace IronPython.Compiler.Ast {
             while (i-- > 0) {
                 IfStatementTest ist = _tests[i];
 
-                result = ag.AddDebugInfo(
+                result = ag.AddDebugInfoAndVoid(
                     Ast.Condition(
                         ag.TransformAndDynamicConvert(ist.Test, typeof(bool)),
                         ag.TransformMaybeSingleLineSuite(ist.Body, ist.Test.Start), 

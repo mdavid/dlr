@@ -13,13 +13,13 @@
  *
  * ***************************************************************************/
 
-#if CODEPLEX_40
-using System;
+#if !CLR2
 using System.Linq.Expressions;
 #else
-using System; using Microsoft;
-using Microsoft.Linq.Expressions;
+using Microsoft.Scripting.Ast;
 #endif
+
+using System;
 using System.Reflection;
 
 using Microsoft.Scripting;
@@ -108,7 +108,7 @@ namespace IronPython.Compiler {
             }
         }
 
-        public SymbolId Name {
+        public string Name {
             get {
                 return _variable.Name;
             }

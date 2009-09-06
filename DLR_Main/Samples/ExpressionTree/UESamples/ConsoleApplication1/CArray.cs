@@ -1,20 +1,7 @@
-#if CODEPLEX_40
 using System;
-#else
-using System; using Microsoft;
-#endif
 using System.Collections.Generic;
-#if CODEPLEX_40
-using System.Linq;
-#else
-using Microsoft.Linq;
-#endif
 using System.Text;
-#if CODEPLEX_40
-using System.Linq.Expressions;
-#else
-using Microsoft.Linq.Expressions;
-#endif
+using Microsoft.Scripting.Ast;
 
 
 namespace Samples {
@@ -23,11 +10,7 @@ namespace Samples {
         static public void ArrayAccess1() {
             //<Snippet1>
             // add the following directive to your file
-#if CODEPLEX_40
-            // using System.Linq.Expressions;  
-#else
-            // using Microsoft.Linq.Expressions;  
-#endif
+            // using Microsoft.Scripting.Ast;  
 
             //This variable will hold the array to be accessed
             ParameterExpression MyArray = Expression.Parameter(typeof(int[]), "MyArray");
@@ -73,11 +56,7 @@ namespace Samples {
         static public void ArrayAccess2() {
             //<Snippet1>
             // add the following directive to your file
-#if CODEPLEX_40
-            // using System.Linq.Expressions;  
-#else
-            // using Microsoft.Linq.Expressions;  
-#endif
+            // using Microsoft.Scripting.Ast;  
 
             //This variable will hold the array to be accessed
             ParameterExpression MyArray = Expression.Parameter(typeof(int[]), "MyArray");
@@ -126,11 +105,7 @@ namespace Samples {
         static public void ArrayAccess3() {
             //<Snippet1>
             // add the following directive to your file:
-#if CODEPLEX_40
-            // using System.Linq.Expressions;  
-#else
-            // using Microsoft.Linq.Expressions;  
-#endif
+            // using Microsoft.Scripting.Ast;  
 
             //This variable will hold the array to be indexed.
             ParameterExpression MyArray = Expression.Parameter(typeof(int[]), "MyArray");
@@ -166,11 +141,7 @@ namespace Samples {
         static public void ArrayAccess4() {
             //<Snippet1>
             // add the following directive to your file:
-#if CODEPLEX_40
-            // using System.Linq.Expressions;  
-#else
-            // using Microsoft.Linq.Expressions;  
-#endif
+            // using Microsoft.Scripting.Ast;  
 
             //This variable will hold the array to be indexed.
             ParameterExpression MyArray = Expression.Parameter(typeof(int[,]), "MyArray");
@@ -209,11 +180,7 @@ namespace Samples {
         static public void ArrayAccess5() {
             //<Snippet1>
             // add the following directive to your file:
-#if CODEPLEX_40
-            // using System.Linq.Expressions;  
-#else
-            // using Microsoft.Linq.Expressions;  
-#endif
+            // using Microsoft.Scripting.Ast;  
 
             //This variable will hold the array to be indexed.
             ParameterExpression MyArray = Expression.Parameter(typeof(int[,]), "MyArray");
@@ -255,11 +222,7 @@ namespace Samples {
         static public void ArrayAccess6() {
             //<Snippet1>
             // add the following directive to your file:
-#if CODEPLEX_40
-            // using System.Linq.Expressions;  
-#else
-            // using Microsoft.Linq.Expressions;  
-#endif
+            // using Microsoft.Scripting.Ast;  
 
             //This variable will hold the array.
             ParameterExpression MyArray = Expression.Parameter(typeof(int[]), "MyArray");

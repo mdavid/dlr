@@ -1,22 +1,8 @@
-#if CODEPLEX_40
 using System;
-#else
-using System; using Microsoft;
-#endif
 using System.Collections.Generic;
-#if CODEPLEX_40
-using System.Linq;
-using System.Linq.Expressions;
-#else
-using Microsoft.Linq;
-using Microsoft.Linq.Expressions;
-#endif
 using System.Text;
 using System.Runtime.CompilerServices;
-#if !CODEPLEX_40
-using Microsoft.Runtime.CompilerServices;
-#endif
-
+using Microsoft.Scripting.Ast;
 
 namespace Samples {
     class CMakeDynamic {
@@ -36,11 +22,7 @@ namespace Samples {
         static public void MakeDynamic1() {
             //<Snippet1>
             // add the following directive to your file
-#if CODEPLEX_40
-            // using System.Linq.Expressions;  
-#else
-            // using Microsoft.Linq.Expressions;  
-#endif
+            // using Microsoft.Scripting.Ast;  
 
             //Instantiate the CallSiteBinder that describes the operation.
             var MyCallSiteBinder = new MyCallSiteBinder();
@@ -80,11 +62,7 @@ namespace Samples {
         static public void MakeDynamic2() {
             //<Snippet2>
             // add the following directive to your file
-#if CODEPLEX_40
-            // using System.Linq.Expressions;  
-#else
-            // using Microsoft.Linq.Expressions;  
-#endif
+            // using Microsoft.Scripting.Ast;  
 
             //Instantiate the CallSiteBinder that describes the operation.
             var MyCallSiteBinder = new MyCallSiteBinder2();
@@ -123,11 +101,7 @@ namespace Samples {
         static public void MakeDynamic3() {
             //<Snippet3>
             // add the following directive to your file
-#if CODEPLEX_40
-            // using System.Linq.Expressions;  
-#else
-            // using Microsoft.Linq.Expressions;  
-#endif
+            // using Microsoft.Scripting.Ast;  
 
             //Instantiate the CallSiteBinder that describes the operation.
             var MyCallSiteBinder = new MyCallSiteBinder3();
@@ -168,11 +142,7 @@ namespace Samples {
         static public void MakeDynamic4() {
             //<Snippet4>
             // add the following directive to your file
-#if CODEPLEX_40
-            // using System.Linq.Expressions;  
-#else
-            // using Microsoft.Linq.Expressions;  
-#endif
+            // using Microsoft.Scripting.Ast;  
 
             //Instantiate the CallSiteBinder that describes the operation.
             var MyCallSiteBinder = new MyCallSiteBinder4();
@@ -220,11 +190,7 @@ namespace Samples {
         static public void MakeDynamic5() {
             //<Snippet5>
             // add the following directive to your file
-#if CODEPLEX_40
-            // using System.Linq.Expressions;  
-#else
-            // using Microsoft.Linq.Expressions;  
-#endif
+            // using Microsoft.Scripting.Ast;  
 
             //Instantiate the CallSiteBinder that describes the operation.
             var MyCallSiteBinder = new MyCallSiteBinder5();
@@ -273,11 +239,7 @@ namespace Samples {
         static public void MakeDynamic6() {
             //<Snippet6>
             // add the following directive to your file
-#if CODEPLEX_40
-            // using System.Linq.Expressions;  
-#else
-            // using Microsoft.Linq.Expressions;  
-#endif
+            // using Microsoft.Scripting.Ast;  
 
             //Instantiate the CallSiteBinder that describes the operation.
             var MyCallSiteBinder = new MyCallSiteBinder6();

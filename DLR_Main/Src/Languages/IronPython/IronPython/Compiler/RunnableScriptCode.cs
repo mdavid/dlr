@@ -13,11 +13,7 @@
  *
  * ***************************************************************************/
 
-#if CODEPLEX_40
 using System;
-#else
-using System; using Microsoft;
-#endif
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Threading;
@@ -45,9 +41,20 @@ namespace IronPython.Compiler {
             throw new NotImplementedException();
         }
 
-        protected static CodeContext/*!*/ CreateTopLevelCodeContext(Scope/*!*/ scope, LanguageContext/*!*/ context) {
-            context.EnsureScopeExtension(CodeContext.GetModuleScope(scope));
-            return new CodeContext(scope, (PythonContext)context);
+        protected static CodeContext/*!*/ CreateTopLevelCodeContext(PythonDictionary/*!*/ dict, LanguageContext/*!*/ context) {
+            ModuleContext modContext = new ModuleContext(dict, (PythonContext)context);
+            return modContext.GlobalContext;
+        }
+
+        protected static CodeContext GetContextForScope(Scope scope, SourceUnit sourceUnit) {
+            CodeContext ctx;
+            var ext = scope.GetExtension(sourceUnit.LanguageContext.ContextId) as PythonScopeExtension;
+            if (ext == null) {
+                ext = sourceUnit.LanguageContext.EnsureScopeExtension(scope) as PythonScopeExtension;
+            }
+
+            ctx = ext.ModuleContext.GlobalContext;
+            return ctx;
         }
 
         protected FunctionCode EnsureFunctionCode(Delegate/*!*/ dlg) {
@@ -68,10 +75,10 @@ namespace IronPython.Compiler {
                         SourceUnit.Path,
                         false,
                         true,
-                        new SymbolId[0],
-                        new SymbolId[0],
-                        new SymbolId[0],
-                        new SymbolId[0],
+                        ArrayUtils.EmptyStrings,
+                        ArrayUtils.EmptyStrings,
+                        ArrayUtils.EmptyStrings,
+                        ArrayUtils.EmptyStrings,
                         0,
                         null,
                         null
@@ -95,10 +102,10 @@ namespace IronPython.Compiler {
         }
 
         protected static FunctionAttributes GetCodeAttributes(CompilerContext context) {
-            PythonLanguageFeatures features = ((PythonCompilerOptions)context.Options).LanguageFeatures;
+            ModuleOptions features = ((PythonCompilerOptions)context.Options).Module;
             FunctionAttributes funcAttrs = 0;
 
-            if ((features & PythonLanguageFeatures.TrueDivision) != 0) {
+            if ((features & ModuleOptions.TrueDivision) != 0) {
                 funcAttrs |= FunctionAttributes.FutureDivision;
             }
 

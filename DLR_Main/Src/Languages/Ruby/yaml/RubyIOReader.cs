@@ -13,19 +13,11 @@
  *
  * ***************************************************************************/
 
-#if CODEPLEX_40
 using System;
-#else
-using System; using Microsoft;
-#endif
 using System.IO;
 using System.Text;
 using IronRuby.Builtins;
-#if CODEPLEX_40
 using System.Dynamic.Utils;
-#else
-using Microsoft.Scripting.Utils;
-#endif
 
 namespace IronRuby.StandardLibrary.Yaml {
     internal class RubyIOReader : TextReader {

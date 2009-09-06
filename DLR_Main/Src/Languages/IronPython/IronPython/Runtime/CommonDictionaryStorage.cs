@@ -13,18 +13,10 @@
  *
  * ***************************************************************************/
 
-#if CODEPLEX_40
 using System;
-#else
-using System; using Microsoft;
-#endif
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Runtime.CompilerServices;
-#if !CODEPLEX_40
-using Microsoft.Runtime.CompilerServices;
-#endif
-
 using System.Runtime.Serialization;
 
 using Microsoft.Scripting;
@@ -200,7 +192,7 @@ namespace IronPython.Runtime {
                 } else {
                     // random type, but still homogeneous... get a shared site for this type.
                     PythonType pt = DynamicHelpers.GetPythonType(key);
-                    var hashSite = DefaultContext.DefaultPythonContext.GetHashSite(pt);
+                    var hashSite = PythonContext.GetHashSite(pt);
                     var equalSite = DefaultContext.DefaultPythonContext.GetEqualSite(pt);
 
                     AssignSiteDelegates(hashSite, equalSite);

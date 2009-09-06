@@ -1,20 +1,7 @@
-#if CODEPLEX_40
 using System;
-#else
-using System; using Microsoft;
-#endif
 using System.Collections.Generic;
-#if CODEPLEX_40
-using System.Linq;
-#else
-using Microsoft.Linq;
-#endif
 using System.Text;
-#if CODEPLEX_40
-using System.Linq.Expressions;
-#else
-using Microsoft.Linq.Expressions;
-#endif
+using Microsoft.Scripting.Ast;
 
 namespace Samples {
     class CAdd {
@@ -22,11 +9,7 @@ namespace Samples {
         static public void Add1() {
             //<Snippet1>
             // add the following directive to your file
-#if CODEPLEX_40
-            // using System.Linq.Expressions;  
-#else
-            // using Microsoft.Linq.Expressions;  
-#endif
+            // using Microsoft.Scripting.Ast;  
 
             //This expression adds the values of its two arguments.
             //Both arguments need to be of the same type.
@@ -54,11 +37,7 @@ namespace Samples {
         public static void Add2() {
             //<Snippet2>
             // add the following directive to your file
-#if CODEPLEX_40
-            // using System.Linq.Expressions;
-#else
-            // using Microsoft.Linq.Expressions;
-#endif
+            // using Microsoft.Scripting.Ast;
 
             //This expression represents an addition of two arguments using a user defined operator.
             //The parameters to the addition should be reference convertible to the MethodInfo's arguments
@@ -81,11 +60,7 @@ namespace Samples {
         static public void AddChecked1() {
             //<Snippet3>
             // add the following directive to your file
-#if CODEPLEX_40
-            // using System.Linq.Expressions;
-#else
-            // using Microsoft.Linq.Expressions;
-#endif
+            // using Microsoft.Scripting.Ast;
 
             //This expression adds the values of its two arguments.
             //Both arguments need to be of the same type.
@@ -125,11 +100,7 @@ namespace Samples {
         public static void AddChecked2() {
             //<Snippet4>
             // add the following directive to your file
-#if CODEPLEX_40
-            // using System.Linq.Expressions;
-#else
-            // using Microsoft.Linq.Expressions;
-#endif
+            // using Microsoft.Scripting.Ast;
 
             //This expression represents an addition of two arguments using a user defined operator.
             //The parameters to the addition should be reference convertible to the MethodInfo's arguments
@@ -160,11 +131,7 @@ namespace Samples {
         public static void AddAssign1() {
             //<Snippet5>
             // add the following directive to your file
-#if CODEPLEX_40
-            // using System.Linq.Expressions;
-#else
-            // using Microsoft.Linq.Expressions;
-#endif
+            // using Microsoft.Scripting.Ast;
 
             //AddAssign requires an assignable expression to be used as the left argument.
             ParameterExpression Variable = Expression.Variable(typeof(int), "Variable");
@@ -199,11 +166,7 @@ namespace Samples {
         public static void AddAssign2() {
             //<Snippet6>
             // add the following directive to your file
-#if CODEPLEX_40
-            // using System.Linq.Expressions;
-#else
-            // using Microsoft.Linq.Expressions;
-#endif
+            // using Microsoft.Scripting.Ast;
 
             //AddAssign requires an assignable expression to be used as the left argument.
             ParameterExpression Variable = Expression.Variable(typeof(int), "Variable");
@@ -238,11 +201,7 @@ namespace Samples {
         public static void AddAssign3() {
             //<Snippet7>
             // add the following directive to your file
-#if CODEPLEX_40
-            // using System.Linq.Expressions;
-#else
-            // using Microsoft.Linq.Expressions;
-#endif
+            // using Microsoft.Scripting.Ast;
 
             //AddAssign requires an assignable expression to be used as the left argument.
             ParameterExpression Variable = Expression.Variable(typeof(int), "Variable");
@@ -286,11 +245,7 @@ namespace Samples {
         public static void AddAssignChecked1() {
             //<Snippet8>
             // add the following directive to your file
-#if CODEPLEX_40
-            // using System.Linq.Expressions;
-#else
-            // using Microsoft.Linq.Expressions;
-#endif
+            // using Microsoft.Scripting.Ast;
 
             //AddAssign requires an assignable expression to be used as the left argument.
             ParameterExpression Variable = Expression.Variable(typeof(int), "Variable");
@@ -325,11 +280,7 @@ namespace Samples {
         public static void AddAssignChecked2() {
             //<Snippet9>
             // add the following directive to your file
-#if CODEPLEX_40
-            // using System.Linq.Expressions;
-#else
-            // using Microsoft.Linq.Expressions;
-#endif
+            // using Microsoft.Scripting.Ast;
 
             //AddAssign requires an assignable expression to be used as the left argument.
             ParameterExpression Variable = Expression.Variable(typeof(int), "Variable");
@@ -364,11 +315,7 @@ namespace Samples {
         public static void AddAssignChecked3() {
             //<Snippet10>
             // add the following directive to your file
-#if CODEPLEX_40
-            // using System.Linq.Expressions;
-#else
-            // using Microsoft.Linq.Expressions;
-#endif
+            // using Microsoft.Scripting.Ast;
 
             //AddAssign requires an assignable expression to be used as the left argument.
             ParameterExpression Variable = Expression.Variable(typeof(int), "Variable");

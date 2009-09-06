@@ -13,25 +13,18 @@
  *
  * ***************************************************************************/
 
-#if CODEPLEX_40
-using System;
+#if !CLR2
+using System.Linq.Expressions;
 #else
-using System; using Microsoft;
+using Microsoft.Scripting.Ast;
 #endif
+
+using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
-#if CODEPLEX_40
-using System.Linq.Expressions;
-#else
-using Microsoft.Linq.Expressions;
-#endif
 using System.Reflection;
 using System.Runtime.CompilerServices;
-#if !CODEPLEX_40
-using Microsoft.Runtime.CompilerServices;
-#endif
-
 using System.Runtime.Serialization;
 using System.Text;
 using System.Threading;
@@ -719,7 +712,7 @@ namespace IronRuby.Runtime {
 
             return new RubyCompilerOptions(targetScope.RubyContext.RubyOptions) {
                 IsEval = true,
-                FactoryKind = isModuleEval ? TopScopeFactoryKind.Module : TopScopeFactoryKind.None,
+                FactoryKind = isModuleEval ? TopScopeFactoryKind.ModuleEval : TopScopeFactoryKind.None,
                 LocalNames = targetScope.GetVisibleLocalNames(),
                 TopLevelMethodName = (methodScope != null) ? methodScope.DefinitionName : null,
                 InitialLocation = new SourceLocation(0, line <= 0 ? 1 : line, 1),
@@ -768,51 +761,48 @@ namespace IronRuby.Runtime {
             );
         }
 
-        private static RubyModuleScope/*!*/ CreateModuleEvalScope(RubyScope/*!*/ parent, object self, RubyModule module) {
-            RubyModuleScope scope = new RubyModuleScope(parent, module, true, self);
-            scope.SetDebugName("top-module/instance-eval");
+        private static RubyScope/*!*/ CreateModuleEvalScope(RubyScope/*!*/ parent, object self, RubyModule module) {
+            var scope = new RubyModuleEvalScope(parent, module, self);
+            scope.SetDebugName("instance/module-eval");
             return scope;
         }
-        
-        public static object EvaluateInModule(RubyModule/*!*/ self, BlockParam/*!*/ block) {
-            Assert.NotNull(self, block);
 
-            object returnValue = EvaluateInModuleNoJumpCheck(self, block);
-            block.BlockJumped(returnValue);
-            return returnValue;
+        public static object EvaluateInModule(RubyModule/*!*/ self, BlockParam/*!*/ block, object[] args) {
+            object result;
+            EvaluateBlock(block, self, self, args, out result);
+            return result;
         }
 
-        public static object EvaluateInModule(RubyModule/*!*/ self, BlockParam/*!*/ block, object defaultReturnValue) {
-            Assert.NotNull(self, block);
-
-            object returnValue = EvaluateInModuleNoJumpCheck(self, block);
-
-            if (block.BlockJumped(returnValue)) {
-                return returnValue;
-            }
-
-            return defaultReturnValue;
+        public static object EvaluateInModule(RubyModule/*!*/ self, BlockParam/*!*/ block, object[] args, object defaultReturnValue) {
+            object result;
+            return EvaluateBlock(block, self, self, args, out result) ? result : defaultReturnValue;
         }
 
-        private static object EvaluateInModuleNoJumpCheck(RubyModule/*!*/ self, BlockParam/*!*/ block) {
-            block.MethodLookupModule = self;
-            return RubyOps.Yield1(self, self, block);
-        }
-
-        public static object EvaluateInSingleton(object self, BlockParam/*!*/ block) {
+        public static object EvaluateInSingleton(object self, BlockParam/*!*/ block, object[] args) {
             // TODO: this is checked in method definition, if no method is defined it is ok.
             // => singleton is create in method definition also.
             if (!RubyUtils.CanCreateSingleton(self)) {
                 throw RubyExceptions.CreateTypeError("can't define singleton method for literals");
             }
 
-            block.MethodLookupModule = block.RubyContext.CreateSingletonClass(self);
+            object result;
+            EvaluateBlock(block, block.RubyContext.CreateSingletonClass(self), self, args, out result);
+            return result;
+        }
 
-            // TODO: flows Public visibility in the block
-            // Flow "Singleton" method attribute? If we change method attribute
-            object returnValue = RubyOps.Yield1(self, self, block);
-            block.BlockJumped(returnValue);
-            return returnValue;
+        private static bool EvaluateBlock(BlockParam/*!*/ block, RubyModule/*!*/ module, object self, object[] args, out object result) {
+            Assert.NotNull(block, module);
+            block.MethodLookupModule = module;
+
+            if (args != null) {
+                result = RubyOps.Yield(args, self, block);
+            } else if (module.Context.RubyOptions.Compatibility == RubyCompatibility.Ruby18) {
+                result = RubyOps.Yield1(self, self, block);
+            } else {
+                result = RubyOps.Yield0(self, block);
+            }
+
+            return block.BlockJumped(result);
         }
 
         #endregion

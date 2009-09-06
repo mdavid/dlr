@@ -12,8 +12,6 @@
  *
  *
  * ***************************************************************************/
-using System; using Microsoft;
-
 #if !SILVERLIGHT // Signals dont make much sense in Silverlight as cross-process communication is not allowed
 
 using IronRuby.Runtime;

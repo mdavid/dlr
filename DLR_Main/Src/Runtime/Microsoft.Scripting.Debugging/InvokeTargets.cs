@@ -13,20 +13,18 @@
  *
  * ***************************************************************************/
 
-#if CODEPLEX_40
-using System;
+#if !CLR2
+using MSAst = System.Linq.Expressions;
 #else
-using System; using Microsoft;
+using MSAst = Microsoft.Scripting.Ast;
 #endif
+
+using System;
 using System.Collections;
 using System.Collections.Generic;
 
 namespace Microsoft.Scripting.Debugging {
-#if CODEPLEX_40
-    using Ast = System.Linq.Expressions.Expression;
-#else
-    using Ast = Microsoft.Linq.Expressions.Expression;
-#endif
+    using Ast = MSAst.Expression;
 
     internal static class InvokeTargets {
         internal static Type GetGeneratorFactoryTarget(Type[] parameterTypes) {

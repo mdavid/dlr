@@ -13,17 +13,15 @@
  *
  * ***************************************************************************/
 
-#if CODEPLEX_40
+#if !CLR2
+using System.Linq.Expressions;
+#else
+using Microsoft.Scripting.Ast;
+#endif
+
 using System;
-#else
-using System; using Microsoft;
-#endif
 using System.Diagnostics;
-#if CODEPLEX_40
 using System.Dynamic;
-#else
-using Microsoft.Scripting;
-#endif
 using System.Reflection;
 
 using Microsoft.Contracts;
@@ -33,11 +31,7 @@ using Microsoft.Scripting.Utils;
 using AstUtils = Microsoft.Scripting.Ast.Utils;
 
 namespace Microsoft.Scripting.Actions {
-#if CODEPLEX_40
-    using Ast = System.Linq.Expressions.Expression;
-#else
-    using Ast = Microsoft.Linq.Expressions.Expression;
-#endif
+    using Ast = Expression;
 
     public class FieldTracker : MemberTracker {
         private readonly FieldInfo _field;

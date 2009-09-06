@@ -1,16 +1,6 @@
-#if CODEPLEX_40
 using System;
-#else
-using System; using Microsoft;
-#endif
 using System.Collections.Generic;
-#if CODEPLEX_40
-using System.Linq;
-using System.Linq.Expressions;
-#else
-using Microsoft.Linq;
-using Microsoft.Linq.Expressions;
-#endif
+using Microsoft.Scripting.Ast;
 using System.Text;
 
 namespace Samples {
@@ -19,11 +9,7 @@ namespace Samples {
         static public void ElementInit1() {
             //<Snippet1>
             // add the following directive to your file
-#if CODEPLEX_40
-            // using System.Linq.Expressions;  
-#else
-            // using Microsoft.Linq.Expressions;  
-#endif
+            // using Microsoft.Scripting.Ast;  
 
             //List variable
             ParameterExpression MyList = Expression.Parameter(typeof(List<int>));
@@ -85,11 +71,7 @@ namespace Samples {
         static public void ElementInit2() {
             //<Snippet1>
             // add the following directive to your file
-#if CODEPLEX_40
-            // using System.Linq.Expressions;  
-#else
-            // using Microsoft.Linq.Expressions;  
-#endif
+            // using Microsoft.Scripting.Ast;  
 
             //List variable
             ParameterExpression MyList = Expression.Parameter(typeof(List<int>));

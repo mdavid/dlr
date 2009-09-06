@@ -13,32 +13,26 @@
  *
  * ***************************************************************************/
 
-#if CODEPLEX_40
-using System;
-#else
-using System; using Microsoft;
-#endif
-using System.Collections;
-#if CODEPLEX_40
+#if !CLR2
 using System.Linq.Expressions;
 #else
-using Microsoft.Linq.Expressions;
+using Microsoft.Scripting.Ast;
 #endif
+
+using System;
+using System.Collections;
 using IronRuby.Builtins;
 using IronRuby.Compiler;
 using IronRuby.Compiler.Generation;
 using Microsoft.Scripting.Runtime;
 using Microsoft.Scripting.Utils;
-#if CODEPLEX_40
-using Ast = System.Linq.Expressions.Expression;
-#else
-using Ast = Microsoft.Linq.Expressions.Expression;
-#endif
 using System.Diagnostics;
 using AstUtils = Microsoft.Scripting.Ast.Utils;
 using IronRuby.Runtime.Calls;
 
 namespace IronRuby.Runtime.Conversions {
+    using Ast = Expression;
+
     public enum CompositeConversion {
         ToFixnumToStr,
         ToStrToFixnum,

@@ -13,31 +13,25 @@
  *
  * ***************************************************************************/
 
-#if CODEPLEX_40
-using System;
+#if !CLR2
 using System.Linq.Expressions;
 #else
-using System; using Microsoft;
-using Microsoft.Linq.Expressions;
+using Microsoft.Scripting.Ast;
 #endif
-using System.Reflection;
-#if CODEPLEX_40
+
+using System;
 using System.Dynamic;
-#else
-using Microsoft.Scripting;
-#endif
-using Microsoft.Scripting.Generation;
-using Microsoft.Scripting.Runtime;
-using Microsoft.Scripting.Utils;
-using Microsoft.Scripting.Actions.Calls;
+using System.Reflection;
+
 using Microsoft.Scripting.Actions;
+using Microsoft.Scripting.Generation;
+
+using IronPython.Runtime.Operations;
+
+using AstUtils = Microsoft.Scripting.Ast.Utils;
 
 namespace IronPython.Runtime.Binding {
-#if CODEPLEX_40
-    using Ast = System.Linq.Expressions.Expression;
-#else
-    using Ast = Microsoft.Linq.Expressions.Expression;
-#endif
+    using Ast = Expression;
 
     public sealed partial class PythonBinder : DefaultBinder {
         public DynamicMetaObject Create(CallSignature signature, DynamicMetaObject target, DynamicMetaObject[] args, Expression contextExpression) {
@@ -47,11 +41,14 @@ namespace IronPython.Runtime.Binding {
             if (t != null) {
 
                 if (typeof(Delegate).IsAssignableFrom(t) && args.Length == 1) {
-                    MethodInfo dc = GetDelegateCtor(t);
-
-                    // BinderOps.CreateDelegate<T>(CodeContext context, object callable);
+                    // PythonOps.GetDelegate(CodeContext context, object callable, Type t);
                     return new DynamicMetaObject(
-                        Ast.Call(null, dc, contextExpression, args[0].Expression),
+                        Ast.Call(
+                            typeof(PythonOps).GetMethod("GetDelegate"),
+                            contextExpression,
+                            AstUtils.Convert(args[0].Expression, typeof(object)),
+                            Expression.Constant(t)
+                        ),
                         target.Restrictions.Merge(BindingRestrictions.GetInstanceRestriction(target.Expression, target.Value))
                     );
                 }
@@ -62,17 +59,13 @@ namespace IronPython.Runtime.Binding {
                         args,
                         signature,
                         contextExpression
-                    ), 
+                    ),
                     CompilerHelpers.GetConstructors(t, PrivateBinding),
                     target.Restrictions.Merge(BindingRestrictions.GetInstanceRestriction(target.Expression, target.Value))
                 );
             }
 
             return null;
-        }
-
-        private static MethodInfo GetDelegateCtor(Type t) {
-            return typeof(BinderOps).GetMethod("CreateDelegate").MakeGenericMethod(t);
         }
 
         private static Type GetTargetType(object target) {

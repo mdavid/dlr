@@ -12,26 +12,16 @@
  *
  *
  * ***************************************************************************/
-
-#if CODEPLEX_40
-using System;
-#else
-using System; using Microsoft;
-#endif
-using System.Collections.Generic;
-#if CODEPLEX_40
-using System.Dynamic;
+#if !CLR2
 using System.Linq.Expressions;
-#else
-using Microsoft.Linq.Expressions;
 #endif
+
+using System;
+using System.Collections.Generic;
+using System.Dynamic;
 using System.Reflection;
 using System.Reflection.Emit;
 using System.Runtime.CompilerServices;
-#if !CODEPLEX_40
-using Microsoft.Runtime.CompilerServices;
-#endif
-
 using System.Runtime.InteropServices;
 using System.Threading;
 
@@ -87,7 +77,7 @@ namespace IronPython.Modules {
                 if (funcName != null) {
                     _addr = NativeFunctions.GetProcAddress(intPtrHandle, funcName);
                 } else {
-                    _addr = NativeFunctions.GetProcAddress(intPtrHandle, (int)nameOrOrdinal);
+                    _addr = NativeFunctions.GetProcAddress(intPtrHandle, new IntPtr((int)nameOrOrdinal));
                 }
 
                 if (_addr == IntPtr.Zero) {
@@ -832,6 +822,7 @@ namespace IronPython.Modules {
                     }
                 }
 
+#if FALSE   // not implemented yet
                 /// <summary>
                 /// Provides the marshalling for a user defined object which has an _as_parameter_
                 /// value.
@@ -852,6 +843,7 @@ namespace IronPython.Modules {
                         throw new NotImplementedException("user defined marshaller");
                     }
                 }
+#endif
 
                 #endregion
             }

@@ -14,19 +14,11 @@
  * ***************************************************************************/
 
 #if !SILVERLIGHT
-#if CODEPLEX_40
 using System;
-#else
-using System; using Microsoft;
-#endif
 using System.Collections.Generic;
 using System.Net;
 using System.Net.Sockets;
 using System.Runtime.CompilerServices;
-#if !CODEPLEX_40
-using Microsoft.Runtime.CompilerServices;
-#endif
-
 using System.Runtime.InteropServices;
 using System.Threading;
 using Microsoft.Scripting;
@@ -43,8 +35,6 @@ namespace IronRuby.StandardLibrary.Sockets {
     public abstract class RubyBasicSocket : RubyIO {
         // TODO: do these escape out of the library?
         private static readonly MutableString BROADCAST_STRING = MutableString.CreateAscii("<broadcast>").Freeze();
-        private static readonly MutableString BROADCAST_IP_STRING = MutableString.CreateAscii("255.255.255.255").Freeze();
-        private static readonly MutableString ANY_IP_STRING = MutableString.CreateAscii("0.0.0.0").Freeze();
 
         private readonly Socket/*!*/ _socket;
 

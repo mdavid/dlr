@@ -13,19 +13,11 @@
  *
  * ***************************************************************************/
 
-#if CODEPLEX_40
 using System;
-#else
-using System; using Microsoft;
-#endif
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Reflection;
 using System.Runtime.CompilerServices;
-#if !CODEPLEX_40
-using Microsoft.Runtime.CompilerServices;
-#endif
-
 using System.Threading;
 using IronRuby.Compiler;
 using IronRuby.Compiler.Generation;
@@ -485,8 +477,8 @@ namespace IronRuby.Builtins {
                 Debug.Assert(module._constants == null && module._namespaceTracker == null);
                 Debug.Assert(_constants != null);
                 _constants.Clear();
-                foreach (KeyValuePair<SymbolId, object> constant in _context.TopGlobalScope.Items) {
-                    _constants.Add(SymbolTable.IdToString(constant.Key), constant.Value);
+                foreach (KeyValuePair<string, object> constant in RubyOps.ScopeGetItems(_context.TopGlobalScope)) {
+                    _constants.Add(constant.Key, constant.Value);
                 }
             } else {
                 _constants = (module._constants != null) ? new Dictionary<string, object>(module._constants) : null;
@@ -718,7 +710,7 @@ namespace IronRuby.Builtins {
         // Ruby constructor:
         public static object CreateAnonymousModule(RubyScope/*!*/ scope, BlockParam body, RubyClass/*!*/ self) {
             RubyModule newModule = new RubyModule(self, null);
-            return (body != null) ? RubyUtils.EvaluateInModule(newModule, body, newModule) : newModule;
+            return (body != null) ? RubyUtils.EvaluateInModule(newModule, body, null, newModule) : newModule;
         }
 
         // thread safe:
@@ -1010,7 +1002,7 @@ namespace IronRuby.Builtins {
             Debug.Assert(included || !inherited);
 
             if (autoloadScope != null && autoloadScope.Context != Context) {
-                throw RubyExceptions.CreateTypeError(String.Format("Cannot autoload constatns to a foreign runtime #{0}", autoloadScope.Context.RuntimeId));
+                throw RubyExceptions.CreateTypeError(String.Format("Cannot autoload constants to a foreign runtime #{0}", autoloadScope.Context.RuntimeId));
             }
 
             value = null;
@@ -1122,8 +1114,8 @@ namespace IronRuby.Builtins {
                 SymbolId symbol = SymbolTable.StringToId(name);
 
                 using (Context.ClassHierarchyUnlocker()) {
-                    return _context.TopGlobalScope.TryGetVariable(symbol, out value) 
-                        && _context.TopGlobalScope.TryRemoveVariable(symbol);
+                    return RubyOps.ScopeTryGetMember(_context, _context.TopGlobalScope, name, out value) 
+                        && RubyOps.ScopeDeleteMember(_context.TopGlobalScope, name);
                 }
             }
 
@@ -1179,8 +1171,8 @@ namespace IronRuby.Builtins {
             
             if (DeclaresGlobalConstants) {
                 Debug.Assert(_constants == null && _namespaceTracker == null);
-                foreach (KeyValuePair<SymbolId, object> constant in _context.TopGlobalScope.Items) {
-                    if (action(this, SymbolTable.IdToString(constant.Key), constant.Value)) return true;
+                foreach (KeyValuePair<string, object> constant in RubyOps.ScopeGetItems(_context.TopGlobalScope)) {
+                    if (action(this, constant.Key, constant.Value)) return true;
                 }
 
                 return false;

@@ -13,17 +13,10 @@
  *
  * ***************************************************************************/
 
-#if CODEPLEX_40
 using System;
-#else
-using System; using Microsoft;
-#endif
 using System.IO;
 using System.Collections.Generic;
-#if CODEPLEX_40
 using System.Dynamic;
-#else
-#endif
 using System.Text;
 using System.Windows.Browser;
 using Microsoft.Scripting;
@@ -143,9 +136,14 @@ namespace Microsoft.Scripting.Silverlight {
             if (sourceFile == null || line <= 0) {
                 return "";
             }
-            
-            var stream = _runtime.Host.PlatformAdaptationLayer.OpenInputFileStream(sourceFile);
-            if (stream == null) {
+
+            Stream stream = null;
+            try {
+                stream = _runtime.Host.PlatformAdaptationLayer.OpenInputFileStream(sourceFile);
+                if (stream == null) {
+                    return "";
+                }
+            } catch (IOException) {
                 return "";
             }
 
@@ -276,8 +274,12 @@ namespace Microsoft.Scripting.Silverlight {
 
                 ScriptEngine engine = null;
                 if (_sourceFileName != null && _sourceFileName.IndexOfAny(Path.GetInvalidPathChars()) == 0) {
-                    var extension = System.IO.Path.GetExtension(_sourceFileName);
-                    _runtime.TryGetEngineByFileExtension(extension, out engine);
+                    try {
+                        var extension = System.IO.Path.GetExtension(_sourceFileName);
+                        _runtime.TryGetEngineByFileExtension(extension, out engine);
+                    } catch (ArgumentException) {
+                        engine = DynamicApplication.Current.Engine.Engine;
+                    }
                 } else if (Repl.Current != null && Repl.Current.Engine != null) {
                     // running at an interactive prompt, so get the prompt's engine
                     engine = Repl.Current.Engine;

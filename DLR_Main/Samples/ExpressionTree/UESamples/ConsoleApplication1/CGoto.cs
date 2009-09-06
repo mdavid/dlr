@@ -1,20 +1,7 @@
-#if CODEPLEX_40
 using System;
-#else
-using System; using Microsoft;
-#endif
 using System.Collections.Generic;
-#if CODEPLEX_40
-using System.Linq;
-#else
-using Microsoft.Linq;
-#endif
 using System.Text;
-#if CODEPLEX_40
-using System.Linq.Expressions;
-#else
-using Microsoft.Linq.Expressions;
-#endif
+using Microsoft.Scripting.Ast;
 
 namespace Samples {
     class CGoto {
@@ -22,11 +9,7 @@ namespace Samples {
         static public void Goto1() {
             //<Snippet1>
             // Add the following directive to your file
-#if CODEPLEX_40
-            // using System.Linq.Expressions;  
-#else
-            // using Microsoft.Linq.Expressions;  
-#endif
+            // using Microsoft.Scripting.Ast;  
 
             //We need to create a label target to use with the goto.
             LabelTarget MyLabelTarget = Expression.Label();
@@ -61,11 +44,7 @@ namespace Samples {
         static public void Goto2() {
             //<Snippet1>
             // Add the following directive to your file
-#if CODEPLEX_40
-            // using System.Linq.Expressions;  
-#else
-            // using Microsoft.Linq.Expressions;  
-#endif
+            // using Microsoft.Scripting.Ast;  
 
             //We need to create a label target to use with the goto.
             LabelTarget MyLabelTarget = Expression.Label(typeof(int));
@@ -99,11 +78,7 @@ namespace Samples {
         static public void Goto3() {
             //<Snippet1>
             // Add the following directive to your file
-#if CODEPLEX_40
-            // using System.Linq.Expressions;  
-#else
-            // using Microsoft.Linq.Expressions;  
-#endif
+            // using Microsoft.Scripting.Ast;  
 
             //We need to create a label target to use with the goto.
             LabelTarget MyLabelTarget = Expression.Label(typeof(int));
@@ -144,11 +119,7 @@ namespace Samples {
         static public void Goto4() {
             //<Snippet1>
             // Add the following directive to your file
-#if CODEPLEX_40
-            // using System.Linq.Expressions;  
-#else
-            // using Microsoft.Linq.Expressions;  
-#endif
+            // using Microsoft.Scripting.Ast;  
 
             //We need to create a label target to use with the goto.
             LabelTarget MyLabelTarget = Expression.Label();

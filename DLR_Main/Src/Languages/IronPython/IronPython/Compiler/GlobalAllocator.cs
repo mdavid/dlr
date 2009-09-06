@@ -13,39 +13,26 @@
  *
  * ***************************************************************************/
 
-#if CODEPLEX_40
-using System;
+#if !CLR2
+using MSAst = System.Linq.Expressions;
 #else
-using System; using Microsoft;
-#endif
-using System.Collections.Generic;
-using System.Diagnostics;
-#if CODEPLEX_40
-using System.Dynamic;
-using System.Linq.Expressions;
-#else
-using Microsoft.Linq.Expressions;
+using MSAst = Microsoft.Scripting.Ast;
 #endif
 
+using System;
+using System.Collections.Generic;
+using System.Diagnostics;
+using System.Dynamic;
+
 using Microsoft.Scripting;
-using Microsoft.Scripting.Ast;
 using Microsoft.Scripting.Runtime;
 using Microsoft.Scripting.Utils;
 
 using IronPython.Runtime;
 
-#if CODEPLEX_40
-using MSAst = System.Linq.Expressions;
-#else
-using MSAst = Microsoft.Linq.Expressions;
-#endif
-
 namespace IronPython.Compiler.Ast {
-#if CODEPLEX_40
-    using Ast = System.Linq.Expressions.Expression;
-#else
-    using Ast = Microsoft.Linq.Expressions.Expression;
-#endif
+    using Ast = MSAst.Expression;
+    using AstUtils = Microsoft.Scripting.Ast.Utils;
 
     /// <summary>
     /// Provides specific behaviors for different compilation modes.  For example pre-compiled
@@ -61,7 +48,7 @@ namespace IronPython.Compiler.Ast {
 
         #region Customizable APIs
 
-        public abstract ScriptCode MakeScriptCode(MSAst.Expression/*!*/ body, CompilerContext/*!*/ context, PythonAst/*!*/ ast);
+        public abstract ScriptCode MakeScriptCode(MSAst.Expression/*!*/ body, CompilerContext/*!*/ context, PythonAst/*!*/ ast, Dictionary<int, bool> handlerLocations, Dictionary<int, Dictionary<int, bool>> loopAndFinallyLocations);
 
         public abstract MSAst.Expression/*!*/ GlobalContext {
             get;
@@ -71,10 +58,6 @@ namespace IronPython.Compiler.Ast {
 
         public virtual MSAst.Expression/*!*/ GetConstant(object value) {
             return Ast.Constant(value);
-        }
-
-        public virtual MSAst.Expression/*!*/ GetSymbol(SymbolId name) {
-            return Utils.Constant(name);
         }
 
         /// <summary>
@@ -88,7 +71,7 @@ namespace IronPython.Compiler.Ast {
 
         #region Fixed Public API Surface
 
-        public MSAst.Expression/*!*/ Assign(MSAst.Expression/*!*/ expression, MSAst.Expression value) {
+        public static MSAst.Expression/*!*/ Assign(MSAst.Expression/*!*/ expression, MSAst.Expression value) {
             IPythonVariableExpression pyGlobal = expression as IPythonVariableExpression;
             if(pyGlobal != null) {
                 return pyGlobal.Assign(value);
@@ -97,7 +80,7 @@ namespace IronPython.Compiler.Ast {
             return Ast.Assign(expression, value);
         }
 
-        public MSAst.Expression/*!*/ Delete(MSAst.Expression/*!*/ expression) {
+        public static MSAst.Expression/*!*/ Delete(MSAst.Expression/*!*/ expression) {
             IPythonVariableExpression pyGlobal = expression as IPythonVariableExpression;
             if (pyGlobal != null) {
                 return pyGlobal.Delete();
@@ -106,7 +89,7 @@ namespace IronPython.Compiler.Ast {
             return Ast.Assign(expression, Ast.Field(null, typeof(Uninitialized).GetField("Instance")));
         }
 
-        // TODO: Optimized overloads for various aritys.
+        // TODO: Optimized overloads for various arities.
         public virtual MSAst.Expression/*!*/ Dynamic(DynamicMetaObjectBinder/*!*/ binder, Type/*!*/ retType, MSAst.Expression/*!*/ arg0) {
             return Ast.Dynamic(binder, retType, arg0);
         }
@@ -136,7 +119,7 @@ namespace IronPython.Compiler.Ast {
 
             Debug.Assert(variable.Kind != VariableKind.Parameter);
             
-            string name = SymbolTable.IdToString(variable.Name);
+            string name = variable.Name;
             switch (variable.Kind) {
                 case VariableKind.Global:
                 case VariableKind.GlobalLocal:

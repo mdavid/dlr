@@ -13,11 +13,7 @@
  *
  * ***************************************************************************/
 
-#if CODEPLEX_40
 using System;
-#else
-using System; using Microsoft;
-#endif
 using System.Collections.Generic;
 using System.Diagnostics;
 
@@ -27,19 +23,16 @@ using Microsoft.Scripting.Runtime;
 using IronPython.Runtime.Binding;
 using IronPython.Runtime.Operations;
 
-using AstUtils = Microsoft.Scripting.Ast.Utils;
-#if CODEPLEX_40
+#if !CLR2
 using MSAst = System.Linq.Expressions;
 #else
-using MSAst = Microsoft.Linq.Expressions;
+using MSAst = Microsoft.Scripting.Ast;
 #endif
 
+using AstUtils = Microsoft.Scripting.Ast.Utils;
+
 namespace IronPython.Compiler.Ast {
-#if CODEPLEX_40
-    using Ast = System.Linq.Expressions.Expression;
-#else
-    using Ast = Microsoft.Linq.Expressions.Expression;
-#endif
+    using Ast = MSAst.Expression;
 
     public class AssignmentStatement : Statement {
         // _left.Length is 1 for simple assignments like "x = 1"
@@ -90,7 +83,7 @@ namespace IronPython.Compiler.Ast {
 
             // 2. right_temp = right
             statements.Add(
-                ag.MakeAssignment(right_temp, right)
+                AstGenerator.MakeAssignment(right_temp, right)
                 );
 
             // Do left to right assignment
@@ -107,7 +100,7 @@ namespace IronPython.Compiler.Ast {
 
             // 4. Create and return the resulting suite
             statements.Add(AstUtils.Empty());
-            return ag.AddDebugInfo(
+            return ag.AddDebugInfoAndVoid(
                 Ast.Block(statements.ToArray()),
                 Span
             );
@@ -119,8 +112,8 @@ namespace IronPython.Compiler.Ast {
             SequenceExpression seLeft = _left[0] as SequenceExpression;
             SequenceExpression seRight = _right as SequenceExpression;
 
-            if (seLeft != null && seRight != null && seLeft.Items.Length == seRight.Items.Length) {
-                int cnt = seLeft.Items.Length;
+            if (seLeft != null && seRight != null && seLeft.Items.Count == seRight.Items.Count) {
+                int cnt = seLeft.Items.Count;
 
                 // a, b = 1, 2, or [a,b] = 1,2 - not something like a, b = range(2)
                 // we can do a fast parallel assignment
@@ -156,7 +149,7 @@ namespace IronPython.Compiler.Ast {
 
                 // 4. Create and return the resulting suite
                 body[cnt * 2] = AstUtils.Empty();
-                return ag.AddDebugInfo(Ast.Block(body), Span);
+                return ag.AddDebugInfoAndVoid(Ast.Block(body), Span);
             }
 
             return _left[0].TransformSet(ag, Span, ag.Transform(_right), PythonOperationKind.None);

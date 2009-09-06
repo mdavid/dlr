@@ -1,17 +1,9 @@
-#if CODEPLEX_40
 using System;
-#else
-using System; using Microsoft;
-#endif
 using System.Collections.Generic;
 using System.Text;
 using Microsoft.Scripting.Utils;
 using System.Threading;
-#if CODEPLEX_40
 using System.Dynamic;
-#else
-using Microsoft.Scripting;
-#endif
 using IronRuby.Runtime.Conversions;
 
 namespace IronRuby.Runtime.Calls {

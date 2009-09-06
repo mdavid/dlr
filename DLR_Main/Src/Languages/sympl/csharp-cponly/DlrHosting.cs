@@ -1,6 +1,6 @@
 using System;
 using System.Collections.Generic;
-//using System.Linq;
+using System.Dynamic;
 using System.Text;
 using Microsoft.Scripting.Runtime;
 
@@ -8,14 +8,9 @@ using Microsoft.Scripting.Runtime;
 // Needed for type language implementers need to support DLR Hosting, such as
 // ScriptCode.
 using Microsoft.Scripting;
-// Needed for IDynamicMetaObjectProvider and friends.
-using Microsoft.Scripting;
-using Microsoft.Linq.Expressions;
-using Microsoft;
+using Microsoft.Scripting.Ast;
 #else
 using System.Linq.Expressions;
-using System.Dynamic;
-using System.Linq;
 #endif
 
 using Microsoft.Scripting.Utils;
@@ -52,7 +47,7 @@ namespace SymplSample.Hosting {
         // This is all that's needed to run code on behalf of language-independent
         // DLR hosting.  Sympl defines its own subtype of ScriptCode.
         //
-        protected override ScriptCode CompileSourceCode(
+        public override ScriptCode CompileSourceCode(
                 SourceUnit sourceUnit, CompilerOptions options, ErrorSink errorSink) {
             using (var reader = sourceUnit.GetReader()) {
                 try {
@@ -129,42 +124,13 @@ namespace SymplSample.Hosting {
             if (_compiledLambda == null) {
                 _compiledLambda = _lambda.Compile();
             }
-            var module = new SymplModuleDlrScope(scope);
             if (this.SourceUnit.Kind == SourceCodeKind.File) {
                 // Simple way to convey script rundir for RuntimeHelpers.SymplImport
                 // to load .sympl files relative to the current script file.
-                DynamicObjectHelpers.SetMember(module, "__file__",
+                DynamicObjectHelpers.SetMember(scope, "__file__",
                                                Path.GetFullPath(this.SourceUnit.Path));
             }
-            return _compiledLambda(_sympl, module);
+            return _compiledLambda(_sympl, scope);
         }
     }
-
-
-
-    // This class represents Sympl modules or globals scopes.  We derive from
-    // DynamicObject for an easy IDynamicMetaObjectProvider implementation, and
-    // just hold onto the DLR internal scope object.  Languages typically have
-    // their own scope so that 1) it can flow around an a dynamic object and 2)
-    // to dope in any language-specific behaviors, such as case-INsensitivity.
-    //
-    public sealed class SymplModuleDlrScope : DynamicObject {
-        private readonly Scope _scope;
-
-        public SymplModuleDlrScope(Scope scope) {
-            _scope = scope;
-        }
-
-        public override bool TryGetMember(GetMemberBinder binder, out object result) {
-            return _scope.TryGetVariable(SymbolTable.StringToCaseInsensitiveId(binder.Name),
-                                     out result);
-        }
-
-        public override bool TrySetMember(SetMemberBinder binder, object value) {
-            _scope.SetVariable(SymbolTable.StringToId(binder.Name), value);
-            return true;
-        }
-    }
-
-
 } // SymplSample.Hosting namespace

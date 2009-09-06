@@ -1,17 +1,7 @@
-#if CODEPLEX_40
 using System;
-#else
-using System; using Microsoft;
-#endif
 using System.Collections.Generic;
-#if CODEPLEX_40
-using System.Linq;
-using System.Linq.Expressions;
-#else
-using Microsoft.Linq;
-using Microsoft.Linq.Expressions;
-#endif
 using System.Text;
+using Microsoft.Scripting.Ast;
 
 namespace Samples {
     class CLambda {
@@ -19,11 +9,7 @@ namespace Samples {
         static public void Lambda1() {
             //<Snippet1>
             // add the following directive to your file
-#if CODEPLEX_40
-            // using System.Linq.Expressions;  
-#else
-            // using Microsoft.Linq.Expressions;  
-#endif
+            // using Microsoft.Scripting.Ast;  
 
             //We'll define a parameter to use in the lambda
             ParameterExpression MyParam = Expression.Parameter(typeof(int));
@@ -51,11 +37,7 @@ namespace Samples {
         static public void Lambda2() {
             //<Snippet1>
             // add the following directive to your file
-#if CODEPLEX_40
-            // using System.Linq.Expressions;  
-#else
-            // using Microsoft.Linq.Expressions;  
-#endif
+            // using Microsoft.Scripting.Ast;  
 
             //We'll define a parameter to use in the lambda
             ParameterExpression MyParam = Expression.Parameter(typeof(int));
@@ -83,11 +65,7 @@ namespace Samples {
         static public void Lambda3() {
             //<Snippet1>
             // add the following directive to your file
-#if CODEPLEX_40
-            // using System.Linq.Expressions;  
-#else
-            // using Microsoft.Linq.Expressions;  
-#endif
+            // using Microsoft.Scripting.Ast;  
 
             //We'll define a parameter to use in the lambda
             ParameterExpression MyParam = Expression.Parameter(typeof(int));
@@ -117,11 +95,7 @@ namespace Samples {
         static public void Lambda4() {
             //<Snippet1>
             // add the following directive to your file
-#if CODEPLEX_40
-            // using System.Linq.Expressions;  
-#else
-            // using Microsoft.Linq.Expressions;  
-#endif
+            // using Microsoft.Scripting.Ast;  
 
             //We'll define a parameter to use in the lambda
             ParameterExpression MyParam = Expression.Parameter(typeof(int));
@@ -150,11 +124,7 @@ namespace Samples {
         static public void Lambda5() {
             //<Snippet1>
             // add the following directive to your file
-#if CODEPLEX_40
-            // using System.Linq.Expressions;  
-#else
-            // using Microsoft.Linq.Expressions;  
-#endif
+            // using Microsoft.Scripting.Ast;  
 
             //We'll define a parameter to use in the lambda
             ParameterExpression MyParam = Expression.Parameter(typeof(int));
@@ -183,11 +153,7 @@ namespace Samples {
         static public void Lambda6() {
             //<Snippet1>
             // add the following directive to your file
-#if CODEPLEX_40
-            // using System.Linq.Expressions;  
-#else
-            // using Microsoft.Linq.Expressions;  
-#endif
+            // using Microsoft.Scripting.Ast;  
 
             //We'll define a parameter to use in the lambda
             ParameterExpression MyParam = Expression.Parameter(typeof(int));
@@ -218,11 +184,7 @@ namespace Samples {
         static public void Lambda7() {
             //<Snippet1>
             // add the following directive to your file
-#if CODEPLEX_40
-            // using System.Linq.Expressions;  
-#else
-            // using Microsoft.Linq.Expressions;  
-#endif
+            // using Microsoft.Scripting.Ast;  
 
             //We'll define a parameter to use in the lambda
             ParameterExpression MyParam = Expression.Parameter(typeof(int));
@@ -250,11 +212,7 @@ namespace Samples {
         static public void Lambda8() {
             //<Snippet1>
             // add the following directive to your file
-#if CODEPLEX_40
-            // using System.Linq.Expressions;  
-#else
-            // using Microsoft.Linq.Expressions;  
-#endif
+            // using Microsoft.Scripting.Ast;  
 
             //We'll define a parameter to use in the lambda
             ParameterExpression MyParam = Expression.Parameter(typeof(int));
@@ -282,11 +240,7 @@ namespace Samples {
         static public void Lambda9() {
             //<Snippet1>
             // add the following directive to your file
-#if CODEPLEX_40
-            // using System.Linq.Expressions;  
-#else
-            // using Microsoft.Linq.Expressions;  
-#endif
+            // using Microsoft.Scripting.Ast;  
 
             //We'll define a parameter to use in the lambda
             ParameterExpression MyParam = Expression.Parameter(typeof(int));

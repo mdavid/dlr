@@ -1,17 +1,7 @@
-#if CODEPLEX_40
 using System;
-#else
-using System; using Microsoft;
-#endif
-using System.Collections.Generic;
-#if CODEPLEX_40
-using System.Linq;
-using System.Linq.Expressions;
-#else
-using Microsoft.Linq;
-using Microsoft.Linq.Expressions;
-#endif
 using System.Text;
+using System.Collections.Generic;
+using Microsoft.Scripting.Ast;
 
 namespace Samples {
     class CBlock {
@@ -19,11 +9,7 @@ namespace Samples {
         static public void Block1() {
             //<Snippet1>
             // add the following directive to your file
-#if CODEPLEX_40
-            // using System.Linq.Expressions;  
-#else
-            // using Microsoft.Linq.Expressions;  
-#endif
+            // using Microsoft.Scripting.Ast;  
 
 
             //This Expression represents a set of sequencial Expressions.
@@ -55,11 +41,7 @@ namespace Samples {
         static public void Block2() {
             //<Snippet1>
             // add the following directive to your file
-#if CODEPLEX_40
-            // using System.Linq.Expressions;  
-#else
-            // using Microsoft.Linq.Expressions;  
-#endif
+            // using Microsoft.Scripting.Ast;  
 
             //A list that holds a set of instructions we want to run sequencially
             List<Expression> MyList = new List<Expression>();
@@ -94,11 +76,7 @@ namespace Samples {
         static public void Block3() {
             //<Snippet1>
             // add the following directive to your file
-#if CODEPLEX_40
-            // using System.Linq.Expressions;  
-#else
-            // using Microsoft.Linq.Expressions;  
-#endif
+            // using Microsoft.Scripting.Ast;  
 
 
             //This Expression represents a set of sequencial Expressions.
@@ -125,11 +103,7 @@ namespace Samples {
         static public void Block4() {
             //<Snippet1>
             // add the following directive to your file
-#if CODEPLEX_40
-            // using System.Linq.Expressions;  
-#else
-            // using Microsoft.Linq.Expressions;  
-#endif
+            // using Microsoft.Scripting.Ast;  
 
 
             //This Expression represents a set of sequencial Expressions.
@@ -159,11 +133,7 @@ namespace Samples {
         static public void Block5() {
             //<Snippet1>
             // add the following directive to your file
-#if CODEPLEX_40
-            // using System.Linq.Expressions;  
-#else
-            // using Microsoft.Linq.Expressions;  
-#endif
+            // using Microsoft.Scripting.Ast;  
 
             //A list that holds a set of instructions we want to run sequencially
             List<Expression> MyList = new List<Expression>();
@@ -196,11 +166,7 @@ namespace Samples {
         static public void Block6() {
             //<Snippet1>
             // add the following directive to your file
-#if CODEPLEX_40
-            // using System.Linq.Expressions;  
-#else
-            // using Microsoft.Linq.Expressions;  
-#endif
+            // using Microsoft.Scripting.Ast;  
 
 
             //This Expression represents a set of sequencial Expressions.
@@ -234,11 +200,7 @@ namespace Samples {
         static public void Block7() {
             //<Snippet1>
             // add the following directive to your file
-#if CODEPLEX_40
-            // using System.Linq.Expressions;  
-#else
-            // using Microsoft.Linq.Expressions;  
-#endif
+            // using Microsoft.Scripting.Ast;  
 
             //First we'll create a list of Expressions we want to execute sequencially.
             ParameterExpression var1 = Expression.Variable(typeof(int), "Var 1");
@@ -276,11 +238,7 @@ namespace Samples {
         static public void Block8() {
             //<Snippet1>
             // add the following directive to your file
-#if CODEPLEX_40
-            // using System.Linq.Expressions;  
-#else
-            // using Microsoft.Linq.Expressions;  
-#endif
+            // using Microsoft.Scripting.Ast;  
 
 
             //This Expression represents a set of sequencial Expressions.
@@ -308,11 +266,7 @@ namespace Samples {
         static public void Block9() {
             //<Snippet1>
             // add the following directive to your file
-#if CODEPLEX_40
-            // using System.Linq.Expressions;  
-#else
-            // using Microsoft.Linq.Expressions;  
-#endif
+            // using Microsoft.Scripting.Ast;  
 
 
             //This Expression represents a set of sequencial Expressions.
@@ -341,11 +295,7 @@ namespace Samples {
         static public void Block10() {
             //<Snippet1>
             // add the following directive to your file
-#if CODEPLEX_40
-            // using System.Linq.Expressions;  
-#else
-            // using Microsoft.Linq.Expressions;  
-#endif
+            // using Microsoft.Scripting.Ast;  
 
             //First we'll create a list of Expressions we want to execute sequencially.
             ParameterExpression var1 = Expression.Variable(typeof(int), "Var 1");
@@ -379,11 +329,7 @@ namespace Samples {
         static public void Block11() {
             //<Snippet1>
             // add the following directive to your file
-#if CODEPLEX_40
-            // using System.Linq.Expressions;  
-#else
-            // using Microsoft.Linq.Expressions;  
-#endif
+            // using Microsoft.Scripting.Ast;  
 
 
             //This Expression represents a set of sequencial Expressions.
@@ -412,11 +358,7 @@ namespace Samples {
         static public void Block12() {
             //<Snippet1>
             // add the following directive to your file
-#if CODEPLEX_40
-            // using System.Linq.Expressions;  
-#else
-            // using Microsoft.Linq.Expressions;  
-#endif
+            // using Microsoft.Scripting.Ast;  
 
 
             //This Expression represents a set of sequencial Expressions.

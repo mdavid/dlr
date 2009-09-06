@@ -17,11 +17,7 @@ using IronRuby.Runtime;
 using Microsoft.Scripting.Utils;
 using System.Diagnostics;
 using System.Collections.Generic;
-#if CODEPLEX_40
 using System;
-#else
-using System; using Microsoft;
-#endif
 
 namespace IronRuby.Builtins {
     public class RubyObjectDebugView {

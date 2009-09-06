@@ -252,16 +252,21 @@ def test_member_completion():
     verifyResults(getTestOutput()[0], testRegex)
     
 def test_member_completion_com():
+    superConsole.SendKeys('outputRedirectStart{(}True{)}{ENTER}')
     superConsole.SendKeys('import clr{ENTER}')
     superConsole.SendKeys('import System{ENTER}')
     superConsole.SendKeys('clr.AddReference{(}"Microsoft.Office.Interop.Word"{)}{ENTER}')
     superConsole.SendKeys('import Microsoft.Office.Interop.Word{ENTER}')
     superConsole.SendKeys('wordapp = Microsoft.Office.Interop.Word.ApplicationClass{(}{)}{ENTER}')
-    superConsole.SendKeys('outputRedirectStart{(}True{)}{ENTER}')
+    sleep(10) #http://ironpython.codeplex.com/WorkItem/View.aspx?WorkItemId=24427
     superConsole.SendKeys('wordapp.Activ{TAB}{ENTER}')
+    sleep(15) #http://ironpython.codeplex.com/WorkItem/View.aspx?WorkItemId=24427
     superConsole.SendKeys('outputRedirectStop{(}{)}{ENTER}')
-    sleep(10)
-    Assert('<System.Dynamic.DispCallable object at ' in getTestOutput()[0][1])
+    
+    #Verification
+    temp = getTestOutput()
+    Assert(len(temp[0])==8, str(temp[0]))
+    Assert(temp[0][6].startswith('<Microsoft.Scripting.ComInterop.DispCallable object at '), str(temp[0]))
 
 def test_cp17797():
     #setup
@@ -599,6 +604,7 @@ def test_areraise():
     superConsole.SendKeys('def foo{(}{)}:{ENTER}{TAB}some(){ENTER}{ENTER}')
     superConsole.SendKeys(    'try:{ENTER}{TAB}foo{(}{)}{ENTER}{BACKSPACE}{BACKSPACE}{BACKSPACE}{BACKSPACE}')
     superConsole.SendKeys(    'except:{ENTER}{TAB}raise{ENTER}{ENTER}')
+    sleep(3)
     superConsole.SendKeys('outputRedirectStop{(}{)}{ENTER}')
     lines = getTestOutput()[1]
     AreEqual(lines, ['Traceback (most recent call last):\r\n', '  File "<stdin>", line 2, in <module>\r\n', '  File "<stdin>", line 2, in foo\r\n', "NameError: global name 'some' is not defined\r\n"])

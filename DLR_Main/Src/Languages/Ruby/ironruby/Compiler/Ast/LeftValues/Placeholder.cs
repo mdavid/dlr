@@ -13,19 +13,16 @@
  *
  * ***************************************************************************/
 
-#if CODEPLEX_40
-using System.Dynamic;
+#if !CLR2
+using MSA = System.Linq.Expressions;
 #else
+using MSA = Microsoft.Scripting.Ast;
 #endif
+
+using System.Dynamic;
 using Microsoft.Scripting;
 using Microsoft.Scripting.Utils;
-#if CODEPLEX_40
-using MSA = System.Linq.Expressions;
 using System;
-#else
-using MSA = Microsoft.Linq.Expressions;
-using System; using Microsoft;
-#endif
 
 namespace IronRuby.Compiler.Ast {
 

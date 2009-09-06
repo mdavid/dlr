@@ -13,17 +13,9 @@
  *
  * ***************************************************************************/
 
-#if CODEPLEX_40
 using System;
-#else
-using System; using Microsoft;
-#endif
 using System.Diagnostics;
 using System.Runtime.CompilerServices;
-#if !CODEPLEX_40
-using Microsoft.Runtime.CompilerServices;
-#endif
-
 using IronRuby.Runtime;
 using IronRuby.Runtime.Calls;
 using Microsoft.Scripting.Runtime;
@@ -168,7 +160,7 @@ namespace IronRuby.Builtins {
 
         [RubyMethod("new", RubyMethodAttributes.PublicSingleton)]
         public static Proc/*!*/ CreateNew(CallSiteStorage<Func<CallSite, Proc, Proc, object>>/*!*/ storage, 
-            BlockParam/*!*/ block, RubyClass/*!*/ self) {
+            BlockParam block, RubyClass/*!*/ self) {
 
             if (block == null) {
                 throw RubyExceptions.CreateArgumentError("tried to create Proc object without a block");

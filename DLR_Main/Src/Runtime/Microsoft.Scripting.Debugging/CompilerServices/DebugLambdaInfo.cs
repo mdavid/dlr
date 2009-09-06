@@ -12,15 +12,14 @@
  *
  *
  * ***************************************************************************/
-using System; using Microsoft;
 
-
-using System.Collections.Generic;
-#if CODEPLEX_40
+#if !CLR2
 using MSAst = System.Linq.Expressions;
 #else
-using MSAst = Microsoft.Linq.Expressions;
+using MSAst = Microsoft.Scripting.Ast;
 #endif
+
+using System.Collections.Generic;
 
 namespace Microsoft.Scripting.Debugging.CompilerServices {
     /// <summary>

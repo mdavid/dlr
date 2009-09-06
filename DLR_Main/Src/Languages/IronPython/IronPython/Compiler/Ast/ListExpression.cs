@@ -13,20 +13,16 @@
  *
  * ***************************************************************************/
 
-#if CODEPLEX_40
-using System;
+#if !CLR2
 using MSAst = System.Linq.Expressions;
 #else
-using System; using Microsoft;
-using MSAst = Microsoft.Linq.Expressions;
+using MSAst = Microsoft.Scripting.Ast;
 #endif
 
+using System;
+
 namespace IronPython.Compiler.Ast {
-#if CODEPLEX_40
-    using Ast = System.Linq.Expressions.Expression;
-#else
-    using Ast = Microsoft.Linq.Expressions.Expression;
-#endif
+    using Ast = MSAst.Expression;
 
     public class ListExpression : SequenceExpression {
         
@@ -36,7 +32,7 @@ namespace IronPython.Compiler.Ast {
         }
 
         internal override MSAst.Expression Transform(AstGenerator ag, Type type) {
-            if (Items.Length == 0) {
+            if (Items.Count == 0) {
                 return Ast.Call(
                     AstGenerator.GetHelperMethod("MakeEmptyListFromCode"),
                     AstGenerator.EmptyExpression

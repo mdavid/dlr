@@ -13,27 +13,17 @@
  *
  * ***************************************************************************/
 
-#if CODEPLEX_40
-using System;
-#else
-using System; using Microsoft;
-#endif
-using System.Collections;
-using System.Collections.Generic;
-#if CODEPLEX_40
+#if !CLR2
 using System.Linq.Expressions;
 #else
-using Microsoft.Linq.Expressions;
-#endif
-using System.Runtime.CompilerServices;
-#if !CODEPLEX_40
-using Microsoft.Runtime.CompilerServices;
+using Microsoft.Scripting.Ast;
 #endif
 
-#if CODEPLEX_40
+using System;
+using System.Collections;
+using System.Collections.Generic;
+using System.Runtime.CompilerServices;
 using System.Dynamic;
-#else
-#endif
 using IronPython.Runtime.Operations;
 using IronPython.Runtime.Types;
 using Microsoft.Scripting.Actions;
@@ -41,17 +31,13 @@ using Microsoft.Scripting.Generation;
 using Microsoft.Scripting.Runtime;
 using Microsoft.Scripting.Utils;
 
-#if CODEPLEX_40
-using Ast = System.Linq.Expressions.Expression;
-#else
-using Ast = Microsoft.Linq.Expressions.Expression;
-#endif
-using AstUtils = Microsoft.Scripting.Ast.Utils;
 using Microsoft.Scripting;
 using System.Reflection;
 using System.Diagnostics;
 
 namespace IronPython.Runtime.Binding {
+    using Ast = Expression;
+    using AstUtils = Microsoft.Scripting.Ast.Utils;
 
     class PythonConversionBinder : DynamicMetaObjectBinder, IPythonSite, IExpressionSerializable {
         private readonly PythonContext/*!*/ _context;
@@ -145,7 +131,7 @@ namespace IronPython.Runtime.Binding {
 
 #if !SILVERLIGHT
             DynamicMetaObject comConvert;
-            if (ComBinder.TryConvert(new CompatConversionBinder(_context, Type, _kind == ConversionResultKind.ExplicitCast || _kind == ConversionResultKind.ExplicitTry), self, out comConvert)) {
+            if (Microsoft.Scripting.ComInterop.ComBinder.TryConvert(new CompatConversionBinder(_context, Type, _kind == ConversionResultKind.ExplicitCast || _kind == ConversionResultKind.ExplicitTry), self, out comConvert)) {
                 return comConvert;
             }
 #endif
@@ -528,7 +514,7 @@ namespace IronPython.Runtime.Binding {
 
         #region Conversion Logic
 
-        private DynamicMetaObject TryToGenericInterfaceConversion(DynamicMetaObject/*!*/ self, Type/*!*/ toType, Type/*!*/ fromType, Type/*!*/ wrapperType) {
+        private static DynamicMetaObject TryToGenericInterfaceConversion(DynamicMetaObject/*!*/ self, Type/*!*/ toType, Type/*!*/ fromType, Type/*!*/ wrapperType) {
             if (fromType.IsAssignableFrom(CompilerHelpers.GetType(self.Value))) {
                 Type making = wrapperType.MakeGenericType(toType.GetGenericArguments());
 
@@ -548,7 +534,7 @@ namespace IronPython.Runtime.Binding {
             return null;
         }
 
-        private DynamicMetaObject/*!*/ MakeToArrayConversion(DynamicMetaObject/*!*/ self, Type/*!*/ toType) {
+        private static DynamicMetaObject/*!*/ MakeToArrayConversion(DynamicMetaObject/*!*/ self, Type/*!*/ toType) {
             self = self.Restrict(typeof(PythonTuple));
 
             return new DynamicMetaObject(

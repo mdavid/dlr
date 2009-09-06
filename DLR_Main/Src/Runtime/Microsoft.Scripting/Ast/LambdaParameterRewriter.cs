@@ -12,15 +12,14 @@
  *
  *
  * ***************************************************************************/
-using System; using Microsoft;
 
-
-using System.Collections.Generic;
-#if CODEPLEX_40
+#if !CLR2
 using System.Linq.Expressions;
 #else
-using Microsoft.Linq.Expressions;
+using Microsoft.Scripting.Ast;
 #endif
+
+using System.Collections.Generic;
 
 namespace Microsoft.Scripting.Ast {
     internal sealed class LambdaParameterRewriter : ExpressionVisitor {

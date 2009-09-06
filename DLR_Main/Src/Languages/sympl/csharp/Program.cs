@@ -1,11 +1,10 @@
 using System;
+using System.Dynamic;
 using System.IO;
 using System.Reflection;
 #if USE35
-using Microsoft.Scripting;
-using Microsoft.Linq.Expressions;
+using Microsoft.Scripting.Ast;
 #else
-using System.Dynamic;
 using System.Linq.Expressions;
 #endif
 
@@ -18,7 +17,7 @@ namespace SymplSample
             string dllPath = typeof(object).Assembly.Location;
             Assembly asm = Assembly.LoadFile(dllPath);
 
-            string filename = @"..\..\Src\Languages\sympl\examples\test.sympl";
+            string filename = @"..\..\Languages\sympl\examples\test.sympl";
             var s = new Sympl(new Assembly[] { asm });
             var feo = s.ExecuteFile(filename);
 

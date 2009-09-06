@@ -13,36 +13,26 @@
  *
  * ***************************************************************************/
 
-#if CODEPLEX_40
+#if !CLR2
+using System.Linq.Expressions;
+#else
+using Microsoft.Scripting.Ast;
+#endif
+
 using System;
-#else
-using System; using Microsoft;
-#endif
 using System.Collections.Generic;
-#if CODEPLEX_40
 using System.Dynamic;
-#else
-using Microsoft.Scripting;
-#endif
 using System.Reflection;
 using IronRuby.Compiler;
 using Microsoft.Scripting.Utils;
-#if CODEPLEX_40
-using Ast = System.Linq.Expressions.Expression;
-#else
-using Ast = Microsoft.Linq.Expressions.Expression;
-#endif
 using AstUtils = Microsoft.Scripting.Ast.Utils;
 using IronRuby.Compiler.Generation;
-#if CODEPLEX_40
-using System.Linq.Expressions;
-#else
-using Microsoft.Linq.Expressions;
-#endif
 using System.Diagnostics;
 using IronRuby.Runtime.Calls;
 
 namespace IronRuby.Runtime.Conversions {
+    using Ast = Expression;
+
     public sealed class GenericConversionAction : RubyConversionAction {
         private readonly Type/*!*/ _type;
 

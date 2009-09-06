@@ -12,16 +12,16 @@
  *
  *
  * ***************************************************************************/
-using System; using Microsoft;
 
-
-using IronPython.Runtime.Operations;
-using AstUtils = Microsoft.Scripting.Ast.Utils;
-#if CODEPLEX_40
+#if !CLR2
 using MSAst = System.Linq.Expressions;
 #else
-using MSAst = Microsoft.Linq.Expressions;
+using MSAst = Microsoft.Scripting.Ast;
 #endif
+
+using System.Collections.Generic;
+using System.Runtime.CompilerServices;
+using AstUtils = Microsoft.Scripting.Ast.Utils;
 
 namespace IronPython.Compiler.Ast {
 
@@ -32,17 +32,17 @@ namespace IronPython.Compiler.Ast {
             _expressions = expressions;
         }
 
-        public Expression[] Expressions {
+        public IList<Expression> Expressions {
             get { return _expressions; }
         }
 
         internal override MSAst.Expression Transform(AstGenerator ag) {
             // Transform to series of individual del statements.
-            MSAst.Expression[] statements = new MSAst.Expression[_expressions.Length + 1];
+            ReadOnlyCollectionBuilder<MSAst.Expression> statements = new ReadOnlyCollectionBuilder<MSAst.Expression>(_expressions.Length + 1);
             for (int i = 0; i < _expressions.Length; i++) {
-                statements[i] = _expressions[i].TransformDelete(ag);
+                statements.Add(_expressions[i].TransformDelete(ag));
             }
-            statements[_expressions.Length] = AstUtils.Empty();
+            statements.Add(AstUtils.Empty());
             return ag.AddDebugInfo(MSAst.Expression.Block(statements), Span);
         }
 

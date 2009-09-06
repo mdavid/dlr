@@ -12,8 +12,6 @@
  *
  *
  * ***************************************************************************/
-using System; using Microsoft;
-
 
 using System.Reflection;
 using Microsoft.Scripting.Generation;
@@ -34,7 +32,7 @@ namespace Microsoft.Scripting.Actions {
         }
 
         public static bool IsParamDictionary(ParameterInfo parameter) {
-            return parameter.IsDefined(typeof(ParamDictionaryAttribute), false);
+            return parameter.IsAttributeDefined(typeof(ParamDictionaryAttribute), false);
         }
 
     }

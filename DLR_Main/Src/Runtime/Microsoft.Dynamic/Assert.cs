@@ -14,17 +14,11 @@
  * ***************************************************************************/
 
 #define DEBUG
-using System; using Microsoft;
-
 
 using System.Collections.Generic;
 using System.Diagnostics;
 
-#if CODEPLEX_40
 namespace System.Dynamic {
-#else
-namespace Microsoft.Scripting {
-#endif
     internal static class Assert {
 
         internal static Exception Unreachable {

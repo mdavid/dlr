@@ -14,25 +14,18 @@
  * ***************************************************************************/
 
 
-#if CODEPLEX_40
-using System;
-#else
-using System; using Microsoft;
-#endif
-using System.Collections.Generic;
-using System.Diagnostics;
-#if CODEPLEX_40
-using System.Dynamic;
+#if !CLR2
 using System.Linq.Expressions;
 #else
-using Microsoft.Linq.Expressions;
-#endif
-using System.Reflection;
-using System.Runtime.CompilerServices;
-#if !CODEPLEX_40
-using Microsoft.Runtime.CompilerServices;
+using Microsoft.Scripting.Ast;
 #endif
 
+using System;
+using System.Collections.Generic;
+using System.Diagnostics;
+using System.Dynamic;
+using System.Reflection;
+using System.Runtime.CompilerServices;
 using System.Threading;
 
 using Microsoft.Scripting;
@@ -43,14 +36,9 @@ using Microsoft.Scripting.Runtime;
 using IronPython.Runtime.Operations;
 using IronPython.Runtime.Types;
 
-#if CODEPLEX_40
-using Ast = System.Linq.Expressions.Expression;
-#else
-using Ast = Microsoft.Linq.Expressions.Expression;
-#endif
-using AstUtils = Microsoft.Scripting.Ast.Utils;
-
 namespace IronPython.Runtime.Binding {
+    using Ast = Expression;
+    using AstUtils = Microsoft.Scripting.Ast.Utils;
 
     partial class MetaPythonType : MetaPythonObject, IPythonGetable {
 
@@ -835,7 +823,7 @@ namespace IronPython.Runtime.Binding {
             );
         }
 
-        private bool IsProtectedSetter(MemberTracker mt) {
+        private static bool IsProtectedSetter(MemberTracker mt) {
             PropertyTracker pt = mt as PropertyTracker;
             if (pt != null) {
                 MethodInfo mi = pt.GetSetMethod(true);

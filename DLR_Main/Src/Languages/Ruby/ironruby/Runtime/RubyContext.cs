@@ -13,23 +13,19 @@
  *
  * ***************************************************************************/
 
-#if CODEPLEX_40
-using System;
+#if !CLR2
+using MSA = System.Linq.Expressions;
 #else
-using System; using Microsoft;
-#endif
-using System.Collections.Generic;
-using System.Diagnostics;
-#if CODEPLEX_40
-using System.Dynamic;
-#else
-#endif
-using System.IO;
-using System.Runtime.CompilerServices;
-#if !CODEPLEX_40
-using Microsoft.Runtime.CompilerServices;
+using MSA = Microsoft.Scripting.Ast;
 #endif
 
+using System;
+using System.Collections.Generic;
+using System.Diagnostics;
+using System.Dynamic;
+using System.IO;
+using System.Reflection;
+using System.Runtime.CompilerServices;
 using System.Security;
 using System.Text;
 using System.Threading;
@@ -43,11 +39,6 @@ using Microsoft.Scripting;
 using Microsoft.Scripting.Actions;
 using Microsoft.Scripting.Runtime;
 using Microsoft.Scripting.Utils;
-#if CODEPLEX_40
-using MSA = System.Linq.Expressions;
-#else
-using MSA = Microsoft.Linq.Expressions;
-#endif
 
 namespace IronRuby.Runtime {
     /// <summary>
@@ -77,9 +68,13 @@ namespace IronRuby.Runtime {
 
         private RubyOptions/*!*/ _options;
         private MutableString _commandLineProgramPath;
+        private readonly TopNamespaceTracker _nsTracker;
         private readonly Loader/*!*/ _loader;
         private readonly Scope/*!*/ _globalScope;
         private readonly RubyMetaBinderFactory/*!*/ _metaBinderFactory;
+        private DynamicOperations _operations;
+        private readonly RubyBinder _binder;
+        private DynamicDelegateCreator _delegateCreator;
 
         #region Global Variables (thread-safe access)
 
@@ -397,7 +392,7 @@ namespace IronRuby.Runtime {
             _upTime = new Stopwatch();
             _upTime.Start();
             
-            Binder = new RubyBinder(this);
+            _binder = new RubyBinder(this);
 
             _metaBinderFactory = new RubyMetaBinderFactory(this);
             _runtimeErrorSink = new RuntimeErrorSink(this);
@@ -447,8 +442,24 @@ namespace IronRuby.Runtime {
             // needs to run before globals and constants are initialized:
             InitializeFileDescriptors(DomainManager.SharedIO);
 
+            _nsTracker = new TopNamespaceTracker(manager);
+            manager.AssemblyLoaded += new EventHandler<AssemblyLoadedEventArgs>(AssemblyLoaded);
+            foreach (Assembly asm in manager.GetLoadedAssemblyList()) {
+                _nsTracker.LoadAssembly(asm);
+            }
+
             InitializeGlobalConstants();
             InitializeGlobalVariables();
+        }
+
+        public RubyBinder Binder {
+            get {
+                return _binder;
+            }
+        }
+
+        void AssemblyLoaded(object sender, AssemblyLoadedEventArgs e) {
+            _nsTracker.LoadAssembly(e.Assembly);
         }
 
         /// <summary>
@@ -553,11 +564,16 @@ namespace IronRuby.Runtime {
         }
 
         internal void SetGlobalConstant(string/*!*/ name, object value) {
-            _globalScope.SetVariable(SymbolTable.StringToId(name), value);
+            RubyOps.ScopeSetMember(_globalScope, name, value);
         }
 
         internal bool TryGetGlobalConstant(string/*!*/ name, out object value) {
-            return _globalScope.TryGetVariable(SymbolTable.StringToId(name), out value);
+            if (RubyOps.ScopeTryGetMember(this, _globalScope, name, out value)) {
+                return true;
+            }
+
+            value = _nsTracker.TryGetPackageAny(name);
+            return value != null;
         }
 
         private void InitializeFileDescriptors(SharedIO/*!*/ io) {
@@ -1376,6 +1392,16 @@ namespace IronRuby.Runtime {
             return result;
         }
 
+        internal DynamicOperations Operations {
+            get {
+                if (_operations == null) {
+                    Interlocked.CompareExchange(ref _operations, new DynamicOperations(this), null);
+                }
+
+                return _operations;
+            }
+        }
+
         #endregion
 
         #region Object Operations: Instance variables, flags (NOT thread-safe)
@@ -1886,7 +1912,7 @@ namespace IronRuby.Runtime {
 
         #region Parsing, Compilation (thread-safe)
 
-        protected override ScriptCode CompileSourceCode(SourceUnit/*!*/ sourceUnit, CompilerOptions/*!*/ options, ErrorSink/*!*/ errorSink) {
+        public override ScriptCode CompileSourceCode(SourceUnit/*!*/ sourceUnit, CompilerOptions/*!*/ options, ErrorSink/*!*/ errorSink) {
             ContractUtils.RequiresNotNull(sourceUnit, "sourceUnit");
             ContractUtils.RequiresNotNull(options, "options");
             ContractUtils.RequiresNotNull(errorSink, "errorSink");
@@ -1937,13 +1963,8 @@ namespace IronRuby.Runtime {
             MSA.Expression<T> lambda;
 #if MEASURE_AST
             lock (_TransformationLock) {
-#if CODEPLEX_40
                 var oldHistogram = System.Linq.Expressions.Expression.Histogram;
                 System.Linq.Expressions.Expression.Histogram = _TransformationHistogram;
-#else
-                var oldHistogram = Microsoft.Linq.Expressions.Expression.Histogram;
-                Microsoft.Linq.Expressions.Expression.Histogram = _TransformationHistogram;
-#endif
                 try {
 #endif
             ts1 = Stopwatch.GetTimestamp();
@@ -1953,11 +1974,7 @@ namespace IronRuby.Runtime {
 
 #if MEASURE_AST
                 } finally {
-#if CODEPLEX_40
                     System.Linq.Expressions.Expression.Histogram = oldHistogram;
-#else
-                    Microsoft.Linq.Expressions.Expression.Histogram = oldHistogram;
-#endif
                 }
             }
 #endif
@@ -2000,7 +2017,7 @@ namespace IronRuby.Runtime {
             return _runtimeErrorSink;
         }
 
-        protected override ScriptCode/*!*/ LoadCompiledCode(Delegate/*!*/ method, string path, string customData) {
+        public override ScriptCode/*!*/ LoadCompiledCode(Delegate/*!*/ method, string path, string customData) {
             // TODO: we need to save the kind of the scope factory:
             SourceUnit su = new SourceUnit(this, NullTextContentProvider.Null, path, SourceCodeKind.File);
             return new RubyScriptCode((Func<RubyScope, object, object>)method, su, TopScopeFactoryKind.Hosted);
@@ -2371,7 +2388,7 @@ namespace IronRuby.Runtime {
 #endif
         }
 
-        protected override string/*!*/ FormatObject(DynamicOperations/*!*/ operations, object obj) {
+        public override string/*!*/ FormatObject(DynamicOperations/*!*/ operations, object obj) {
             var inspectSite = operations.GetOrCreateSite<object, object>(
                 RubyCallAction.Make(this, "inspect", RubyCallSignature.WithImplicitSelf(1))
             );
@@ -2421,11 +2438,7 @@ namespace IronRuby.Runtime {
             }
 #if !SILVERLIGHT
             if (Utils.IsComObject(obj)) {
-#if CODEPLEX_40
-                return new List<string>(System.Dynamic.ComBinder.GetDynamicMemberNames(obj));
-#else
-                return new List<string>(Microsoft.Scripting.ComBinder.GetDynamicMemberNames(obj));
-#endif
+                return new List<string>(Microsoft.Scripting.ComInterop.ComBinder.GetDynamicMemberNames(obj));
             }
 #endif
             return GetMemberNames(obj);
@@ -2458,6 +2471,16 @@ namespace IronRuby.Runtime {
                 var newSite = CallSite<TSiteFunc>.Create(RubyCallAction.Make(this, methodName, callSignature));
                 _sendSites.Add(Key.Create(methodName, callSignature), newSite);
                 return newSite;
+            }
+        }
+
+        public DynamicDelegateCreator/*!*/ DelegateCreator {
+            get {
+                if (_delegateCreator == null) {
+                    Interlocked.CompareExchange(ref _delegateCreator, new DynamicDelegateCreator(this), null);
+                }
+
+                return _delegateCreator;
             }
         }
 

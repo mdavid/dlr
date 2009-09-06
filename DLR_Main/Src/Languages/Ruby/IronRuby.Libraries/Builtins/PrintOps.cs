@@ -12,8 +12,6 @@
  *
  *
  * ***************************************************************************/
-using System; using Microsoft;
-
 
 using System.Collections;
 using System.Collections.Generic;
@@ -29,7 +27,7 @@ namespace IronRuby.Builtins {
     [RubyModule("Print", DefineIn = typeof(IronRubyOps))]
     public static class PrintOps {
         [RubyMethod("<<")]
-        public static object/*!*/ Output(BinaryOpStorage/*!*/ writeStorage, object/*!*/ self, object value) {
+        public static object/*!*/ Output(BinaryOpStorage/*!*/ writeStorage, object self, object value) {
             Protocols.Write(writeStorage, self, value);
             return self;
         }
@@ -47,7 +45,7 @@ namespace IronRuby.Builtins {
         }
 
         [RubyMethod("print")]
-        public static void Print(BinaryOpStorage/*!*/ writeStorage, object/*!*/ self, object value) {
+        public static void Print(BinaryOpStorage/*!*/ writeStorage, object self, object value) {
             Protocols.Write(writeStorage, self, value ?? MutableString.CreateAscii("nil"));
 
             MutableString delimiter = writeStorage.Context.OutputSeparator;

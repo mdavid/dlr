@@ -13,11 +13,13 @@
  *
  * ***************************************************************************/
 
-#if CODEPLEX_40
-using System;
+#if !CLR2
+using System.Linq.Expressions;
 #else
-using System; using Microsoft;
+using Microsoft.Scripting.Ast;
 #endif
+
+using System;
 using System.Diagnostics;
 using System.IO;
 using System.Runtime.InteropServices;
@@ -28,13 +30,9 @@ using IronRuby.Runtime.Calls;
 using IronRuby.Runtime.Conversions;
 using Microsoft.Scripting.Math;
 using Microsoft.Scripting.Runtime;
-#if CODEPLEX_40
-using Ast = System.Linq.Expressions.Expression;
-#else
-using Ast = Microsoft.Linq.Expressions.Expression;
-#endif
 
 namespace IronRuby.Builtins {
+    using Ast = Expression;
 
     /// <summary>
     /// Implementation of IO builtin class. 
@@ -152,7 +150,6 @@ namespace IronRuby.Builtins {
                 targetClass.BuildObjectConstructionNoFlow(metaBuilder, args, name);
 
                 // TODO: initialize yields the block?
-                // TODO: null block check
                 if (args.Signature.HasBlock) {
                     // ignore flow builder set up so far, we need one that creates a BlockParam for library calls:
                     metaBuilder.ControlFlowBuilder = null;
@@ -175,7 +172,7 @@ namespace IronRuby.Builtins {
         }
 
         [Emitted]
-        public static object InvokeOpenBlock(UnaryOpStorage/*!*/ closeStorage, BlockParam/*!*/ block, object obj) {
+        public static object InvokeOpenBlock(UnaryOpStorage/*!*/ closeStorage, BlockParam block, object obj) {
             object result = obj;
             if (!RubyOps.IsRetrySingleton(obj) && block != null) {
                 try {

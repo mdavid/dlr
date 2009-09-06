@@ -13,11 +13,7 @@
  *
  * ***************************************************************************/
 
-#if CODEPLEX_40
 using System;
-#else
-using System; using Microsoft;
-#endif
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Reflection;
@@ -52,6 +48,7 @@ namespace IronPython.Runtime {
             if (TryGetLazyValue(strKey, out value)) {
                 // hide the deleted value
                 base.Add(key, Uninitialized.Instance);
+                found = true;
             }
 
             return found;
@@ -202,7 +199,7 @@ namespace IronPython.Runtime {
 
         public override bool TryGetValue(object key, out object value) {
             if (base.TryGetValue(key, out value)) {
-                return true;
+                return value != Uninitialized.Instance;
             }
 
             string strKey = key as string;
@@ -213,7 +210,7 @@ namespace IronPython.Runtime {
             return false;
         }
 
-        public void Reload() {
+        public virtual void Reload() {
             foreach (KeyValuePair<object, object> kvp in base.GetItems()) {
                 if (kvp.Value == Uninitialized.Instance) {
                     // hiding a member

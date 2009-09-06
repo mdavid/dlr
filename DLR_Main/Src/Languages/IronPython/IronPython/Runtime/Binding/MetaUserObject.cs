@@ -13,19 +13,16 @@
  *
  * ***************************************************************************/
 
-#if CODEPLEX_40
-using System;
-#else
-using System; using Microsoft;
-#endif
-using System.Collections;
-using System.Collections.Generic;
-#if CODEPLEX_40
-using System.Dynamic;
+#if !CLR2
 using System.Linq.Expressions;
 #else
-using Microsoft.Linq.Expressions;
+using Microsoft.Scripting.Ast;
 #endif
+
+using System;
+using System.Collections;
+using System.Collections.Generic;
+using System.Dynamic;
 
 using Microsoft.Scripting;
 using Microsoft.Scripting.Actions;
@@ -37,11 +34,7 @@ using IronPython.Runtime.Operations;
 using IronPython.Runtime.Types;
 
 namespace IronPython.Runtime.Binding {
-#if CODEPLEX_40
-    using Ast = System.Linq.Expressions.Expression;
-#else
-    using Ast = Microsoft.Linq.Expressions.Expression;
-#endif
+    using Ast = Expression;
     using AstUtils = Microsoft.Scripting.Ast.Utils;
 
     partial class MetaUserObject : MetaPythonObject, IPythonInvokable, IPythonConvertible {
@@ -322,7 +315,7 @@ namespace IronPython.Runtime.Binding {
             return callExpr;
         }
 
-        private ConversionResultKind GetResultKind(DynamicMetaObjectBinder convertToAction) {
+        private static ConversionResultKind GetResultKind(DynamicMetaObjectBinder convertToAction) {
             PythonConversionBinder cb = convertToAction as PythonConversionBinder;
             if (cb != null) {
                 return cb.ResultKind;
@@ -367,7 +360,7 @@ namespace IronPython.Runtime.Binding {
         /// <summary>
         ///  Various helpers related to calling Python __*__ conversion methods 
         /// </summary>
-        private DynamicMetaObject/*!*/ GetConversionFailedReturnValue(PythonConversionBinder/*!*/ convertToAction, DynamicMetaObject/*!*/ self) {
+        private static DynamicMetaObject/*!*/ GetConversionFailedReturnValue(PythonConversionBinder/*!*/ convertToAction, DynamicMetaObject/*!*/ self) {
             switch (convertToAction.ResultKind) {
                 case ConversionResultKind.ImplicitTry:
                 case ConversionResultKind.ExplicitTry:

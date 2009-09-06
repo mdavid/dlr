@@ -12,16 +12,14 @@
  *
  *
  * ***************************************************************************/
-using System; using Microsoft;
 
-
-#if CODEPLEX_40
+#if !CLR2
 using System.Linq.Expressions;
-using System.Dynamic;
 #else
-using Microsoft.Linq.Expressions;
-using Microsoft.Scripting;
+using Microsoft.Scripting.Ast;
 #endif
+
+using System.Dynamic;
 using Microsoft.Scripting.Utils;
 
 namespace Microsoft.Scripting.Actions {

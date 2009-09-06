@@ -13,18 +13,10 @@
  *
  * ***************************************************************************/
 
-#if CODEPLEX_40
 using System;
-#else
-using System; using Microsoft;
-#endif
 using System.Collections.Generic;
 using System.IO;
 using System.Runtime.CompilerServices;
-#if !CODEPLEX_40
-using Microsoft.Runtime.CompilerServices;
-#endif
-
 using System.Runtime.InteropServices;
 using System.Runtime.Serialization;
 using IronRuby.Runtime;
@@ -93,9 +85,6 @@ namespace IronRuby.Builtins {
             private int _recursionLimit;
             private readonly Dictionary<string/*!*/, int>/*!*/ _symbols;
             private readonly Dictionary<object, int>/*!*/ _objects;
-#if !SILVERLIGHT
-            private readonly StreamingContext/*!*/ _streamingContext;
-#endif
 
             internal MarshalWriter(WriterSites/*!*/ sites, BinaryWriter/*!*/ writer, RubyContext/*!*/ context, int? limit) {
                 Assert.NotNull(sites, writer, context);
@@ -106,9 +95,6 @@ namespace IronRuby.Builtins {
                 _recursionLimit = (limit.HasValue ? limit.Value : -1);
                 _symbols = new Dictionary<string, int>();
                 _objects = new Dictionary<object, int>(ReferenceEqualityComparer.Instance);
-#if !SILVERLIGHT
-                _streamingContext = new StreamingContext(StreamingContextStates.Other, _context);
-#endif
             }
 
             private void WritePreamble() {

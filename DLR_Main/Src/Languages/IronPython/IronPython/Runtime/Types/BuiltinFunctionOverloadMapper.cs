@@ -13,11 +13,7 @@
  *
  * ***************************************************************************/
 
-#if CODEPLEX_40
 using System;
-#else
-using System; using Microsoft;
-#endif
 using System.Collections.Generic;
 using System.Reflection;
 using System.Threading;
@@ -79,7 +75,7 @@ namespace IronPython.Runtime.Types {
             }
         }
 
-        private MethodBase[] FindMatchingTargets(Type[] sig, IList<MethodBase> targets) {
+        private static MethodBase[] FindMatchingTargets(Type[] sig, IList<MethodBase> targets) {
             int args = sig.Length;
 
             List<MethodBase> res = new List<MethodBase>();

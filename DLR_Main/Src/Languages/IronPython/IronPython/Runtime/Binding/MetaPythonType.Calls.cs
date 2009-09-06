@@ -13,19 +13,16 @@
  *
  * ***************************************************************************/
 
-#if CODEPLEX_40
-using System;
-#else
-using System; using Microsoft;
-#endif
-using System.Collections.Generic;
-using System.Diagnostics;
-#if CODEPLEX_40
-using System.Dynamic;
+#if !CLR2
 using System.Linq.Expressions;
 #else
-using Microsoft.Linq.Expressions;
+using Microsoft.Scripting.Ast;
 #endif
+
+using System;
+using System.Collections.Generic;
+using System.Diagnostics;
+using System.Dynamic;
 using System.Reflection;
 
 using Microsoft.Scripting;
@@ -37,14 +34,9 @@ using Microsoft.Scripting.Utils;
 using IronPython.Runtime.Operations;
 using IronPython.Runtime.Types;
 
-using AstUtils = Microsoft.Scripting.Ast.Utils;
-
 namespace IronPython.Runtime.Binding {
-#if CODEPLEX_40
-    using Ast = System.Linq.Expressions.Expression;
-#else
-    using Ast = Microsoft.Linq.Expressions.Expression;
-#endif
+    using Ast = Expression;
+    using AstUtils = Microsoft.Scripting.Ast.Utils;
 
     partial class MetaPythonType : MetaPythonObject, IPythonInvokable {
 
@@ -327,22 +319,11 @@ namespace IronPython.Runtime.Binding {
             private readonly ArgumentValues/*!*/ _argInfo;
             private readonly PythonContext/*!*/ _state;
             private readonly Expression/*!*/ _context;
-            private BindingRestrictions/*!*/ _restrictions;            
 
             public CallAdapter(ArgumentValues/*!*/ ai, PythonContext/*!*/ state, Expression/*!*/ codeContext) {
                 _argInfo = ai;
                 _state = state;
-                _restrictions = BindingRestrictions.Empty;
                 _context = codeContext;
-            }
-
-            public BindingRestrictions/*!*/ Restrictions {
-                get {
-                    return _restrictions;
-                }
-                set {
-                    _restrictions = value;
-                }
             }
 
             protected PythonContext PythonContext {
@@ -709,15 +690,7 @@ namespace IronPython.Runtime.Binding {
         private static BindingRestrictions GetInstanceRestriction(ArgumentValues ai) {
             return BindingRestrictions.GetInstanceRestriction(ai.Self.Expression, ai.Self.Value);
         }
-
-        private Expression/*!*/ GetFinalizerInitialization(DynamicMetaObjectBinder/*!*/ action, ParameterExpression/*!*/ variable) {
-            return Ast.Call(
-                typeof(PythonOps).GetMethod("InitializeForFinalization"),
-                AstUtils.Constant(PythonContext.GetPythonContext(action).SharedContext),
-                AstUtils.Convert(variable, typeof(object))
-            );
-        }
-
+        
         private bool HasFinalizer(DynamicMetaObjectBinder/*!*/ action) {
             // only user types have finalizers...
             if (Value.IsSystemType) return false;

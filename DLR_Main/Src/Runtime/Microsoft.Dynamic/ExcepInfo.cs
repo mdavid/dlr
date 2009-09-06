@@ -12,8 +12,6 @@
  *
  *
  * ***************************************************************************/
-using System; using Microsoft;
-
 
 #if !SILVERLIGHT // ComObject
 
@@ -23,11 +21,7 @@ using System.Runtime.InteropServices;
 using System.Security;
 using ComTypes = System.Runtime.InteropServices.ComTypes;
 
-#if CODEPLEX_40
 namespace System.Dynamic {
-#else
-namespace Microsoft.Scripting {
-#endif
     /// <summary>
     /// This is similar to ComTypes.EXCEPINFO, but lets us do our own custom marshaling
     /// </summary>

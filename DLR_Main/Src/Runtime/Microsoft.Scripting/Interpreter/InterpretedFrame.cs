@@ -12,21 +12,16 @@
  *
  *
  * ***************************************************************************/
-using System; using Microsoft;
 
-
-using System.Collections.Generic;
-#if CODEPLEX_40
+#if !CLR2
 using System.Linq.Expressions;
 #else
-using Microsoft.Linq.Expressions;
-#endif
-using System.Reflection;
-using System.Runtime.CompilerServices;
-#if !CODEPLEX_40
-using Microsoft.Runtime.CompilerServices;
+using Microsoft.Scripting.Ast;
 #endif
 
+using System.Collections.Generic;
+using System.Reflection;
+using System.Runtime.CompilerServices;
 using Microsoft.Scripting.Utils;
 using System.Diagnostics;
 
@@ -34,7 +29,11 @@ namespace Microsoft.Scripting.Interpreter {
     public class InterpretedFrame {
         internal readonly Interpreter Interpreter;
         public InterpretedFrame Parent;
+
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Security", "CA2105:ArrayFieldsShouldNotBeReadOnly")]
         public readonly object[] Data;
+
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Security", "CA2105:ArrayFieldsShouldNotBeReadOnly")]
         public readonly StrongBox<object>[] Closure;
 
         public int StackIndex;

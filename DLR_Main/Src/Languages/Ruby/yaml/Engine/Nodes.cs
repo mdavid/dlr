@@ -16,11 +16,7 @@
  * 
  ***** END LICENSE BLOCK *****/
 
-#if CODEPLEX_40
 using System;
-#else
-using System; using Microsoft;
-#endif
 using System.Collections.Generic;
 using System.Text;
 using System.Collections.ObjectModel;

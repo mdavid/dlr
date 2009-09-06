@@ -15,11 +15,7 @@
 
 #if !SILVERLIGHT // ICustomTypeDescriptor
 
-#if CODEPLEX_40
 using System;
-#else
-using System; using Microsoft;
-#endif
 using System.ComponentModel;
 using IronRuby.Runtime;
 

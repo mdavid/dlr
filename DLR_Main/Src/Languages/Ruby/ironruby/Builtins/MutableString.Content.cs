@@ -13,11 +13,7 @@
  *
  * ***************************************************************************/
 
-#if CODEPLEX_40
 using System;
-#else
-using System; using Microsoft;
-#endif
 using System.Collections.Generic;
 using Microsoft.Scripting.Utils;
 using System.Text;
@@ -130,6 +126,9 @@ namespace IronRuby.Builtins {
             public abstract void SetChar(int index, char c);
 
             public abstract void Remove(int start, int count);
+
+            public abstract void Write(int offset, byte[]/*!*/ value, int start, int count);
+            public abstract void Write(int offset, byte value, int repeatCount);
         }
     }
 }

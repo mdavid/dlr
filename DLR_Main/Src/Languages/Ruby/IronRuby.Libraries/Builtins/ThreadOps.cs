@@ -13,17 +13,9 @@
  *
  * ***************************************************************************/
 
-#if CODEPLEX_40
 using System;
-#else
-using System; using Microsoft;
-#endif
 using System.Collections.Generic;
 using System.Runtime.CompilerServices;
-#if !CODEPLEX_40
-using Microsoft.Runtime.CompilerServices;
-#endif
-
 using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading;
@@ -77,7 +69,6 @@ namespace IronRuby.Builtins {
         internal class RubyThreadInfo {
             private static readonly Dictionary<int, RubyThreadInfo> _mapping = new Dictionary<int, RubyThreadInfo>();
             private readonly Dictionary<SymbolId, object> _threadLocalStorage;
-            private readonly int _id;
             private ThreadGroup _group;
             private readonly Thread _thread;
             private bool _blocked;
@@ -89,7 +80,6 @@ namespace IronRuby.Builtins {
                 _threadLocalStorage = new Dictionary<SymbolId, object>();
                 _group = ThreadGroup.Default;
                 _thread = thread;
-                _id = thread.ManagedThreadId;
             }
 
             internal static RubyThreadInfo FromThread(Thread t) {

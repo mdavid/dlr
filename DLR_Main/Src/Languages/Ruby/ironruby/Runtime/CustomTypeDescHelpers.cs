@@ -15,18 +15,10 @@
 
 #if !SILVERLIGHT // ICustomTypeDescriptor
 
-#if CODEPLEX_40
 using System;
-#else
-using System; using Microsoft;
-#endif
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Runtime.CompilerServices;
-#if !CODEPLEX_40
-using Microsoft.Runtime.CompilerServices;
-#endif
-
 using Microsoft.Scripting;
 using Microsoft.Scripting.Actions.Calls;
 using Microsoft.Scripting.Utils;
