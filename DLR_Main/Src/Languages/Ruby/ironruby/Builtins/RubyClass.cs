@@ -47,9 +47,6 @@ namespace IronRuby.Builtins {
         public const string/*!*/ ClassSingletonSingletonName = "__ClassSingletonSingleton";
         public const string/*!*/ MainSingletonName = "__MainSingleton";
 
-        // interlocked
-        private static int _globalVersion = 0;
-
         // Level in class hierarchy (0 == Object)
         private readonly int _level;
         private readonly RubyClass _superClass;
@@ -81,11 +78,6 @@ namespace IronRuby.Builtins {
 
         #region Mutable state guarded by ClassHierarchyLock
 
-        [Emitted]
-        public VersionHandle Version;
-
-        private readonly WeakReference/*!*/ _weakSelf;
-
         // We postpone setting dependency edges from included mixins and the super class to those module
         // until a member table of this module is initialized. True if the edges has been set up.
         // This allows to create modules without locking. 
@@ -110,6 +102,7 @@ namespace IronRuby.Builtins {
         private CallSite<Func<CallSite, object, object, object>> _eqlSite;
         private CallSite<Func<CallSite, object, object>> _hashSite;
         private CallSite<Func<CallSite, object, object>> _toStringSite;
+        private CallSite<Func<CallSite, object, object>> _toArraySplatSite;
         private CallSite<Func<CallSite, object, object, object>> _newSite;
 
         public CallSite<Func<CallSite, object, object>>/*!*/ InspectSite { 
@@ -118,6 +111,10 @@ namespace IronRuby.Builtins {
 
         public CallSite<Func<CallSite, object, object, object>>/*!*/ NewSite {
             get { return RubyUtils.GetCallSite(ref _newSite, Context, "new", 1); }
+        }
+
+        internal CallSite<Func<CallSite, object, object>>/*!*/ ToArraySplatSite {
+            get { return RubyUtils.GetCallSite(ref _toArraySplatSite, ConvertToArraySplatAction.Make(Context)); }
         }
         
         public CallSite<Func<CallSite, object, MutableString>>/*!*/ InspectResultConversionSite {
@@ -204,10 +201,6 @@ namespace IronRuby.Builtins {
 
         #endregion
 
-        internal WeakReference/*!*/ WeakSelf {
-            get { return _weakSelf; }
-        }
-
         public RubyClass SuperClass {
             get { return _superClass; } 
         }
@@ -287,8 +280,10 @@ namespace IronRuby.Builtins {
             Action<RubyModule> methodsInitializer, Action<RubyModule> constantsInitializer, Delegate/*!*/[] factories, RubyClass superClass, 
             RubyModule/*!*/[] expandedMixins, TypeTracker tracker, RubyStruct.Info structInfo,
             bool isRubyClass, bool isSingletonClass, ModuleRestrictions restrictions)
-            : base(context, name, methodsInitializer, constantsInitializer, expandedMixins, null, tracker, restrictions) {
+            : base(context, name, methodsInitializer, constantsInitializer, expandedMixins,
+                superClass != null ? null : context.Namespaces, tracker, restrictions) {
 
+            Debug.Assert(context.Namespaces != null, "Namespaces should be initialized");
             Debug.Assert((superClass == null) == (type == typeof(object)), "All classes have a superclass, except for Object");
             Debug.Assert(superClass != null || structInfo == null, "Object is not a struct");
             Debug.Assert(!isRubyClass || tracker == null, "Ruby class cannot have a tracker");
@@ -308,17 +303,9 @@ namespace IronRuby.Builtins {
             } else {
                 _level = 0;
             }
-
-            _weakSelf = new WeakReference(this);
-            Version = new VersionHandle(Interlocked.Increment(ref _globalVersion));
-            Version.SetName(name);
         }
 
         #region Versioning
-
-        internal override void IncrementVersion() {
-            Version.Value = Interlocked.Increment(ref _globalVersion);
-        }
 
         internal override void InitializeDependencies() {
             Context.RequiresClassHierarchyLock();
@@ -386,13 +373,13 @@ namespace IronRuby.Builtins {
                 if (ssm != null) {
                     if (!ssm.ContainsKey(methodName)) {
                         ssm[methodName] = true;
-                        _superClass.Updated("SetSingletonMethod: " + methodName);
+                        _superClass.MethodsUpdated("SetSingletonMethod: " + methodName);
                         superClassUpdated = true;
                     }
                 } else {
                     _superClass.ClrSingletonMethods = ssm = new Dictionary<string, bool>();
                     ssm[methodName] = true;
-                    _superClass.Updated("SetSingletonMethod: " + methodName);
+                    _superClass.MethodsUpdated("SetSingletonMethod: " + methodName);
                     superClassUpdated = true;
                 }
             }
@@ -428,12 +415,12 @@ namespace IronRuby.Builtins {
                         Context.KernelModule.MissingMethodsCachedInSites;
 
                     if (missingMethods != null && missingMethods.ContainsKey(methodName)) {
-                        Updated("SetMethod: " + methodName);
+                        MethodsUpdated("SetMethod: " + methodName);
                     }
                 }
             } else {
                 if (overriddenMethod.InvalidateSitesOnOverride && !superClassUpdated) {
-                    Updated("SetMethod: " + methodName);
+                    MethodsUpdated("SetMethod: " + methodName);
                 }
 
                 // If the overridden method is not a group the groups below were already updated.
@@ -553,7 +540,7 @@ namespace IronRuby.Builtins {
             // Notes:
             // - MRI duplicates Object class so that the result doesn't inherit from Object,
             //   which we don't do (we want our class hierarchy to be rooted).
-            if (this != Context.ObjectClass) {
+            if (!IsObjectClass) {
                 isRubyClass = IsRubyClass;
                 type = _underlyingSystemType;
             } else {
@@ -586,10 +573,6 @@ namespace IronRuby.Builtins {
             // In all other cases the order is event first, body next.
             RubyClass newClass = context.DefineClass(owner, null, superClass ?? context.ObjectClass, null);
             return (body != null) ? RubyUtils.EvaluateInModule(newClass, body, null, newClass) : newClass;
-        }
-
-        public override string/*!*/ ToString() {
-            return Name;
         }
 
         internal override bool ForEachAncestor(Func<RubyModule, bool>/*!*/ action) {
@@ -1239,7 +1222,7 @@ namespace IronRuby.Builtins {
             }
 
             bool hasRubyInitializer = initializer is RubyMethodInfo;
-            bool hasLibraryInitializer = !hasRubyInitializer && initializer.DeclaringModule != Context.ObjectClass && initializer is RubyLibraryMethodInfo;
+            bool hasLibraryInitializer = !hasRubyInitializer && !initializer.DeclaringModule.IsObjectClass && initializer is RubyLibraryMethodInfo;
 
             if (hasRubyInitializer || hasLibraryInitializer && _isRubyClass) {
                 // allocate and initialize:

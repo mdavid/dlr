@@ -4,6 +4,8 @@ using System.Dynamic;
 using System.Reflection;
 #if USE35
 using Microsoft.Scripting.Ast;
+using Microsoft.Scripting.Utils;
+using Microsoft.Scripting.ComInterop;
 #else
 using System.Linq.Expressions;
 #endif

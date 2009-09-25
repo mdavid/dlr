@@ -14,6 +14,7 @@
  * ***************************************************************************/
 
 using System;
+using Microsoft.Scripting.Utils;
 
 namespace IronRuby.Tests {    
     public partial class Tests {
@@ -49,6 +50,12 @@ namespace IronRuby.Tests {
                 NameMangling1,
                 NameMangling2,
 
+                Constants1A,
+                Constants1B,
+                ConstantNames,
+                Constants3,
+                Constants4,
+                
                 OverloadResolution_Block1,
                 OverloadResolution_ParamArrays1,
                 OverloadResolution_Numeric1,
@@ -156,15 +163,25 @@ namespace IronRuby.Tests {
                 InvokeMemberCache1,
                 Scenario_RubyBlockExpressions1,
                 
-                Constants1A,
-                Constants1B,
-                ConstantNames,
-                Constants3,
-                Constants4,
                 UnqualifiedConstants1,
                 LoadAndGlobalConstants,
-                GlobalConstantsInterop,
-                
+                GlobalConstants1,
+                ConstantCaching_Unqualified1,
+                ConstantCaching_Unqualified2,
+                ConstantCaching_Unqualified3,
+                ConstantCaching_Unqualified4,
+                ConstantCaching_Unqualified5,
+                ConstantCaching_Unqualified6,
+                ConstantCaching_Unqualified7,
+                ConstantCaching_Unqualified_IsDefined1,
+                ConstantCaching_Qualified1,
+                ConstantCaching_Qualified2,
+                ConstantCaching_Qualified_IsDefined1,
+                ConstantCaching_Qualified_IsDefined2,
+                ConstantCaching_CrossRuntime1,
+                ConstantCaching_AutoUpdating1A,
+                ConstantCaching_AutoUpdating1B,
+
                 Scenario_ClassVariables1,
                 Scenario_ClassVariables2,
                 Scenario_RubyLocals1,
@@ -233,6 +250,7 @@ namespace IronRuby.Tests {
                 Scenario_RubyBlockArgs8,
                 Scenario_RubyBlockArgs9,
                 Scenario_RubyBlockArgs10,
+                Scenario_RubyBlockArgs11,
                 Proc_RhsAndBlockArguments1,
 
                 RubyProcs1,
@@ -336,6 +354,7 @@ namespace IronRuby.Tests {
                 RubyHosting1D,
                 RubyHosting2,
                 RubyHosting3,
+                RubyHosting4,
                 CrossRuntime1,
                 CrossRuntime2,
 
@@ -363,6 +382,7 @@ namespace IronRuby.Tests {
                 ClrFields1,
                 ClrTypes1,
                 ClrNamespaces1,
+                ClrNamespaces2,
                 ClrGenerics1,
                 ClrGenerics2,
                 ClrMethods1,
@@ -463,6 +483,7 @@ namespace IronRuby.Tests {
                 RescueSplat1,
                 RescueSplat2,
                 RescueSplat3,
+                RescueSplat4,
                 ExceptionMapping1,
                 ExceptionMapping2,
                 ExceptionMapping3,
@@ -534,6 +555,7 @@ namespace IronRuby.Tests {
                 Scenario_RubyDefinedOperator_Methods2,
                 Scenario_RubyDefinedOperator_Constants1,
                 Scenario_RubyDefinedOperator_Constants2,
+                Scenario_RubyDefinedOperator_Constants3,
                 Scenario_RubyDefinedOperator_Expressions1,
                 Scenario_RubyDefinedOperator_InstanceVariables1,
                 Scenario_RubyDefinedOperator_ClassVariables1,

@@ -31,6 +31,7 @@
 
 namespace IronRuby.Builtins {
     using System;
+    using Microsoft.Scripting.Utils;
     
     public sealed class BuiltinsLibraryInitializer : IronRuby.Builtins.LibraryInitializer {
         protected override void LoadModules() {
@@ -47,32 +48,32 @@ namespace IronRuby.Builtins {
             
             // Skipped primitive: __ClassSingleton
             // Skipped primitive: __MainSingleton
-            IronRuby.Builtins.RubyModule def44 = DefineGlobalModule("Comparable", typeof(IronRuby.Builtins.Comparable), 0x00000103, LoadComparable_Instance, null, null, IronRuby.Builtins.RubyModule.EmptyArray);
-            IronRuby.Builtins.RubyModule def35 = DefineGlobalModule("Enumerable", typeof(IronRuby.Builtins.Enumerable), 0x00000103, LoadEnumerable_Instance, null, null, IronRuby.Builtins.RubyModule.EmptyArray);
-            IronRuby.Builtins.RubyModule def2 = DefineGlobalModule("Errno", typeof(IronRuby.Builtins.Errno), 0x00000103, null, null, null, IronRuby.Builtins.RubyModule.EmptyArray);
-            IronRuby.Builtins.RubyModule def26 = DefineModule("File::Constants", typeof(IronRuby.Builtins.RubyFileOps.Constants), 0x00000103, null, null, LoadFile__Constants_Constants, IronRuby.Builtins.RubyModule.EmptyArray);
-            DefineGlobalModule("FileTest", typeof(IronRuby.Builtins.FileTest), 0x00000103, null, LoadFileTest_Class, null, IronRuby.Builtins.RubyModule.EmptyArray);
-            DefineGlobalModule("GC", typeof(IronRuby.Builtins.RubyGC), 0x00000103, LoadGC_Instance, LoadGC_Class, null, IronRuby.Builtins.RubyModule.EmptyArray);
-            IronRuby.Builtins.RubyModule def22 = DefineGlobalModule("IronRuby", typeof(IronRuby.Ruby), 0x00000000, null, LoadIronRuby_Class, null, IronRuby.Builtins.RubyModule.EmptyArray);
+            IronRuby.Builtins.RubyModule def44 = DefineGlobalModule("Comparable", typeof(IronRuby.Builtins.Comparable), 0x00000107, LoadComparable_Instance, null, null, IronRuby.Builtins.RubyModule.EmptyArray);
+            IronRuby.Builtins.RubyModule def35 = DefineGlobalModule("Enumerable", typeof(IronRuby.Builtins.Enumerable), 0x00000107, LoadEnumerable_Instance, null, null, IronRuby.Builtins.RubyModule.EmptyArray);
+            IronRuby.Builtins.RubyModule def2 = DefineGlobalModule("Errno", typeof(IronRuby.Builtins.Errno), 0x00000107, null, null, null, IronRuby.Builtins.RubyModule.EmptyArray);
+            IronRuby.Builtins.RubyModule def26 = DefineModule("File::Constants", typeof(IronRuby.Builtins.RubyFileOps.Constants), 0x00000107, null, null, LoadFile__Constants_Constants, IronRuby.Builtins.RubyModule.EmptyArray);
+            DefineGlobalModule("FileTest", typeof(IronRuby.Builtins.FileTest), 0x00000107, null, LoadFileTest_Class, null, IronRuby.Builtins.RubyModule.EmptyArray);
+            DefineGlobalModule("GC", typeof(IronRuby.Builtins.RubyGC), 0x00000107, LoadGC_Instance, LoadGC_Class, null, IronRuby.Builtins.RubyModule.EmptyArray);
+            IronRuby.Builtins.RubyModule def22 = DefineGlobalModule("IronRuby", typeof(IronRuby.Ruby), 0x00000004, null, LoadIronRuby_Class, null, IronRuby.Builtins.RubyModule.EmptyArray);
             IronRuby.Builtins.RubyModule def4 = DefineModule("IronRuby::Clr", typeof(IronRuby.Builtins.IronRubyOps.ClrOps), 0x00000100, null, LoadIronRuby__Clr_Class, null, IronRuby.Builtins.RubyModule.EmptyArray);
-            IronRuby.Builtins.RubyModule def5 = DefineModule("IronRuby::Clr::BigInteger", typeof(IronRuby.Builtins.ClrBigInteger), 0x00000103, LoadIronRuby__Clr__BigInteger_Instance, null, null, IronRuby.Builtins.RubyModule.EmptyArray);
+            IronRuby.Builtins.RubyModule def5 = DefineModule("IronRuby::Clr::BigInteger", typeof(IronRuby.Builtins.ClrBigInteger), 0x00000107, LoadIronRuby__Clr__BigInteger_Instance, null, null, IronRuby.Builtins.RubyModule.EmptyArray);
             IronRuby.Builtins.RubyModule def20 = DefineModule("IronRuby::Clr::FlagEnumeration", typeof(IronRuby.Builtins.FlagEnumeration), 0x00000000, LoadIronRuby__Clr__FlagEnumeration_Instance, null, null, IronRuby.Builtins.RubyModule.EmptyArray);
-            IronRuby.Builtins.RubyModule def6 = DefineModule("IronRuby::Clr::Float", typeof(IronRuby.Builtins.ClrFloat), 0x00000103, LoadIronRuby__Clr__Float_Instance, LoadIronRuby__Clr__Float_Class, null, IronRuby.Builtins.RubyModule.EmptyArray);
-            IronRuby.Builtins.RubyModule def7 = DefineModule("IronRuby::Clr::Integer", typeof(IronRuby.Builtins.ClrInteger), 0x00000103, LoadIronRuby__Clr__Integer_Instance, null, null, IronRuby.Builtins.RubyModule.EmptyArray);
+            IronRuby.Builtins.RubyModule def6 = DefineModule("IronRuby::Clr::Float", typeof(IronRuby.Builtins.ClrFloat), 0x00000107, LoadIronRuby__Clr__Float_Instance, LoadIronRuby__Clr__Float_Class, null, IronRuby.Builtins.RubyModule.EmptyArray);
+            IronRuby.Builtins.RubyModule def7 = DefineModule("IronRuby::Clr::Integer", typeof(IronRuby.Builtins.ClrInteger), 0x00000107, LoadIronRuby__Clr__Integer_Instance, null, null, IronRuby.Builtins.RubyModule.EmptyArray);
             IronRuby.Builtins.RubyModule def23 = DefineModule("IronRuby::Clr::MultiDimensionalArray", typeof(IronRuby.Builtins.MultiDimensionalArray), 0x00000000, null, null, null, IronRuby.Builtins.RubyModule.EmptyArray);
-            IronRuby.Builtins.RubyModule def8 = DefineModule("IronRuby::Clr::String", typeof(IronRuby.Builtins.ClrString), 0x00000103, LoadIronRuby__Clr__String_Instance, null, null, IronRuby.Builtins.RubyModule.EmptyArray);
-            IronRuby.Builtins.RubyModule def24 = DefineModule("IronRuby::Print", typeof(IronRuby.Builtins.PrintOps), 0x00000103, LoadIronRuby__Print_Instance, null, null, IronRuby.Builtins.RubyModule.EmptyArray);
+            IronRuby.Builtins.RubyModule def8 = DefineModule("IronRuby::Clr::String", typeof(IronRuby.Builtins.ClrString), 0x00000107, LoadIronRuby__Clr__String_Instance, null, null, IronRuby.Builtins.RubyModule.EmptyArray);
+            IronRuby.Builtins.RubyModule def24 = DefineModule("IronRuby::Print", typeof(IronRuby.Builtins.PrintOps), 0x00000107, LoadIronRuby__Print_Instance, null, null, IronRuby.Builtins.RubyModule.EmptyArray);
             // Skipped primitive: Kernel
-            DefineGlobalModule("Marshal", typeof(IronRuby.Builtins.RubyMarshal), 0x00000103, null, LoadMarshal_Class, LoadMarshal_Constants, IronRuby.Builtins.RubyModule.EmptyArray);
-            DefineGlobalModule("Math", typeof(IronRuby.Builtins.RubyMath), 0x00000103, LoadMath_Instance, LoadMath_Class, LoadMath_Constants, IronRuby.Builtins.RubyModule.EmptyArray);
+            DefineGlobalModule("Marshal", typeof(IronRuby.Builtins.RubyMarshal), 0x00000107, null, LoadMarshal_Class, LoadMarshal_Constants, IronRuby.Builtins.RubyModule.EmptyArray);
+            DefineGlobalModule("Math", typeof(IronRuby.Builtins.RubyMath), 0x00000107, LoadMath_Instance, LoadMath_Class, LoadMath_Constants, IronRuby.Builtins.RubyModule.EmptyArray);
             ExtendClass(typeof(Microsoft.Scripting.Actions.TypeTracker), null, LoadMicrosoft__Scripting__Actions__TypeTracker_Instance, null, null, IronRuby.Builtins.RubyModule.EmptyArray);
-            DefineGlobalModule("ObjectSpace", typeof(IronRuby.Builtins.ObjectSpace), 0x00000103, null, LoadObjectSpace_Class, null, IronRuby.Builtins.RubyModule.EmptyArray);
-            IronRuby.Builtins.RubyModule def41 = DefineGlobalModule("Precision", typeof(IronRuby.Builtins.Precision), 0x00000103, LoadPrecision_Instance, LoadPrecision_Class, null, IronRuby.Builtins.RubyModule.EmptyArray);
+            DefineGlobalModule("ObjectSpace", typeof(IronRuby.Builtins.ObjectSpace), 0x00000107, null, LoadObjectSpace_Class, null, IronRuby.Builtins.RubyModule.EmptyArray);
+            IronRuby.Builtins.RubyModule def41 = DefineGlobalModule("Precision", typeof(IronRuby.Builtins.Precision), 0x00000107, LoadPrecision_Instance, LoadPrecision_Class, null, IronRuby.Builtins.RubyModule.EmptyArray);
             #if !SILVERLIGHT
-            IronRuby.Builtins.RubyModule def27 = DefineGlobalModule("Process", typeof(IronRuby.Builtins.RubyProcess), 0x00000103, LoadProcess_Instance, LoadProcess_Class, null, IronRuby.Builtins.RubyModule.EmptyArray);
+            IronRuby.Builtins.RubyModule def27 = DefineGlobalModule("Process", typeof(IronRuby.Builtins.RubyProcess), 0x00000107, LoadProcess_Instance, LoadProcess_Class, null, IronRuby.Builtins.RubyModule.EmptyArray);
             #endif
             #if !SILVERLIGHT
-            DefineGlobalModule("Signal", typeof(IronRuby.Builtins.Signal), 0x00000103, null, LoadSignal_Class, null, IronRuby.Builtins.RubyModule.EmptyArray);
+            DefineGlobalModule("Signal", typeof(IronRuby.Builtins.Signal), 0x00000107, null, LoadSignal_Class, null, IronRuby.Builtins.RubyModule.EmptyArray);
             #endif
             ExtendClass(typeof(System.Type), null, LoadSystem__Type_Instance, null, null, IronRuby.Builtins.RubyModule.EmptyArray);
             // Skipped primitive: __ClassSingletonSingleton
@@ -98,128 +99,128 @@ namespace IronRuby.Builtins {
                 new Func<IronRuby.Builtins.RubyClass, System.Char[], System.String>(IronRuby.Builtins.ClrStringOps.Create), 
                 new Func<IronRuby.Builtins.RubyClass, System.Char[], System.Int32, System.Int32, System.String>(IronRuby.Builtins.ClrStringOps.Create)
             );
-            DefineGlobalClass("Array", typeof(IronRuby.Builtins.RubyArray), 0x00000003, Context.ObjectClass, LoadArray_Instance, LoadArray_Class, null, new IronRuby.Builtins.RubyModule[] {def35}, 
+            DefineGlobalClass("Array", typeof(IronRuby.Builtins.RubyArray), 0x00000007, Context.ObjectClass, LoadArray_Instance, LoadArray_Class, null, new IronRuby.Builtins.RubyModule[] {def35}, 
                 new Func<IronRuby.Builtins.RubyClass, IronRuby.Builtins.RubyArray>(IronRuby.Builtins.ArrayOps.CreateArray), 
                 new Func<IronRuby.Runtime.ConversionStorage<IronRuby.Runtime.Union<System.Collections.IList, System.Int32>>, IronRuby.Runtime.BlockParam, IronRuby.Builtins.RubyClass, System.Object, System.Object>(IronRuby.Builtins.ArrayOps.CreateArray), 
                 new Func<IronRuby.Runtime.BlockParam, IronRuby.Builtins.RubyClass, System.Int32, System.Object, IronRuby.Builtins.RubyArray>(IronRuby.Builtins.ArrayOps.CreateArray), 
                 new Func<IronRuby.Builtins.RubyClass, System.Int32, System.Object, IronRuby.Builtins.RubyArray>(IronRuby.Builtins.ArrayOps.CreateArray)
             );
-            DefineGlobalClass("Binding", typeof(IronRuby.Builtins.Binding), 0x00000003, Context.ObjectClass, null, null, null, IronRuby.Builtins.RubyModule.EmptyArray);
-            DefineGlobalClass("Dir", typeof(IronRuby.Builtins.RubyDir), 0x00000103, Context.ObjectClass, LoadDir_Instance, LoadDir_Class, null, new IronRuby.Builtins.RubyModule[] {def35});
+            DefineGlobalClass("Binding", typeof(IronRuby.Builtins.Binding), 0x00000007, Context.ObjectClass, null, null, null, IronRuby.Builtins.RubyModule.EmptyArray);
+            DefineGlobalClass("Dir", typeof(IronRuby.Builtins.RubyDir), 0x00000107, Context.ObjectClass, LoadDir_Instance, LoadDir_Class, null, new IronRuby.Builtins.RubyModule[] {def35});
             #if !SILVERLIGHT
             if (Context.RubyOptions.Compatibility >= RubyCompatibility.Ruby19) {
-            DefineGlobalClass("Encoding", typeof(IronRuby.Builtins.RubyEncoding), 0x00000003, Context.ObjectClass, LoadEncoding_Instance, LoadEncoding_Class, null, IronRuby.Builtins.RubyModule.EmptyArray);
+            DefineGlobalClass("Encoding", typeof(IronRuby.Builtins.RubyEncoding), 0x00000007, Context.ObjectClass, LoadEncoding_Instance, LoadEncoding_Class, null, IronRuby.Builtins.RubyModule.EmptyArray);
             }
             #endif
-            IronRuby.Builtins.RubyClass def45 = Context.ExceptionClass = DefineGlobalClass("Exception", typeof(System.Exception), 0x00000003, Context.ObjectClass, LoadException_Instance, LoadException_Class, null, IronRuby.Builtins.RubyModule.EmptyArray, 
+            IronRuby.Builtins.RubyClass def45 = Context.ExceptionClass = DefineGlobalClass("Exception", typeof(System.Exception), 0x00000007, Context.ObjectClass, LoadException_Instance, LoadException_Class, null, IronRuby.Builtins.RubyModule.EmptyArray, 
             new Func<IronRuby.Builtins.RubyClass, System.Object, System.Exception>(BuiltinsLibraryInitializer.ExceptionFactory__Exception));
-            Context.FalseClass = DefineGlobalClass("FalseClass", typeof(IronRuby.Builtins.FalseClass), 0x00000103, Context.ObjectClass, LoadFalseClass_Instance, null, null, IronRuby.Builtins.RubyModule.EmptyArray);
+            Context.FalseClass = DefineGlobalClass("FalseClass", typeof(IronRuby.Builtins.FalseClass), 0x00000107, Context.ObjectClass, LoadFalseClass_Instance, null, null, IronRuby.Builtins.RubyModule.EmptyArray);
             #if !SILVERLIGHT
-            IronRuby.Builtins.RubyClass def33 = DefineClass("File::Stat", typeof(System.IO.FileSystemInfo), 0x00000003, Context.ObjectClass, LoadFile__Stat_Instance, null, null, new IronRuby.Builtins.RubyModule[] {def44}, 
+            IronRuby.Builtins.RubyClass def33 = DefineClass("File::Stat", typeof(System.IO.FileSystemInfo), 0x00000007, Context.ObjectClass, LoadFile__Stat_Instance, null, null, new IronRuby.Builtins.RubyModule[] {def44}, 
                 new Func<IronRuby.Builtins.RubyClass, IronRuby.Builtins.MutableString, System.IO.FileSystemInfo>(IronRuby.Builtins.RubyFileOps.RubyStatOps.Create)
             );
             #endif
-            DefineGlobalClass("Hash", typeof(IronRuby.Builtins.Hash), 0x00000003, Context.ObjectClass, LoadHash_Instance, LoadHash_Class, null, new IronRuby.Builtins.RubyModule[] {def35}, 
+            DefineGlobalClass("Hash", typeof(IronRuby.Builtins.Hash), 0x00000007, Context.ObjectClass, LoadHash_Instance, LoadHash_Class, null, new IronRuby.Builtins.RubyModule[] {def35}, 
                 new Func<IronRuby.Builtins.RubyClass, IronRuby.Builtins.Hash>(IronRuby.Builtins.HashOps.CreateHash), 
                 new Func<IronRuby.Runtime.BlockParam, IronRuby.Builtins.RubyClass, System.Object, IronRuby.Builtins.Hash>(IronRuby.Builtins.HashOps.CreateHash), 
                 new Func<IronRuby.Runtime.BlockParam, IronRuby.Builtins.RubyClass, IronRuby.Builtins.Hash>(IronRuby.Builtins.HashOps.CreateHash)
             );
-            IronRuby.Builtins.RubyClass def46 = DefineGlobalClass("IO", typeof(IronRuby.Builtins.RubyIO), 0x00000003, Context.ObjectClass, LoadIO_Instance, LoadIO_Class, LoadIO_Constants, new IronRuby.Builtins.RubyModule[] {def26, def35}, 
+            IronRuby.Builtins.RubyClass def46 = DefineGlobalClass("IO", typeof(IronRuby.Builtins.RubyIO), 0x00000007, Context.ObjectClass, LoadIO_Instance, LoadIO_Class, LoadIO_Constants, new IronRuby.Builtins.RubyModule[] {def26, def35}, 
                 new Func<IronRuby.Builtins.RubyClass, System.Int32, IronRuby.Builtins.MutableString, IronRuby.Builtins.RubyIO>(IronRuby.Builtins.RubyIOOps.Create), 
                 new Func<IronRuby.Builtins.RubyClass, System.Int32, System.Int32, IronRuby.Builtins.RubyIO>(IronRuby.Builtins.RubyIOOps.Create)
             );
-            IronRuby.Builtins.RubyClass def29 = DefineClass("IronRuby::Clr::Name", typeof(IronRuby.Runtime.ClrName), 0x00000003, Context.ObjectClass, LoadIronRuby__Clr__Name_Instance, LoadIronRuby__Clr__Name_Class, null, IronRuby.Builtins.RubyModule.EmptyArray);
-            IronRuby.Builtins.RubyClass def30 = DefineClass("IronRuby::Clr::Scope", typeof(Microsoft.Scripting.Runtime.Scope), 0x00000003, Context.ObjectClass, LoadIronRuby__Clr__Scope_Instance, null, null, IronRuby.Builtins.RubyModule.EmptyArray);
-            DefineGlobalClass("MatchData", typeof(IronRuby.Builtins.MatchData), 0x00000003, Context.ObjectClass, LoadMatchData_Instance, LoadMatchData_Class, null, IronRuby.Builtins.RubyModule.EmptyArray);
-            DefineGlobalClass("Method", typeof(IronRuby.Builtins.RubyMethod), 0x00000003, Context.ObjectClass, LoadMethod_Instance, null, null, IronRuby.Builtins.RubyModule.EmptyArray);
+            IronRuby.Builtins.RubyClass def29 = DefineClass("IronRuby::Clr::Name", typeof(IronRuby.Runtime.ClrName), 0x00000007, Context.ObjectClass, LoadIronRuby__Clr__Name_Instance, LoadIronRuby__Clr__Name_Class, null, IronRuby.Builtins.RubyModule.EmptyArray);
+            IronRuby.Builtins.RubyClass def30 = DefineClass("IronRuby::Clr::Scope", typeof(Microsoft.Scripting.Runtime.Scope), 0x00000007, Context.ObjectClass, LoadIronRuby__Clr__Scope_Instance, null, null, IronRuby.Builtins.RubyModule.EmptyArray);
+            DefineGlobalClass("MatchData", typeof(IronRuby.Builtins.MatchData), 0x00000007, Context.ObjectClass, LoadMatchData_Instance, LoadMatchData_Class, null, IronRuby.Builtins.RubyModule.EmptyArray);
+            DefineGlobalClass("Method", typeof(IronRuby.Builtins.RubyMethod), 0x00000007, Context.ObjectClass, LoadMethod_Instance, null, null, IronRuby.Builtins.RubyModule.EmptyArray);
             // Skipped primitive: Module
-            Context.NilClass = DefineGlobalClass("NilClass", typeof(Microsoft.Scripting.Runtime.DynamicNull), 0x00000003, Context.ObjectClass, LoadNilClass_Instance, null, null, IronRuby.Builtins.RubyModule.EmptyArray);
-            IronRuby.Builtins.RubyClass def40 = DefineGlobalClass("Numeric", typeof(IronRuby.Builtins.Numeric), 0x00000103, Context.ObjectClass, LoadNumeric_Instance, null, null, new IronRuby.Builtins.RubyModule[] {def44});
-            DefineGlobalClass("Proc", typeof(IronRuby.Builtins.Proc), 0x00000003, Context.ObjectClass, LoadProc_Instance, LoadProc_Class, null, IronRuby.Builtins.RubyModule.EmptyArray, 
+            Context.NilClass = DefineGlobalClass("NilClass", typeof(Microsoft.Scripting.Runtime.DynamicNull), 0x00000007, Context.ObjectClass, LoadNilClass_Instance, null, null, IronRuby.Builtins.RubyModule.EmptyArray);
+            IronRuby.Builtins.RubyClass def40 = DefineGlobalClass("Numeric", typeof(IronRuby.Builtins.Numeric), 0x00000107, Context.ObjectClass, LoadNumeric_Instance, null, null, new IronRuby.Builtins.RubyModule[] {def44});
+            DefineGlobalClass("Proc", typeof(IronRuby.Builtins.Proc), 0x00000007, Context.ObjectClass, LoadProc_Instance, LoadProc_Class, null, IronRuby.Builtins.RubyModule.EmptyArray, 
                 new Action<IronRuby.Builtins.RubyClass, System.Object[]>(IronRuby.Builtins.ProcOps.Error)
             );
             #if !SILVERLIGHT && !SILVERLIGHT
-            IronRuby.Builtins.RubyClass def28 = DefineClass("Process::Status", typeof(IronRuby.Builtins.RubyProcess.Status), 0x00000103, Context.ObjectClass, LoadProcess__Status_Instance, null, null, IronRuby.Builtins.RubyModule.EmptyArray);
+            IronRuby.Builtins.RubyClass def28 = DefineClass("Process::Status", typeof(IronRuby.Builtins.RubyProcess.Status), 0x00000107, Context.ObjectClass, LoadProcess__Status_Instance, null, null, IronRuby.Builtins.RubyModule.EmptyArray);
             #endif
-            DefineGlobalClass("Range", typeof(IronRuby.Builtins.Range), 0x00000003, Context.ObjectClass, LoadRange_Instance, null, null, new IronRuby.Builtins.RubyModule[] {def35}, 
+            DefineGlobalClass("Range", typeof(IronRuby.Builtins.Range), 0x00000007, Context.ObjectClass, LoadRange_Instance, null, null, new IronRuby.Builtins.RubyModule[] {def35}, 
                 new Func<IronRuby.Runtime.BinaryOpStorage, IronRuby.Builtins.RubyClass, System.Object, System.Object, System.Boolean, IronRuby.Builtins.Range>(IronRuby.Builtins.RangeOps.CreateRange)
             );
-            DefineGlobalClass("Regexp", typeof(IronRuby.Builtins.RubyRegex), 0x00000003, Context.ObjectClass, LoadRegexp_Instance, LoadRegexp_Class, LoadRegexp_Constants, new IronRuby.Builtins.RubyModule[] {def35}, 
+            DefineGlobalClass("Regexp", typeof(IronRuby.Builtins.RubyRegex), 0x00000007, Context.ObjectClass, LoadRegexp_Instance, LoadRegexp_Class, LoadRegexp_Constants, new IronRuby.Builtins.RubyModule[] {def35}, 
                 new Func<IronRuby.Builtins.RubyClass, IronRuby.Builtins.RubyRegex, IronRuby.Builtins.RubyRegex>(IronRuby.Builtins.RegexpOps.Create), 
                 new Func<IronRuby.Builtins.RubyClass, IronRuby.Builtins.RubyRegex, System.Int32, System.Object, IronRuby.Builtins.RubyRegex>(IronRuby.Builtins.RegexpOps.Create), 
                 new Func<IronRuby.Builtins.RubyClass, IronRuby.Builtins.RubyRegex, System.Object, System.Object, IronRuby.Builtins.RubyRegex>(IronRuby.Builtins.RegexpOps.Create), 
                 new Func<IronRuby.Builtins.RubyClass, IronRuby.Builtins.MutableString, System.Int32, IronRuby.Builtins.MutableString, IronRuby.Builtins.RubyRegex>(IronRuby.Builtins.RegexpOps.Create), 
                 new Func<IronRuby.Builtins.RubyClass, IronRuby.Builtins.MutableString, System.Boolean, IronRuby.Builtins.MutableString, IronRuby.Builtins.RubyRegex>(IronRuby.Builtins.RegexpOps.Create)
             );
-            DefineGlobalClass("String", typeof(IronRuby.Builtins.MutableString), 0x00000003, Context.ObjectClass, LoadString_Instance, null, null, new IronRuby.Builtins.RubyModule[] {def35, def44}, 
+            DefineGlobalClass("String", typeof(IronRuby.Builtins.MutableString), 0x00000007, Context.ObjectClass, LoadString_Instance, null, null, new IronRuby.Builtins.RubyModule[] {def35, def44}, 
                 new Func<IronRuby.Builtins.RubyClass, IronRuby.Builtins.MutableString>(IronRuby.Builtins.MutableStringOps.Create), 
                 new Func<IronRuby.Builtins.RubyClass, IronRuby.Builtins.MutableString, IronRuby.Builtins.MutableString>(IronRuby.Builtins.MutableStringOps.Create)
             );
-            DefineGlobalClass("Struct", typeof(IronRuby.Builtins.RubyStruct), 0x00000003, Context.ObjectClass, LoadStruct_Instance, LoadStruct_Class, LoadStruct_Constants, new IronRuby.Builtins.RubyModule[] {def35}, 
+            DefineGlobalClass("Struct", typeof(IronRuby.Builtins.RubyStruct), 0x00000007, Context.ObjectClass, LoadStruct_Instance, LoadStruct_Class, LoadStruct_Constants, new IronRuby.Builtins.RubyModule[] {def35}, 
                 new Action<IronRuby.Builtins.RubyClass, System.Object[]>(IronRuby.Builtins.RubyStructOps.AllocatorUndefined)
             );
-            DefineGlobalClass("Symbol", typeof(Microsoft.Scripting.SymbolId), 0x00000003, Context.ObjectClass, LoadSymbol_Instance, LoadSymbol_Class, null, IronRuby.Builtins.RubyModule.EmptyArray);
-            DefineGlobalClass("Thread", typeof(System.Threading.Thread), 0x00000003, Context.ObjectClass, LoadThread_Instance, LoadThread_Class, null, IronRuby.Builtins.RubyModule.EmptyArray);
-            DefineGlobalClass("ThreadGroup", typeof(IronRuby.Builtins.ThreadGroup), 0x00000103, Context.ObjectClass, LoadThreadGroup_Instance, null, LoadThreadGroup_Constants, IronRuby.Builtins.RubyModule.EmptyArray);
-            DefineGlobalClass("Time", typeof(System.DateTime), 0x00000003, Context.ObjectClass, LoadTime_Instance, LoadTime_Class, null, new IronRuby.Builtins.RubyModule[] {def44}, 
+            DefineGlobalClass("Symbol", typeof(Microsoft.Scripting.SymbolId), 0x00000007, Context.ObjectClass, LoadSymbol_Instance, LoadSymbol_Class, null, IronRuby.Builtins.RubyModule.EmptyArray);
+            DefineGlobalClass("Thread", typeof(System.Threading.Thread), 0x00000007, Context.ObjectClass, LoadThread_Instance, LoadThread_Class, null, IronRuby.Builtins.RubyModule.EmptyArray);
+            DefineGlobalClass("ThreadGroup", typeof(IronRuby.Builtins.ThreadGroup), 0x00000107, Context.ObjectClass, LoadThreadGroup_Instance, null, LoadThreadGroup_Constants, IronRuby.Builtins.RubyModule.EmptyArray);
+            DefineGlobalClass("Time", typeof(System.DateTime), 0x00000007, Context.ObjectClass, LoadTime_Instance, LoadTime_Class, null, new IronRuby.Builtins.RubyModule[] {def44}, 
                 new Func<IronRuby.Builtins.RubyClass, System.DateTime>(IronRuby.Builtins.TimeOps.Create)
             );
-            Context.TrueClass = DefineGlobalClass("TrueClass", typeof(IronRuby.Builtins.TrueClass), 0x00000103, Context.ObjectClass, LoadTrueClass_Instance, null, null, IronRuby.Builtins.RubyModule.EmptyArray);
-            DefineGlobalClass("UnboundMethod", typeof(IronRuby.Builtins.UnboundMethod), 0x00000103, Context.ObjectClass, LoadUnboundMethod_Instance, null, null, IronRuby.Builtins.RubyModule.EmptyArray);
+            Context.TrueClass = DefineGlobalClass("TrueClass", typeof(IronRuby.Builtins.TrueClass), 0x00000107, Context.ObjectClass, LoadTrueClass_Instance, null, null, IronRuby.Builtins.RubyModule.EmptyArray);
+            DefineGlobalClass("UnboundMethod", typeof(IronRuby.Builtins.UnboundMethod), 0x00000107, Context.ObjectClass, LoadUnboundMethod_Instance, null, null, IronRuby.Builtins.RubyModule.EmptyArray);
             // Skipped primitive: Class
-            IronRuby.Builtins.RubyClass def25 = DefineGlobalClass("File", typeof(IronRuby.Builtins.RubyFile), 0x00000003, def46, LoadFile_Instance, LoadFile_Class, LoadFile_Constants, IronRuby.Builtins.RubyModule.EmptyArray, 
+            IronRuby.Builtins.RubyClass def25 = DefineGlobalClass("File", typeof(IronRuby.Builtins.RubyFile), 0x00000007, def46, LoadFile_Instance, LoadFile_Class, LoadFile_Constants, IronRuby.Builtins.RubyModule.EmptyArray, 
                 new Func<IronRuby.Builtins.RubyClass, IronRuby.Runtime.Union<System.Int32, IronRuby.Builtins.MutableString>, IronRuby.Builtins.MutableString, System.Int32, IronRuby.Builtins.RubyFile>(IronRuby.Builtins.RubyFileOps.CreateFile), 
                 new Func<IronRuby.Builtins.RubyClass, IronRuby.Runtime.Union<System.Int32, IronRuby.Builtins.MutableString>, System.Int32, System.Int32, IronRuby.Builtins.RubyFile>(IronRuby.Builtins.RubyFileOps.CreateFile), 
                 new Func<IronRuby.Builtins.RubyClass, IronRuby.Builtins.MutableString, IronRuby.Builtins.RubyFile>(IronRuby.Builtins.RubyFileOps.CreateFile), 
                 new Func<IronRuby.Builtins.RubyClass, IronRuby.Builtins.MutableString, IronRuby.Builtins.MutableString, IronRuby.Builtins.RubyFile>(IronRuby.Builtins.RubyFileOps.CreateFile), 
                 new Func<IronRuby.Builtins.RubyClass, IronRuby.Builtins.MutableString, System.Int32, IronRuby.Builtins.RubyFile>(IronRuby.Builtins.RubyFileOps.CreateFile)
             );
-            DefineGlobalClass("Float", typeof(System.Double), 0x00000003, def40, LoadFloat_Instance, LoadFloat_Class, LoadFloat_Constants, new IronRuby.Builtins.RubyModule[] {def41});
-            IronRuby.Builtins.RubyClass def47 = DefineGlobalClass("Integer", typeof(IronRuby.Builtins.Integer), 0x00000103, def40, LoadInteger_Instance, LoadInteger_Class, null, new IronRuby.Builtins.RubyModule[] {def41});
-            DefineGlobalClass("NoMemoryError", typeof(IronRuby.Builtins.NoMemoryError), 0x00000103, def45, null, null, null, IronRuby.Builtins.RubyModule.EmptyArray, 
+            DefineGlobalClass("Float", typeof(System.Double), 0x00000007, def40, LoadFloat_Instance, LoadFloat_Class, LoadFloat_Constants, new IronRuby.Builtins.RubyModule[] {def41});
+            IronRuby.Builtins.RubyClass def47 = DefineGlobalClass("Integer", typeof(IronRuby.Builtins.Integer), 0x00000107, def40, LoadInteger_Instance, LoadInteger_Class, null, new IronRuby.Builtins.RubyModule[] {def41});
+            DefineGlobalClass("NoMemoryError", typeof(IronRuby.Builtins.NoMemoryError), 0x00000107, def45, null, null, null, IronRuby.Builtins.RubyModule.EmptyArray, 
             new Func<IronRuby.Builtins.RubyClass, System.Object, System.Exception>(BuiltinsLibraryInitializer.ExceptionFactory__NoMemoryError));
-            IronRuby.Builtins.RubyClass def43 = DefineGlobalClass("ScriptError", typeof(IronRuby.Builtins.ScriptError), 0x00000003, def45, null, null, null, IronRuby.Builtins.RubyModule.EmptyArray, 
+            IronRuby.Builtins.RubyClass def43 = DefineGlobalClass("ScriptError", typeof(IronRuby.Builtins.ScriptError), 0x00000007, def45, null, null, null, IronRuby.Builtins.RubyModule.EmptyArray, 
             new Func<IronRuby.Builtins.RubyClass, System.Object, System.Exception>(BuiltinsLibraryInitializer.ExceptionFactory__ScriptError));
-            IronRuby.Builtins.RubyClass def42 = DefineGlobalClass("SignalException", typeof(IronRuby.Builtins.SignalException), 0x00000103, def45, null, null, null, IronRuby.Builtins.RubyModule.EmptyArray, 
+            IronRuby.Builtins.RubyClass def42 = DefineGlobalClass("SignalException", typeof(IronRuby.Builtins.SignalException), 0x00000107, def45, null, null, null, IronRuby.Builtins.RubyModule.EmptyArray, 
             new Func<IronRuby.Builtins.RubyClass, System.Object, System.Exception>(BuiltinsLibraryInitializer.ExceptionFactory__SignalException));
-            IronRuby.Builtins.RubyClass def37 = Context.StandardErrorClass = DefineGlobalClass("StandardError", typeof(System.SystemException), 0x00000003, def45, null, null, null, IronRuby.Builtins.RubyModule.EmptyArray, 
+            IronRuby.Builtins.RubyClass def37 = Context.StandardErrorClass = DefineGlobalClass("StandardError", typeof(System.SystemException), 0x00000007, def45, null, null, null, IronRuby.Builtins.RubyModule.EmptyArray, 
             new Func<IronRuby.Builtins.RubyClass, System.Object, System.Exception>(BuiltinsLibraryInitializer.ExceptionFactory__StandardError));
             ExtendClass(typeof(System.Single), def40, LoadSystem__Single_Instance, LoadSystem__Single_Class, null, new IronRuby.Builtins.RubyModule[] {def41}, 
                 new Func<IronRuby.Builtins.RubyClass, System.Double, System.Single>(IronRuby.Builtins.SingleOps.Create)
             );
-            DefineGlobalClass("SystemExit", typeof(IronRuby.Builtins.SystemExit), 0x00000003, def45, LoadSystemExit_Instance, null, null, IronRuby.Builtins.RubyModule.EmptyArray, 
+            DefineGlobalClass("SystemExit", typeof(IronRuby.Builtins.SystemExit), 0x00000007, def45, LoadSystemExit_Instance, null, null, IronRuby.Builtins.RubyModule.EmptyArray, 
                 new Func<IronRuby.Builtins.RubyClass, System.Object, IronRuby.Builtins.SystemExit>(IronRuby.Builtins.SystemExitOps.Factory), 
                 new Func<IronRuby.Builtins.RubyClass, System.Int32, System.Object, IronRuby.Builtins.SystemExit>(IronRuby.Builtins.SystemExitOps.Factory)
             );
-            DefineGlobalClass("ArgumentError", typeof(System.ArgumentException), 0x00000003, def37, LoadArgumentError_Instance, null, null, IronRuby.Builtins.RubyModule.EmptyArray, 
+            DefineGlobalClass("ArgumentError", typeof(System.ArgumentException), 0x00000007, def37, LoadArgumentError_Instance, null, null, IronRuby.Builtins.RubyModule.EmptyArray, 
             new Func<IronRuby.Builtins.RubyClass, System.Object, System.Exception>(BuiltinsLibraryInitializer.ExceptionFactory__ArgumentError));
-            DefineGlobalClass("Bignum", typeof(Microsoft.Scripting.Math.BigInteger), 0x00000003, def47, LoadBignum_Instance, LoadBignum_Class, null, IronRuby.Builtins.RubyModule.EmptyArray);
-            DefineGlobalClass("EncodingError", typeof(IronRuby.Builtins.EncodingError), 0x00000003, def37, null, null, null, IronRuby.Builtins.RubyModule.EmptyArray, 
+            DefineGlobalClass("Bignum", typeof(Microsoft.Scripting.Math.BigInteger), 0x00000007, def47, LoadBignum_Instance, LoadBignum_Class, null, IronRuby.Builtins.RubyModule.EmptyArray);
+            DefineGlobalClass("EncodingError", typeof(IronRuby.Builtins.EncodingError), 0x00000007, def37, null, null, null, IronRuby.Builtins.RubyModule.EmptyArray, 
             new Func<IronRuby.Builtins.RubyClass, System.Object, System.Exception>(BuiltinsLibraryInitializer.ExceptionFactory__EncodingError));
-            DefineGlobalClass("Fixnum", typeof(System.Int32), 0x00000003, def47, LoadFixnum_Instance, LoadFixnum_Class, null, IronRuby.Builtins.RubyModule.EmptyArray);
-            DefineGlobalClass("IndexError", typeof(System.IndexOutOfRangeException), 0x00000003, def37, null, null, null, IronRuby.Builtins.RubyModule.EmptyArray, 
+            DefineGlobalClass("Fixnum", typeof(System.Int32), 0x00000007, def47, LoadFixnum_Instance, LoadFixnum_Class, null, IronRuby.Builtins.RubyModule.EmptyArray);
+            DefineGlobalClass("IndexError", typeof(System.IndexOutOfRangeException), 0x00000007, def37, null, null, null, IronRuby.Builtins.RubyModule.EmptyArray, 
             new Func<IronRuby.Builtins.RubyClass, System.Object, System.Exception>(BuiltinsLibraryInitializer.ExceptionFactory__IndexError));
-            DefineGlobalClass("Interrupt", typeof(IronRuby.Builtins.Interrupt), 0x00000103, def42, null, null, null, IronRuby.Builtins.RubyModule.EmptyArray, 
+            DefineGlobalClass("Interrupt", typeof(IronRuby.Builtins.Interrupt), 0x00000107, def42, null, null, null, IronRuby.Builtins.RubyModule.EmptyArray, 
             new Func<IronRuby.Builtins.RubyClass, System.Object, System.Exception>(BuiltinsLibraryInitializer.ExceptionFactory__Interrupt));
-            IronRuby.Builtins.RubyClass def38 = DefineGlobalClass("IOError", typeof(System.IO.IOException), 0x00000003, def37, null, null, null, IronRuby.Builtins.RubyModule.EmptyArray, 
+            IronRuby.Builtins.RubyClass def38 = DefineGlobalClass("IOError", typeof(System.IO.IOException), 0x00000007, def37, null, null, null, IronRuby.Builtins.RubyModule.EmptyArray, 
             new Func<IronRuby.Builtins.RubyClass, System.Object, System.Exception>(BuiltinsLibraryInitializer.ExceptionFactory__IOError));
-            DefineGlobalClass("LoadError", typeof(IronRuby.Builtins.LoadError), 0x00000003, def43, null, null, null, IronRuby.Builtins.RubyModule.EmptyArray, 
+            DefineGlobalClass("LoadError", typeof(IronRuby.Builtins.LoadError), 0x00000007, def43, null, null, null, IronRuby.Builtins.RubyModule.EmptyArray, 
             new Func<IronRuby.Builtins.RubyClass, System.Object, System.Exception>(BuiltinsLibraryInitializer.ExceptionFactory__LoadError));
-            DefineGlobalClass("LocalJumpError", typeof(IronRuby.Builtins.LocalJumpError), 0x00000003, def37, null, null, null, IronRuby.Builtins.RubyModule.EmptyArray, 
+            DefineGlobalClass("LocalJumpError", typeof(IronRuby.Builtins.LocalJumpError), 0x00000007, def37, null, null, null, IronRuby.Builtins.RubyModule.EmptyArray, 
             new Func<IronRuby.Builtins.RubyClass, System.Object, System.Exception>(BuiltinsLibraryInitializer.ExceptionFactory__LocalJumpError));
-            IronRuby.Builtins.RubyClass def48 = DefineGlobalClass("NameError", typeof(System.MemberAccessException), 0x00000003, def37, null, null, null, IronRuby.Builtins.RubyModule.EmptyArray, 
+            IronRuby.Builtins.RubyClass def48 = DefineGlobalClass("NameError", typeof(System.MemberAccessException), 0x00000007, def37, null, null, null, IronRuby.Builtins.RubyModule.EmptyArray, 
             new Func<IronRuby.Builtins.RubyClass, System.Object, System.Exception>(BuiltinsLibraryInitializer.ExceptionFactory__NameError));
-            DefineGlobalClass("NotImplementedError", typeof(IronRuby.Builtins.NotImplementedError), 0x00000003, def43, null, null, null, IronRuby.Builtins.RubyModule.EmptyArray, 
+            DefineGlobalClass("NotImplementedError", typeof(IronRuby.Builtins.NotImplementedError), 0x00000007, def43, null, null, null, IronRuby.Builtins.RubyModule.EmptyArray, 
             new Func<IronRuby.Builtins.RubyClass, System.Object, System.Exception>(BuiltinsLibraryInitializer.ExceptionFactory__NotImplementedError));
-            IronRuby.Builtins.RubyClass def39 = DefineGlobalClass("RangeError", typeof(System.ArgumentOutOfRangeException), 0x00000003, def37, LoadRangeError_Instance, null, null, IronRuby.Builtins.RubyModule.EmptyArray, 
+            IronRuby.Builtins.RubyClass def39 = DefineGlobalClass("RangeError", typeof(System.ArgumentOutOfRangeException), 0x00000007, def37, LoadRangeError_Instance, null, null, IronRuby.Builtins.RubyModule.EmptyArray, 
             new Func<IronRuby.Builtins.RubyClass, System.Object, System.Exception>(BuiltinsLibraryInitializer.ExceptionFactory__RangeError));
-            DefineGlobalClass("RegexpError", typeof(IronRuby.Builtins.RegexpError), 0x00000003, def37, null, null, null, IronRuby.Builtins.RubyModule.EmptyArray, 
+            DefineGlobalClass("RegexpError", typeof(IronRuby.Builtins.RegexpError), 0x00000007, def37, null, null, null, IronRuby.Builtins.RubyModule.EmptyArray, 
             new Func<IronRuby.Builtins.RubyClass, System.Object, System.Exception>(BuiltinsLibraryInitializer.ExceptionFactory__RegexpError));
-            DefineGlobalClass("RuntimeError", typeof(IronRuby.Builtins.RuntimeError), 0x00000103, def37, null, null, null, IronRuby.Builtins.RubyModule.EmptyArray, 
+            DefineGlobalClass("RuntimeError", typeof(IronRuby.Builtins.RuntimeError), 0x00000107, def37, null, null, null, IronRuby.Builtins.RubyModule.EmptyArray, 
             new Func<IronRuby.Builtins.RubyClass, System.Object, System.Exception>(BuiltinsLibraryInitializer.ExceptionFactory__RuntimeError));
-            DefineGlobalClass("SecurityError", typeof(System.Security.SecurityException), 0x00000003, def37, null, null, null, IronRuby.Builtins.RubyModule.EmptyArray, 
+            DefineGlobalClass("SecurityError", typeof(System.Security.SecurityException), 0x00000007, def37, null, null, null, IronRuby.Builtins.RubyModule.EmptyArray, 
             new Func<IronRuby.Builtins.RubyClass, System.Object, System.Exception>(BuiltinsLibraryInitializer.ExceptionFactory__SecurityError));
-            DefineGlobalClass("SyntaxError", typeof(IronRuby.Builtins.SyntaxError), 0x00000003, def43, null, null, null, IronRuby.Builtins.RubyModule.EmptyArray, 
+            DefineGlobalClass("SyntaxError", typeof(IronRuby.Builtins.SyntaxError), 0x00000007, def43, null, null, null, IronRuby.Builtins.RubyModule.EmptyArray, 
             new Func<IronRuby.Builtins.RubyClass, System.Object, System.Exception>(BuiltinsLibraryInitializer.ExceptionFactory__SyntaxError));
             ExtendClass(typeof(System.Byte), def47, LoadSystem__Byte_Instance, LoadSystem__Byte_Class, null, IronRuby.Builtins.RubyModule.EmptyArray, 
                 new Func<IronRuby.Builtins.RubyClass, System.Int32, System.Byte>(IronRuby.Builtins.ByteOps.InducedFrom), 
@@ -256,51 +257,51 @@ namespace IronRuby.Builtins {
                 new Func<IronRuby.Builtins.RubyClass, Microsoft.Scripting.Math.BigInteger, System.UInt64>(IronRuby.Builtins.UInt64Ops.InducedFrom), 
                 new Func<IronRuby.Builtins.RubyClass, System.Double, System.UInt64>(IronRuby.Builtins.UInt64Ops.InducedFrom)
             );
-            IronRuby.Builtins.RubyClass def36 = DefineGlobalClass("SystemCallError", typeof(System.Runtime.InteropServices.ExternalException), 0x00000003, def37, null, null, null, IronRuby.Builtins.RubyModule.EmptyArray, 
+            IronRuby.Builtins.RubyClass def36 = DefineGlobalClass("SystemCallError", typeof(System.Runtime.InteropServices.ExternalException), 0x00000007, def37, null, null, null, IronRuby.Builtins.RubyModule.EmptyArray, 
                 new Func<IronRuby.Builtins.RubyClass, IronRuby.Builtins.MutableString, System.Runtime.InteropServices.ExternalException>(IronRuby.Builtins.SystemCallErrorOps.Factory), 
                 new Func<IronRuby.Builtins.RubyClass, System.Int32, System.Runtime.InteropServices.ExternalException>(IronRuby.Builtins.SystemCallErrorOps.Factory)
             );
-            DefineGlobalClass("SystemStackError", typeof(IronRuby.Builtins.SystemStackError), 0x00000003, def37, null, null, null, IronRuby.Builtins.RubyModule.EmptyArray, 
+            DefineGlobalClass("SystemStackError", typeof(IronRuby.Builtins.SystemStackError), 0x00000007, def37, null, null, null, IronRuby.Builtins.RubyModule.EmptyArray, 
             new Func<IronRuby.Builtins.RubyClass, System.Object, System.Exception>(BuiltinsLibraryInitializer.ExceptionFactory__SystemStackError));
-            DefineGlobalClass("ThreadError", typeof(IronRuby.Builtins.ThreadError), 0x00000103, def37, null, null, null, IronRuby.Builtins.RubyModule.EmptyArray, 
+            DefineGlobalClass("ThreadError", typeof(IronRuby.Builtins.ThreadError), 0x00000107, def37, null, null, null, IronRuby.Builtins.RubyModule.EmptyArray, 
             new Func<IronRuby.Builtins.RubyClass, System.Object, System.Exception>(BuiltinsLibraryInitializer.ExceptionFactory__ThreadError));
-            DefineGlobalClass("TypeError", typeof(System.InvalidOperationException), 0x00000003, def37, null, null, null, IronRuby.Builtins.RubyModule.EmptyArray, 
+            DefineGlobalClass("TypeError", typeof(System.InvalidOperationException), 0x00000007, def37, null, null, null, IronRuby.Builtins.RubyModule.EmptyArray, 
             new Func<IronRuby.Builtins.RubyClass, System.Object, System.Exception>(BuiltinsLibraryInitializer.ExceptionFactory__TypeError));
-            DefineGlobalClass("ZeroDivisionError", typeof(System.DivideByZeroException), 0x00000003, def37, null, null, null, IronRuby.Builtins.RubyModule.EmptyArray, 
+            DefineGlobalClass("ZeroDivisionError", typeof(System.DivideByZeroException), 0x00000007, def37, null, null, null, IronRuby.Builtins.RubyModule.EmptyArray, 
             new Func<IronRuby.Builtins.RubyClass, System.Object, System.Exception>(BuiltinsLibraryInitializer.ExceptionFactory__ZeroDivisionError));
-            DefineGlobalClass("EOFError", typeof(IronRuby.Builtins.EOFError), 0x00000103, def38, null, null, null, IronRuby.Builtins.RubyModule.EmptyArray, 
+            DefineGlobalClass("EOFError", typeof(IronRuby.Builtins.EOFError), 0x00000107, def38, null, null, null, IronRuby.Builtins.RubyModule.EmptyArray, 
             new Func<IronRuby.Builtins.RubyClass, System.Object, System.Exception>(BuiltinsLibraryInitializer.ExceptionFactory__EOFError));
-            IronRuby.Builtins.RubyClass def34 = DefineClass("Errno::EACCES", typeof(System.UnauthorizedAccessException), 0x00000003, def36, null, null, null, IronRuby.Builtins.RubyModule.EmptyArray, 
+            IronRuby.Builtins.RubyClass def34 = DefineClass("Errno::EACCES", typeof(System.UnauthorizedAccessException), 0x00000007, def36, null, null, null, IronRuby.Builtins.RubyModule.EmptyArray, 
                 new Func<IronRuby.Builtins.RubyClass, IronRuby.Builtins.MutableString, System.UnauthorizedAccessException>(IronRuby.Builtins.Errno.UnauthorizedAccessExceptionOps.Create)
             );
-            IronRuby.Builtins.RubyClass def10 = DefineClass("Errno::EADDRINUSE", typeof(IronRuby.Builtins.Errno.AddressInUseError), 0x00000103, def36, null, null, null, IronRuby.Builtins.RubyModule.EmptyArray);
-            IronRuby.Builtins.RubyClass def3 = DefineClass("Errno::EBADF", typeof(IronRuby.Builtins.BadFileDescriptorError), 0x00000003, def36, null, null, null, IronRuby.Builtins.RubyModule.EmptyArray, 
+            IronRuby.Builtins.RubyClass def10 = DefineClass("Errno::EADDRINUSE", typeof(IronRuby.Builtins.Errno.AddressInUseError), 0x00000107, def36, null, null, null, IronRuby.Builtins.RubyModule.EmptyArray);
+            IronRuby.Builtins.RubyClass def3 = DefineClass("Errno::EBADF", typeof(IronRuby.Builtins.BadFileDescriptorError), 0x00000007, def36, null, null, null, IronRuby.Builtins.RubyModule.EmptyArray, 
                 new Func<IronRuby.Builtins.RubyClass, IronRuby.Builtins.MutableString, IronRuby.Builtins.BadFileDescriptorError>(IronRuby.Builtins.Errno.BadFileDescriptorErrorOps.Create)
             );
-            IronRuby.Builtins.RubyClass def11 = DefineClass("Errno::ECHILD", typeof(IronRuby.Builtins.Errno.ChildError), 0x00000103, def36, null, null, null, IronRuby.Builtins.RubyModule.EmptyArray);
-            IronRuby.Builtins.RubyClass def12 = DefineClass("Errno::ECONNABORTED", typeof(IronRuby.Builtins.Errno.ConnectionAbortError), 0x00000103, def36, null, null, null, IronRuby.Builtins.RubyModule.EmptyArray);
-            IronRuby.Builtins.RubyClass def13 = DefineClass("Errno::ECONNREFUSED", typeof(IronRuby.Builtins.Errno.ConnectionRefusedError), 0x00000103, def36, null, null, null, IronRuby.Builtins.RubyModule.EmptyArray);
-            IronRuby.Builtins.RubyClass def14 = DefineClass("Errno::ECONNRESET", typeof(IronRuby.Builtins.Errno.ConnectionResetError), 0x00000103, def36, null, null, null, IronRuby.Builtins.RubyModule.EmptyArray);
-            IronRuby.Builtins.RubyClass def15 = DefineClass("Errno::EDOM", typeof(IronRuby.Builtins.Errno.DomainError), 0x00000103, def36, null, null, null, IronRuby.Builtins.RubyModule.EmptyArray);
-            IronRuby.Builtins.RubyClass def19 = DefineClass("Errno::EEXIST", typeof(IronRuby.Builtins.ExistError), 0x00000003, def36, null, null, null, IronRuby.Builtins.RubyModule.EmptyArray, 
+            IronRuby.Builtins.RubyClass def11 = DefineClass("Errno::ECHILD", typeof(IronRuby.Builtins.Errno.ChildError), 0x00000107, def36, null, null, null, IronRuby.Builtins.RubyModule.EmptyArray);
+            IronRuby.Builtins.RubyClass def12 = DefineClass("Errno::ECONNABORTED", typeof(IronRuby.Builtins.Errno.ConnectionAbortError), 0x00000107, def36, null, null, null, IronRuby.Builtins.RubyModule.EmptyArray);
+            IronRuby.Builtins.RubyClass def13 = DefineClass("Errno::ECONNREFUSED", typeof(IronRuby.Builtins.Errno.ConnectionRefusedError), 0x00000107, def36, null, null, null, IronRuby.Builtins.RubyModule.EmptyArray);
+            IronRuby.Builtins.RubyClass def14 = DefineClass("Errno::ECONNRESET", typeof(IronRuby.Builtins.Errno.ConnectionResetError), 0x00000107, def36, null, null, null, IronRuby.Builtins.RubyModule.EmptyArray);
+            IronRuby.Builtins.RubyClass def15 = DefineClass("Errno::EDOM", typeof(IronRuby.Builtins.Errno.DomainError), 0x00000107, def36, null, null, null, IronRuby.Builtins.RubyModule.EmptyArray);
+            IronRuby.Builtins.RubyClass def19 = DefineClass("Errno::EEXIST", typeof(IronRuby.Builtins.ExistError), 0x00000007, def36, null, null, null, IronRuby.Builtins.RubyModule.EmptyArray, 
                 new Func<IronRuby.Builtins.RubyClass, IronRuby.Builtins.MutableString, IronRuby.Builtins.ExistError>(IronRuby.Builtins.Errno.ExistErrorOps.Create)
             );
-            IronRuby.Builtins.RubyClass def21 = DefineClass("Errno::EINVAL", typeof(IronRuby.Builtins.InvalidError), 0x00000003, def36, null, null, null, IronRuby.Builtins.RubyModule.EmptyArray, 
+            IronRuby.Builtins.RubyClass def21 = DefineClass("Errno::EINVAL", typeof(IronRuby.Builtins.InvalidError), 0x00000007, def36, null, null, null, IronRuby.Builtins.RubyModule.EmptyArray, 
                 new Func<IronRuby.Builtins.RubyClass, IronRuby.Builtins.MutableString, IronRuby.Builtins.InvalidError>(IronRuby.Builtins.Errno.InvalidErrorOps.Create)
             );
-            IronRuby.Builtins.RubyClass def32 = DefineClass("Errno::ENOENT", typeof(System.IO.FileNotFoundException), 0x00000003, def36, null, null, null, IronRuby.Builtins.RubyModule.EmptyArray, 
+            IronRuby.Builtins.RubyClass def32 = DefineClass("Errno::ENOENT", typeof(System.IO.FileNotFoundException), 0x00000007, def36, null, null, null, IronRuby.Builtins.RubyModule.EmptyArray, 
                 new Func<IronRuby.Builtins.RubyClass, IronRuby.Builtins.MutableString, System.IO.FileNotFoundException>(IronRuby.Builtins.Errno.FileNotFoundExceptionOps.Create)
             );
-            IronRuby.Builtins.RubyClass def17 = DefineClass("Errno::ENOTCONN", typeof(IronRuby.Builtins.Errno.NotConnectedError), 0x00000103, def36, null, null, null, IronRuby.Builtins.RubyModule.EmptyArray);
-            IronRuby.Builtins.RubyClass def31 = DefineClass("Errno::ENOTDIR", typeof(System.IO.DirectoryNotFoundException), 0x00000003, def36, null, null, null, IronRuby.Builtins.RubyModule.EmptyArray, 
+            IronRuby.Builtins.RubyClass def17 = DefineClass("Errno::ENOTCONN", typeof(IronRuby.Builtins.Errno.NotConnectedError), 0x00000107, def36, null, null, null, IronRuby.Builtins.RubyModule.EmptyArray);
+            IronRuby.Builtins.RubyClass def31 = DefineClass("Errno::ENOTDIR", typeof(System.IO.DirectoryNotFoundException), 0x00000007, def36, null, null, null, IronRuby.Builtins.RubyModule.EmptyArray, 
                 new Func<IronRuby.Builtins.RubyClass, IronRuby.Builtins.MutableString, System.IO.DirectoryNotFoundException>(IronRuby.Builtins.Errno.DirectoryNotFoundExceptionOps.Create)
             );
-            IronRuby.Builtins.RubyClass def18 = DefineClass("Errno::EPIPE", typeof(IronRuby.Builtins.Errno.PipeError), 0x00000103, def36, null, null, null, IronRuby.Builtins.RubyModule.EmptyArray);
-            IronRuby.Builtins.RubyClass def16 = DefineClass("Errno::EXDEV", typeof(IronRuby.Builtins.Errno.ImproperLinkError), 0x00000103, def36, null, null, null, IronRuby.Builtins.RubyModule.EmptyArray);
-            DefineGlobalClass("ESPIPE", typeof(IronRuby.Builtins.InvalidSeekError), 0x00000103, def36, null, null, null, IronRuby.Builtins.RubyModule.EmptyArray);
-            DefineGlobalClass("FloatDomainError", typeof(IronRuby.Builtins.FloatDomainError), 0x00000103, def39, null, null, null, IronRuby.Builtins.RubyModule.EmptyArray, 
+            IronRuby.Builtins.RubyClass def18 = DefineClass("Errno::EPIPE", typeof(IronRuby.Builtins.Errno.PipeError), 0x00000107, def36, null, null, null, IronRuby.Builtins.RubyModule.EmptyArray);
+            IronRuby.Builtins.RubyClass def16 = DefineClass("Errno::EXDEV", typeof(IronRuby.Builtins.Errno.ImproperLinkError), 0x00000107, def36, null, null, null, IronRuby.Builtins.RubyModule.EmptyArray);
+            DefineGlobalClass("ESPIPE", typeof(IronRuby.Builtins.InvalidSeekError), 0x00000107, def36, null, null, null, IronRuby.Builtins.RubyModule.EmptyArray);
+            DefineGlobalClass("FloatDomainError", typeof(IronRuby.Builtins.FloatDomainError), 0x00000107, def39, null, null, null, IronRuby.Builtins.RubyModule.EmptyArray, 
             new Func<IronRuby.Builtins.RubyClass, System.Object, System.Exception>(BuiltinsLibraryInitializer.ExceptionFactory__FloatDomainError));
-            DefineGlobalClass("NoMethodError", typeof(System.MissingMethodException), 0x00000003, def48, LoadNoMethodError_Instance, null, null, IronRuby.Builtins.RubyModule.EmptyArray, 
+            DefineGlobalClass("NoMethodError", typeof(System.MissingMethodException), 0x00000007, def48, LoadNoMethodError_Instance, null, null, IronRuby.Builtins.RubyModule.EmptyArray, 
             new Func<IronRuby.Builtins.RubyClass, System.Object, System.Exception>(BuiltinsLibraryInitializer.ExceptionFactory__NoMethodError));
             def25.SetBuiltinConstant("Constants", def26);
             def22.SetBuiltinConstant("Clr", def4);
@@ -711,91 +712,91 @@ namespace IronRuby.Builtins {
         
         private static void LoadEnumerable_Instance(IronRuby.Builtins.RubyModule/*!*/ module) {
             module.DefineLibraryMethod("all?", 0x51, 
-                new Func<IronRuby.Runtime.CallSiteStorage<System.Func<System.Runtime.CompilerServices.CallSite, System.Object, IronRuby.Builtins.Proc, System.Object>>, IronRuby.Runtime.BlockParam, System.Object, System.Object>(IronRuby.Builtins.Enumerable.TrueForAll)
+                new Func<IronRuby.Runtime.CallSiteStorage<Func<System.Runtime.CompilerServices.CallSite, System.Object, IronRuby.Builtins.Proc, System.Object>>, IronRuby.Runtime.BlockParam, System.Object, System.Object>(IronRuby.Builtins.Enumerable.TrueForAll)
             );
             
             module.DefineLibraryMethod("any?", 0x51, 
-                new Func<IronRuby.Runtime.CallSiteStorage<System.Func<System.Runtime.CompilerServices.CallSite, System.Object, IronRuby.Builtins.Proc, System.Object>>, IronRuby.Runtime.BlockParam, System.Object, System.Object>(IronRuby.Builtins.Enumerable.TrueForAny)
+                new Func<IronRuby.Runtime.CallSiteStorage<Func<System.Runtime.CompilerServices.CallSite, System.Object, IronRuby.Builtins.Proc, System.Object>>, IronRuby.Runtime.BlockParam, System.Object, System.Object>(IronRuby.Builtins.Enumerable.TrueForAny)
             );
             
             module.DefineLibraryMethod("collect", 0x51, 
-                new Func<IronRuby.Runtime.CallSiteStorage<System.Func<System.Runtime.CompilerServices.CallSite, System.Object, IronRuby.Builtins.Proc, System.Object>>, IronRuby.Runtime.BlockParam, System.Object, System.Object>(IronRuby.Builtins.Enumerable.Map)
+                new Func<IronRuby.Runtime.CallSiteStorage<Func<System.Runtime.CompilerServices.CallSite, System.Object, IronRuby.Builtins.Proc, System.Object>>, IronRuby.Runtime.BlockParam, System.Object, System.Object>(IronRuby.Builtins.Enumerable.Map)
             );
             
             module.DefineLibraryMethod("detect", 0x51, 
-                new Func<IronRuby.Runtime.CallSiteStorage<System.Func<System.Runtime.CompilerServices.CallSite, System.Object, IronRuby.Builtins.Proc, System.Object>>, IronRuby.Runtime.CallSiteStorage<System.Func<System.Runtime.CompilerServices.CallSite, System.Object, System.Object>>, IronRuby.Runtime.BlockParam, System.Object, System.Object, System.Object>(IronRuby.Builtins.Enumerable.Find)
+                new Func<IronRuby.Runtime.CallSiteStorage<Func<System.Runtime.CompilerServices.CallSite, System.Object, IronRuby.Builtins.Proc, System.Object>>, IronRuby.Runtime.CallSiteStorage<Func<System.Runtime.CompilerServices.CallSite, System.Object, System.Object>>, IronRuby.Runtime.BlockParam, System.Object, System.Object, System.Object>(IronRuby.Builtins.Enumerable.Find)
             );
             
             module.DefineLibraryMethod("each_with_index", 0x51, 
-                new Func<IronRuby.Runtime.CallSiteStorage<System.Func<System.Runtime.CompilerServices.CallSite, System.Object, IronRuby.Builtins.Proc, System.Object>>, IronRuby.Runtime.BlockParam, System.Object, System.Object>(IronRuby.Builtins.Enumerable.EachWithIndex)
+                new Func<IronRuby.Runtime.CallSiteStorage<Func<System.Runtime.CompilerServices.CallSite, System.Object, IronRuby.Builtins.Proc, System.Object>>, IronRuby.Runtime.BlockParam, System.Object, System.Object>(IronRuby.Builtins.Enumerable.EachWithIndex)
             );
             
             module.DefineLibraryMethod("entries", 0x51, 
-                new Func<IronRuby.Runtime.CallSiteStorage<System.Func<System.Runtime.CompilerServices.CallSite, System.Object, IronRuby.Builtins.Proc, System.Object>>, System.Object, IronRuby.Builtins.RubyArray>(IronRuby.Builtins.Enumerable.ToArray)
+                new Func<IronRuby.Runtime.CallSiteStorage<Func<System.Runtime.CompilerServices.CallSite, System.Object, IronRuby.Builtins.Proc, System.Object>>, System.Object, IronRuby.Builtins.RubyArray>(IronRuby.Builtins.Enumerable.ToArray)
             );
             
             module.DefineLibraryMethod("find", 0x51, 
-                new Func<IronRuby.Runtime.CallSiteStorage<System.Func<System.Runtime.CompilerServices.CallSite, System.Object, IronRuby.Builtins.Proc, System.Object>>, IronRuby.Runtime.CallSiteStorage<System.Func<System.Runtime.CompilerServices.CallSite, System.Object, System.Object>>, IronRuby.Runtime.BlockParam, System.Object, System.Object, System.Object>(IronRuby.Builtins.Enumerable.Find)
+                new Func<IronRuby.Runtime.CallSiteStorage<Func<System.Runtime.CompilerServices.CallSite, System.Object, IronRuby.Builtins.Proc, System.Object>>, IronRuby.Runtime.CallSiteStorage<Func<System.Runtime.CompilerServices.CallSite, System.Object, System.Object>>, IronRuby.Runtime.BlockParam, System.Object, System.Object, System.Object>(IronRuby.Builtins.Enumerable.Find)
             );
             
             module.DefineLibraryMethod("find_all", 0x51, 
-                new Func<IronRuby.Runtime.CallSiteStorage<System.Func<System.Runtime.CompilerServices.CallSite, System.Object, IronRuby.Builtins.Proc, System.Object>>, IronRuby.Runtime.BlockParam, System.Object, System.Object>(IronRuby.Builtins.Enumerable.Select)
+                new Func<IronRuby.Runtime.CallSiteStorage<Func<System.Runtime.CompilerServices.CallSite, System.Object, IronRuby.Builtins.Proc, System.Object>>, IronRuby.Runtime.BlockParam, System.Object, System.Object>(IronRuby.Builtins.Enumerable.Select)
             );
             
             module.DefineLibraryMethod("grep", 0x51, 
-                new Func<IronRuby.Runtime.CallSiteStorage<System.Func<System.Runtime.CompilerServices.CallSite, System.Object, IronRuby.Builtins.Proc, System.Object>>, IronRuby.Runtime.BinaryOpStorage, IronRuby.Runtime.BlockParam, System.Object, System.Object, System.Object>(IronRuby.Builtins.Enumerable.Grep)
+                new Func<IronRuby.Runtime.CallSiteStorage<Func<System.Runtime.CompilerServices.CallSite, System.Object, IronRuby.Builtins.Proc, System.Object>>, IronRuby.Runtime.BinaryOpStorage, IronRuby.Runtime.BlockParam, System.Object, System.Object, System.Object>(IronRuby.Builtins.Enumerable.Grep)
             );
             
             module.DefineLibraryMethod("include?", 0x51, 
-                new Func<IronRuby.Runtime.CallSiteStorage<System.Func<System.Runtime.CompilerServices.CallSite, System.Object, IronRuby.Builtins.Proc, System.Object>>, IronRuby.Runtime.BinaryOpStorage, System.Object, System.Object, System.Object>(IronRuby.Builtins.Enumerable.Contains)
+                new Func<IronRuby.Runtime.CallSiteStorage<Func<System.Runtime.CompilerServices.CallSite, System.Object, IronRuby.Builtins.Proc, System.Object>>, IronRuby.Runtime.BinaryOpStorage, System.Object, System.Object, System.Object>(IronRuby.Builtins.Enumerable.Contains)
             );
             
             module.DefineLibraryMethod("inject", 0x51, 
-                new Func<IronRuby.Runtime.CallSiteStorage<System.Func<System.Runtime.CompilerServices.CallSite, System.Object, IronRuby.Builtins.Proc, System.Object>>, IronRuby.Runtime.BlockParam, System.Object, System.Object, System.Object>(IronRuby.Builtins.Enumerable.Inject)
+                new Func<IronRuby.Runtime.CallSiteStorage<Func<System.Runtime.CompilerServices.CallSite, System.Object, IronRuby.Builtins.Proc, System.Object>>, IronRuby.Runtime.BlockParam, System.Object, System.Object, System.Object>(IronRuby.Builtins.Enumerable.Inject)
             );
             
             module.DefineLibraryMethod("map", 0x51, 
-                new Func<IronRuby.Runtime.CallSiteStorage<System.Func<System.Runtime.CompilerServices.CallSite, System.Object, IronRuby.Builtins.Proc, System.Object>>, IronRuby.Runtime.BlockParam, System.Object, System.Object>(IronRuby.Builtins.Enumerable.Map)
+                new Func<IronRuby.Runtime.CallSiteStorage<Func<System.Runtime.CompilerServices.CallSite, System.Object, IronRuby.Builtins.Proc, System.Object>>, IronRuby.Runtime.BlockParam, System.Object, System.Object>(IronRuby.Builtins.Enumerable.Map)
             );
             
             module.DefineLibraryMethod("max", 0x51, 
-                new Func<IronRuby.Runtime.CallSiteStorage<System.Func<System.Runtime.CompilerServices.CallSite, System.Object, IronRuby.Builtins.Proc, System.Object>>, IronRuby.Runtime.BinaryOpStorage, IronRuby.Runtime.BinaryOpStorage, IronRuby.Runtime.BinaryOpStorage, IronRuby.Runtime.BlockParam, System.Object, System.Object>(IronRuby.Builtins.Enumerable.GetMaximum)
+                new Func<IronRuby.Runtime.CallSiteStorage<Func<System.Runtime.CompilerServices.CallSite, System.Object, IronRuby.Builtins.Proc, System.Object>>, IronRuby.Runtime.BinaryOpStorage, IronRuby.Runtime.BinaryOpStorage, IronRuby.Runtime.BinaryOpStorage, IronRuby.Runtime.BlockParam, System.Object, System.Object>(IronRuby.Builtins.Enumerable.GetMaximum)
             );
             
             module.DefineLibraryMethod("member?", 0x51, 
-                new Func<IronRuby.Runtime.CallSiteStorage<System.Func<System.Runtime.CompilerServices.CallSite, System.Object, IronRuby.Builtins.Proc, System.Object>>, IronRuby.Runtime.BinaryOpStorage, System.Object, System.Object, System.Object>(IronRuby.Builtins.Enumerable.Contains)
+                new Func<IronRuby.Runtime.CallSiteStorage<Func<System.Runtime.CompilerServices.CallSite, System.Object, IronRuby.Builtins.Proc, System.Object>>, IronRuby.Runtime.BinaryOpStorage, System.Object, System.Object, System.Object>(IronRuby.Builtins.Enumerable.Contains)
             );
             
             module.DefineLibraryMethod("min", 0x51, 
-                new Func<IronRuby.Runtime.CallSiteStorage<System.Func<System.Runtime.CompilerServices.CallSite, System.Object, IronRuby.Builtins.Proc, System.Object>>, IronRuby.Runtime.BinaryOpStorage, IronRuby.Runtime.BinaryOpStorage, IronRuby.Runtime.BinaryOpStorage, IronRuby.Runtime.BlockParam, System.Object, System.Object>(IronRuby.Builtins.Enumerable.GetMinimum)
+                new Func<IronRuby.Runtime.CallSiteStorage<Func<System.Runtime.CompilerServices.CallSite, System.Object, IronRuby.Builtins.Proc, System.Object>>, IronRuby.Runtime.BinaryOpStorage, IronRuby.Runtime.BinaryOpStorage, IronRuby.Runtime.BinaryOpStorage, IronRuby.Runtime.BlockParam, System.Object, System.Object>(IronRuby.Builtins.Enumerable.GetMinimum)
             );
             
             module.DefineLibraryMethod("partition", 0x51, 
-                new Func<IronRuby.Runtime.CallSiteStorage<System.Func<System.Runtime.CompilerServices.CallSite, System.Object, IronRuby.Builtins.Proc, System.Object>>, IronRuby.Runtime.BlockParam, System.Object, System.Object>(IronRuby.Builtins.Enumerable.Partition)
+                new Func<IronRuby.Runtime.CallSiteStorage<Func<System.Runtime.CompilerServices.CallSite, System.Object, IronRuby.Builtins.Proc, System.Object>>, IronRuby.Runtime.BlockParam, System.Object, System.Object>(IronRuby.Builtins.Enumerable.Partition)
             );
             
             module.DefineLibraryMethod("reject", 0x51, 
-                new Func<IronRuby.Runtime.CallSiteStorage<System.Func<System.Runtime.CompilerServices.CallSite, System.Object, IronRuby.Builtins.Proc, System.Object>>, IronRuby.Runtime.BlockParam, System.Object, System.Object>(IronRuby.Builtins.Enumerable.Reject)
+                new Func<IronRuby.Runtime.CallSiteStorage<Func<System.Runtime.CompilerServices.CallSite, System.Object, IronRuby.Builtins.Proc, System.Object>>, IronRuby.Runtime.BlockParam, System.Object, System.Object>(IronRuby.Builtins.Enumerable.Reject)
             );
             
             module.DefineLibraryMethod("select", 0x51, 
-                new Func<IronRuby.Runtime.CallSiteStorage<System.Func<System.Runtime.CompilerServices.CallSite, System.Object, IronRuby.Builtins.Proc, System.Object>>, IronRuby.Runtime.BlockParam, System.Object, System.Object>(IronRuby.Builtins.Enumerable.Select)
+                new Func<IronRuby.Runtime.CallSiteStorage<Func<System.Runtime.CompilerServices.CallSite, System.Object, IronRuby.Builtins.Proc, System.Object>>, IronRuby.Runtime.BlockParam, System.Object, System.Object>(IronRuby.Builtins.Enumerable.Select)
             );
             
             module.DefineLibraryMethod("sort", 0x51, 
-                new Func<IronRuby.Runtime.CallSiteStorage<System.Func<System.Runtime.CompilerServices.CallSite, System.Object, IronRuby.Builtins.Proc, System.Object>>, IronRuby.Runtime.BinaryOpStorage, IronRuby.Runtime.BinaryOpStorage, IronRuby.Runtime.BinaryOpStorage, IronRuby.Runtime.BlockParam, System.Object, System.Object>(IronRuby.Builtins.Enumerable.Sort)
+                new Func<IronRuby.Runtime.CallSiteStorage<Func<System.Runtime.CompilerServices.CallSite, System.Object, IronRuby.Builtins.Proc, System.Object>>, IronRuby.Runtime.BinaryOpStorage, IronRuby.Runtime.BinaryOpStorage, IronRuby.Runtime.BinaryOpStorage, IronRuby.Runtime.BlockParam, System.Object, System.Object>(IronRuby.Builtins.Enumerable.Sort)
             );
             
             module.DefineLibraryMethod("sort_by", 0x51, 
-                new Func<IronRuby.Runtime.CallSiteStorage<System.Func<System.Runtime.CompilerServices.CallSite, System.Object, IronRuby.Builtins.Proc, System.Object>>, IronRuby.Runtime.BinaryOpStorage, IronRuby.Runtime.BinaryOpStorage, IronRuby.Runtime.BinaryOpStorage, IronRuby.Runtime.BlockParam, System.Object, System.Object>(IronRuby.Builtins.Enumerable.SortBy)
+                new Func<IronRuby.Runtime.CallSiteStorage<Func<System.Runtime.CompilerServices.CallSite, System.Object, IronRuby.Builtins.Proc, System.Object>>, IronRuby.Runtime.BinaryOpStorage, IronRuby.Runtime.BinaryOpStorage, IronRuby.Runtime.BinaryOpStorage, IronRuby.Runtime.BlockParam, System.Object, System.Object>(IronRuby.Builtins.Enumerable.SortBy)
             );
             
             module.DefineLibraryMethod("to_a", 0x51, 
-                new Func<IronRuby.Runtime.CallSiteStorage<System.Func<System.Runtime.CompilerServices.CallSite, System.Object, IronRuby.Builtins.Proc, System.Object>>, System.Object, IronRuby.Builtins.RubyArray>(IronRuby.Builtins.Enumerable.ToArray)
+                new Func<IronRuby.Runtime.CallSiteStorage<Func<System.Runtime.CompilerServices.CallSite, System.Object, IronRuby.Builtins.Proc, System.Object>>, System.Object, IronRuby.Builtins.RubyArray>(IronRuby.Builtins.Enumerable.ToArray)
             );
             
             module.DefineLibraryMethod("zip", 0x51, 
-                new Func<IronRuby.Runtime.CallSiteStorage<System.Func<System.Runtime.CompilerServices.CallSite, System.Object, IronRuby.Builtins.Proc, System.Object>>, IronRuby.Runtime.ConversionStorage<System.Collections.IList>, IronRuby.Runtime.BlockParam, System.Object, System.Object[], System.Object>(IronRuby.Builtins.Enumerable.Zip)
+                new Func<IronRuby.Runtime.CallSiteStorage<Func<System.Runtime.CompilerServices.CallSite, System.Object, IronRuby.Builtins.Proc, System.Object>>, IronRuby.Runtime.ConversionStorage<System.Collections.IList>, IronRuby.Runtime.BlockParam, System.Object, System.Object[], System.Object>(IronRuby.Builtins.Enumerable.Zip)
             );
             
         }
@@ -1523,12 +1524,12 @@ namespace IronRuby.Builtins {
         private static void LoadHash_Instance(IronRuby.Builtins.RubyModule/*!*/ module) {
             LoadSystem__Collections__Generic__IDictionary_Instance(module);
             module.DefineLibraryMethod("[]", 0x51, 
-                new Func<IronRuby.Runtime.CallSiteStorage<System.Func<System.Runtime.CompilerServices.CallSite, IronRuby.Builtins.Hash, System.Object, System.Object>>, IronRuby.Builtins.Hash, System.Object, System.Object>(IronRuby.Builtins.HashOps.GetElement)
+                new Func<IronRuby.Runtime.CallSiteStorage<Func<System.Runtime.CompilerServices.CallSite, IronRuby.Builtins.Hash, System.Object, System.Object>>, IronRuby.Builtins.Hash, System.Object, System.Object>(IronRuby.Builtins.HashOps.GetElement)
             );
             
             module.DefineLibraryMethod("default", 0x51, 
                 new Func<IronRuby.Runtime.RubyContext, IronRuby.Builtins.Hash, System.Object>(IronRuby.Builtins.HashOps.GetDefaultValue), 
-                new Func<IronRuby.Runtime.CallSiteStorage<System.Func<System.Runtime.CompilerServices.CallSite, IronRuby.Builtins.Proc, IronRuby.Builtins.Hash, System.Object, System.Object>>, IronRuby.Builtins.Hash, System.Object, System.Object>(IronRuby.Builtins.HashOps.GetDefaultValue)
+                new Func<IronRuby.Runtime.CallSiteStorage<Func<System.Runtime.CompilerServices.CallSite, IronRuby.Builtins.Proc, IronRuby.Builtins.Hash, System.Object, System.Object>>, IronRuby.Builtins.Hash, System.Object, System.Object>(IronRuby.Builtins.HashOps.GetDefaultValue)
             );
             
             module.DefineLibraryMethod("default_proc", 0x51, 
@@ -1558,7 +1559,7 @@ namespace IronRuby.Builtins {
             );
             
             module.DefineLibraryMethod("shift", 0x51, 
-                new Func<IronRuby.Runtime.CallSiteStorage<System.Func<System.Runtime.CompilerServices.CallSite, IronRuby.Builtins.Hash, System.Object, System.Object>>, IronRuby.Builtins.Hash, System.Object>(IronRuby.Builtins.HashOps.Shift)
+                new Func<IronRuby.Runtime.CallSiteStorage<Func<System.Runtime.CompilerServices.CallSite, IronRuby.Builtins.Hash, System.Object, System.Object>>, IronRuby.Builtins.Hash, System.Object>(IronRuby.Builtins.HashOps.Shift)
             );
             
         }
@@ -2021,7 +2022,7 @@ namespace IronRuby.Builtins {
             module.DefineLibraryMethod("==", 0x51, 
                 new Func<Microsoft.Scripting.Math.BigInteger, Microsoft.Scripting.Math.BigInteger, System.Boolean>(IronRuby.Builtins.ClrBigInteger.Equal), 
                 new Func<Microsoft.Scripting.Math.BigInteger, System.Int32, System.Boolean>(IronRuby.Builtins.ClrBigInteger.Equal), 
-                new Func<Microsoft.Scripting.Math.BigInteger, System.Double, System.Boolean>(IronRuby.Builtins.ClrBigInteger.Equal), 
+                new Func<IronRuby.Runtime.RubyContext, Microsoft.Scripting.Math.BigInteger, System.Double, System.Boolean>(IronRuby.Builtins.ClrBigInteger.Equal), 
                 new Func<IronRuby.Runtime.BinaryOpStorage, Microsoft.Scripting.Math.BigInteger, System.Object, System.Boolean>(IronRuby.Builtins.ClrBigInteger.Equal)
             );
             
@@ -2118,42 +2119,42 @@ namespace IronRuby.Builtins {
         private static void LoadIronRuby__Clr__Float_Instance(IronRuby.Builtins.RubyModule/*!*/ module) {
             module.DefineLibraryMethod("-", 0x51, 
                 new Func<System.Double, System.Int32, System.Double>(IronRuby.Builtins.ClrFloat.Subtract), 
-                new Func<System.Double, Microsoft.Scripting.Math.BigInteger, System.Double>(IronRuby.Builtins.ClrFloat.Subtract), 
+                new Func<IronRuby.Runtime.RubyContext, System.Double, Microsoft.Scripting.Math.BigInteger, System.Double>(IronRuby.Builtins.ClrFloat.Subtract), 
                 new Func<System.Double, System.Double, System.Double>(IronRuby.Builtins.ClrFloat.Subtract), 
                 new Func<IronRuby.Runtime.BinaryOpStorage, IronRuby.Runtime.BinaryOpStorage, System.Double, System.Object, System.Object>(IronRuby.Builtins.ClrFloat.Subtract)
             );
             
             module.DefineLibraryMethod("%", 0x51, 
                 new Func<System.Double, System.Int32, System.Double>(IronRuby.Builtins.ClrFloat.Modulo), 
-                new Func<System.Double, Microsoft.Scripting.Math.BigInteger, System.Double>(IronRuby.Builtins.ClrFloat.Modulo), 
+                new Func<IronRuby.Runtime.RubyContext, System.Double, Microsoft.Scripting.Math.BigInteger, System.Double>(IronRuby.Builtins.ClrFloat.Modulo), 
                 new Func<System.Double, System.Double, System.Double>(IronRuby.Builtins.ClrFloat.Modulo), 
                 new Func<IronRuby.Runtime.BinaryOpStorage, IronRuby.Runtime.BinaryOpStorage, System.Double, System.Object, System.Object>(IronRuby.Builtins.ClrFloat.ModuloOp)
             );
             
             module.DefineLibraryMethod("*", 0x51, 
                 new Func<System.Double, System.Int32, System.Double>(IronRuby.Builtins.ClrFloat.Multiply), 
-                new Func<System.Double, Microsoft.Scripting.Math.BigInteger, System.Double>(IronRuby.Builtins.ClrFloat.Multiply), 
+                new Func<IronRuby.Runtime.RubyContext, System.Double, Microsoft.Scripting.Math.BigInteger, System.Double>(IronRuby.Builtins.ClrFloat.Multiply), 
                 new Func<System.Double, System.Double, System.Double>(IronRuby.Builtins.ClrFloat.Multiply), 
                 new Func<IronRuby.Runtime.BinaryOpStorage, IronRuby.Runtime.BinaryOpStorage, System.Double, System.Object, System.Object>(IronRuby.Builtins.ClrFloat.Multiply)
             );
             
             module.DefineLibraryMethod("**", 0x51, 
                 new Func<System.Double, System.Int32, System.Double>(IronRuby.Builtins.ClrFloat.Power), 
-                new Func<System.Double, Microsoft.Scripting.Math.BigInteger, System.Double>(IronRuby.Builtins.ClrFloat.Power), 
+                new Func<IronRuby.Runtime.RubyContext, System.Double, Microsoft.Scripting.Math.BigInteger, System.Double>(IronRuby.Builtins.ClrFloat.Power), 
                 new Func<System.Double, System.Double, System.Double>(IronRuby.Builtins.ClrFloat.Power), 
                 new Func<IronRuby.Runtime.BinaryOpStorage, IronRuby.Runtime.BinaryOpStorage, System.Double, System.Object, System.Object>(IronRuby.Builtins.ClrFloat.Power)
             );
             
             module.DefineLibraryMethod("/", 0x51, 
                 new Func<System.Double, System.Int32, System.Double>(IronRuby.Builtins.ClrFloat.Divide), 
-                new Func<System.Double, Microsoft.Scripting.Math.BigInteger, System.Double>(IronRuby.Builtins.ClrFloat.Divide), 
+                new Func<IronRuby.Runtime.RubyContext, System.Double, Microsoft.Scripting.Math.BigInteger, System.Double>(IronRuby.Builtins.ClrFloat.Divide), 
                 new Func<System.Double, System.Double, System.Double>(IronRuby.Builtins.ClrFloat.Divide), 
                 new Func<IronRuby.Runtime.BinaryOpStorage, IronRuby.Runtime.BinaryOpStorage, System.Double, System.Object, System.Object>(IronRuby.Builtins.ClrFloat.Divide)
             );
             
             module.DefineLibraryMethod("+", 0x51, 
                 new Func<System.Double, System.Int32, System.Double>(IronRuby.Builtins.ClrFloat.Add), 
-                new Func<System.Double, Microsoft.Scripting.Math.BigInteger, System.Double>(IronRuby.Builtins.ClrFloat.Add), 
+                new Func<IronRuby.Runtime.RubyContext, System.Double, Microsoft.Scripting.Math.BigInteger, System.Double>(IronRuby.Builtins.ClrFloat.Add), 
                 new Func<System.Double, System.Double, System.Double>(IronRuby.Builtins.ClrFloat.Add), 
                 new Func<IronRuby.Runtime.BinaryOpStorage, IronRuby.Runtime.BinaryOpStorage, System.Double, System.Object, System.Object>(IronRuby.Builtins.ClrFloat.Add)
             );
@@ -2161,21 +2162,21 @@ namespace IronRuby.Builtins {
             module.DefineLibraryMethod("<", 0x51, 
                 new Func<System.Double, System.Double, System.Boolean>(IronRuby.Builtins.ClrFloat.LessThan), 
                 new Func<System.Double, System.Int32, System.Boolean>(IronRuby.Builtins.ClrFloat.LessThan), 
-                new Func<System.Double, Microsoft.Scripting.Math.BigInteger, System.Boolean>(IronRuby.Builtins.ClrFloat.LessThan), 
+                new Func<IronRuby.Runtime.RubyContext, System.Double, Microsoft.Scripting.Math.BigInteger, System.Boolean>(IronRuby.Builtins.ClrFloat.LessThan), 
                 new Func<IronRuby.Runtime.BinaryOpStorage, IronRuby.Runtime.BinaryOpStorage, System.Double, System.Object, System.Boolean>(IronRuby.Builtins.ClrFloat.LessThan)
             );
             
             module.DefineLibraryMethod("<=", 0x51, 
                 new Func<System.Double, System.Double, System.Boolean>(IronRuby.Builtins.ClrFloat.LessThanOrEqual), 
                 new Func<System.Double, System.Int32, System.Boolean>(IronRuby.Builtins.ClrFloat.LessThanOrEqual), 
-                new Func<System.Double, Microsoft.Scripting.Math.BigInteger, System.Boolean>(IronRuby.Builtins.ClrFloat.LessThanOrEqual), 
+                new Func<IronRuby.Runtime.RubyContext, System.Double, Microsoft.Scripting.Math.BigInteger, System.Boolean>(IronRuby.Builtins.ClrFloat.LessThanOrEqual), 
                 new Func<IronRuby.Runtime.BinaryOpStorage, IronRuby.Runtime.BinaryOpStorage, System.Double, System.Object, System.Boolean>(IronRuby.Builtins.ClrFloat.LessThanOrEqual)
             );
             
             module.DefineLibraryMethod("<=>", 0x51, 
                 new Func<System.Double, System.Double, System.Object>(IronRuby.Builtins.ClrFloat.Compare), 
                 new Func<System.Double, System.Int32, System.Object>(IronRuby.Builtins.ClrFloat.Compare), 
-                new Func<System.Double, Microsoft.Scripting.Math.BigInteger, System.Object>(IronRuby.Builtins.ClrFloat.Compare), 
+                new Func<IronRuby.Runtime.RubyContext, System.Double, Microsoft.Scripting.Math.BigInteger, System.Object>(IronRuby.Builtins.ClrFloat.Compare), 
                 new Func<IronRuby.Runtime.BinaryOpStorage, IronRuby.Runtime.BinaryOpStorage, System.Double, System.Object, System.Object>(IronRuby.Builtins.ClrFloat.Compare)
             );
             
@@ -2187,14 +2188,14 @@ namespace IronRuby.Builtins {
             module.DefineLibraryMethod(">", 0x51, 
                 new Func<System.Double, System.Double, System.Boolean>(IronRuby.Builtins.ClrFloat.GreaterThan), 
                 new Func<System.Double, System.Int32, System.Boolean>(IronRuby.Builtins.ClrFloat.GreaterThan), 
-                new Func<System.Double, Microsoft.Scripting.Math.BigInteger, System.Boolean>(IronRuby.Builtins.ClrFloat.GreaterThan), 
+                new Func<IronRuby.Runtime.RubyContext, System.Double, Microsoft.Scripting.Math.BigInteger, System.Boolean>(IronRuby.Builtins.ClrFloat.GreaterThan), 
                 new Func<IronRuby.Runtime.BinaryOpStorage, IronRuby.Runtime.BinaryOpStorage, System.Double, System.Object, System.Boolean>(IronRuby.Builtins.ClrFloat.GreaterThan)
             );
             
             module.DefineLibraryMethod(">=", 0x51, 
                 new Func<System.Double, System.Double, System.Boolean>(IronRuby.Builtins.ClrFloat.GreaterThanOrEqual), 
                 new Func<System.Double, System.Int32, System.Boolean>(IronRuby.Builtins.ClrFloat.GreaterThanOrEqual), 
-                new Func<System.Double, Microsoft.Scripting.Math.BigInteger, System.Boolean>(IronRuby.Builtins.ClrFloat.GreaterThanOrEqual), 
+                new Func<IronRuby.Runtime.RubyContext, System.Double, Microsoft.Scripting.Math.BigInteger, System.Boolean>(IronRuby.Builtins.ClrFloat.GreaterThanOrEqual), 
                 new Func<IronRuby.Runtime.BinaryOpStorage, IronRuby.Runtime.BinaryOpStorage, System.Double, System.Object, System.Boolean>(IronRuby.Builtins.ClrFloat.GreaterThanOrEqual)
             );
             
@@ -2212,7 +2213,7 @@ namespace IronRuby.Builtins {
             
             module.DefineLibraryMethod("divmod", 0x51, 
                 new Func<System.Double, System.Int32, IronRuby.Builtins.RubyArray>(IronRuby.Builtins.ClrFloat.DivMod), 
-                new Func<System.Double, Microsoft.Scripting.Math.BigInteger, IronRuby.Builtins.RubyArray>(IronRuby.Builtins.ClrFloat.DivMod), 
+                new Func<IronRuby.Runtime.RubyContext, System.Double, Microsoft.Scripting.Math.BigInteger, IronRuby.Builtins.RubyArray>(IronRuby.Builtins.ClrFloat.DivMod), 
                 new Func<System.Double, System.Double, IronRuby.Builtins.RubyArray>(IronRuby.Builtins.ClrFloat.DivMod), 
                 new Func<IronRuby.Runtime.BinaryOpStorage, IronRuby.Runtime.BinaryOpStorage, System.Double, System.Object, System.Object>(IronRuby.Builtins.ClrFloat.DivMod)
             );
@@ -2235,7 +2236,7 @@ namespace IronRuby.Builtins {
             
             module.DefineLibraryMethod("modulo", 0x51, 
                 new Func<System.Double, System.Int32, System.Double>(IronRuby.Builtins.ClrFloat.Modulo), 
-                new Func<System.Double, Microsoft.Scripting.Math.BigInteger, System.Double>(IronRuby.Builtins.ClrFloat.Modulo), 
+                new Func<IronRuby.Runtime.RubyContext, System.Double, Microsoft.Scripting.Math.BigInteger, System.Double>(IronRuby.Builtins.ClrFloat.Modulo), 
                 new Func<System.Double, System.Double, System.Double>(IronRuby.Builtins.ClrFloat.Modulo), 
                 new Func<IronRuby.Runtime.BinaryOpStorage, IronRuby.Runtime.BinaryOpStorage, System.Double, System.Object, System.Object>(IronRuby.Builtins.ClrFloat.Modulo)
             );
@@ -2524,7 +2525,7 @@ namespace IronRuby.Builtins {
             module.DefineLibraryMethod("=~", 0x51, 
                 new Func<IronRuby.Runtime.RubyScope, System.String, IronRuby.Builtins.RubyRegex, System.Object>(IronRuby.Builtins.ClrString.Match), 
                 new Func<System.String, System.String, System.Object>(IronRuby.Builtins.ClrString.Match), 
-                new Func<IronRuby.Runtime.CallSiteStorage<System.Func<System.Runtime.CompilerServices.CallSite, IronRuby.Runtime.RubyScope, System.Object, System.String, System.Object>>, IronRuby.Runtime.RubyScope, System.String, System.Object, System.Object>(IronRuby.Builtins.ClrString.Match)
+                new Func<IronRuby.Runtime.CallSiteStorage<Func<System.Runtime.CompilerServices.CallSite, IronRuby.Runtime.RubyScope, System.Object, System.String, System.Object>>, IronRuby.Runtime.RubyScope, System.String, System.Object, System.Object>(IronRuby.Builtins.ClrString.Match)
             );
             
             module.DefineLibraryMethod("==", 0x51, 
@@ -2710,7 +2711,7 @@ namespace IronRuby.Builtins {
             );
             
             module.DefineLibraryMethod("clone", 0x51, 
-                new Func<IronRuby.Runtime.CallSiteStorage<System.Func<System.Runtime.CompilerServices.CallSite, System.Object, System.Object, System.Object>>, IronRuby.Runtime.CallSiteStorage<System.Func<System.Runtime.CompilerServices.CallSite, IronRuby.Builtins.RubyClass, System.Object>>, System.Object, System.Object>(IronRuby.Builtins.KernelOps.Clone)
+                new Func<IronRuby.Runtime.CallSiteStorage<Func<System.Runtime.CompilerServices.CallSite, System.Object, System.Object, System.Object>>, IronRuby.Runtime.CallSiteStorage<Func<System.Runtime.CompilerServices.CallSite, IronRuby.Builtins.RubyClass, System.Object>>, System.Object, System.Object>(IronRuby.Builtins.KernelOps.Clone)
             );
             
             module.DefineLibraryMethod("clr_member", 0x51, 
@@ -2722,7 +2723,7 @@ namespace IronRuby.Builtins {
             );
             
             module.DefineLibraryMethod("dup", 0x51, 
-                new Func<IronRuby.Runtime.CallSiteStorage<System.Func<System.Runtime.CompilerServices.CallSite, System.Object, System.Object, System.Object>>, IronRuby.Runtime.CallSiteStorage<System.Func<System.Runtime.CompilerServices.CallSite, IronRuby.Builtins.RubyClass, System.Object>>, System.Object, System.Object>(IronRuby.Builtins.KernelOps.Duplicate)
+                new Func<IronRuby.Runtime.CallSiteStorage<Func<System.Runtime.CompilerServices.CallSite, System.Object, System.Object, System.Object>>, IronRuby.Runtime.CallSiteStorage<Func<System.Runtime.CompilerServices.CallSite, IronRuby.Builtins.RubyClass, System.Object>>, System.Object, System.Object>(IronRuby.Builtins.KernelOps.Duplicate)
             );
             
             module.DefineLibraryMethod("eql?", 0x51, 
@@ -2759,13 +2760,13 @@ namespace IronRuby.Builtins {
             );
             
             module.DefineLibraryMethod("extend", 0x51, 
-                new Func<IronRuby.Runtime.CallSiteStorage<System.Func<System.Runtime.CompilerServices.CallSite, IronRuby.Builtins.RubyModule, System.Object, System.Object>>, IronRuby.Runtime.CallSiteStorage<System.Func<System.Runtime.CompilerServices.CallSite, IronRuby.Builtins.RubyModule, System.Object, System.Object>>, System.Object, IronRuby.Builtins.RubyModule, IronRuby.Builtins.RubyModule[], System.Object>(IronRuby.Builtins.KernelOps.Extend)
+                new Func<IronRuby.Runtime.CallSiteStorage<Func<System.Runtime.CompilerServices.CallSite, IronRuby.Builtins.RubyModule, System.Object, System.Object>>, IronRuby.Runtime.CallSiteStorage<Func<System.Runtime.CompilerServices.CallSite, IronRuby.Builtins.RubyModule, System.Object, System.Object>>, System.Object, IronRuby.Builtins.RubyModule, IronRuby.Builtins.RubyModule[], System.Object>(IronRuby.Builtins.KernelOps.Extend)
             );
             
             module.DefineLibraryMethod("fail", 0x52, 
                 new Action<IronRuby.Runtime.RubyContext, System.Object>(IronRuby.Builtins.KernelOps.RaiseException), 
                 new Action<System.Object, IronRuby.Builtins.MutableString>(IronRuby.Builtins.KernelOps.RaiseException), 
-                new Action<IronRuby.Runtime.RespondToStorage, IronRuby.Runtime.UnaryOpStorage, IronRuby.Runtime.BinaryOpStorage, IronRuby.Runtime.CallSiteStorage<System.Action<System.Runtime.CompilerServices.CallSite, System.Exception, IronRuby.Builtins.RubyArray>>, System.Object, System.Object, System.Object, IronRuby.Builtins.RubyArray>(IronRuby.Builtins.KernelOps.RaiseException)
+                new Action<IronRuby.Runtime.RespondToStorage, IronRuby.Runtime.UnaryOpStorage, IronRuby.Runtime.BinaryOpStorage, IronRuby.Runtime.CallSiteStorage<Microsoft.Scripting.Utils.Action<System.Runtime.CompilerServices.CallSite, System.Exception, IronRuby.Builtins.RubyArray>>, System.Object, System.Object, System.Object, IronRuby.Builtins.RubyArray>(IronRuby.Builtins.KernelOps.RaiseException)
             );
             
             module.DefineLibraryMethod("Float", 0x52, 
@@ -2790,8 +2791,8 @@ namespace IronRuby.Builtins {
             );
             
             module.DefineLibraryMethod("gets", 0x52, 
-                new Func<IronRuby.Runtime.CallSiteStorage<System.Func<System.Runtime.CompilerServices.CallSite, System.Object, IronRuby.Builtins.MutableString, System.Object>>, System.Object, System.Object>(IronRuby.Builtins.KernelOps.ReadInputLine), 
-                new Func<IronRuby.Runtime.CallSiteStorage<System.Func<System.Runtime.CompilerServices.CallSite, System.Object, IronRuby.Builtins.MutableString, System.Object>>, System.Object, IronRuby.Builtins.MutableString, System.Object>(IronRuby.Builtins.KernelOps.ReadInputLine)
+                new Func<IronRuby.Runtime.CallSiteStorage<Func<System.Runtime.CompilerServices.CallSite, System.Object, IronRuby.Builtins.MutableString, System.Object>>, System.Object, System.Object>(IronRuby.Builtins.KernelOps.ReadInputLine), 
+                new Func<IronRuby.Runtime.CallSiteStorage<Func<System.Runtime.CompilerServices.CallSite, System.Object, IronRuby.Builtins.MutableString, System.Object>>, System.Object, IronRuby.Builtins.MutableString, System.Object>(IronRuby.Builtins.KernelOps.ReadInputLine)
             );
             
             module.DefineLibraryMethod("global_variables", 0x52, 
@@ -2954,7 +2955,7 @@ namespace IronRuby.Builtins {
             module.DefineLibraryMethod("raise", 0x52, 
                 new Action<IronRuby.Runtime.RubyContext, System.Object>(IronRuby.Builtins.KernelOps.RaiseException), 
                 new Action<System.Object, IronRuby.Builtins.MutableString>(IronRuby.Builtins.KernelOps.RaiseException), 
-                new Action<IronRuby.Runtime.RespondToStorage, IronRuby.Runtime.UnaryOpStorage, IronRuby.Runtime.BinaryOpStorage, IronRuby.Runtime.CallSiteStorage<System.Action<System.Runtime.CompilerServices.CallSite, System.Exception, IronRuby.Builtins.RubyArray>>, System.Object, System.Object, System.Object, IronRuby.Builtins.RubyArray>(IronRuby.Builtins.KernelOps.RaiseException)
+                new Action<IronRuby.Runtime.RespondToStorage, IronRuby.Runtime.UnaryOpStorage, IronRuby.Runtime.BinaryOpStorage, IronRuby.Runtime.CallSiteStorage<Microsoft.Scripting.Utils.Action<System.Runtime.CompilerServices.CallSite, System.Exception, IronRuby.Builtins.RubyArray>>, System.Object, System.Object, System.Object, IronRuby.Builtins.RubyArray>(IronRuby.Builtins.KernelOps.RaiseException)
             );
             
             module.DefineLibraryMethod("rand", 0x52, 
@@ -3158,7 +3159,7 @@ namespace IronRuby.Builtins {
             module.DefineLibraryMethod("fail", 0x61, 
                 new Action<IronRuby.Runtime.RubyContext, System.Object>(IronRuby.Builtins.KernelOps.RaiseException), 
                 new Action<System.Object, IronRuby.Builtins.MutableString>(IronRuby.Builtins.KernelOps.RaiseException), 
-                new Action<IronRuby.Runtime.RespondToStorage, IronRuby.Runtime.UnaryOpStorage, IronRuby.Runtime.BinaryOpStorage, IronRuby.Runtime.CallSiteStorage<System.Action<System.Runtime.CompilerServices.CallSite, System.Exception, IronRuby.Builtins.RubyArray>>, System.Object, System.Object, System.Object, IronRuby.Builtins.RubyArray>(IronRuby.Builtins.KernelOps.RaiseException)
+                new Action<IronRuby.Runtime.RespondToStorage, IronRuby.Runtime.UnaryOpStorage, IronRuby.Runtime.BinaryOpStorage, IronRuby.Runtime.CallSiteStorage<Microsoft.Scripting.Utils.Action<System.Runtime.CompilerServices.CallSite, System.Exception, IronRuby.Builtins.RubyArray>>, System.Object, System.Object, System.Object, IronRuby.Builtins.RubyArray>(IronRuby.Builtins.KernelOps.RaiseException)
             );
             
             module.DefineLibraryMethod("Float", 0x61, 
@@ -3174,8 +3175,8 @@ namespace IronRuby.Builtins {
             );
             
             module.DefineLibraryMethod("gets", 0x61, 
-                new Func<IronRuby.Runtime.CallSiteStorage<System.Func<System.Runtime.CompilerServices.CallSite, System.Object, IronRuby.Builtins.MutableString, System.Object>>, System.Object, System.Object>(IronRuby.Builtins.KernelOps.ReadInputLine), 
-                new Func<IronRuby.Runtime.CallSiteStorage<System.Func<System.Runtime.CompilerServices.CallSite, System.Object, IronRuby.Builtins.MutableString, System.Object>>, System.Object, IronRuby.Builtins.MutableString, System.Object>(IronRuby.Builtins.KernelOps.ReadInputLine)
+                new Func<IronRuby.Runtime.CallSiteStorage<Func<System.Runtime.CompilerServices.CallSite, System.Object, IronRuby.Builtins.MutableString, System.Object>>, System.Object, System.Object>(IronRuby.Builtins.KernelOps.ReadInputLine), 
+                new Func<IronRuby.Runtime.CallSiteStorage<Func<System.Runtime.CompilerServices.CallSite, System.Object, IronRuby.Builtins.MutableString, System.Object>>, System.Object, IronRuby.Builtins.MutableString, System.Object>(IronRuby.Builtins.KernelOps.ReadInputLine)
             );
             
             module.DefineLibraryMethod("global_variables", 0x61, 
@@ -3256,7 +3257,7 @@ namespace IronRuby.Builtins {
             module.DefineLibraryMethod("raise", 0x61, 
                 new Action<IronRuby.Runtime.RubyContext, System.Object>(IronRuby.Builtins.KernelOps.RaiseException), 
                 new Action<System.Object, IronRuby.Builtins.MutableString>(IronRuby.Builtins.KernelOps.RaiseException), 
-                new Action<IronRuby.Runtime.RespondToStorage, IronRuby.Runtime.UnaryOpStorage, IronRuby.Runtime.BinaryOpStorage, IronRuby.Runtime.CallSiteStorage<System.Action<System.Runtime.CompilerServices.CallSite, System.Exception, IronRuby.Builtins.RubyArray>>, System.Object, System.Object, System.Object, IronRuby.Builtins.RubyArray>(IronRuby.Builtins.KernelOps.RaiseException)
+                new Action<IronRuby.Runtime.RespondToStorage, IronRuby.Runtime.UnaryOpStorage, IronRuby.Runtime.BinaryOpStorage, IronRuby.Runtime.CallSiteStorage<Microsoft.Scripting.Utils.Action<System.Runtime.CompilerServices.CallSite, System.Exception, IronRuby.Builtins.RubyArray>>, System.Object, System.Object, System.Object, IronRuby.Builtins.RubyArray>(IronRuby.Builtins.KernelOps.RaiseException)
             );
             
             module.DefineLibraryMethod("rand", 0x61, 
@@ -3678,8 +3679,8 @@ namespace IronRuby.Builtins {
             );
             
             module.DefineLibraryMethod("clr_new", 0x51, 
-                new Func<IronRuby.Runtime.CallSiteStorage<System.Func<System.Runtime.CompilerServices.CallSite, System.Object, System.Object, System.Object>>, Microsoft.Scripting.Actions.TypeGroup, System.Object[], System.Object>(IronRuby.Builtins.TypeGroupOps.ClrNew), 
-                new Func<IronRuby.Runtime.CallSiteStorage<System.Func<System.Runtime.CompilerServices.CallSite, System.Object, System.Object, System.Object, System.Object>>, IronRuby.Runtime.BlockParam, Microsoft.Scripting.Actions.TypeGroup, System.Object[], System.Object>(IronRuby.Builtins.TypeGroupOps.ClrNew)
+                new Func<IronRuby.Runtime.CallSiteStorage<Func<System.Runtime.CompilerServices.CallSite, System.Object, System.Object, System.Object>>, Microsoft.Scripting.Actions.TypeGroup, System.Object[], System.Object>(IronRuby.Builtins.TypeGroupOps.ClrNew), 
+                new Func<IronRuby.Runtime.CallSiteStorage<Func<System.Runtime.CompilerServices.CallSite, System.Object, System.Object, System.Object, System.Object>>, IronRuby.Runtime.BlockParam, Microsoft.Scripting.Actions.TypeGroup, System.Object[], System.Object>(IronRuby.Builtins.TypeGroupOps.ClrNew)
             );
             
             module.DefineLibraryMethod("each", 0x51, 
@@ -3695,8 +3696,8 @@ namespace IronRuby.Builtins {
             );
             
             module.DefineLibraryMethod("new", 0x51, 
-                new Func<IronRuby.Runtime.CallSiteStorage<System.Func<System.Runtime.CompilerServices.CallSite, System.Object, System.Object, System.Object>>, Microsoft.Scripting.Actions.TypeGroup, System.Object[], System.Object>(IronRuby.Builtins.TypeGroupOps.New), 
-                new Func<IronRuby.Runtime.CallSiteStorage<System.Func<System.Runtime.CompilerServices.CallSite, System.Object, System.Object, System.Object, System.Object>>, IronRuby.Runtime.BlockParam, Microsoft.Scripting.Actions.TypeGroup, System.Object[], System.Object>(IronRuby.Builtins.TypeGroupOps.New)
+                new Func<IronRuby.Runtime.CallSiteStorage<Func<System.Runtime.CompilerServices.CallSite, System.Object, System.Object, System.Object>>, Microsoft.Scripting.Actions.TypeGroup, System.Object[], System.Object>(IronRuby.Builtins.TypeGroupOps.New), 
+                new Func<IronRuby.Runtime.CallSiteStorage<Func<System.Runtime.CompilerServices.CallSite, System.Object, System.Object, System.Object, System.Object>>, IronRuby.Runtime.BlockParam, Microsoft.Scripting.Actions.TypeGroup, System.Object[], System.Object>(IronRuby.Builtins.TypeGroupOps.New)
             );
             
             module.DefineLibraryMethod("of", 0x51, 
@@ -3837,7 +3838,7 @@ namespace IronRuby.Builtins {
             );
             
             module.DefineLibraryMethod("const_missing", 0x51, 
-                new Action<IronRuby.Builtins.RubyModule, System.String>(IronRuby.Builtins.ModuleOps.ConstantMissing)
+                new Func<IronRuby.Builtins.RubyModule, System.String, System.Object>(IronRuby.Builtins.ModuleOps.ConstantMissing)
             );
             
             module.DefineLibraryMethod("const_set", 0x51, 
@@ -3873,7 +3874,7 @@ namespace IronRuby.Builtins {
             );
             
             module.DefineLibraryMethod("include", 0x52, 
-                new Func<IronRuby.Runtime.CallSiteStorage<System.Func<System.Runtime.CompilerServices.CallSite, IronRuby.Builtins.RubyModule, IronRuby.Builtins.RubyModule, System.Object>>, IronRuby.Runtime.CallSiteStorage<System.Func<System.Runtime.CompilerServices.CallSite, IronRuby.Builtins.RubyModule, IronRuby.Builtins.RubyModule, System.Object>>, IronRuby.Builtins.RubyModule, IronRuby.Builtins.RubyModule[], IronRuby.Builtins.RubyModule>(IronRuby.Builtins.ModuleOps.Include)
+                new Func<IronRuby.Runtime.CallSiteStorage<Func<System.Runtime.CompilerServices.CallSite, IronRuby.Builtins.RubyModule, IronRuby.Builtins.RubyModule, System.Object>>, IronRuby.Runtime.CallSiteStorage<Func<System.Runtime.CompilerServices.CallSite, IronRuby.Builtins.RubyModule, IronRuby.Builtins.RubyModule, System.Object>>, IronRuby.Builtins.RubyModule, IronRuby.Builtins.RubyModule[], IronRuby.Builtins.RubyModule>(IronRuby.Builtins.ModuleOps.Include)
             );
             
             module.DefineLibraryMethod("include?", 0x51, 
@@ -4198,15 +4199,15 @@ namespace IronRuby.Builtins {
         
         private static void LoadPrecision_Instance(IronRuby.Builtins.RubyModule/*!*/ module) {
             module.DefineLibraryMethod("prec", 0x51, 
-                new Func<IronRuby.Runtime.CallSiteStorage<System.Func<System.Runtime.CompilerServices.CallSite, IronRuby.Builtins.RubyClass, System.Object, System.Object>>, System.Object, IronRuby.Builtins.RubyClass, System.Object>(IronRuby.Builtins.Precision.Prec)
+                new Func<IronRuby.Runtime.CallSiteStorage<Func<System.Runtime.CompilerServices.CallSite, IronRuby.Builtins.RubyClass, System.Object, System.Object>>, System.Object, IronRuby.Builtins.RubyClass, System.Object>(IronRuby.Builtins.Precision.Prec)
             );
             
             module.DefineLibraryMethod("prec_f", 0x51, 
-                new Func<IronRuby.Runtime.CallSiteStorage<System.Func<System.Runtime.CompilerServices.CallSite, System.Object, IronRuby.Builtins.RubyClass, System.Object>>, System.Object, System.Object>(IronRuby.Builtins.Precision.PrecFloat)
+                new Func<IronRuby.Runtime.CallSiteStorage<Func<System.Runtime.CompilerServices.CallSite, System.Object, IronRuby.Builtins.RubyClass, System.Object>>, System.Object, System.Object>(IronRuby.Builtins.Precision.PrecFloat)
             );
             
             module.DefineLibraryMethod("prec_i", 0x51, 
-                new Func<IronRuby.Runtime.CallSiteStorage<System.Func<System.Runtime.CompilerServices.CallSite, System.Object, IronRuby.Builtins.RubyClass, System.Object>>, System.Object, System.Object>(IronRuby.Builtins.Precision.PrecInteger)
+                new Func<IronRuby.Runtime.CallSiteStorage<Func<System.Runtime.CompilerServices.CallSite, System.Object, IronRuby.Builtins.RubyClass, System.Object>>, System.Object, System.Object>(IronRuby.Builtins.Precision.PrecInteger)
             );
             
         }
@@ -4270,8 +4271,8 @@ namespace IronRuby.Builtins {
         
         private static void LoadProc_Class(IronRuby.Builtins.RubyModule/*!*/ module) {
             module.DefineLibraryMethod("new", 0x61, 
-                new Func<IronRuby.Runtime.CallSiteStorage<System.Func<System.Runtime.CompilerServices.CallSite, IronRuby.Builtins.Proc, IronRuby.Builtins.Proc, System.Object>>, IronRuby.Runtime.RubyScope, IronRuby.Builtins.RubyClass, IronRuby.Builtins.Proc>(IronRuby.Builtins.ProcOps.CreateNew), 
-                new Func<IronRuby.Runtime.CallSiteStorage<System.Func<System.Runtime.CompilerServices.CallSite, IronRuby.Builtins.Proc, IronRuby.Builtins.Proc, System.Object>>, IronRuby.Runtime.BlockParam, IronRuby.Builtins.RubyClass, IronRuby.Builtins.Proc>(IronRuby.Builtins.ProcOps.CreateNew)
+                new Func<IronRuby.Runtime.CallSiteStorage<Func<System.Runtime.CompilerServices.CallSite, IronRuby.Builtins.Proc, IronRuby.Builtins.Proc, System.Object>>, IronRuby.Runtime.RubyScope, IronRuby.Builtins.RubyClass, IronRuby.Builtins.Proc>(IronRuby.Builtins.ProcOps.CreateNew), 
+                new Func<IronRuby.Runtime.CallSiteStorage<Func<System.Runtime.CompilerServices.CallSite, IronRuby.Builtins.Proc, IronRuby.Builtins.Proc, System.Object>>, IronRuby.Runtime.BlockParam, IronRuby.Builtins.RubyClass, IronRuby.Builtins.Proc>(IronRuby.Builtins.ProcOps.CreateNew)
             );
             
         }
@@ -4592,7 +4593,7 @@ namespace IronRuby.Builtins {
             module.DefineLibraryMethod("=~", 0x51, 
                 new Func<IronRuby.Runtime.RubyScope, IronRuby.Builtins.MutableString, IronRuby.Builtins.RubyRegex, System.Object>(IronRuby.Builtins.MutableStringOps.Match), 
                 new Func<IronRuby.Builtins.MutableString, IronRuby.Builtins.MutableString, System.Object>(IronRuby.Builtins.MutableStringOps.Match), 
-                new Func<IronRuby.Runtime.CallSiteStorage<System.Func<System.Runtime.CompilerServices.CallSite, IronRuby.Runtime.RubyScope, System.Object, IronRuby.Builtins.MutableString, System.Object>>, IronRuby.Runtime.RubyScope, IronRuby.Builtins.MutableString, System.Object, System.Object>(IronRuby.Builtins.MutableStringOps.Match)
+                new Func<IronRuby.Runtime.CallSiteStorage<Func<System.Runtime.CompilerServices.CallSite, IronRuby.Runtime.RubyScope, System.Object, IronRuby.Builtins.MutableString, System.Object>>, IronRuby.Runtime.RubyScope, IronRuby.Builtins.MutableString, System.Object, System.Object>(IronRuby.Builtins.MutableStringOps.Match)
             );
             
             module.DefineLibraryMethod("==", 0x51, 
@@ -4760,8 +4761,8 @@ namespace IronRuby.Builtins {
             );
             
             module.DefineLibraryMethod("match", 0x51, 
-                new Func<IronRuby.Runtime.CallSiteStorage<System.Func<System.Runtime.CompilerServices.CallSite, IronRuby.Runtime.RubyScope, IronRuby.Builtins.RubyRegex, IronRuby.Builtins.MutableString, System.Object>>, IronRuby.Runtime.RubyScope, IronRuby.Builtins.MutableString, IronRuby.Builtins.RubyRegex, System.Object>(IronRuby.Builtins.MutableStringOps.MatchRegexp), 
-                new Func<IronRuby.Runtime.CallSiteStorage<System.Func<System.Runtime.CompilerServices.CallSite, IronRuby.Runtime.RubyScope, IronRuby.Builtins.RubyRegex, IronRuby.Builtins.MutableString, System.Object>>, IronRuby.Runtime.RubyScope, IronRuby.Builtins.MutableString, IronRuby.Builtins.MutableString, System.Object>(IronRuby.Builtins.MutableStringOps.MatchObject)
+                new Func<IronRuby.Runtime.CallSiteStorage<Func<System.Runtime.CompilerServices.CallSite, IronRuby.Runtime.RubyScope, IronRuby.Builtins.RubyRegex, IronRuby.Builtins.MutableString, System.Object>>, IronRuby.Runtime.RubyScope, IronRuby.Builtins.MutableString, IronRuby.Builtins.RubyRegex, System.Object>(IronRuby.Builtins.MutableStringOps.MatchRegexp), 
+                new Func<IronRuby.Runtime.CallSiteStorage<Func<System.Runtime.CompilerServices.CallSite, IronRuby.Runtime.RubyScope, IronRuby.Builtins.RubyRegex, IronRuby.Builtins.MutableString, System.Object>>, IronRuby.Runtime.RubyScope, IronRuby.Builtins.MutableString, IronRuby.Builtins.MutableString, System.Object>(IronRuby.Builtins.MutableStringOps.MatchObject)
             );
             
             module.DefineLibraryMethod("next", 0x51, 
@@ -5010,7 +5011,7 @@ namespace IronRuby.Builtins {
             );
             
             module.DefineLibraryMethod("select", 0x51, 
-                new Func<IronRuby.Runtime.CallSiteStorage<System.Func<System.Runtime.CompilerServices.CallSite, System.Object, IronRuby.Builtins.Proc, System.Object>>, IronRuby.Runtime.BlockParam, IronRuby.Builtins.RubyStruct, System.Object>(IronRuby.Builtins.RubyStructOps.Select)
+                new Func<IronRuby.Runtime.CallSiteStorage<Func<System.Runtime.CompilerServices.CallSite, System.Object, IronRuby.Builtins.Proc, System.Object>>, IronRuby.Runtime.BlockParam, IronRuby.Builtins.RubyStruct, System.Object>(IronRuby.Builtins.RubyStructOps.Select)
             );
             
             module.DefineLibraryMethod("size", 0x51, 
@@ -5210,7 +5211,7 @@ namespace IronRuby.Builtins {
             );
             
             module.DefineLibraryMethod("merge", 0x51, 
-                new Func<IronRuby.Runtime.CallSiteStorage<System.Func<System.Runtime.CompilerServices.CallSite, System.Object, System.Object, System.Object>>, IronRuby.Runtime.CallSiteStorage<System.Func<System.Runtime.CompilerServices.CallSite, IronRuby.Builtins.RubyClass, System.Object>>, IronRuby.Runtime.BlockParam, System.Collections.Generic.IDictionary<System.Object, System.Object>, System.Collections.Generic.IDictionary<System.Object, System.Object>, System.Object>(IronRuby.Builtins.IDictionaryOps.Merge)
+                new Func<IronRuby.Runtime.CallSiteStorage<Func<System.Runtime.CompilerServices.CallSite, System.Object, System.Object, System.Object>>, IronRuby.Runtime.CallSiteStorage<Func<System.Runtime.CompilerServices.CallSite, IronRuby.Builtins.RubyClass, System.Object>>, IronRuby.Runtime.BlockParam, System.Collections.Generic.IDictionary<System.Object, System.Object>, System.Collections.Generic.IDictionary<System.Object, System.Object>, System.Object>(IronRuby.Builtins.IDictionaryOps.Merge)
             );
             
             module.DefineLibraryMethod("merge!", 0x51, 
@@ -5222,7 +5223,7 @@ namespace IronRuby.Builtins {
             );
             
             module.DefineLibraryMethod("reject", 0x51, 
-                new Func<IronRuby.Runtime.CallSiteStorage<System.Func<System.Runtime.CompilerServices.CallSite, System.Object, System.Object, System.Object>>, IronRuby.Runtime.CallSiteStorage<System.Func<System.Runtime.CompilerServices.CallSite, IronRuby.Builtins.RubyClass, System.Object>>, IronRuby.Runtime.BlockParam, System.Collections.Generic.IDictionary<System.Object, System.Object>, System.Object>(IronRuby.Builtins.IDictionaryOps.Reject)
+                new Func<IronRuby.Runtime.CallSiteStorage<Func<System.Runtime.CompilerServices.CallSite, System.Object, System.Object, System.Object>>, IronRuby.Runtime.CallSiteStorage<Func<System.Runtime.CompilerServices.CallSite, IronRuby.Builtins.RubyClass, System.Object>>, IronRuby.Runtime.BlockParam, System.Collections.Generic.IDictionary<System.Object, System.Object>, System.Object>(IronRuby.Builtins.IDictionaryOps.Reject)
             );
             
             module.DefineLibraryMethod("reject!", 0x51, 
@@ -5300,15 +5301,15 @@ namespace IronRuby.Builtins {
             );
             
             module.DefineLibraryMethod("*", 0x51, 
-                new Func<IronRuby.Runtime.CallSiteStorage<System.Func<System.Runtime.CompilerServices.CallSite, IronRuby.Builtins.RubyClass, System.Object>>, System.Collections.IList, System.Int32, System.Collections.IList>(IronRuby.Builtins.IListOps.Repetition), 
+                new Func<IronRuby.Runtime.CallSiteStorage<Func<System.Runtime.CompilerServices.CallSite, IronRuby.Builtins.RubyClass, System.Object>>, System.Collections.IList, System.Int32, System.Collections.IList>(IronRuby.Builtins.IListOps.Repetition), 
                 new Func<IronRuby.Runtime.ConversionStorage<IronRuby.Builtins.MutableString>, System.Collections.IList, IronRuby.Builtins.MutableString, IronRuby.Builtins.MutableString>(IronRuby.Builtins.IListOps.Repetition), 
-                new Func<IronRuby.Runtime.CallSiteStorage<System.Func<System.Runtime.CompilerServices.CallSite, IronRuby.Builtins.RubyClass, System.Object>>, IronRuby.Runtime.ConversionStorage<IronRuby.Builtins.MutableString>, System.Collections.IList, IronRuby.Runtime.Union<IronRuby.Builtins.MutableString, System.Int32>, System.Object>(IronRuby.Builtins.IListOps.Repetition)
+                new Func<IronRuby.Runtime.CallSiteStorage<Func<System.Runtime.CompilerServices.CallSite, IronRuby.Builtins.RubyClass, System.Object>>, IronRuby.Runtime.ConversionStorage<IronRuby.Builtins.MutableString>, System.Collections.IList, IronRuby.Runtime.Union<IronRuby.Builtins.MutableString, System.Int32>, System.Object>(IronRuby.Builtins.IListOps.Repetition)
             );
             
             module.DefineLibraryMethod("[]", 0x51, 
                 new Func<System.Collections.IList, System.Int32, System.Object>(IronRuby.Builtins.IListOps.GetElement), 
-                new Func<IronRuby.Runtime.CallSiteStorage<System.Func<System.Runtime.CompilerServices.CallSite, IronRuby.Builtins.RubyClass, System.Object>>, System.Collections.IList, System.Int32, System.Int32, System.Collections.IList>(IronRuby.Builtins.IListOps.GetElements), 
-                new Func<IronRuby.Runtime.ConversionStorage<System.Int32>, IronRuby.Runtime.CallSiteStorage<System.Func<System.Runtime.CompilerServices.CallSite, IronRuby.Builtins.RubyClass, System.Object>>, System.Collections.IList, IronRuby.Builtins.Range, System.Collections.IList>(IronRuby.Builtins.IListOps.GetElement)
+                new Func<IronRuby.Runtime.CallSiteStorage<Func<System.Runtime.CompilerServices.CallSite, IronRuby.Builtins.RubyClass, System.Object>>, System.Collections.IList, System.Int32, System.Int32, System.Collections.IList>(IronRuby.Builtins.IListOps.GetElements), 
+                new Func<IronRuby.Runtime.ConversionStorage<System.Int32>, IronRuby.Runtime.CallSiteStorage<Func<System.Runtime.CompilerServices.CallSite, IronRuby.Builtins.RubyClass, System.Object>>, System.Collections.IList, IronRuby.Builtins.Range, System.Collections.IList>(IronRuby.Builtins.IListOps.GetElement)
             );
             
             module.DefineLibraryMethod("[]=", 0x51, 
@@ -5356,7 +5357,7 @@ namespace IronRuby.Builtins {
             );
             
             module.DefineLibraryMethod("compact", 0x51, 
-                new Func<IronRuby.Runtime.CallSiteStorage<System.Func<System.Runtime.CompilerServices.CallSite, IronRuby.Builtins.RubyClass, System.Object>>, System.Collections.IList, System.Collections.IList>(IronRuby.Builtins.IListOps.Compact)
+                new Func<IronRuby.Runtime.CallSiteStorage<Func<System.Runtime.CompilerServices.CallSite, IronRuby.Builtins.RubyClass, System.Object>>, System.Collections.IList, System.Collections.IList>(IronRuby.Builtins.IListOps.Compact)
             );
             
             module.DefineLibraryMethod("compact!", 0x51, 
@@ -5417,7 +5418,7 @@ namespace IronRuby.Builtins {
             );
             
             module.DefineLibraryMethod("flatten", 0x51, 
-                new Func<IronRuby.Runtime.CallSiteStorage<System.Func<System.Runtime.CompilerServices.CallSite, IronRuby.Builtins.RubyClass, System.Object>>, IronRuby.Runtime.ConversionStorage<System.Collections.IList>, System.Collections.IList, System.Collections.IList>(IronRuby.Builtins.IListOps.Flatten)
+                new Func<IronRuby.Runtime.CallSiteStorage<Func<System.Runtime.CompilerServices.CallSite, IronRuby.Builtins.RubyClass, System.Object>>, IronRuby.Runtime.ConversionStorage<System.Collections.IList>, System.Collections.IList, System.Collections.IList>(IronRuby.Builtins.IListOps.Flatten)
             );
             
             module.DefineLibraryMethod("flatten!", 0x51, 
@@ -5437,11 +5438,11 @@ namespace IronRuby.Builtins {
             );
             
             module.DefineLibraryMethod("indexes", 0x51, 
-                new Func<IronRuby.Runtime.ConversionStorage<System.Int32>, IronRuby.Runtime.CallSiteStorage<System.Func<System.Runtime.CompilerServices.CallSite, IronRuby.Builtins.RubyClass, System.Object>>, System.Collections.IList, System.Object[], System.Object>(IronRuby.Builtins.IListOps.Indexes)
+                new Func<IronRuby.Runtime.ConversionStorage<System.Int32>, IronRuby.Runtime.CallSiteStorage<Func<System.Runtime.CompilerServices.CallSite, IronRuby.Builtins.RubyClass, System.Object>>, System.Collections.IList, System.Object[], System.Object>(IronRuby.Builtins.IListOps.Indexes)
             );
             
             module.DefineLibraryMethod("indices", 0x51, 
-                new Func<IronRuby.Runtime.ConversionStorage<System.Int32>, IronRuby.Runtime.CallSiteStorage<System.Func<System.Runtime.CompilerServices.CallSite, IronRuby.Builtins.RubyClass, System.Object>>, System.Collections.IList, System.Object[], System.Object>(IronRuby.Builtins.IListOps.Indexes)
+                new Func<IronRuby.Runtime.ConversionStorage<System.Int32>, IronRuby.Runtime.CallSiteStorage<Func<System.Runtime.CompilerServices.CallSite, IronRuby.Builtins.RubyClass, System.Object>>, System.Collections.IList, System.Object[], System.Object>(IronRuby.Builtins.IListOps.Indexes)
             );
             
             module.DefineLibraryMethod("initialize_copy", 0x52, 
@@ -5499,7 +5500,7 @@ namespace IronRuby.Builtins {
             );
             
             module.DefineLibraryMethod("reverse", 0x51, 
-                new Func<IronRuby.Runtime.CallSiteStorage<System.Func<System.Runtime.CompilerServices.CallSite, IronRuby.Builtins.RubyClass, System.Object>>, System.Collections.IList, System.Collections.IList>(IronRuby.Builtins.IListOps.Reverse)
+                new Func<IronRuby.Runtime.CallSiteStorage<Func<System.Runtime.CompilerServices.CallSite, IronRuby.Builtins.RubyClass, System.Object>>, System.Collections.IList, System.Collections.IList>(IronRuby.Builtins.IListOps.Reverse)
             );
             
             module.DefineLibraryMethod("reverse!", 0x51, 
@@ -5520,18 +5521,18 @@ namespace IronRuby.Builtins {
             
             module.DefineLibraryMethod("slice", 0x51, 
                 new Func<System.Collections.IList, System.Int32, System.Object>(IronRuby.Builtins.IListOps.GetElement), 
-                new Func<IronRuby.Runtime.CallSiteStorage<System.Func<System.Runtime.CompilerServices.CallSite, IronRuby.Builtins.RubyClass, System.Object>>, System.Collections.IList, System.Int32, System.Int32, System.Collections.IList>(IronRuby.Builtins.IListOps.GetElements), 
-                new Func<IronRuby.Runtime.ConversionStorage<System.Int32>, IronRuby.Runtime.CallSiteStorage<System.Func<System.Runtime.CompilerServices.CallSite, IronRuby.Builtins.RubyClass, System.Object>>, System.Collections.IList, IronRuby.Builtins.Range, System.Collections.IList>(IronRuby.Builtins.IListOps.GetElement)
+                new Func<IronRuby.Runtime.CallSiteStorage<Func<System.Runtime.CompilerServices.CallSite, IronRuby.Builtins.RubyClass, System.Object>>, System.Collections.IList, System.Int32, System.Int32, System.Collections.IList>(IronRuby.Builtins.IListOps.GetElements), 
+                new Func<IronRuby.Runtime.ConversionStorage<System.Int32>, IronRuby.Runtime.CallSiteStorage<Func<System.Runtime.CompilerServices.CallSite, IronRuby.Builtins.RubyClass, System.Object>>, System.Collections.IList, IronRuby.Builtins.Range, System.Collections.IList>(IronRuby.Builtins.IListOps.GetElement)
             );
             
             module.DefineLibraryMethod("slice!", 0x51, 
                 new Func<IronRuby.Runtime.ConversionStorage<System.Collections.IList>, System.Collections.IList, System.Int32, System.Object>(IronRuby.Builtins.IListOps.SliceInPlace), 
-                new Func<IronRuby.Runtime.ConversionStorage<System.Collections.IList>, IronRuby.Runtime.ConversionStorage<System.Int32>, IronRuby.Runtime.CallSiteStorage<System.Func<System.Runtime.CompilerServices.CallSite, IronRuby.Builtins.RubyClass, System.Object>>, System.Collections.IList, IronRuby.Builtins.Range, System.Object>(IronRuby.Builtins.IListOps.SliceInPlace), 
-                new Func<IronRuby.Runtime.ConversionStorage<System.Collections.IList>, IronRuby.Runtime.CallSiteStorage<System.Func<System.Runtime.CompilerServices.CallSite, IronRuby.Builtins.RubyClass, System.Object>>, System.Collections.IList, System.Int32, System.Int32, System.Collections.IList>(IronRuby.Builtins.IListOps.SliceInPlace)
+                new Func<IronRuby.Runtime.ConversionStorage<System.Collections.IList>, IronRuby.Runtime.ConversionStorage<System.Int32>, IronRuby.Runtime.CallSiteStorage<Func<System.Runtime.CompilerServices.CallSite, IronRuby.Builtins.RubyClass, System.Object>>, System.Collections.IList, IronRuby.Builtins.Range, System.Object>(IronRuby.Builtins.IListOps.SliceInPlace), 
+                new Func<IronRuby.Runtime.ConversionStorage<System.Collections.IList>, IronRuby.Runtime.CallSiteStorage<Func<System.Runtime.CompilerServices.CallSite, IronRuby.Builtins.RubyClass, System.Object>>, System.Collections.IList, System.Int32, System.Int32, System.Collections.IList>(IronRuby.Builtins.IListOps.SliceInPlace)
             );
             
             module.DefineLibraryMethod("sort", 0x51, 
-                new Func<IronRuby.Runtime.CallSiteStorage<System.Func<System.Runtime.CompilerServices.CallSite, IronRuby.Builtins.RubyClass, System.Object>>, IronRuby.Runtime.BinaryOpStorage, IronRuby.Runtime.BinaryOpStorage, IronRuby.Runtime.BinaryOpStorage, IronRuby.Runtime.BlockParam, System.Collections.IList, System.Object>(IronRuby.Builtins.IListOps.Sort)
+                new Func<IronRuby.Runtime.CallSiteStorage<Func<System.Runtime.CompilerServices.CallSite, IronRuby.Builtins.RubyClass, System.Object>>, IronRuby.Runtime.BinaryOpStorage, IronRuby.Runtime.BinaryOpStorage, IronRuby.Runtime.BinaryOpStorage, IronRuby.Runtime.BlockParam, System.Collections.IList, System.Object>(IronRuby.Builtins.IListOps.Sort)
             );
             
             module.DefineLibraryMethod("sort!", 0x51, 
@@ -5555,7 +5556,7 @@ namespace IronRuby.Builtins {
             );
             
             module.DefineLibraryMethod("uniq", 0x51, 
-                new Func<IronRuby.Runtime.CallSiteStorage<System.Func<System.Runtime.CompilerServices.CallSite, IronRuby.Builtins.RubyClass, System.Object>>, System.Collections.IList, System.Collections.IList>(IronRuby.Builtins.IListOps.Unique)
+                new Func<IronRuby.Runtime.CallSiteStorage<Func<System.Runtime.CompilerServices.CallSite, IronRuby.Builtins.RubyClass, System.Object>>, System.Collections.IList, System.Collections.IList>(IronRuby.Builtins.IListOps.Unique)
             );
             
             module.DefineLibraryMethod("uniq!", 0x51, 
@@ -5568,11 +5569,11 @@ namespace IronRuby.Builtins {
             );
             
             module.DefineLibraryMethod("values_at", 0x51, 
-                new Func<IronRuby.Runtime.ConversionStorage<System.Int32>, IronRuby.Runtime.CallSiteStorage<System.Func<System.Runtime.CompilerServices.CallSite, IronRuby.Builtins.RubyClass, System.Object>>, System.Collections.IList, System.Object[], IronRuby.Builtins.RubyArray>(IronRuby.Builtins.IListOps.ValuesAt)
+                new Func<IronRuby.Runtime.ConversionStorage<System.Int32>, IronRuby.Runtime.CallSiteStorage<Func<System.Runtime.CompilerServices.CallSite, IronRuby.Builtins.RubyClass, System.Object>>, System.Collections.IList, System.Object[], IronRuby.Builtins.RubyArray>(IronRuby.Builtins.IListOps.ValuesAt)
             );
             
             module.DefineLibraryMethod("zip", 0x51, 
-                new Func<IronRuby.Runtime.CallSiteStorage<System.Func<System.Runtime.CompilerServices.CallSite, System.Object, IronRuby.Builtins.Proc, System.Object>>, IronRuby.Runtime.ConversionStorage<System.Collections.IList>, IronRuby.Runtime.BlockParam, System.Object, System.Collections.IList[], System.Object>(IronRuby.Builtins.IListOps.Zip)
+                new Func<IronRuby.Runtime.CallSiteStorage<Func<System.Runtime.CompilerServices.CallSite, System.Object, IronRuby.Builtins.Proc, System.Object>>, IronRuby.Runtime.ConversionStorage<System.Collections.IList>, IronRuby.Runtime.BlockParam, System.Object, System.Collections.IList[], System.Object>(IronRuby.Builtins.IListOps.Zip)
             );
             
         }
@@ -5803,7 +5804,7 @@ namespace IronRuby.Builtins {
             module.DefineLibraryMethod("raise", 0x51, 
                 new Action<IronRuby.Runtime.RubyContext, System.Threading.Thread>(IronRuby.Builtins.ThreadOps.RaiseException), 
                 new Action<System.Threading.Thread, IronRuby.Builtins.MutableString>(IronRuby.Builtins.ThreadOps.RaiseException), 
-                new Action<IronRuby.Runtime.RespondToStorage, IronRuby.Runtime.UnaryOpStorage, IronRuby.Runtime.BinaryOpStorage, IronRuby.Runtime.CallSiteStorage<System.Action<System.Runtime.CompilerServices.CallSite, System.Exception, IronRuby.Builtins.RubyArray>>, System.Threading.Thread, System.Object, System.Object, IronRuby.Builtins.RubyArray>(IronRuby.Builtins.ThreadOps.RaiseException)
+                new Action<IronRuby.Runtime.RespondToStorage, IronRuby.Runtime.UnaryOpStorage, IronRuby.Runtime.BinaryOpStorage, IronRuby.Runtime.CallSiteStorage<Microsoft.Scripting.Utils.Action<System.Runtime.CompilerServices.CallSite, System.Exception, IronRuby.Builtins.RubyArray>>, System.Threading.Thread, System.Object, System.Object, IronRuby.Builtins.RubyArray>(IronRuby.Builtins.ThreadOps.RaiseException)
             );
             
             #if !SILVERLIGHT
@@ -6326,16 +6327,17 @@ namespace IronRuby.Builtins {
 
 namespace IronRuby.StandardLibrary.Threading {
     using System;
+    using Microsoft.Scripting.Utils;
     
     public sealed class ThreadingLibraryInitializer : IronRuby.Builtins.LibraryInitializer {
         protected override void LoadModules() {
             IronRuby.Builtins.RubyClass classRef0 = GetClass(typeof(System.Object));
             
             
-            DefineGlobalClass("ConditionVariable", typeof(IronRuby.StandardLibrary.Threading.RubyConditionVariable), 0x00000103, classRef0, LoadConditionVariable_Instance, null, null, IronRuby.Builtins.RubyModule.EmptyArray);
-            DefineGlobalClass("Mutex", typeof(IronRuby.StandardLibrary.Threading.RubyMutex), 0x00000103, classRef0, LoadMutex_Instance, null, null, IronRuby.Builtins.RubyModule.EmptyArray);
-            IronRuby.Builtins.RubyClass def1 = DefineGlobalClass("Queue", typeof(IronRuby.StandardLibrary.Threading.RubyQueue), 0x00000103, classRef0, LoadQueue_Instance, null, null, IronRuby.Builtins.RubyModule.EmptyArray);
-            DefineGlobalClass("SizedQueue", typeof(IronRuby.StandardLibrary.Threading.SizedQueue), 0x00000103, def1, LoadSizedQueue_Instance, null, null, IronRuby.Builtins.RubyModule.EmptyArray);
+            DefineGlobalClass("ConditionVariable", typeof(IronRuby.StandardLibrary.Threading.RubyConditionVariable), 0x00000100, classRef0, LoadConditionVariable_Instance, null, null, IronRuby.Builtins.RubyModule.EmptyArray);
+            DefineGlobalClass("Mutex", typeof(IronRuby.StandardLibrary.Threading.RubyMutex), 0x00000100, classRef0, LoadMutex_Instance, null, null, IronRuby.Builtins.RubyModule.EmptyArray);
+            IronRuby.Builtins.RubyClass def1 = DefineGlobalClass("Queue", typeof(IronRuby.StandardLibrary.Threading.RubyQueue), 0x00000100, classRef0, LoadQueue_Instance, null, null, IronRuby.Builtins.RubyModule.EmptyArray);
+            DefineGlobalClass("SizedQueue", typeof(IronRuby.StandardLibrary.Threading.SizedQueue), 0x00000100, def1, LoadSizedQueue_Instance, null, null, IronRuby.Builtins.RubyModule.EmptyArray);
         }
         
         private static void LoadConditionVariable_Instance(IronRuby.Builtins.RubyModule/*!*/ module) {
@@ -6471,6 +6473,7 @@ namespace IronRuby.StandardLibrary.Threading {
 
 namespace IronRuby.StandardLibrary.Sockets {
     using System;
+    using Microsoft.Scripting.Utils;
     
     public sealed class SocketsLibraryInitializer : IronRuby.Builtins.LibraryInitializer {
         protected override void LoadModules() {
@@ -6479,39 +6482,39 @@ namespace IronRuby.StandardLibrary.Sockets {
             
             
             #if !SILVERLIGHT
-            IronRuby.Builtins.RubyClass def3 = DefineGlobalClass("BasicSocket", typeof(IronRuby.StandardLibrary.Sockets.RubyBasicSocket), 0x00000103, classRef0, LoadBasicSocket_Instance, LoadBasicSocket_Class, null, IronRuby.Builtins.RubyModule.EmptyArray);
+            IronRuby.Builtins.RubyClass def3 = DefineGlobalClass("BasicSocket", typeof(IronRuby.StandardLibrary.Sockets.RubyBasicSocket), 0x00000100, classRef0, LoadBasicSocket_Instance, LoadBasicSocket_Class, null, IronRuby.Builtins.RubyModule.EmptyArray);
             #endif
             #if !SILVERLIGHT && !SILVERLIGHT
-            IronRuby.Builtins.RubyModule def2 = DefineModule("Socket::Constants", typeof(IronRuby.StandardLibrary.Sockets.RubySocket.SocketConstants), 0x00000103, null, null, LoadSocket__Constants_Constants, IronRuby.Builtins.RubyModule.EmptyArray);
+            IronRuby.Builtins.RubyModule def2 = DefineModule("Socket::Constants", typeof(IronRuby.StandardLibrary.Sockets.RubySocket.SocketConstants), 0x00000100, null, null, LoadSocket__Constants_Constants, IronRuby.Builtins.RubyModule.EmptyArray);
             #endif
             #if !SILVERLIGHT
-            DefineGlobalClass("SocketError", typeof(System.Net.Sockets.SocketException), 0x00000003, classRef1, LoadSocketError_Instance, null, null, IronRuby.Builtins.RubyModule.EmptyArray, 
+            DefineGlobalClass("SocketError", typeof(System.Net.Sockets.SocketException), 0x00000000, classRef1, LoadSocketError_Instance, null, null, IronRuby.Builtins.RubyModule.EmptyArray, 
                 new Func<IronRuby.Builtins.RubyClass, System.Object, System.Exception>(IronRuby.StandardLibrary.Sockets.SocketErrorOps.Create)
             );
             #endif
             #if !SILVERLIGHT
-            IronRuby.Builtins.RubyClass def5 = DefineGlobalClass("IPSocket", typeof(IronRuby.StandardLibrary.Sockets.IPSocket), 0x00000103, def3, LoadIPSocket_Instance, LoadIPSocket_Class, null, IronRuby.Builtins.RubyModule.EmptyArray);
+            IronRuby.Builtins.RubyClass def5 = DefineGlobalClass("IPSocket", typeof(IronRuby.StandardLibrary.Sockets.IPSocket), 0x00000100, def3, LoadIPSocket_Instance, LoadIPSocket_Class, null, IronRuby.Builtins.RubyModule.EmptyArray);
             #endif
             #if !SILVERLIGHT
-            IronRuby.Builtins.RubyClass def1 = DefineGlobalClass("Socket", typeof(IronRuby.StandardLibrary.Sockets.RubySocket), 0x00000103, def3, LoadSocket_Instance, LoadSocket_Class, LoadSocket_Constants, IronRuby.Builtins.RubyModule.EmptyArray, 
+            IronRuby.Builtins.RubyClass def1 = DefineGlobalClass("Socket", typeof(IronRuby.StandardLibrary.Sockets.RubySocket), 0x00000100, def3, LoadSocket_Instance, LoadSocket_Class, LoadSocket_Constants, IronRuby.Builtins.RubyModule.EmptyArray, 
                 new Func<IronRuby.Runtime.ConversionStorage<IronRuby.Builtins.MutableString>, IronRuby.Runtime.ConversionStorage<System.Int32>, IronRuby.Builtins.RubyClass, System.Object, System.Int32, System.Int32, IronRuby.StandardLibrary.Sockets.RubySocket>(IronRuby.StandardLibrary.Sockets.RubySocket.CreateSocket)
             );
             #endif
             #if !SILVERLIGHT
-            IronRuby.Builtins.RubyClass def4 = DefineGlobalClass("TCPSocket", typeof(IronRuby.StandardLibrary.Sockets.TCPSocket), 0x00000103, def5, null, LoadTCPSocket_Class, null, IronRuby.Builtins.RubyModule.EmptyArray, 
+            IronRuby.Builtins.RubyClass def4 = DefineGlobalClass("TCPSocket", typeof(IronRuby.StandardLibrary.Sockets.TCPSocket), 0x00000100, def5, null, LoadTCPSocket_Class, null, IronRuby.Builtins.RubyModule.EmptyArray, 
                 new Func<IronRuby.Runtime.ConversionStorage<IronRuby.Builtins.MutableString>, IronRuby.Runtime.ConversionStorage<System.Int32>, IronRuby.Builtins.RubyClass, IronRuby.Builtins.MutableString, System.Object, IronRuby.StandardLibrary.Sockets.TCPSocket>(IronRuby.StandardLibrary.Sockets.TCPSocket.CreateTCPSocket), 
                 new Func<IronRuby.Runtime.ConversionStorage<IronRuby.Builtins.MutableString>, IronRuby.Runtime.ConversionStorage<System.Int32>, IronRuby.Builtins.RubyClass, IronRuby.Builtins.MutableString, System.Object, System.Int32, IronRuby.StandardLibrary.Sockets.TCPSocket>(IronRuby.StandardLibrary.Sockets.TCPSocket.CreateTCPSocket), 
                 new Func<IronRuby.Runtime.ConversionStorage<IronRuby.Builtins.MutableString>, IronRuby.Runtime.ConversionStorage<System.Int32>, IronRuby.Builtins.RubyClass, IronRuby.Builtins.MutableString, System.Object, IronRuby.Builtins.MutableString, IronRuby.Builtins.MutableString, IronRuby.StandardLibrary.Sockets.TCPSocket>(IronRuby.StandardLibrary.Sockets.TCPSocket.CreateTCPSocket)
             );
             #endif
             #if !SILVERLIGHT
-            DefineGlobalClass("UDPSocket", typeof(IronRuby.StandardLibrary.Sockets.UDPSocket), 0x00000103, def5, LoadUDPSocket_Instance, null, null, IronRuby.Builtins.RubyModule.EmptyArray, 
+            DefineGlobalClass("UDPSocket", typeof(IronRuby.StandardLibrary.Sockets.UDPSocket), 0x00000100, def5, LoadUDPSocket_Instance, null, null, IronRuby.Builtins.RubyModule.EmptyArray, 
                 new Func<IronRuby.Builtins.RubyClass, IronRuby.StandardLibrary.Sockets.UDPSocket>(IronRuby.StandardLibrary.Sockets.UDPSocket.CreateUDPSocket), 
                 new Func<IronRuby.Runtime.ConversionStorage<IronRuby.Builtins.MutableString>, IronRuby.Runtime.ConversionStorage<System.Int32>, IronRuby.Builtins.RubyClass, System.Object, IronRuby.StandardLibrary.Sockets.UDPSocket>(IronRuby.StandardLibrary.Sockets.UDPSocket.CreateUDPSocket)
             );
             #endif
             #if !SILVERLIGHT
-            DefineGlobalClass("TCPServer", typeof(IronRuby.StandardLibrary.Sockets.TCPServer), 0x00000103, def4, LoadTCPServer_Instance, null, null, IronRuby.Builtins.RubyModule.EmptyArray, 
+            DefineGlobalClass("TCPServer", typeof(IronRuby.StandardLibrary.Sockets.TCPServer), 0x00000100, def4, LoadTCPServer_Instance, null, null, IronRuby.Builtins.RubyModule.EmptyArray, 
                 new Func<IronRuby.Runtime.ConversionStorage<IronRuby.Builtins.MutableString>, IronRuby.Runtime.ConversionStorage<System.Int32>, IronRuby.Builtins.RubyClass, IronRuby.Builtins.MutableString, System.Object, IronRuby.StandardLibrary.Sockets.TCPServer>(IronRuby.StandardLibrary.Sockets.TCPServer.CreateTCPServer)
             );
             #endif
@@ -7020,6 +7023,7 @@ namespace IronRuby.StandardLibrary.Sockets {
 
 namespace IronRuby.StandardLibrary.OpenSsl {
     using System;
+    using Microsoft.Scripting.Utils;
     
     public sealed class OpenSslLibraryInitializer : IronRuby.Builtins.LibraryInitializer {
         protected override void LoadModules() {
@@ -7027,25 +7031,25 @@ namespace IronRuby.StandardLibrary.OpenSsl {
             IronRuby.Builtins.RubyClass classRef1 = GetClass(typeof(System.Runtime.InteropServices.ExternalException));
             
             
-            IronRuby.Builtins.RubyModule def1 = DefineGlobalModule("OpenSSL", typeof(IronRuby.StandardLibrary.OpenSsl.OpenSsl), 0x00000103, null, null, LoadOpenSSL_Constants, IronRuby.Builtins.RubyModule.EmptyArray);
-            IronRuby.Builtins.RubyClass def2 = DefineClass("OpenSSL::BN", typeof(IronRuby.StandardLibrary.OpenSsl.OpenSsl.BN), 0x00000103, classRef0, null, LoadOpenSSL__BN_Class, null, IronRuby.Builtins.RubyModule.EmptyArray);
-            IronRuby.Builtins.RubyModule def3 = DefineModule("OpenSSL::Digest", typeof(IronRuby.StandardLibrary.OpenSsl.OpenSsl.DigestFactory), 0x00000103, null, null, null, IronRuby.Builtins.RubyModule.EmptyArray);
-            IronRuby.Builtins.RubyClass def4 = DefineClass("OpenSSL::Digest::Digest", typeof(IronRuby.StandardLibrary.OpenSsl.OpenSsl.DigestFactory.Digest), 0x00000103, classRef0, LoadOpenSSL__Digest__Digest_Instance, null, null, IronRuby.Builtins.RubyModule.EmptyArray, 
+            IronRuby.Builtins.RubyModule def1 = DefineGlobalModule("OpenSSL", typeof(IronRuby.StandardLibrary.OpenSsl.OpenSsl), 0x00000100, null, null, LoadOpenSSL_Constants, IronRuby.Builtins.RubyModule.EmptyArray);
+            IronRuby.Builtins.RubyClass def2 = DefineClass("OpenSSL::BN", typeof(IronRuby.StandardLibrary.OpenSsl.OpenSsl.BN), 0x00000100, classRef0, null, LoadOpenSSL__BN_Class, null, IronRuby.Builtins.RubyModule.EmptyArray);
+            IronRuby.Builtins.RubyModule def3 = DefineModule("OpenSSL::Digest", typeof(IronRuby.StandardLibrary.OpenSsl.OpenSsl.DigestFactory), 0x00000100, null, null, null, IronRuby.Builtins.RubyModule.EmptyArray);
+            IronRuby.Builtins.RubyClass def4 = DefineClass("OpenSSL::Digest::Digest", typeof(IronRuby.StandardLibrary.OpenSsl.OpenSsl.DigestFactory.Digest), 0x00000100, classRef0, LoadOpenSSL__Digest__Digest_Instance, null, null, IronRuby.Builtins.RubyModule.EmptyArray, 
                 new Func<IronRuby.Builtins.RubyClass, IronRuby.Builtins.MutableString, IronRuby.StandardLibrary.OpenSsl.OpenSsl.DigestFactory.Digest>(IronRuby.StandardLibrary.OpenSsl.OpenSsl.DigestFactory.Digest.CreateDigest)
             );
-            IronRuby.Builtins.RubyClass def5 = DefineClass("OpenSSL::HMAC", typeof(IronRuby.StandardLibrary.OpenSsl.OpenSsl.HMAC), 0x00000103, classRef0, null, LoadOpenSSL__HMAC_Class, null, IronRuby.Builtins.RubyModule.EmptyArray);
-            IronRuby.Builtins.RubyModule def6 = DefineModule("OpenSSL::PKey", typeof(IronRuby.StandardLibrary.OpenSsl.OpenSsl.PKey), 0x00000103, null, null, null, IronRuby.Builtins.RubyModule.EmptyArray);
-            IronRuby.Builtins.RubyClass def7 = DefineClass("OpenSSL::PKey::RSA", typeof(IronRuby.StandardLibrary.OpenSsl.OpenSsl.PKey.RSA), 0x00000103, classRef0, null, null, null, IronRuby.Builtins.RubyModule.EmptyArray);
-            IronRuby.Builtins.RubyModule def8 = DefineModule("OpenSSL::Random", typeof(IronRuby.StandardLibrary.OpenSsl.OpenSsl.RandomModule), 0x00000103, null, LoadOpenSSL__Random_Class, null, IronRuby.Builtins.RubyModule.EmptyArray);
-            IronRuby.Builtins.RubyModule def9 = DefineModule("OpenSSL::X509", typeof(IronRuby.StandardLibrary.OpenSsl.OpenSsl.X509), 0x00000103, null, null, null, IronRuby.Builtins.RubyModule.EmptyArray);
-            IronRuby.Builtins.RubyClass def10 = DefineClass("OpenSSL::X509::Certificate", typeof(IronRuby.StandardLibrary.OpenSsl.OpenSsl.X509.Certificate), 0x00000103, classRef0, LoadOpenSSL__X509__Certificate_Instance, null, null, IronRuby.Builtins.RubyModule.EmptyArray, 
+            IronRuby.Builtins.RubyClass def5 = DefineClass("OpenSSL::HMAC", typeof(IronRuby.StandardLibrary.OpenSsl.OpenSsl.HMAC), 0x00000100, classRef0, null, LoadOpenSSL__HMAC_Class, null, IronRuby.Builtins.RubyModule.EmptyArray);
+            IronRuby.Builtins.RubyModule def6 = DefineModule("OpenSSL::PKey", typeof(IronRuby.StandardLibrary.OpenSsl.OpenSsl.PKey), 0x00000100, null, null, null, IronRuby.Builtins.RubyModule.EmptyArray);
+            IronRuby.Builtins.RubyClass def7 = DefineClass("OpenSSL::PKey::RSA", typeof(IronRuby.StandardLibrary.OpenSsl.OpenSsl.PKey.RSA), 0x00000100, classRef0, null, null, null, IronRuby.Builtins.RubyModule.EmptyArray);
+            IronRuby.Builtins.RubyModule def8 = DefineModule("OpenSSL::Random", typeof(IronRuby.StandardLibrary.OpenSsl.OpenSsl.RandomModule), 0x00000100, null, LoadOpenSSL__Random_Class, null, IronRuby.Builtins.RubyModule.EmptyArray);
+            IronRuby.Builtins.RubyModule def9 = DefineModule("OpenSSL::X509", typeof(IronRuby.StandardLibrary.OpenSsl.OpenSsl.X509), 0x00000100, null, null, null, IronRuby.Builtins.RubyModule.EmptyArray);
+            IronRuby.Builtins.RubyClass def10 = DefineClass("OpenSSL::X509::Certificate", typeof(IronRuby.StandardLibrary.OpenSsl.OpenSsl.X509.Certificate), 0x00000100, classRef0, LoadOpenSSL__X509__Certificate_Instance, null, null, IronRuby.Builtins.RubyModule.EmptyArray, 
                 new Func<IronRuby.Builtins.RubyClass, IronRuby.StandardLibrary.OpenSsl.OpenSsl.X509.Certificate>(IronRuby.StandardLibrary.OpenSsl.OpenSsl.X509.Certificate.CreateCertificate), 
                 new Func<IronRuby.Builtins.RubyClass, IronRuby.Builtins.MutableString, IronRuby.StandardLibrary.OpenSsl.OpenSsl.X509.Certificate>(IronRuby.StandardLibrary.OpenSsl.OpenSsl.X509.Certificate.CreateCertificate)
             );
-            IronRuby.Builtins.RubyClass def12 = DefineClass("OpenSSL::X509::CertificateError", typeof(System.Security.Cryptography.CryptographicException), 0x00000003, classRef1, null, null, null, IronRuby.Builtins.RubyModule.EmptyArray, 
+            IronRuby.Builtins.RubyClass def12 = DefineClass("OpenSSL::X509::CertificateError", typeof(System.Security.Cryptography.CryptographicException), 0x00000000, classRef1, null, null, null, IronRuby.Builtins.RubyModule.EmptyArray, 
                 new Func<IronRuby.Builtins.RubyClass, IronRuby.Builtins.MutableString, System.Security.Cryptography.CryptographicException>(IronRuby.StandardLibrary.OpenSsl.OpenSsl.X509.CryptographicExceptionOps.Create)
             );
-            IronRuby.Builtins.RubyClass def11 = DefineClass("OpenSSL::X509::Name", typeof(IronRuby.StandardLibrary.OpenSsl.OpenSsl.X509.Name), 0x00000103, classRef0, null, null, null, IronRuby.Builtins.RubyModule.EmptyArray);
+            IronRuby.Builtins.RubyClass def11 = DefineClass("OpenSSL::X509::Name", typeof(IronRuby.StandardLibrary.OpenSsl.OpenSsl.X509.Name), 0x00000100, classRef0, null, null, null, IronRuby.Builtins.RubyModule.EmptyArray);
             def1.SetConstant("BN", def2);
             def1.SetConstant("Digest", def3);
             def3.SetConstant("Digest", def4);
@@ -7166,30 +7170,31 @@ namespace IronRuby.StandardLibrary.OpenSsl {
 
 namespace IronRuby.StandardLibrary.Digest {
     using System;
+    using Microsoft.Scripting.Utils;
     
     public sealed class DigestLibraryInitializer : IronRuby.Builtins.LibraryInitializer {
         protected override void LoadModules() {
             IronRuby.Builtins.RubyClass classRef0 = GetClass(typeof(System.Object));
             
             
-            IronRuby.Builtins.RubyModule def1 = DefineGlobalModule("Digest", typeof(IronRuby.StandardLibrary.Digest.Digest), 0x00000103, null, LoadDigest_Class, null, IronRuby.Builtins.RubyModule.EmptyArray);
-            IronRuby.Builtins.RubyModule def4 = DefineModule("Digest::Instance", typeof(IronRuby.StandardLibrary.Digest.Digest.Instance), 0x00000103, LoadDigest__Instance_Instance, null, null, IronRuby.Builtins.RubyModule.EmptyArray);
-            IronRuby.Builtins.RubyClass def3 = DefineClass("Digest::Class", typeof(IronRuby.StandardLibrary.Digest.Digest.Class), 0x00000103, classRef0, null, LoadDigest__Class_Class, null, new IronRuby.Builtins.RubyModule[] {def4});
-            IronRuby.Builtins.RubyClass def2 = DefineClass("Digest::Base", typeof(IronRuby.StandardLibrary.Digest.Digest.Base), 0x00000103, def3, LoadDigest__Base_Instance, null, null, IronRuby.Builtins.RubyModule.EmptyArray);
+            IronRuby.Builtins.RubyModule def1 = DefineGlobalModule("Digest", typeof(IronRuby.StandardLibrary.Digest.Digest), 0x00000100, null, LoadDigest_Class, null, IronRuby.Builtins.RubyModule.EmptyArray);
+            IronRuby.Builtins.RubyModule def4 = DefineModule("Digest::Instance", typeof(IronRuby.StandardLibrary.Digest.Digest.Instance), 0x00000100, LoadDigest__Instance_Instance, null, null, IronRuby.Builtins.RubyModule.EmptyArray);
+            IronRuby.Builtins.RubyClass def3 = DefineClass("Digest::Class", typeof(IronRuby.StandardLibrary.Digest.Digest.Class), 0x00000100, classRef0, null, LoadDigest__Class_Class, null, new IronRuby.Builtins.RubyModule[] {def4});
+            IronRuby.Builtins.RubyClass def2 = DefineClass("Digest::Base", typeof(IronRuby.StandardLibrary.Digest.Digest.Base), 0x00000100, def3, LoadDigest__Base_Instance, null, null, IronRuby.Builtins.RubyModule.EmptyArray);
             #if !SILVERLIGHT
-            IronRuby.Builtins.RubyClass def5 = DefineClass("Digest::MD5", typeof(IronRuby.StandardLibrary.Digest.Digest.MD5), 0x00000103, def2, null, null, null, IronRuby.Builtins.RubyModule.EmptyArray);
+            IronRuby.Builtins.RubyClass def5 = DefineClass("Digest::MD5", typeof(IronRuby.StandardLibrary.Digest.Digest.MD5), 0x00000100, def2, null, null, null, IronRuby.Builtins.RubyModule.EmptyArray);
             #endif
             #if !SILVERLIGHT
-            IronRuby.Builtins.RubyClass def6 = DefineClass("Digest::SHA1", typeof(IronRuby.StandardLibrary.Digest.Digest.SHA1), 0x00000103, def2, null, null, null, IronRuby.Builtins.RubyModule.EmptyArray);
+            IronRuby.Builtins.RubyClass def6 = DefineClass("Digest::SHA1", typeof(IronRuby.StandardLibrary.Digest.Digest.SHA1), 0x00000100, def2, null, null, null, IronRuby.Builtins.RubyModule.EmptyArray);
             #endif
             #if !SILVERLIGHT
-            IronRuby.Builtins.RubyClass def7 = DefineClass("Digest::SHA256", typeof(IronRuby.StandardLibrary.Digest.Digest.SHA256), 0x00000103, def2, null, null, null, IronRuby.Builtins.RubyModule.EmptyArray);
+            IronRuby.Builtins.RubyClass def7 = DefineClass("Digest::SHA256", typeof(IronRuby.StandardLibrary.Digest.Digest.SHA256), 0x00000100, def2, null, null, null, IronRuby.Builtins.RubyModule.EmptyArray);
             #endif
             #if !SILVERLIGHT
-            IronRuby.Builtins.RubyClass def8 = DefineClass("Digest::SHA384", typeof(IronRuby.StandardLibrary.Digest.Digest.SHA384), 0x00000103, def2, null, null, null, IronRuby.Builtins.RubyModule.EmptyArray);
+            IronRuby.Builtins.RubyClass def8 = DefineClass("Digest::SHA384", typeof(IronRuby.StandardLibrary.Digest.Digest.SHA384), 0x00000100, def2, null, null, null, IronRuby.Builtins.RubyModule.EmptyArray);
             #endif
             #if !SILVERLIGHT
-            IronRuby.Builtins.RubyClass def9 = DefineClass("Digest::SHA512", typeof(IronRuby.StandardLibrary.Digest.Digest.SHA512), 0x00000103, def2, null, null, null, IronRuby.Builtins.RubyModule.EmptyArray);
+            IronRuby.Builtins.RubyClass def9 = DefineClass("Digest::SHA512", typeof(IronRuby.StandardLibrary.Digest.Digest.SHA512), 0x00000100, def2, null, null, null, IronRuby.Builtins.RubyModule.EmptyArray);
             #endif
             def1.SetConstant("Instance", def4);
             def1.SetConstant("Class", def3);
@@ -7243,12 +7248,12 @@ namespace IronRuby.StandardLibrary.Digest {
         
         private static void LoadDigest__Class_Class(IronRuby.Builtins.RubyModule/*!*/ module) {
             module.DefineLibraryMethod("digest", 0x21, 
-                new Func<IronRuby.Runtime.CallSiteStorage<System.Func<System.Runtime.CompilerServices.CallSite, IronRuby.Builtins.RubyClass, System.Object>>, IronRuby.Runtime.CallSiteStorage<System.Func<System.Runtime.CompilerServices.CallSite, System.Object, IronRuby.Builtins.MutableString, System.Object>>, IronRuby.Builtins.RubyClass, IronRuby.Builtins.MutableString, IronRuby.Builtins.MutableString>(IronRuby.StandardLibrary.Digest.Digest.Class.Digest), 
+                new Func<IronRuby.Runtime.CallSiteStorage<Func<System.Runtime.CompilerServices.CallSite, IronRuby.Builtins.RubyClass, System.Object>>, IronRuby.Runtime.CallSiteStorage<Func<System.Runtime.CompilerServices.CallSite, System.Object, IronRuby.Builtins.MutableString, System.Object>>, IronRuby.Builtins.RubyClass, IronRuby.Builtins.MutableString, IronRuby.Builtins.MutableString>(IronRuby.StandardLibrary.Digest.Digest.Class.Digest), 
                 new Func<IronRuby.Builtins.RubyClass, IronRuby.Builtins.MutableString>(IronRuby.StandardLibrary.Digest.Digest.Class.Digest)
             );
             
             module.DefineLibraryMethod("hexdigest", 0x21, 
-                new Func<IronRuby.Runtime.CallSiteStorage<System.Func<System.Runtime.CompilerServices.CallSite, System.Object, IronRuby.Builtins.MutableString, System.Object>>, IronRuby.Builtins.RubyClass, IronRuby.Builtins.MutableString, IronRuby.Builtins.MutableString>(IronRuby.StandardLibrary.Digest.Digest.Class.HexDigest), 
+                new Func<IronRuby.Runtime.CallSiteStorage<Func<System.Runtime.CompilerServices.CallSite, System.Object, IronRuby.Builtins.MutableString, System.Object>>, IronRuby.Builtins.RubyClass, IronRuby.Builtins.MutableString, IronRuby.Builtins.MutableString>(IronRuby.StandardLibrary.Digest.Digest.Class.HexDigest), 
                 new Func<IronRuby.Builtins.RubyClass, IronRuby.Builtins.MutableString>(IronRuby.StandardLibrary.Digest.Digest.Class.HexDigest)
             );
             
@@ -7256,21 +7261,21 @@ namespace IronRuby.StandardLibrary.Digest {
         
         private static void LoadDigest__Instance_Instance(IronRuby.Builtins.RubyModule/*!*/ module) {
             module.DefineLibraryMethod("digest", 0x11, 
-                new Func<IronRuby.Runtime.CallSiteStorage<System.Func<System.Runtime.CompilerServices.CallSite, System.Object, System.Object, System.Object>>, IronRuby.Runtime.CallSiteStorage<System.Func<System.Runtime.CompilerServices.CallSite, IronRuby.Builtins.RubyClass, System.Object>>, IronRuby.Runtime.CallSiteStorage<System.Func<System.Runtime.CompilerServices.CallSite, System.Object, System.Object>>, System.Object, IronRuby.Builtins.MutableString>(IronRuby.StandardLibrary.Digest.Digest.Instance.Digest), 
-                new Func<IronRuby.Runtime.CallSiteStorage<System.Func<System.Runtime.CompilerServices.CallSite, System.Object, IronRuby.Builtins.MutableString, System.Object>>, IronRuby.Runtime.CallSiteStorage<System.Func<System.Runtime.CompilerServices.CallSite, System.Object, System.Object>>, IronRuby.Runtime.CallSiteStorage<System.Func<System.Runtime.CompilerServices.CallSite, System.Object, System.Object>>, System.Object, IronRuby.Builtins.MutableString, IronRuby.Builtins.MutableString>(IronRuby.StandardLibrary.Digest.Digest.Instance.Digest)
+                new Func<IronRuby.Runtime.CallSiteStorage<Func<System.Runtime.CompilerServices.CallSite, System.Object, System.Object, System.Object>>, IronRuby.Runtime.CallSiteStorage<Func<System.Runtime.CompilerServices.CallSite, IronRuby.Builtins.RubyClass, System.Object>>, IronRuby.Runtime.CallSiteStorage<Func<System.Runtime.CompilerServices.CallSite, System.Object, System.Object>>, System.Object, IronRuby.Builtins.MutableString>(IronRuby.StandardLibrary.Digest.Digest.Instance.Digest), 
+                new Func<IronRuby.Runtime.CallSiteStorage<Func<System.Runtime.CompilerServices.CallSite, System.Object, IronRuby.Builtins.MutableString, System.Object>>, IronRuby.Runtime.CallSiteStorage<Func<System.Runtime.CompilerServices.CallSite, System.Object, System.Object>>, IronRuby.Runtime.CallSiteStorage<Func<System.Runtime.CompilerServices.CallSite, System.Object, System.Object>>, System.Object, IronRuby.Builtins.MutableString, IronRuby.Builtins.MutableString>(IronRuby.StandardLibrary.Digest.Digest.Instance.Digest)
             );
             
             module.DefineLibraryMethod("digest!", 0x11, 
-                new Func<IronRuby.Runtime.CallSiteStorage<System.Func<System.Runtime.CompilerServices.CallSite, System.Object, System.Object>>, IronRuby.Runtime.CallSiteStorage<System.Func<System.Runtime.CompilerServices.CallSite, System.Object, System.Object>>, System.Object, IronRuby.Builtins.MutableString>(IronRuby.StandardLibrary.Digest.Digest.Instance.DigestNew)
+                new Func<IronRuby.Runtime.CallSiteStorage<Func<System.Runtime.CompilerServices.CallSite, System.Object, System.Object>>, IronRuby.Runtime.CallSiteStorage<Func<System.Runtime.CompilerServices.CallSite, System.Object, System.Object>>, System.Object, IronRuby.Builtins.MutableString>(IronRuby.StandardLibrary.Digest.Digest.Instance.DigestNew)
             );
             
             module.DefineLibraryMethod("hexdigest", 0x11, 
-                new Func<IronRuby.Runtime.CallSiteStorage<System.Func<System.Runtime.CompilerServices.CallSite, System.Object, System.Object, System.Object>>, IronRuby.Runtime.CallSiteStorage<System.Func<System.Runtime.CompilerServices.CallSite, IronRuby.Builtins.RubyClass, System.Object>>, IronRuby.Runtime.CallSiteStorage<System.Func<System.Runtime.CompilerServices.CallSite, System.Object, System.Object>>, System.Object, IronRuby.Builtins.MutableString>(IronRuby.StandardLibrary.Digest.Digest.Instance.HexDigest), 
-                new Func<IronRuby.Runtime.CallSiteStorage<System.Func<System.Runtime.CompilerServices.CallSite, System.Object, IronRuby.Builtins.MutableString, System.Object>>, IronRuby.Runtime.CallSiteStorage<System.Func<System.Runtime.CompilerServices.CallSite, System.Object, System.Object>>, IronRuby.Runtime.CallSiteStorage<System.Func<System.Runtime.CompilerServices.CallSite, System.Object, System.Object>>, System.Object, IronRuby.Builtins.MutableString, IronRuby.Builtins.MutableString>(IronRuby.StandardLibrary.Digest.Digest.Instance.HexDigest)
+                new Func<IronRuby.Runtime.CallSiteStorage<Func<System.Runtime.CompilerServices.CallSite, System.Object, System.Object, System.Object>>, IronRuby.Runtime.CallSiteStorage<Func<System.Runtime.CompilerServices.CallSite, IronRuby.Builtins.RubyClass, System.Object>>, IronRuby.Runtime.CallSiteStorage<Func<System.Runtime.CompilerServices.CallSite, System.Object, System.Object>>, System.Object, IronRuby.Builtins.MutableString>(IronRuby.StandardLibrary.Digest.Digest.Instance.HexDigest), 
+                new Func<IronRuby.Runtime.CallSiteStorage<Func<System.Runtime.CompilerServices.CallSite, System.Object, IronRuby.Builtins.MutableString, System.Object>>, IronRuby.Runtime.CallSiteStorage<Func<System.Runtime.CompilerServices.CallSite, System.Object, System.Object>>, IronRuby.Runtime.CallSiteStorage<Func<System.Runtime.CompilerServices.CallSite, System.Object, System.Object>>, System.Object, IronRuby.Builtins.MutableString, IronRuby.Builtins.MutableString>(IronRuby.StandardLibrary.Digest.Digest.Instance.HexDigest)
             );
             
             module.DefineLibraryMethod("hexdigest!", 0x11, 
-                new Func<IronRuby.Runtime.CallSiteStorage<System.Func<System.Runtime.CompilerServices.CallSite, System.Object, System.Object>>, IronRuby.Runtime.CallSiteStorage<System.Func<System.Runtime.CompilerServices.CallSite, System.Object, System.Object>>, System.Object, IronRuby.Builtins.MutableString>(IronRuby.StandardLibrary.Digest.Digest.Instance.HexDigestNew)
+                new Func<IronRuby.Runtime.CallSiteStorage<Func<System.Runtime.CompilerServices.CallSite, System.Object, System.Object>>, IronRuby.Runtime.CallSiteStorage<Func<System.Runtime.CompilerServices.CallSite, System.Object, System.Object>>, System.Object, IronRuby.Builtins.MutableString>(IronRuby.StandardLibrary.Digest.Digest.Instance.HexDigestNew)
             );
             
         }
@@ -7280,6 +7285,7 @@ namespace IronRuby.StandardLibrary.Digest {
 
 namespace IronRuby.StandardLibrary.Zlib {
     using System;
+    using Microsoft.Scripting.Utils;
     
     public sealed class ZlibLibraryInitializer : IronRuby.Builtins.LibraryInitializer {
         protected override void LoadModules() {
@@ -7288,29 +7294,29 @@ namespace IronRuby.StandardLibrary.Zlib {
             IronRuby.Builtins.RubyClass classRef2 = GetClass(typeof(IronRuby.Builtins.RuntimeError));
             
             
-            IronRuby.Builtins.RubyModule def1 = DefineGlobalModule("Zlib", typeof(IronRuby.StandardLibrary.Zlib.Zlib), 0x00000103, null, null, LoadZlib_Constants, IronRuby.Builtins.RubyModule.EmptyArray);
-            IronRuby.Builtins.RubyClass def5 = DefineClass("Zlib::Error", typeof(IronRuby.StandardLibrary.Zlib.Zlib.Error), 0x00000103, classRef0, null, null, null, IronRuby.Builtins.RubyModule.EmptyArray, 
+            IronRuby.Builtins.RubyModule def1 = DefineGlobalModule("Zlib", typeof(IronRuby.StandardLibrary.Zlib.Zlib), 0x00000100, null, null, LoadZlib_Constants, IronRuby.Builtins.RubyModule.EmptyArray);
+            IronRuby.Builtins.RubyClass def5 = DefineClass("Zlib::Error", typeof(IronRuby.StandardLibrary.Zlib.Zlib.Error), 0x00000100, classRef0, null, null, null, IronRuby.Builtins.RubyModule.EmptyArray, 
             new Func<IronRuby.Builtins.RubyClass, System.Object, System.Exception>(ZlibLibraryInitializer.ExceptionFactory__Zlib__Error));
-            IronRuby.Builtins.RubyClass def6 = DefineClass("Zlib::GzipFile", typeof(IronRuby.StandardLibrary.Zlib.Zlib.GZipFile), 0x00000103, classRef1, LoadZlib__GzipFile_Instance, LoadZlib__GzipFile_Class, null, IronRuby.Builtins.RubyModule.EmptyArray);
-            IronRuby.Builtins.RubyClass def7 = DefineClass("Zlib::GzipFile::Error", typeof(IronRuby.StandardLibrary.Zlib.Zlib.GZipFile.Error), 0x00000103, classRef2, null, null, null, IronRuby.Builtins.RubyModule.EmptyArray);
-            IronRuby.Builtins.RubyClass def12 = DefineClass("Zlib::ZStream", typeof(IronRuby.StandardLibrary.Zlib.Zlib.ZStream), 0x00000103, classRef1, LoadZlib__ZStream_Instance, null, null, IronRuby.Builtins.RubyModule.EmptyArray);
-            IronRuby.Builtins.RubyClass def2 = DefineClass("Zlib::BufError", typeof(IronRuby.StandardLibrary.Zlib.Zlib.BufError), 0x00000103, def5, null, null, null, IronRuby.Builtins.RubyModule.EmptyArray, 
+            IronRuby.Builtins.RubyClass def6 = DefineClass("Zlib::GzipFile", typeof(IronRuby.StandardLibrary.Zlib.Zlib.GZipFile), 0x00000100, classRef1, LoadZlib__GzipFile_Instance, LoadZlib__GzipFile_Class, null, IronRuby.Builtins.RubyModule.EmptyArray);
+            IronRuby.Builtins.RubyClass def7 = DefineClass("Zlib::GzipFile::Error", typeof(IronRuby.StandardLibrary.Zlib.Zlib.GZipFile.Error), 0x00000100, classRef2, null, null, null, IronRuby.Builtins.RubyModule.EmptyArray);
+            IronRuby.Builtins.RubyClass def12 = DefineClass("Zlib::ZStream", typeof(IronRuby.StandardLibrary.Zlib.Zlib.ZStream), 0x00000100, classRef1, LoadZlib__ZStream_Instance, null, null, IronRuby.Builtins.RubyModule.EmptyArray);
+            IronRuby.Builtins.RubyClass def2 = DefineClass("Zlib::BufError", typeof(IronRuby.StandardLibrary.Zlib.Zlib.BufError), 0x00000100, def5, null, null, null, IronRuby.Builtins.RubyModule.EmptyArray, 
             new Func<IronRuby.Builtins.RubyClass, System.Object, System.Exception>(ZlibLibraryInitializer.ExceptionFactory__Zlib__BufError));
-            IronRuby.Builtins.RubyClass def3 = DefineClass("Zlib::DataError", typeof(IronRuby.StandardLibrary.Zlib.Zlib.DataError), 0x00000103, def5, null, null, null, IronRuby.Builtins.RubyModule.EmptyArray, 
+            IronRuby.Builtins.RubyClass def3 = DefineClass("Zlib::DataError", typeof(IronRuby.StandardLibrary.Zlib.Zlib.DataError), 0x00000100, def5, null, null, null, IronRuby.Builtins.RubyModule.EmptyArray, 
             new Func<IronRuby.Builtins.RubyClass, System.Object, System.Exception>(ZlibLibraryInitializer.ExceptionFactory__Zlib__DataError));
             #if !SILVERLIGHT
-            IronRuby.Builtins.RubyClass def4 = DefineClass("Zlib::Deflate", typeof(IronRuby.StandardLibrary.Zlib.Zlib.Deflate), 0x00000103, def12, LoadZlib__Deflate_Instance, LoadZlib__Deflate_Class, null, IronRuby.Builtins.RubyModule.EmptyArray);
+            IronRuby.Builtins.RubyClass def4 = DefineClass("Zlib::Deflate", typeof(IronRuby.StandardLibrary.Zlib.Zlib.Deflate), 0x00000100, def12, LoadZlib__Deflate_Instance, LoadZlib__Deflate_Class, null, IronRuby.Builtins.RubyModule.EmptyArray);
             #endif
-            IronRuby.Builtins.RubyClass def8 = DefineClass("Zlib::GzipReader", typeof(IronRuby.StandardLibrary.Zlib.Zlib.GZipReader), 0x00000103, def6, LoadZlib__GzipReader_Instance, LoadZlib__GzipReader_Class, LoadZlib__GzipReader_Constants, IronRuby.Builtins.RubyModule.EmptyArray, 
+            IronRuby.Builtins.RubyClass def8 = DefineClass("Zlib::GzipReader", typeof(IronRuby.StandardLibrary.Zlib.Zlib.GZipReader), 0x00000100, def6, LoadZlib__GzipReader_Instance, LoadZlib__GzipReader_Class, LoadZlib__GzipReader_Constants, IronRuby.Builtins.RubyModule.EmptyArray, 
                 new Func<IronRuby.Runtime.RespondToStorage, IronRuby.Builtins.RubyClass, System.Object, IronRuby.StandardLibrary.Zlib.Zlib.GZipReader>(IronRuby.StandardLibrary.Zlib.Zlib.GZipReader.Create)
             );
             #if !SILVERLIGHT
-            IronRuby.Builtins.RubyClass def9 = DefineClass("Zlib::GzipWriter", typeof(IronRuby.StandardLibrary.Zlib.Zlib.GzipWriter), 0x00000103, def6, LoadZlib__GzipWriter_Instance, LoadZlib__GzipWriter_Class, null, IronRuby.Builtins.RubyModule.EmptyArray, 
+            IronRuby.Builtins.RubyClass def9 = DefineClass("Zlib::GzipWriter", typeof(IronRuby.StandardLibrary.Zlib.Zlib.GzipWriter), 0x00000100, def6, LoadZlib__GzipWriter_Instance, LoadZlib__GzipWriter_Class, null, IronRuby.Builtins.RubyModule.EmptyArray, 
                 new Func<IronRuby.Runtime.RespondToStorage, IronRuby.Builtins.RubyClass, System.Object, System.Int32, System.Int32, IronRuby.StandardLibrary.Zlib.Zlib.GzipWriter>(IronRuby.StandardLibrary.Zlib.Zlib.GzipWriter.Create)
             );
             #endif
-            IronRuby.Builtins.RubyClass def10 = DefineClass("Zlib::Inflate", typeof(IronRuby.StandardLibrary.Zlib.Zlib.Inflate), 0x00000103, def12, LoadZlib__Inflate_Instance, LoadZlib__Inflate_Class, null, IronRuby.Builtins.RubyModule.EmptyArray);
-            IronRuby.Builtins.RubyClass def11 = DefineClass("Zlib::StreamError", typeof(IronRuby.StandardLibrary.Zlib.Zlib.StreamError), 0x00000103, def5, null, null, null, IronRuby.Builtins.RubyModule.EmptyArray, 
+            IronRuby.Builtins.RubyClass def10 = DefineClass("Zlib::Inflate", typeof(IronRuby.StandardLibrary.Zlib.Zlib.Inflate), 0x00000100, def12, LoadZlib__Inflate_Instance, LoadZlib__Inflate_Class, null, IronRuby.Builtins.RubyModule.EmptyArray);
+            IronRuby.Builtins.RubyClass def11 = DefineClass("Zlib::StreamError", typeof(IronRuby.StandardLibrary.Zlib.Zlib.StreamError), 0x00000100, def5, null, null, null, IronRuby.Builtins.RubyModule.EmptyArray, 
             new Func<IronRuby.Builtins.RubyClass, System.Object, System.Exception>(ZlibLibraryInitializer.ExceptionFactory__Zlib__StreamError));
             def1.SetConstant("Error", def5);
             def1.SetConstant("GzipFile", def6);
@@ -7582,6 +7588,7 @@ namespace IronRuby.StandardLibrary.Zlib {
 
 namespace IronRuby.StandardLibrary.StringIO {
     using System;
+    using Microsoft.Scripting.Utils;
     
     public sealed class StringIOLibraryInitializer : IronRuby.Builtins.LibraryInitializer {
         protected override void LoadModules() {
@@ -7589,7 +7596,7 @@ namespace IronRuby.StandardLibrary.StringIO {
             IronRuby.Builtins.RubyClass classRef0 = GetClass(typeof(System.Object));
             
             
-            DefineGlobalClass("StringIO", typeof(IronRuby.StandardLibrary.StringIO.StringIO), 0x00000103, classRef0, LoadStringIO_Instance, LoadStringIO_Class, null, new IronRuby.Builtins.RubyModule[] {moduleRef0}, 
+            DefineGlobalClass("StringIO", typeof(IronRuby.StandardLibrary.StringIO.StringIO), 0x00000100, classRef0, LoadStringIO_Instance, LoadStringIO_Class, null, new IronRuby.Builtins.RubyModule[] {moduleRef0}, 
                 new Func<IronRuby.Builtins.RubyClass, IronRuby.StandardLibrary.StringIO.StringIO>(IronRuby.StandardLibrary.StringIO.StringIO.Create), 
                 new Func<IronRuby.Builtins.RubyClass, IronRuby.Builtins.MutableString, IronRuby.Builtins.MutableString, IronRuby.StandardLibrary.StringIO.StringIO>(IronRuby.StandardLibrary.StringIO.StringIO.Create), 
                 new Func<IronRuby.Builtins.RubyClass, IronRuby.Builtins.MutableString, System.Int32, IronRuby.StandardLibrary.StringIO.StringIO>(IronRuby.StandardLibrary.StringIO.StringIO.Create)
@@ -7842,13 +7849,14 @@ namespace IronRuby.StandardLibrary.StringIO {
 
 namespace IronRuby.StandardLibrary.StringScanner {
     using System;
+    using Microsoft.Scripting.Utils;
     
     public sealed class StringScannerLibraryInitializer : IronRuby.Builtins.LibraryInitializer {
         protected override void LoadModules() {
             IronRuby.Builtins.RubyClass classRef0 = GetClass(typeof(IronRuby.Builtins.RubyObject));
             
             
-            DefineGlobalClass("StringScanner", typeof(IronRuby.StandardLibrary.StringScanner.StringScanner), 0x00000103, classRef0, LoadStringScanner_Instance, LoadStringScanner_Class, null, IronRuby.Builtins.RubyModule.EmptyArray, 
+            DefineGlobalClass("StringScanner", typeof(IronRuby.StandardLibrary.StringScanner.StringScanner), 0x00000100, classRef0, LoadStringScanner_Instance, LoadStringScanner_Class, null, IronRuby.Builtins.RubyModule.EmptyArray, 
                 new Func<IronRuby.Builtins.RubyClass, IronRuby.Builtins.MutableString, IronRuby.StandardLibrary.StringScanner.StringScanner>(IronRuby.StandardLibrary.StringScanner.StringScanner.Create)
             );
         }
@@ -8052,15 +8060,16 @@ namespace IronRuby.StandardLibrary.StringScanner {
 
 namespace IronRuby.StandardLibrary.Enumerator {
     using System;
+    using Microsoft.Scripting.Utils;
     
     public sealed class EnumeratorLibraryInitializer : IronRuby.Builtins.LibraryInitializer {
         protected override void LoadModules() {
             IronRuby.Builtins.RubyClass classRef0 = GetClass(typeof(System.Object));
             
             
-            IronRuby.Builtins.RubyModule def1 = DefineGlobalModule("Enumerable", typeof(IronRuby.Builtins.Enumerable), 0x00000003, LoadEnumerable_Instance, null, null, IronRuby.Builtins.RubyModule.EmptyArray);
+            IronRuby.Builtins.RubyModule def1 = DefineGlobalModule("Enumerable", typeof(IronRuby.Builtins.Enumerable), 0x00000000, LoadEnumerable_Instance, null, null, IronRuby.Builtins.RubyModule.EmptyArray);
             ExtendModule(typeof(IronRuby.Builtins.Kernel), LoadIronRuby__Builtins__Kernel_Instance, null, null, IronRuby.Builtins.RubyModule.EmptyArray);
-            IronRuby.Builtins.RubyClass def2 = DefineClass("Enumerable::Enumerator", typeof(IronRuby.StandardLibrary.Enumerator.Enumerable.Enumerator), 0x00000103, classRef0, LoadEnumerable__Enumerator_Instance, null, null, new IronRuby.Builtins.RubyModule[] {def1}, 
+            IronRuby.Builtins.RubyClass def2 = DefineClass("Enumerable::Enumerator", typeof(IronRuby.StandardLibrary.Enumerator.Enumerable.Enumerator), 0x00000100, classRef0, LoadEnumerable__Enumerator_Instance, null, null, new IronRuby.Builtins.RubyModule[] {def1}, 
                 new Func<IronRuby.Builtins.RubyClass, System.Object, IronRuby.StandardLibrary.Enumerator.Enumerable.Enumerator>(IronRuby.StandardLibrary.Enumerator.Enumerable.Enumerator.Create), 
                 new Func<IronRuby.Builtins.RubyClass, System.Object, System.String, System.Object[], IronRuby.StandardLibrary.Enumerator.Enumerable.Enumerator>(IronRuby.StandardLibrary.Enumerator.Enumerable.Enumerator.Create)
             );
@@ -8069,11 +8078,11 @@ namespace IronRuby.StandardLibrary.Enumerator {
         
         private static void LoadEnumerable_Instance(IronRuby.Builtins.RubyModule/*!*/ module) {
             module.DefineLibraryMethod("each_cons", 0x11, 
-                new Func<IronRuby.Runtime.CallSiteStorage<System.Func<System.Runtime.CompilerServices.CallSite, System.Object, IronRuby.Builtins.Proc, System.Object>>, IronRuby.Runtime.BlockParam, System.Object, System.Int32, System.Object>(IronRuby.StandardLibrary.Enumerator.Enumerable.EachCons)
+                new Func<IronRuby.Runtime.CallSiteStorage<Func<System.Runtime.CompilerServices.CallSite, System.Object, IronRuby.Builtins.Proc, System.Object>>, IronRuby.Runtime.BlockParam, System.Object, System.Int32, System.Object>(IronRuby.StandardLibrary.Enumerator.Enumerable.EachCons)
             );
             
             module.DefineLibraryMethod("each_slice", 0x11, 
-                new Func<IronRuby.Runtime.CallSiteStorage<System.Func<System.Runtime.CompilerServices.CallSite, System.Object, IronRuby.Builtins.Proc, System.Object>>, IronRuby.Runtime.BlockParam, System.Object, System.Int32, System.Object>(IronRuby.StandardLibrary.Enumerator.Enumerable.EachSlice)
+                new Func<IronRuby.Runtime.CallSiteStorage<Func<System.Runtime.CompilerServices.CallSite, System.Object, IronRuby.Builtins.Proc, System.Object>>, IronRuby.Runtime.BlockParam, System.Object, System.Int32, System.Object>(IronRuby.StandardLibrary.Enumerator.Enumerable.EachSlice)
             );
             
             module.DefineLibraryMethod("enum_cons", 0x11, 
@@ -8118,6 +8127,7 @@ namespace IronRuby.StandardLibrary.Enumerator {
 
 namespace IronRuby.StandardLibrary.FunctionControl {
     using System;
+    using Microsoft.Scripting.Utils;
     
     public sealed class FunctionControlLibraryInitializer : IronRuby.Builtins.LibraryInitializer {
         protected override void LoadModules() {
@@ -8130,12 +8140,13 @@ namespace IronRuby.StandardLibrary.FunctionControl {
 
 namespace IronRuby.StandardLibrary.FileControl {
     using System;
+    using Microsoft.Scripting.Utils;
     
     public sealed class FileControlLibraryInitializer : IronRuby.Builtins.LibraryInitializer {
         protected override void LoadModules() {
             
             
-            DefineGlobalModule("Fcntl", typeof(IronRuby.StandardLibrary.FileControl.Fcntl), 0x00000103, null, null, LoadFcntl_Constants, IronRuby.Builtins.RubyModule.EmptyArray);
+            DefineGlobalModule("Fcntl", typeof(IronRuby.StandardLibrary.FileControl.Fcntl), 0x00000100, null, null, LoadFcntl_Constants, IronRuby.Builtins.RubyModule.EmptyArray);
         }
         
         private static void LoadFcntl_Constants(IronRuby.Builtins.RubyModule/*!*/ module) {
@@ -8157,13 +8168,14 @@ namespace IronRuby.StandardLibrary.FileControl {
 
 namespace IronRuby.StandardLibrary.BigDecimal {
     using System;
+    using Microsoft.Scripting.Utils;
     
     public sealed class BigDecimalLibraryInitializer : IronRuby.Builtins.LibraryInitializer {
         protected override void LoadModules() {
             IronRuby.Builtins.RubyClass classRef0 = GetClass(typeof(IronRuby.Builtins.Numeric));
             
             
-            DefineGlobalClass("BigDecimal", typeof(IronRuby.StandardLibrary.BigDecimal.BigDecimal), 0x00000003, classRef0, LoadBigDecimal_Instance, LoadBigDecimal_Class, LoadBigDecimal_Constants, IronRuby.Builtins.RubyModule.EmptyArray, 
+            DefineGlobalClass("BigDecimal", typeof(IronRuby.StandardLibrary.BigDecimal.BigDecimal), 0x00000000, classRef0, LoadBigDecimal_Instance, LoadBigDecimal_Class, LoadBigDecimal_Constants, IronRuby.Builtins.RubyModule.EmptyArray, 
                 new Func<IronRuby.Runtime.RubyContext, IronRuby.Builtins.RubyClass, IronRuby.Builtins.MutableString, System.Int32, IronRuby.StandardLibrary.BigDecimal.BigDecimal>(IronRuby.StandardLibrary.BigDecimal.BigDecimalOps.CreateBigDecimal)
             );
             ExtendModule(typeof(IronRuby.Builtins.Kernel), LoadIronRuby__Builtins__Kernel_Instance, LoadIronRuby__Builtins__Kernel_Class, null, IronRuby.Builtins.RubyModule.EmptyArray);
@@ -8529,13 +8541,14 @@ namespace IronRuby.StandardLibrary.BigDecimal {
 
 namespace IronRuby.StandardLibrary.Iconv {
     using System;
+    using Microsoft.Scripting.Utils;
     
     public sealed class IconvLibraryInitializer : IronRuby.Builtins.LibraryInitializer {
         protected override void LoadModules() {
             IronRuby.Builtins.RubyClass classRef0 = GetClass(typeof(System.Object));
             
             
-            DefineGlobalClass("Iconv", typeof(IronRuby.StandardLibrary.Iconv.Iconv), 0x00000103, classRef0, LoadIconv_Instance, LoadIconv_Class, null, IronRuby.Builtins.RubyModule.EmptyArray, 
+            DefineGlobalClass("Iconv", typeof(IronRuby.StandardLibrary.Iconv.Iconv), 0x00000100, classRef0, LoadIconv_Instance, LoadIconv_Class, null, IronRuby.Builtins.RubyModule.EmptyArray, 
                 new Func<IronRuby.Builtins.RubyClass, IronRuby.Builtins.MutableString, IronRuby.Builtins.MutableString, IronRuby.StandardLibrary.Iconv.Iconv>(IronRuby.StandardLibrary.Iconv.Iconv.Create)
             );
         }
@@ -8580,13 +8593,14 @@ namespace IronRuby.StandardLibrary.Iconv {
 
 namespace IronRuby.StandardLibrary.ParseTree {
     using System;
+    using Microsoft.Scripting.Utils;
     
     public sealed class ParseTreeLibraryInitializer : IronRuby.Builtins.LibraryInitializer {
         protected override void LoadModules() {
             
             
-            IronRuby.Builtins.RubyModule def1 = DefineGlobalModule("IronRuby", typeof(IronRuby.Ruby), 0x00000003, null, null, null, IronRuby.Builtins.RubyModule.EmptyArray);
-            IronRuby.Builtins.RubyModule def2 = DefineModule("IronRuby::ParseTree", typeof(IronRuby.StandardLibrary.ParseTree.IronRubyOps.ParseTreeOps), 0x00000103, LoadIronRuby__ParseTree_Instance, null, null, IronRuby.Builtins.RubyModule.EmptyArray);
+            IronRuby.Builtins.RubyModule def1 = DefineGlobalModule("IronRuby", typeof(IronRuby.Ruby), 0x00000000, null, null, null, IronRuby.Builtins.RubyModule.EmptyArray);
+            IronRuby.Builtins.RubyModule def2 = DefineModule("IronRuby::ParseTree", typeof(IronRuby.StandardLibrary.ParseTree.IronRubyOps.ParseTreeOps), 0x00000100, LoadIronRuby__ParseTree_Instance, null, null, IronRuby.Builtins.RubyModule.EmptyArray);
             def1.SetConstant("ParseTree", def2);
         }
         
@@ -8606,12 +8620,13 @@ namespace IronRuby.StandardLibrary.ParseTree {
 
 namespace IronRuby.StandardLibrary.Open3 {
     using System;
+    using Microsoft.Scripting.Utils;
     
     public sealed class Open3LibraryInitializer : IronRuby.Builtins.LibraryInitializer {
         protected override void LoadModules() {
             
             
-            DefineGlobalModule("Open3", typeof(IronRuby.StandardLibrary.Open3.Open3), 0x00000103, null, LoadOpen3_Class, null, IronRuby.Builtins.RubyModule.EmptyArray);
+            DefineGlobalModule("Open3", typeof(IronRuby.StandardLibrary.Open3.Open3), 0x00000100, null, LoadOpen3_Class, null, IronRuby.Builtins.RubyModule.EmptyArray);
         }
         
         private static void LoadOpen3_Class(IronRuby.Builtins.RubyModule/*!*/ module) {

@@ -3,11 +3,12 @@ import clr
 
 if clr.use35:
     clr.AddReference("Microsoft.Scripting")
+    clr.AddReference("Microsoft.Dynamic")
     clr.AddReference("Microsoft.Scripting.Core")
 
     import Microsoft.Scripting.Ast as Exprs
     from Microsoft.Scripting.ComInterop import ComBinder
-    from Microsoft import (Action, Func)
+    from Microsoft.Scripting.Utils import (Action, Func)
 else:
     clr.AddReference("System.Core")
     clr.AddReference("System.Dynamic")

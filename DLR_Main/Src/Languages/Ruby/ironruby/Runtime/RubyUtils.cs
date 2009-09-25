@@ -196,6 +196,14 @@ namespace IronRuby.Runtime {
 
         #region Names
 
+        public static bool HasUnmangledName(string/*!*/ name) {
+            return !NotUnmangledObject.Contains(name);
+        }
+        
+        public static string TryUnmangleMethodName(string/*!*/ name) {
+            return HasUnmangledName(name) ? TryUnmangleName(name) : null;
+        }
+
         /// <summary>
         /// Converts a Ruby name to PascalCase name (foo_bar -> FooBar).
         /// Returns null if the name is not a well-formed Ruby name (it contains upper-case latter or subsequent underscores).
@@ -203,7 +211,7 @@ namespace IronRuby.Runtime {
         /// </summary>
         public static string TryUnmangleName(string/*!*/ name) {
             ContractUtils.RequiresNotNull(name, "name");
-            if (name.Length == 0 || name == "initialize") {
+            if (name.Length == 0) {
                 return null;
             }
 
@@ -253,6 +261,14 @@ namespace IronRuby.Runtime {
             return mangled.ToString();
         }
 
+        public static bool HasMangledName(string/*!*/ name) {
+            return !NotMangledObject.Contains(name);
+        }
+
+        public static string TryMangleMethodName(string/*!*/ name) {
+            return HasMangledName(name) ? TryMangleName(name) : null;
+        }
+
         /// <summary>
         /// Converts a camelCase or PascalCase name to a Ruby name (FooBar -> foo_bar).
         /// Returns null if the name is not in camelCase or PascalCase (FooBAR, foo, etc.).
@@ -260,9 +276,6 @@ namespace IronRuby.Runtime {
         /// </summary>
         public static string TryMangleName(string/*!*/ name) {
             ContractUtils.RequiresNotNull(name, "name");
-            if (name == "Initialize") {
-                return null;
-            }
 
             StringBuilder mangled = null;
             int i = 0;
@@ -363,6 +376,69 @@ namespace IronRuby.Runtime {
             return (str[index + 1] & 0xff00) == 0 ? (str[index].ToLowerInvariant() << 8) | str[index + 1].ToLowerInvariant() : -1;
         }
 
+        /// <summary>
+        /// A list of Kernel/Object methods that are expected by common Ruby libraries to work on all objects.
+        /// We don't unmangled them to allow Ruby programs work with .NET objects that define e.g. Class property. 
+        /// </summary>
+        internal static readonly HashSet<string> NotUnmangledObject = new HashSet<string>() {
+            // Kernel
+            "class",
+            "clone",
+            "display",
+            "dup",
+            "extend",
+            "freeze",
+            "hash",
+            // "id", Kernel#id is deprecated
+            "initialize",
+            "inspect",
+            "instance_eval",
+            "instance_exec",
+            "instance_variable_get",
+            "instance_variable_set",
+            "instance_variables",
+            "method",
+            "methods",
+            "object_id",
+            "private_methods",
+            "protected_methods",
+            "public_methods",
+            "send",
+            "singleton_methods",
+            "taint",
+            // "type", Kernel#type is deprecated
+            "untaint",
+        };
+
+        internal static readonly HashSet<string> NotMangledObject = new HashSet<string>() {
+            "Class",
+            "Clone",
+            "Display",
+            "Dup",
+            "Extend",
+            "Freeze",
+            "Hash",
+            // "Id", Kernel#id is deprecated
+            "Initialize",
+            "Inspect",
+            "InstanceEval",
+            "InstanceExec",
+            "InstanceVariableGet",
+            "InstanceVariableSet",
+            "InstanceVariables",
+            "Method",
+            "Methods",
+            "ObjectId",
+            "PrivateMethods",
+            "ProtectedMethods",
+            "PublicMethods",
+            "Send",
+            "SingletonMethods",
+            "Taint",
+            // "Type", Kernel#type is deprecated
+            "Untaint",
+        };
+
         #endregion
 
         #region Constants
@@ -372,14 +448,14 @@ namespace IronRuby.Runtime {
             Assert.NotNull(globalScope, owner, name);
 
             using (owner.Context.ClassHierarchyLocker()) {
-                object result;
-                if (owner.TryResolveConstantNoLock(globalScope, name, out result)) {
-                    return result;
+                ConstantStorage storage;
+                if (owner.TryResolveConstantNoLock(globalScope, name, out storage)) {
+                    return storage.Value;
                 }
 
                 RubyClass objectClass = owner.Context.ObjectClass;
-                if (owner != objectClass && lookupObject && objectClass.TryResolveConstantNoLock(globalScope, name, out result)) {
-                    return result;
+                if (owner != objectClass && lookupObject && objectClass.TryResolveConstantNoLock(globalScope, name, out storage)) {
+                    return storage.Value;
                 }
             }
 
@@ -394,10 +470,15 @@ namespace IronRuby.Runtime {
                 owner.Context.ReportWarning(String.Format("already initialized constant {0}", name));
             }
 
-            // Initializes anonymous module's name:
+            // Initializes anonymous module's name, publishes the module:
             RubyModule module = value as RubyModule;
-            if (module != null && module.Name == null) {
-                module.Name = owner.MakeNestedModuleName(name);
+            if (module != null) {
+                if (module.Name == null) {
+                    module.Name = owner.MakeNestedModuleName(name);
+                }
+                if (owner.IsObjectClass) {
+                    module.Publish(name);
+                }
             }
         }
 
@@ -509,71 +590,17 @@ namespace IronRuby.Runtime {
         #endregion
 
         #region Modules, Classes
-
-        internal static RubyModule/*!*/ DefineModule(RubyGlobalScope/*!*/ autoloadScope, RubyModule/*!*/ owner, string/*!*/ name) {
-            Assert.NotNull(autoloadScope, owner);
-
-            object existing;
-            if (owner.TryGetConstant(autoloadScope, name, out existing)) {
-                RubyModule module = existing as RubyModule;
-                if (module == null || module.IsClass) {
-                    throw RubyExceptions.CreateTypeError(String.Format("{0} is not a module", name));
-                }
-                return module;
-            } else {
-                // create class/module object:
-                return owner.Context.DefineModule(owner, name);
-            }
-        }
-
-        // thread-safe:
-        internal static RubyClass/*!*/ DefineClass(RubyGlobalScope/*!*/ autoloadScope, RubyModule/*!*/ owner, string/*!*/ name, object superClassObject) {
-            Assert.NotNull(owner);
-            RubyClass superClass = ToSuperClass(owner.Context, superClassObject);
-
-            object existing;
-            if (ReferenceEquals(owner, owner.Context.ObjectClass)
-                ? owner.TryResolveConstant(autoloadScope, name, out existing)
-                : owner.TryGetConstant(autoloadScope, name, out existing)) {
-
-                RubyClass cls = existing as RubyClass;
-                if (cls == null || !cls.IsClass) {
-                    throw RubyExceptions.CreateTypeError(String.Format("{0} is not a class", name));
-                }
-
-                if (superClassObject != null && !ReferenceEquals(cls.SuperClass, superClass)) {
-                    throw RubyExceptions.CreateTypeError(String.Format("superclass mismatch for class {0}", name));
-                }
-                return cls;
-            } else {
-                return owner.Context.DefineClass(owner, name, superClass, null);
-            }
-        }
-
-        private static RubyClass/*!*/ ToSuperClass(RubyContext/*!*/ ec, object superClassObject) {
-            if (superClassObject != null) {
-                RubyClass superClass = superClassObject as RubyClass;
-                if (superClass == null) {
-                    throw RubyExceptions.CreateTypeError(String.Format("superclass must be a Class ({0} given)", ec.GetClassOf(superClassObject).Name));
-                }
-
-                if (superClass.IsSingletonClass) {
-                    throw RubyExceptions.CreateTypeError("can't make subclass of virtual class");
-                }
-
-                return superClass;
-            } else {
-                return ec.ObjectClass;
-            }
-        }
-
-        internal static RubyModule/*!*/ GetModuleFromObject(RubyContext/*!*/ context, object obj) {
-            Assert.NotNull(context);
+        
+        internal static RubyModule/*!*/ GetModuleFromObject(RubyScope/*!*/ scope, object obj) {
             RubyModule module = obj as RubyModule;
             if (module == null) {
-                throw RubyExceptions.CreateTypeError(String.Format("{0} is not a class/module", context.GetClassOf(obj)));
+                throw CreateNotModuleException(scope, obj);
             }
             return module;
+        }
+
+        internal static Exception/*!*/ CreateNotModuleException(RubyScope/*!*/ scope, object obj) {
+            return RubyExceptions.CreateTypeError(String.Format("{0} is not a class/module", scope.RubyContext.GetClassOf(obj)));
         }
 
         public static void RequireMixins(RubyModule/*!*/ target, params RubyModule[]/*!*/ modules) {
@@ -700,8 +727,9 @@ namespace IronRuby.Runtime {
 
         #region Evals
 
-        [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Performance", "CA1823:AvoidUnusedPrivateFields")]
+#if DEBUG
         private static int _stringEvalCounter;
+#endif
 
         public static RubyCompilerOptions/*!*/ CreateCompilerOptionsForEval(RubyScope/*!*/ targetScope, int line) {
             return CreateCompilerOptionsForEval(targetScope, targetScope.GetInnerMostMethodScope(), false, line);
@@ -730,7 +758,9 @@ namespace IronRuby.Runtime {
             RubyContext context = targetScope.RubyContext;
             RubyMethodScope methodScope = targetScope.GetInnerMostMethodScope();
 
-            Utils.Log(Interlocked.Increment(ref _stringEvalCounter).ToString(), "EVAL");
+#if DEBUG
+            Utils.Log(Interlocked.Increment(ref _stringEvalCounter).ToString() + ": " + (file != null ? file.ToString() : "?") + " : " + line, "EVAL");
+#endif
 
             // we want to create a new top-level local scope:
             var options = CreateCompilerOptionsForEval(targetScope, methodScope, module != null, line);
@@ -761,7 +791,7 @@ namespace IronRuby.Runtime {
             );
         }
 
-        private static RubyScope/*!*/ CreateModuleEvalScope(RubyScope/*!*/ parent, object self, RubyModule module) {
+        private static RubyScope/*!*/ CreateModuleEvalScope(RubyScope/*!*/ parent, object self, RubyModule/*!*/ module) {
             var scope = new RubyModuleEvalScope(parent, module, self);
             scope.SetDebugName("instance/module-eval");
             return scope;

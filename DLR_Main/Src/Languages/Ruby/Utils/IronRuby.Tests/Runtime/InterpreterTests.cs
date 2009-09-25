@@ -23,6 +23,7 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 using Microsoft.Scripting.Generation;
+using Microsoft.Scripting.Utils;
 using System.Runtime.CompilerServices;
 using System.Threading;
 

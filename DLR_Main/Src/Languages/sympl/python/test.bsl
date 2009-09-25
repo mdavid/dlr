@@ -26,7 +26,7 @@ worble: 19
 10
 same
 x: (something wicked) ... y: this way comes
-System.Func`3[System.Object,System.Object,System.Object]
+Func`3
 non ID expr fun: yes
 closure: 5
 

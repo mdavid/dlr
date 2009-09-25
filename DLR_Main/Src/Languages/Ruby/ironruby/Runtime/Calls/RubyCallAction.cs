@@ -115,7 +115,7 @@ namespace IronRuby.Runtime.Calls {
             MethodResolutionResult method;
             RubyClass targetClass = Context.GetImmediateClassOf(target);
             using (targetClass.Context.ClassHierarchyLocker()) {
-                version = targetClass.Version.Value;
+                version = targetClass.Version.Method;
                 method = targetClass.ResolveMethodForSiteNoLock(_methodName, GetVisibilityContext(Signature, scope));
             }
 
@@ -153,7 +153,7 @@ namespace IronRuby.Runtime.Calls {
                 }
 
                 if (args.Signature.IsVirtualCall && !method.Info.IsRubyMember) {
-                    metaBuilder.Result = Ast.Field(null, Fields.RubyOps_ForwardToBase);
+                    metaBuilder.Result = Ast.Field(null, Fields.ForwardToBase);
                     return true;
                 }
 

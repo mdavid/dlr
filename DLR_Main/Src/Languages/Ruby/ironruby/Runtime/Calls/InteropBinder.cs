@@ -345,6 +345,7 @@ namespace IronRuby.Runtime.Calls {
             private readonly RealSetMember/*!*/ _setMember;
             private readonly string/*!*/ _name;
             private readonly RealSetMember _setMemberUnmangled;
+            private readonly ContainsMember/*!*/ _containsUnmangled;
 
             internal SetMember(RubyContext/*!*/ context, string/*!*/ name) {
                 Assert.NotNull(context, name);
@@ -356,6 +357,7 @@ namespace IronRuby.Runtime.Calls {
                 string unmanagled = RubyUtils.TryUnmangleName(name);
                 if (unmanagled != null) {
                     _setMemberUnmangled = new RealSetMember(unmanagled);
+                    _containsUnmangled = new ContainsMember(context, unmanagled);
                 }
             }
 
@@ -371,15 +373,28 @@ namespace IronRuby.Runtime.Calls {
                     return _setMember.Bind(target, args);
                 }
 
-                // first try the specific name provided, then try the unmanaged name
+                //
+                // Consider this case:
+                // x = {"Foo" -> 1}.
+                // x.foo += 1
+                // Without name mangling this would result to x being {"Foo" -> 1, "foo" -> 2} while the expected result is {"Foo" -> 2}.
+                //
+                // Hence if the object doesn't contain the member but contains an unmangled member we set the unmangled one:
+                //
                 return new DynamicMetaObject(
                     Expression.Condition(
-                        Expression.NotEqual(
-                            Expression.Dynamic(_contains, typeof(object), target.Expression),
-                            Expression.Constant(OperationFailed.Value)
+                        Expression.AndAlso(
+                            Expression.Equal(
+                                Expression.Dynamic(_contains, typeof(object), target.Expression),
+                                Expression.Constant(OperationFailed.Value)
+                            ),
+                            Expression.NotEqual(
+                                Expression.Dynamic(_containsUnmangled, typeof(object), target.Expression),
+                                Expression.Constant(OperationFailed.Value)
+                            )
                         ),
-                        Expression.Dynamic(_setMember, typeof(object), target.Expression, args[0].Expression),
-                        Expression.Dynamic(_setMemberUnmangled, typeof(object), target.Expression, args[0].Expression)
+                        Expression.Dynamic(_setMemberUnmangled, typeof(object), target.Expression, args[0].Expression),
+                        Expression.Dynamic(_setMember, typeof(object), target.Expression, args[0].Expression)
                     ),
                     target.Restrict(CompilerHelpers.GetType(target.Value)).Restrictions
                 );
@@ -466,7 +481,7 @@ namespace IronRuby.Runtime.Calls {
                 }
 
                 public override DynamicMetaObject/*!*/ FallbackSetMember(DynamicMetaObject/*!*/ target, DynamicMetaObject/*!*/ value,
-                DynamicMetaObject errorSuggestion) {
+                    DynamicMetaObject errorSuggestion) {
 
 #if !SILVERLIGHT
                     DynamicMetaObject result;

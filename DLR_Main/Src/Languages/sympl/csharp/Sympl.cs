@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Dynamic;
 #if USE35
 using Microsoft.Scripting.Ast;
+using Microsoft.Scripting.Utils;
 #else
 using System.Linq.Expressions;
 #endif

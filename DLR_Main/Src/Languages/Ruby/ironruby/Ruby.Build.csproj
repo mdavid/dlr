@@ -124,6 +124,7 @@
       <!--                            -->
       <!--          Compiler          -->
       <!--                            -->
+      <Compile Include="Compiler\AstBlock.cs" />
       <Compile Include="Compiler\AstGenerator.cs" />
       <Compile Include="Compiler\Errors.cs" />
       <Compile Include="Compiler\ReflectionCache.cs" />
@@ -323,6 +324,8 @@
       <Compile Include="Runtime\CallSiteStorages.cs" />
       <Compile Include="Runtime\CheckedMonitor.cs" />
       <Compile Include="Runtime\ClrName.cs" />
+      <Compile Include="Runtime\ConstantSiteCache.cs" />
+      <Compile Include="Runtime\ConstantStorage.cs" />
       <Compile Include="Runtime\CustomTypeDescHelpers.cs" />
       <Compile Include="Runtime\EqualityComparer.cs" />
       <Compile Include="Runtime\IDuplicable.cs" />
@@ -353,6 +356,7 @@
       <Compile Include="Runtime\StackUnwinder.cs" />
       <Compile Include="Runtime\Union.cs" />
       <Compile Include="Runtime\Utils.cs" />
+      <Compile Include="Runtime\WeakList.cs" />
     </ItemGroup>
     <ItemGroup>
       <!--                                 -->
@@ -418,7 +422,7 @@
     </ItemGroup>
   <!-- End Generated Project Items By GenerateSystemCoreCsproj.py -->
   <ItemGroup>
-    <ProjectReference Include="..\..\..\..\..\ndp\fx\src\Dynamic\System\Dynamic\Microsoft.Dynamic.Build.csproj">
+    <ProjectReference Include="..\..\..\Runtime\Microsoft.Dynamic\Microsoft.Dynamic.Build.csproj">
       <Name>Microsoft.Dynamic</Name>
     </ProjectReference>
     <ProjectReference Include="..\..\..\Runtime\Microsoft.Scripting\Microsoft.Scripting.Build.csproj">

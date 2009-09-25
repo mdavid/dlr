@@ -467,52 +467,46 @@ namespace IronRuby.Runtime {
         }
 
         // thread-safe:
-        // dynamic dispatch to "const_missing" if not found
-        public object ResolveConstant(bool autoload, string/*!*/ name) {
-            object result;
-
-            if (TryResolveConstant(autoload, name, out result)) {
-                return result;
-            }
-
-            RubyContext.CheckConstantName(name);
-            var owner = GetInnerMostModuleForConstantLookup();
-            return owner.ConstantMissing(name);
-        }
-
-        // thread-safe:
-        public bool TryResolveConstant(bool autoload, string/*!*/ name, out object result) {
+        // Returns null on success, the lexically inner-most module on failure.
+        internal RubyModule TryResolveConstantNoLock(RubyGlobalScope autoloadScope, string/*!*/ name, out ConstantStorage result) {
             var context = RubyContext;
-            using (context.ClassHierarchyLocker()) {
-                RubyGlobalScope autoloadScope = autoload ? GlobalScope : null;
-                RubyScope scope = this;
+            context.RequiresClassHierarchyLock();
+            
+            RubyScope scope = this;
 
-                // lexical lookup first:
-                RubyModule innerMostModule = null;
-                do {
-                    RubyModule module = scope.Module;
+            // lexical lookup first:
+            RubyModule innerMostModule = null;
+            do {
+                RubyModule module = scope.Module;
 
-                    if (module != null) {
-                        if (module.TryGetConstant(context, autoloadScope, name, out result)) {
-                            return true;
-                        }
-
-                        // remember the module:
-                        if (innerMostModule == null) {
-                            innerMostModule = module;
-                        }
+                if (module != null) {
+                    if (module.TryGetConstant(context, autoloadScope, name, out result)) {
+                        return null;
                     }
 
-                    scope = scope.Parent;
-                } while (scope != null);
-
-                // check the inner most module and it's base classes/mixins:
-                if (innerMostModule != null && innerMostModule.TryResolveConstant(context, autoloadScope, name, out result)) {
-                    return true;
+                    // remember the module:
+                    if (innerMostModule == null) {
+                        innerMostModule = module;
+                    }
                 }
 
-                return RubyContext.ObjectClass.TryResolveConstant(context, autoloadScope, name, out result);
+                scope = scope.Parent;
+            } while (scope != null);
+
+            // check the inner most module and it's base classes/mixins:
+            if (innerMostModule != null) {
+                if (innerMostModule.TryResolveConstant(context, autoloadScope, name, out result)) {
+                    return null;
+                }
+            } else {
+                innerMostModule = context.ObjectClass;
             }
+
+            if (context.ObjectClass.TryResolveConstant(context, autoloadScope, name, out result)) {
+                return null;
+            }
+
+            return innerMostModule;
         }
 
         #endregion
@@ -748,7 +742,7 @@ var closureScope = scope as RubyClosureScope;
 
         public override RubyModule Module { get { return _module; } }
 
-        internal RubyModuleScope(RubyScope/*!*/ parent, RubyModule module, object selfObject) {
+        internal RubyModuleScope(RubyScope/*!*/ parent, RubyModule module) {
             Assert.NotNull(parent);
 
             // RuntimeFlowControl:
@@ -757,7 +751,7 @@ var closureScope = scope as RubyClosureScope;
             // RubyScope:
             _parent = parent;
             _top = parent.Top;
-            _selfObject = selfObject;
+            _selfObject = module;
             _methodAttributes = RubyMethodAttributes.PrivateInstance;
 
             // RubyModuleScope:
@@ -768,6 +762,21 @@ var closureScope = scope as RubyClosureScope;
         }
     }
 
+    /// <summary>
+    /// String based module_eval injects a module scope (represented by this class) into the lexical scope chain.
+    /// </summary>
+    /// <remarks>
+    /// Note that block-based module_eval is different:
+    /// 
+    /// <code>
+    /// class A
+    ///   X = 1
+    /// end
+    /// 
+    /// A.module_eval { p X }  # error
+    /// A.module_eval "p X"    # 1
+    /// </code>
+    /// </remarks>
     public sealed class RubyModuleEvalScope : RubyClosureScope {
         private readonly RubyModule _module;
 
@@ -793,7 +802,6 @@ var closureScope = scope as RubyClosureScope;
             InLoop = parent.InLoop;
             InRescue = parent.InRescue;
             MethodAttributes = RubyMethodAttributes.PublicInstance;
-
             SetEmptyLocals();
         }
 
@@ -971,9 +979,9 @@ var closureScope = scope as RubyClosureScope;
 
                 str = str.Substring(0, str.Length - 1);
 
-                if(!RubyOps.ScopeContainsMember(globalScope, str)) {
+                if (!RubyOps.ScopeContainsMember(globalScope, str)) {
                     var unmangled = RubyUtils.TryUnmangleName(str);
-                    if (!String.IsNullOrEmpty(unmangled) && RubyOps.ScopeContainsMember(globalScope, unmangled)) {
+                    if (unmangled != null && RubyOps.ScopeContainsMember(globalScope, unmangled)) {
                         str = unmangled;
                     }
                 }
@@ -987,12 +995,7 @@ var closureScope = scope as RubyClosureScope;
                 }
 
                 object value;
-                if (RubyOps.ScopeTryGetMember(context, globalScope, str, out value)) {
-                    return value;
-                }
-
-                string unmangled = RubyUtils.TryUnmangleName(str);
-                if (unmangled != null && RubyOps.ScopeTryGetMember(context, globalScope, unmangled, out value)) {
+                if (RubyOps.TryGetGlobalScopeMethod(context, globalScope, str, out value)) {
                     return value;
                 }
 

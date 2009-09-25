@@ -64,6 +64,7 @@
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\..\..\..\Runtime\Microsoft.Scripting\Microsoft.Scripting.Build.csproj" />
+    <ProjectReference Include="..\..\..\..\Runtime\Microsoft.Dynamic\Microsoft.Dynamic.Build.csproj" />
     <ProjectReference Include="..\..\IronRuby\Ruby.Build.csproj" />
   </ItemGroup>
   <ItemGroup>

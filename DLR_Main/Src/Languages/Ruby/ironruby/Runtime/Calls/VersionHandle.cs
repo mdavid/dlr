@@ -13,16 +13,18 @@
  *
  * ***************************************************************************/
 
+using System;
 using System.Diagnostics;
 using IronRuby.Compiler.Generation;
 
 namespace IronRuby.Runtime.Calls {
+    [ReflectionCached]
     public sealed class VersionHandle {
         [Emitted]
-        public int Value;
+        public int Method;
 
-        internal VersionHandle(int value) {
-            Value = value;
+        internal VersionHandle(int method) {
+            Method = method;
         }
 
 #if DEBUG

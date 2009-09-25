@@ -30,6 +30,7 @@ using Microsoft.Scripting;
 using Microsoft.Scripting.Actions.Calls;
 using Microsoft.Scripting.Math;
 using Microsoft.Scripting.Runtime;
+using Microsoft.Scripting.Utils;
 
 namespace IronRuby.Tests {
     using Ast = Expression;
@@ -253,7 +254,7 @@ namespace IronRuby.Tests {
         }
 
         public void AmbiguousMatch1() {
-            Context.SetGlobalConstant("C", Context.GetClass(typeof(AmbiguousOverloads)));
+            Runtime.Globals.SetVariable("C", Context.GetClass(typeof(AmbiguousOverloads)));
             AssertOutput(() => CompilerTest(@"
 [1, nil, 'foo'].each do |x| 
   puts C.f(x) rescue p $!.class

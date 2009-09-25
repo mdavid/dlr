@@ -50,8 +50,6 @@ using System.Security;
 [assembly: SecurityTransparent]
 
 #if !SILVERLIGHT
-[assembly: AssemblyFileVersion("2.0.0.00")]
-[assembly: AssemblyInformationalVersion("2.0")]
 [assembly: AllowPartiallyTrustedCallers]
 #if CODEPLEX_40
 [assembly: SecurityRules(SecurityRuleSet.Level1)]

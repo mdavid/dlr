@@ -17,6 +17,7 @@
 
 namespace IronRuby.StandardLibrary.Yaml {
     using System;
+    using Microsoft.Scripting.Utils;
     
     public sealed class YamlLibraryInitializer : IronRuby.Builtins.LibraryInitializer {
         protected override void LoadModules() {
@@ -39,14 +40,14 @@ namespace IronRuby.StandardLibrary.Yaml {
             ExtendModule(typeof(Microsoft.Scripting.Math.BigInteger), LoadMicrosoft__Scripting__Math__BigInteger_Instance, null, null, IronRuby.Builtins.RubyModule.EmptyArray);
             ExtendModule(typeof(Microsoft.Scripting.Runtime.DynamicNull), LoadMicrosoft__Scripting__Runtime__DynamicNull_Instance, null, null, IronRuby.Builtins.RubyModule.EmptyArray);
             ExtendModule(typeof(Microsoft.Scripting.SymbolId), LoadMicrosoft__Scripting__SymbolId_Instance, null, null, IronRuby.Builtins.RubyModule.EmptyArray);
-            DefineGlobalClass("Out", typeof(IronRuby.StandardLibrary.Yaml.RubyRepresenter), 0x00000103, classRef0, LoadOut_Instance, null, null, IronRuby.Builtins.RubyModule.EmptyArray);
+            DefineGlobalClass("Out", typeof(IronRuby.StandardLibrary.Yaml.RubyRepresenter), 0x00000100, classRef0, LoadOut_Instance, null, null, IronRuby.Builtins.RubyModule.EmptyArray);
             ExtendModule(typeof(System.DateTime), LoadSystem__DateTime_Instance, null, null, IronRuby.Builtins.RubyModule.EmptyArray);
             ExtendModule(typeof(System.Double), LoadSystem__Double_Instance, null, null, IronRuby.Builtins.RubyModule.EmptyArray);
             ExtendModule(typeof(System.Exception), LoadSystem__Exception_Instance, null, null, IronRuby.Builtins.RubyModule.EmptyArray);
             ExtendClass(typeof(System.Object), null, LoadSystem__Object_Instance, null, null, IronRuby.Builtins.RubyModule.EmptyArray);
-            IronRuby.Builtins.RubyModule def1 = DefineGlobalModule("YAML", typeof(IronRuby.StandardLibrary.Yaml.RubyYaml), 0x00000103, null, LoadYAML_Class, null, IronRuby.Builtins.RubyModule.EmptyArray);
-            IronRuby.Builtins.RubyModule def2 = DefineModule("YAML::BaseNode", typeof(IronRuby.StandardLibrary.Yaml.RubyYaml.BaseNode), 0x00000103, null, null, null, IronRuby.Builtins.RubyModule.EmptyArray);
-            IronRuby.Builtins.RubyClass def3 = DefineClass("YAML::Stream", typeof(IronRuby.StandardLibrary.Yaml.RubyYaml.YamlStream), 0x00000103, classRef1, LoadYAML__Stream_Instance, null, null, IronRuby.Builtins.RubyModule.EmptyArray, 
+            IronRuby.Builtins.RubyModule def1 = DefineGlobalModule("YAML", typeof(IronRuby.StandardLibrary.Yaml.RubyYaml), 0x00000100, null, LoadYAML_Class, null, IronRuby.Builtins.RubyModule.EmptyArray);
+            IronRuby.Builtins.RubyModule def2 = DefineModule("YAML::BaseNode", typeof(IronRuby.StandardLibrary.Yaml.RubyYaml.BaseNode), 0x00000100, null, null, null, IronRuby.Builtins.RubyModule.EmptyArray);
+            IronRuby.Builtins.RubyClass def3 = DefineClass("YAML::Stream", typeof(IronRuby.StandardLibrary.Yaml.RubyYaml.YamlStream), 0x00000100, classRef1, LoadYAML__Stream_Instance, null, null, IronRuby.Builtins.RubyModule.EmptyArray, 
                 new Func<IronRuby.Builtins.RubyClass, IronRuby.Builtins.Hash, IronRuby.StandardLibrary.Yaml.RubyYaml.YamlStream>(IronRuby.StandardLibrary.Yaml.RubyYaml.YamlStream.CreateStream)
             );
             def1.SetConstant("BaseNode", def2);
@@ -92,7 +93,7 @@ namespace IronRuby.StandardLibrary.Yaml {
             );
             
             module.DefineLibraryMethod("is_complex_yaml?", 0x11, 
-                new Func<IronRuby.Runtime.CallSiteStorage<System.Func<System.Runtime.CompilerServices.CallSite, System.Object, IronRuby.Builtins.MutableString>>, IronRuby.Runtime.CallSiteStorage<System.Func<System.Runtime.CompilerServices.CallSite, System.Object, IronRuby.Builtins.RubyArray>>, IronRuby.Builtins.MutableString, System.Boolean>(IronRuby.StandardLibrary.Yaml.YamlStringOps.IsComplexYaml)
+                new Func<IronRuby.Runtime.CallSiteStorage<Func<System.Runtime.CompilerServices.CallSite, System.Object, IronRuby.Builtins.MutableString>>, IronRuby.Runtime.CallSiteStorage<Func<System.Runtime.CompilerServices.CallSite, System.Object, IronRuby.Builtins.RubyArray>>, IronRuby.Builtins.MutableString, System.Boolean>(IronRuby.StandardLibrary.Yaml.YamlStringOps.IsComplexYaml)
             );
             
             module.DefineLibraryMethod("taguri", 0x11, 
@@ -249,7 +250,7 @@ namespace IronRuby.StandardLibrary.Yaml {
             );
             
             module.DefineLibraryMethod("to_yaml_node", 0x12, 
-                new Func<IronRuby.Runtime.CallSiteStorage<System.Func<System.Runtime.CompilerServices.CallSite, System.Exception, System.Object>>, System.Exception, IronRuby.StandardLibrary.Yaml.RubyRepresenter, IronRuby.StandardLibrary.Yaml.Node>(IronRuby.StandardLibrary.Yaml.YamlExceptionOps.ToYamlNode)
+                new Func<IronRuby.Runtime.CallSiteStorage<Func<System.Runtime.CompilerServices.CallSite, System.Exception, System.Object>>, System.Exception, IronRuby.StandardLibrary.Yaml.RubyRepresenter, IronRuby.StandardLibrary.Yaml.Node>(IronRuby.StandardLibrary.Yaml.YamlExceptionOps.ToYamlNode)
             );
             
         }

@@ -104,7 +104,7 @@
              (princ " ... y: ")
              (print y))))
    (f '(something wicked) "this way comes")
-   (print f))
+   (print (f.GetType).Name))
 ;(print f) ;need try-catch to show this is error
 
 ((lambda (z) (princ "non ID expr fun: ") (print z)) "yes")
@@ -289,7 +289,7 @@
 ;10
 ;same
 ;x: (something wicked) ... y: this way comes
-;System.Func`3[System.Object,System.Object,System.Object]
+;Func`3
 ;non ID expr fun: yes
 ;closure: 5
 ;

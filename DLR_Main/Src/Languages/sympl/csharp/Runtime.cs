@@ -5,6 +5,7 @@ using System.Reflection;
 using System.Runtime.CompilerServices;
 #if USE35
 using Microsoft.Scripting.Ast;
+using Microsoft.Scripting.Utils;
 #else
 using System.Linq.Expressions;
 #endif
@@ -603,9 +604,11 @@ namespace SymplSample {
                 DynamicMetaObject targetMO, DynamicMetaObject errorSuggestion) {
             // First try COM binding.
             DynamicMetaObject result;
+#if COM_SUPPORT // requires Microsoft.Scripting reference
             if (ComBinder.TryBindGetMember(this, targetMO, out result, true)) {
                 return result;
             }
+#endif
             // Defer if any object has no value so that we evaulate their
             // Expressions and nest a CallSite for the InvokeMember.
             if (!targetMO.HasValue) return Defer(targetMO);
@@ -651,9 +654,11 @@ namespace SymplSample {
                 DynamicMetaObject errorSuggestion) {
             // First try COM binding.
             DynamicMetaObject result;
+#if COM_SUPPORT // requires Microsoft.Scripting reference
             if (ComBinder.TryBindSetMember(this, targetMO, value, out result)) {
                 return result;
             }
+#endif
             // Defer if any object has no value so that we evaulate their
             // Expressions and nest a CallSite for the InvokeMember.
             if (!targetMO.HasValue) return Defer(targetMO);
@@ -722,9 +727,11 @@ namespace SymplSample {
                 DynamicMetaObject errorSuggestion) {
             // First try COM binding.
             DynamicMetaObject result;
+#if COM_SUPPORT // requires Microsoft.Scripting reference
             if (ComBinder.TryBindInvokeMember(this, targetMO, args, out result)) {
                 return result;
             }
+#endif
             // Defer if any object has no value so that we evaulate their
             // Expressions and nest a CallSite for the InvokeMember.
             if (!targetMO.HasValue || args.Any((a) => !a.HasValue)) {
@@ -833,9 +840,11 @@ namespace SymplSample {
                 DynamicMetaObject errorSuggestion) {
             // First try COM binding.
             DynamicMetaObject result;
+#if COM_SUPPORT // requires Microsoft.Scripting reference
             if (ComBinder.TryBindInvoke(this, targetMO, argMOs, out result)) {
                 return result;
             }
+#endif
             // Defer if any object has no value so that we evaulate their
             // Expressions and nest a CallSite for the InvokeMember.
             if (!targetMO.HasValue || argMOs.Any((a) => !a.HasValue)) {
@@ -948,9 +957,11 @@ namespace SymplSample {
                      DynamicMetaObject errorSuggestion) {
             // First try COM binding.
             DynamicMetaObject result;
+#if COM_SUPPORT // requires Microsoft.Scripting reference
             if (ComBinder.TryBindGetIndex(this, target, indexes, out result)) {
                 return result;
             }
+#endif
             // Defer if any object has no value so that we evaulate their
             // Expressions and nest a CallSite for the InvokeMember.
             if (!target.HasValue || indexes.Any((a) => !a.HasValue)) {
@@ -995,9 +1006,11 @@ namespace SymplSample {
                    DynamicMetaObject value, DynamicMetaObject errorSuggestion) {
             // First try COM binding.
             DynamicMetaObject result;
+#if COM_SUPPORT // requires Microsoft.Scripting reference
             if (ComBinder.TryBindSetIndex(this, target, indexes, value, out result)) {
                 return result;
             }
+#endif
             // Defer if any object has no value so that we evaulate their
             // Expressions and nest a CallSite for the InvokeMember.
             if (!target.HasValue || indexes.Any((a) => !a.HasValue) ||
