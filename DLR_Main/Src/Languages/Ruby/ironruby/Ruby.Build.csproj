@@ -53,6 +53,7 @@
     </Reference>
     <Reference Include="System.Data" />
     <Reference Include="System.Xml" Condition=" $(SilverlightBuild) != 'true' " />
+    <Reference Include="System.Numerics" Condition=" $(SilverlightBuild) != 'true' "/>
   </ItemGroup>
   <!-- Begin Generated Project Items By GenerateSystemCoreCsproj.py -->
     <ItemGroup>
