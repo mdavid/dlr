@@ -221,6 +221,12 @@
       <Compile Include="Thread\SizedQueue.cs" />
     </ItemGroup>
     <ItemGroup>
+      <!--                            -->
+      <!--          Win32API          -->
+      <!--                            -->
+      <Compile Include="Win32API\Win32API.cs" />
+    </ItemGroup>
+    <ItemGroup>
       <!--                        -->
       <!--          Zlib          -->
       <!--                        -->

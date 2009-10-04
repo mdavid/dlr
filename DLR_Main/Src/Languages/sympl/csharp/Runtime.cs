@@ -602,9 +602,12 @@ namespace SymplSample {
 
         public override DynamicMetaObject FallbackGetMember(
                 DynamicMetaObject targetMO, DynamicMetaObject errorSuggestion) {
+            // ComBinder moved to Codeplex only, removing usage from this project
+            // to keep it dependent only functionality in .NET 4.0.
+            // Requires Microsoft.Dynamic reference.
+#if COM_SUPPORT 
             // First try COM binding.
             DynamicMetaObject result;
-#if COM_SUPPORT // requires Microsoft.Scripting reference
             if (ComBinder.TryBindGetMember(this, targetMO, out result, true)) {
                 return result;
             }
@@ -652,9 +655,12 @@ namespace SymplSample {
         public override DynamicMetaObject FallbackSetMember(
                 DynamicMetaObject targetMO, DynamicMetaObject value,
                 DynamicMetaObject errorSuggestion) {
+            // ComBinder moved to Codeplex only, removing usage from this project
+            // to keep it dependent only functionality in .NET 4.0.
+            // Requires Microsoft.Dynamic reference.
+#if COM_SUPPORT 
             // First try COM binding.
             DynamicMetaObject result;
-#if COM_SUPPORT // requires Microsoft.Scripting reference
             if (ComBinder.TryBindSetMember(this, targetMO, value, out result)) {
                 return result;
             }
@@ -725,9 +731,12 @@ namespace SymplSample {
         public override DynamicMetaObject FallbackInvokeMember(
                 DynamicMetaObject targetMO, DynamicMetaObject[] args,
                 DynamicMetaObject errorSuggestion) {
+            // ComBinder moved to Codeplex only, removing usage from this project
+            // to keep it dependent only functionality in .NET 4.0.
+            // Requires Microsoft.Dynamic reference.
+#if COM_SUPPORT 
             // First try COM binding.
             DynamicMetaObject result;
-#if COM_SUPPORT // requires Microsoft.Scripting reference
             if (ComBinder.TryBindInvokeMember(this, targetMO, args, out result)) {
                 return result;
             }
@@ -838,9 +847,12 @@ namespace SymplSample {
         public override DynamicMetaObject FallbackInvoke(
                 DynamicMetaObject targetMO, DynamicMetaObject[] argMOs,
                 DynamicMetaObject errorSuggestion) {
+            // ComBinder moved to Codeplex only, removing usage from this project
+            // to keep it dependent only functionality in .NET 4.0.
+            // Requires Microsoft.Dynamic reference.
+#if COM_SUPPORT 
             // First try COM binding.
             DynamicMetaObject result;
-#if COM_SUPPORT // requires Microsoft.Scripting reference
             if (ComBinder.TryBindInvoke(this, targetMO, argMOs, out result)) {
                 return result;
             }
@@ -955,9 +967,12 @@ namespace SymplSample {
         public override DynamicMetaObject FallbackGetIndex(
                      DynamicMetaObject target, DynamicMetaObject[] indexes,
                      DynamicMetaObject errorSuggestion) {
+            // ComBinder moved to Codeplex only, removing usage from this project
+            // to keep it dependent only functionality in .NET 4.0.
+            // Requires Microsoft.Dynamic reference.
+#if COM_SUPPORT 
             // First try COM binding.
             DynamicMetaObject result;
-#if COM_SUPPORT // requires Microsoft.Scripting reference
             if (ComBinder.TryBindGetIndex(this, target, indexes, out result)) {
                 return result;
             }
@@ -1004,9 +1019,12 @@ namespace SymplSample {
         public override DynamicMetaObject FallbackSetIndex(
                    DynamicMetaObject target, DynamicMetaObject[] indexes,
                    DynamicMetaObject value, DynamicMetaObject errorSuggestion) {
+            // ComBinder moved to Codeplex only, removing usage from this project
+            // to keep it dependent only functionality in .NET 4.0.
+            // Requires Microsoft.Dynamic reference.
+#if COM_SUPPORT 
             // First try COM binding.
             DynamicMetaObject result;
-#if COM_SUPPORT // requires Microsoft.Scripting reference
             if (ComBinder.TryBindSetIndex(this, target, indexes, value, out result)) {
                 return result;
             }
