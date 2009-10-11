@@ -82,6 +82,7 @@
       <Compile Include="SourceSpan.cs" />
       <Compile Include="SourceUnit.cs" />
       <Compile Include="SpecSharp.cs" />
+      <Compile Include="Stubs.cs" />
       <Compile Include="SymbolId.cs" />
       <Compile Include="SymbolTable.cs" />
       <Compile Include="SyntaxErrorException.cs" />

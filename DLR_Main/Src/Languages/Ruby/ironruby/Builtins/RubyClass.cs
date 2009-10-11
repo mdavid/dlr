@@ -760,7 +760,7 @@ namespace IronRuby.Builtins {
                 }
             } else if (name.LastCharacter() == '=') {
                 string propertyName = name.Substring(0, name.Length - 1);
-                string altName = tryUnmangle ? RubyUtils.TryUnmangleName(propertyName) : null;
+                string altName = tryUnmangle ? RubyUtils.TryUnmangleMethodName(propertyName) : null;
                 
                 // property setter:
                 if (TryGetClrProperty(type, bindingFlags, true, name, propertyName, altName, out method)) return true;
@@ -768,7 +768,7 @@ namespace IronRuby.Builtins {
                 // writeable field:
                 if (TryGetClrField(type, bindingFlags, true, propertyName, altName, out method)) return true;
             } else {
-                string altName = tryUnmangle ? RubyUtils.TryUnmangleName(name) : null;
+                string altName = tryUnmangle ? RubyUtils.TryUnmangleMethodName(name) : null;
 
                 // method:
                 if (TryGetClrMethod(type, bindingFlags, false, name, null, name, altName, out method)) return true;

@@ -425,8 +425,9 @@ namespace IronRuby.Builtins {
         public static MutableString/*!*/ Inspect(UnaryOpStorage/*!*/ inspectStorage, ConversionStorage<MutableString>/*!*/ tosConversion,
             object self) {
 
+            RubyClass cls;
             var context = tosConversion.Context;
-            if (context.HasInstanceVariables(self)) {
+            if (context.HasInstanceVariables(self) && ((cls = context.GetClassOf(self)).IsRubyClass || cls.IsObjectClass)) {
                 return RubyUtils.InspectObject(inspectStorage, tosConversion, self);
             } else {
                 var site = tosConversion.GetSite(ConvertToSAction.Make(context));

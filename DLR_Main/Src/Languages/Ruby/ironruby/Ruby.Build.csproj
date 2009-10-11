@@ -73,7 +73,6 @@
       <Compile Include="Builtins\ConsoleStream.cs" />
       <Compile Include="Builtins\DuplexStream.cs" />
       <Compile Include="Builtins\Exceptions.cs" />
-      <Compile Include="Builtins\GenericRegex.cs" />
       <Compile Include="Builtins\Glob.cs" />
       <Compile Include="Builtins\Hash.cs" />
       <Compile Include="Builtins\Hash.Subclass.cs" />

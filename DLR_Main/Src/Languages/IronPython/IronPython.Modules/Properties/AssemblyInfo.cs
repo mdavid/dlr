@@ -25,7 +25,7 @@ using System.Security;
 [assembly: AssemblyConfiguration("")]
 [assembly: AssemblyCompany("Microsoft")]
 [assembly: AssemblyProduct("IronPython.Modules")]
-[assembly: AssemblyCopyright("� Microsoft Corporation.  All rights reserved.")]
+[assembly: AssemblyCopyright("© Microsoft Corporation.  All rights reserved.")]
 [assembly: AssemblyTrademark("")]
 [assembly: AssemblyCulture("")]
 
@@ -54,8 +54,8 @@ using System.Security;
 #if CODEPLEX_40
 [assembly: SecurityRules(SecurityRuleSet.Level1)]
 #endif
-#endif
-
 #if !CLR2
 [assembly: SecurityRules(SecurityRuleSet.Level1)]
 #endif
+#endif
+

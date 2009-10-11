@@ -1837,7 +1837,7 @@ end
             var range = new Range(1, 2, true);
             Assert(range.ToString() == "1...2");
 
-            var regex = new RubyRegex("hello", RubyRegexOptions.IgnoreCase | RubyRegexOptions.Multiline);
+            var regex = new RubyRegex(MutableString.CreateAscii("hello"), RubyRegexOptions.IgnoreCase | RubyRegexOptions.Multiline);
             Assert(regex.ToString() == "(?mi-x:hello)");
         }
 
@@ -2251,7 +2251,7 @@ p System::Char.new('9').to_i
 ", @"
 [System::Char, IronRuby::Clr::String, Enumerable, Comparable, System::ValueType, Object, Kernel]
 [System::String, IronRuby::Clr::String, Enumerable, Comparable, Object, Kernel]
-'a'
+'a' (Char)
 1
 0
 'foo'
@@ -2287,6 +2287,28 @@ Foo
 Bar        
 ");
         }
+        
+        public void ClrEnums2() {
+            Context.ObjectClass.SetConstant("C", Context.GetClass(typeof(ClassWithEnum)));
+            Context.ObjectClass.SetConstant("E", Context.GetClass(typeof(ClassWithEnum.MyEnum)));
+
+            TestOutput(@"
+class X
+  def to_int
+    E.Baz
+  end
+end
+
+p System::Array[E].new([1, E.Bar])
+
+# TODO: allow default protocol to convert to an enum?
+System::Array[E].new [X.new] rescue puts $!
+
+", @"
+[Foo, Bar]
+can't convert X into IronRuby::Tests::Tests::ClassWithEnum::MyEnum
+");
+        }
 
         [Flags]
         public enum FlagsInt { A = 1, B = 2 }
@@ -2297,7 +2319,7 @@ Bar
         [Flags]
         public enum FlagsByte : byte { N = 0, E = 4, F = 8 }
         
-        public void ClrEnums2() {
+        public void ClrEnums3() {
             Context.ObjectClass.SetConstant("A", FlagsInt.A);
             Context.ObjectClass.SetConstant("B", FlagsInt.B);
             Context.ObjectClass.SetConstant("C", FlagsULong.C);
