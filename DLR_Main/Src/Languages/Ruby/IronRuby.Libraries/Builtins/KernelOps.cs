@@ -916,11 +916,13 @@ namespace IronRuby.Builtins {
         /// Includes CLR private members if PrivateBinding is on.
         /// </summary>
         [RubyMethod("clr_member")]
-        public static RubyMethod/*!*/ GetClrMember(RubyContext/*!*/ context, object self, [DefaultProtocol, NotNull]string/*!*/ name) {
+        public static RubyMethod/*!*/ GetClrMember(RubyContext/*!*/ context, object self, [DefaultParameterValue(null), NotNull]object asType, 
+            [DefaultProtocol, NotNull]string/*!*/ name) {
             RubyMemberInfo info;
 
             RubyClass cls = context.GetClassOf(self);
-            if (!cls.TryGetClrMember(name, out info)) {
+            Type type = (asType != null) ? Protocols.ToType(context, asType) : null;
+            if (!cls.TryGetClrMember(name, type, out info)) {
                 throw RubyExceptions.CreateNameError(String.Format("undefined CLR method `{0}' for class `{1}'", name, cls.Name));
             }
 
