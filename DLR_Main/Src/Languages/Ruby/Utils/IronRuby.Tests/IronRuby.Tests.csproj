@@ -45,6 +45,7 @@
     <DefineConstants>TRACE;CLR4;$(SignedSym)</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <TargetFrameworkVersion>v4.0</TargetFrameworkVersion>
+    <UseVSHostingProcess>false</UseVSHostingProcess>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'V4 Debug|AnyCPU' ">
     <DebugSymbols>true</DebugSymbols>
@@ -54,6 +55,7 @@
     <DefineConstants>TRACE;DEBUG;CLR4;$(SignedSym)</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <TargetFrameworkVersion>v4.0</TargetFrameworkVersion>
+    <UseVSHostingProcess>false</UseVSHostingProcess>
   </PropertyGroup>
   <ItemGroup>
     <Compile Include="Driver.cs" />
@@ -70,6 +72,7 @@
     <Compile Include="Runtime\AssignmentTests.cs" />
     <Compile Include="Runtime\BacktraceTests.cs" />
     <Compile Include="Runtime\BoolAndConditionalTests.cs" />
+    <Compile Include="Runtime\BigIntegerTests.cs" />
     <Compile Include="Runtime\CloningTests.cs" />
     <Compile Include="Runtime\ClrTests.cs" />
     <Compile Include="Runtime\ArrayTests.cs" />

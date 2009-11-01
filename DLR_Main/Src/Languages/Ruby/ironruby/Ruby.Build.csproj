@@ -276,8 +276,8 @@
       <Compile Include="Compiler\Generation\ClsTypeEmitter.cs" />
       <Compile Include="Compiler\Generation\EmittedAttribute.cs" />
       <Compile Include="Compiler\Generation\InterfacesBuilder.cs" />
+      <Compile Include="Compiler\Generation\IRubyType.cs" />
       <Compile Include="Compiler\Generation\ITypeFeature.cs" />
-      <Compile Include="Compiler\Generation\OverriddenMembers.cs" />
       <Compile Include="Compiler\Generation\Profiler.cs" />
       <Compile Include="Compiler\Generation\RubyTypeBuilder.cs" />
       <Compile Include="Compiler\Generation\RubyTypeDispenser.cs" />

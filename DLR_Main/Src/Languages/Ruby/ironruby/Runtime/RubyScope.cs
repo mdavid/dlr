@@ -639,6 +639,16 @@ namespace IronRuby.Runtime {
             return (match != null) ? match.GetGroupValue(index) : null;
         }
 
+        internal MutableString GetCurrentPreMatch() {
+            var match = _currentMatch;
+            return (match != null) ? match.GetPreMatch() : null;
+        }
+
+        internal MutableString GetCurrentPostMatch() {
+            var match = _currentMatch;
+            return (match != null) ? match.GetPostMatch() : null;
+        }
+
         internal MutableString GetCurrentMatchLastGroup() {
             var match = _currentMatch;
             if (match != null) {
@@ -934,7 +944,7 @@ var closureScope = scope as RubyClosureScope;
                 );
 
                 scope.SetDebugName(bindGlobals ? "top-level-bound" : "top-level");
-                rubyGlobalScope.TopLocalScope = scope;
+                rubyGlobalScope.SetTopLocalScope(scope);
             } else {
                 // If we reuse a local scope from previous execution all local variables are accessed dynamically.
                 // Therefore we shouldn't have any new static local variables.
@@ -964,6 +974,8 @@ var closureScope = scope as RubyClosureScope;
 
         public static object ScopeMethodMissing(RubyContext/*!*/ context, Scope/*!*/ globalScope, BlockParam block, object self, SymbolId name, object[]/*!*/ args) {
             Assert.NotNull(context, globalScope);
+
+            // TODO: invoke member:
 
             string str = SymbolTable.IdToString(name);
             if (str.LastCharacter() == '=') {

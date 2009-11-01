@@ -1360,21 +1360,13 @@ namespace IronRuby.Runtime {
         }
 
         [Emitted] //RegexMatchReference:
-        public static MutableString GetCurrentMatchPrefix(RubyScope/*!*/ scope) {
-            MatchData match = scope.GetInnerMostClosureScope().CurrentMatch;
-            if (match == null) {
-                return null;
-            }
-            return match.OriginalString.GetSlice(0, match.Index).TaintBy(match.OriginalString);
+        public static MutableString GetCurrentPreMatch(RubyScope/*!*/ scope) {
+            return scope.GetInnerMostClosureScope().GetCurrentPreMatch();
         }
 
         [Emitted] //RegexMatchReference:
-        public static MutableString GetCurrentMatchSuffix(RubyScope/*!*/ scope) {
-            MatchData match = scope.GetInnerMostClosureScope().CurrentMatch;
-            if (match == null) {
-                return null;
-            }
-            return match.OriginalString.GetSlice(match.Index + match.Length);
+        public static MutableString GetCurrentPostMatch(RubyScope/*!*/ scope) {
+            return scope.GetInnerMostClosureScope().GetCurrentPostMatch();
         }
 
         [Emitted] //RegularExpression:
@@ -1821,6 +1813,14 @@ namespace IronRuby.Runtime {
             return new MissingMethodException(
                 RubyExceptions.FormatMethodMissingMessage(context, target, methodName, "CLR protected method `{0}' called for {1}; " +
                 "CLR protected methods can only be called with a receiver whose class is a Ruby subclass of the class declaring the method")
+            );
+        }
+
+        [Emitted]
+        public static Exception/*!*/ MakeClrVirtualMethodCalledError(RubyContext/*!*/ context, object target, string/*!*/ methodName) {
+            return new MissingMethodException(
+                RubyExceptions.FormatMethodMissingMessage(context, target, methodName, "Virtual CLR method `{0}' called via super from {1}; " +
+                "Super calls to virtual CLR methods can only be used in a Ruby subclass of the class declaring the method")
             );
         }
 
