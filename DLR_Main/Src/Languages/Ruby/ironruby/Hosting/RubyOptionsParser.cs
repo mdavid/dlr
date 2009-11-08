@@ -298,6 +298,14 @@ namespace IronRuby.Hosting {
 #endif
             LanguageSetup.Options["SearchPaths"] = _loadPaths;
             LanguageSetup.Options["RequiredPaths"] = _requiredPaths;
+
+#if DEBUG && !SILVERLIGHT
+            // Can be set to nl-BE, ja-JP, etc
+            string culture = Environment.GetEnvironmentVariable("IR_CULTURE");
+            if (culture != null) {
+                System.Threading.Thread.CurrentThread.CurrentCulture = new System.Globalization.CultureInfo(culture, false);
+            }
+#endif
         }
 
         public override void GetHelp(out string commandLine, out string[,] options, out string[,] environmentVariables, out string comments) {

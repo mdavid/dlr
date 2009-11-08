@@ -71,14 +71,13 @@
       <!--                            -->
       <!--          Compiler          -->
       <!--                            -->
-      <Compile Include="Compiler\ArrayGlobalAllocator.cs" />
       <Compile Include="Compiler\ClosureExpression.cs" />
       <Compile Include="Compiler\ClosureInfo.cs" />
+      <Compile Include="Compiler\CollectableCompilationMode.cs" />
       <Compile Include="Compiler\CompilationMode.cs" />
-      <Compile Include="Compiler\DictionaryGlobalAllocator.cs" />
       <Compile Include="Compiler\GeneratorRewriter.cs" />
-      <Compile Include="Compiler\GlobalAllocator.cs" />
       <Compile Include="Compiler\LazyCode.cs" />
+      <Compile Include="Compiler\LookupCompilationMode.cs" />
       <Compile Include="Compiler\OnDiskScriptCode.cs" />
       <Compile Include="Compiler\Parser.cs" />
       <Compile Include="Compiler\PythonCallTargets.cs" />
@@ -90,13 +89,13 @@
       <Compile Include="Compiler\ReducableDynamicExpression.cs" />
       <Compile Include="Compiler\RunnableScriptCode.cs" />
       <Compile Include="Compiler\RuntimeScriptCode.cs" />
-      <Compile Include="Compiler\SavableGlobalAllocator.cs" />
-      <Compile Include="Compiler\SharedGlobalAllocator.cs" />
-      <Compile Include="Compiler\SharedGlobalAllocator.Generated.cs" />
+      <Compile Include="Compiler\ToDiskCompilationMode.cs" />
       <Compile Include="Compiler\Token.cs" />
       <Compile Include="Compiler\Tokenizer.cs" />
       <Compile Include="Compiler\Tokenizer.Generated.cs" />
       <Compile Include="Compiler\TokenKind.Generated.cs" />
+      <Compile Include="Compiler\UncollectableCompilationMode.cs" />
+      <Compile Include="Compiler\UncollectableCompilationMode.Generated.cs" />
     </ItemGroup>
     <ItemGroup>
       <!--                                -->
@@ -106,7 +105,7 @@
       <Compile Include="Compiler\Ast\Arg.cs" />
       <Compile Include="Compiler\Ast\AssertStatement.cs" />
       <Compile Include="Compiler\Ast\AssignmentStatement.cs" />
-      <Compile Include="Compiler\Ast\AstGenerator.cs" />
+      <Compile Include="Compiler\Ast\AstMethods.cs" />
       <Compile Include="Compiler\Ast\AugmentedAssignStatement.cs" />
       <Compile Include="Compiler\Ast\BackQuoteExpression.cs" />
       <Compile Include="Compiler\Ast\BinaryExpression.cs" />
@@ -133,6 +132,7 @@
       <Compile Include="Compiler\Ast\GlobalStatement.cs" />
       <Compile Include="Compiler\Ast\IfStatement.cs" />
       <Compile Include="Compiler\Ast\IfStatementTest.cs" />
+      <Compile Include="Compiler\Ast\ILoopStatement.cs" />
       <Compile Include="Compiler\Ast\ImportStatement.cs" />
       <Compile Include="Compiler\Ast\IndexExpression.cs" />
       <Compile Include="Compiler\Ast\LambdaExpression.cs" />
@@ -159,6 +159,7 @@
       <Compile Include="Compiler\Ast\ReturnStatement.cs" />
       <Compile Include="Compiler\Ast\ScopeStatement.cs" />
       <Compile Include="Compiler\Ast\SequenceExpression.cs" />
+      <Compile Include="Compiler\Ast\SerializedScopeStatement.cs" />
       <Compile Include="Compiler\Ast\SliceExpression.cs" />
       <Compile Include="Compiler\Ast\Statement.cs" />
       <Compile Include="Compiler\Ast\SuiteStatement.cs" />
