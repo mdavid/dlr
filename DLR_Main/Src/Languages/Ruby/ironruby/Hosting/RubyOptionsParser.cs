@@ -349,7 +349,8 @@ namespace IronRuby.Hosting {
                 { "-20",                         "Ruby 2.0 mode" },
 
                 { "-X:ExceptionDetail",          "enable ExceptionDetail mode" },
-                { "-X:NoAdaptiveCompilation",    "disable adaptive compilation" },
+                { "-X:NoAdaptiveCompilation",    "disable adaptive compilation - all code will be compiled" },
+                { "-X:CompilationThreshold",     "the number of iterations before the interpreter starts compiling" },
                 { "-X:PassExceptions",           "do not catch exceptions that are unhandled by script code" },
                 { "-X:PrivateBinding",           "enable binding to private members" },
                 { "-X:ShowClrExceptions",        "display CLS Exception information" },

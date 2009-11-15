@@ -212,6 +212,7 @@
       <Compile Include="Runtime\ClassMethodDescriptor.cs" />
       <Compile Include="Runtime\ClrModule.cs" />
       <Compile Include="Runtime\CodeContext.cs" />
+      <Compile Include="Runtime\CollectionDebugView.cs" />
       <Compile Include="Runtime\CommonDictionaryStorage.cs" />
       <Compile Include="Runtime\CompareUtil.cs" />
       <Compile Include="Runtime\CompiledLoader.cs" />
@@ -253,6 +254,7 @@
       <Compile Include="Runtime\NewStringFormatter.cs" />
       <Compile Include="Runtime\NoLineFeedSourceContentProvider.cs" />
       <Compile Include="Runtime\ObjectAttributesAdapter.cs" />
+      <Compile Include="Runtime\ObjectDebugView.cs" />
       <Compile Include="Runtime\OutputWriter.cs" />
       <Compile Include="Runtime\Profiler.cs" />
       <Compile Include="Runtime\Python3Warning.cs" />
