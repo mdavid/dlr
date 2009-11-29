@@ -25,6 +25,7 @@ using IronRuby.Runtime.Calls;
 using Microsoft.Scripting;
 using Microsoft.Scripting.Runtime;
 using IronRuby.Compiler;
+using System.Globalization;
 
 namespace IronRuby.Builtins {
 
@@ -290,7 +291,7 @@ namespace IronRuby.Builtins {
         public static int Delete(RubyClass/*!*/ self, [DefaultProtocol, NotNull]MutableString/*!*/ path) {
             string strPath = path.ConvertToString();
             if (!FileExists(self.Context, strPath)) {
-                throw RubyExceptions.CreateENOENT(String.Format("No such file or directory - {0}", strPath));
+                throw RubyExceptions.CreateENOENT("No such file or directory - {0}", strPath);
             }
 #if !SILVERLIGHT
             FileAttributes oldAttributes = File.GetAttributes(strPath);
@@ -336,7 +337,7 @@ namespace IronRuby.Builtins {
 
                 string fileName = Path.GetFileName(strPath);
                 if (!String.IsNullOrEmpty(fileName)) {
-                    directoryName = StripPathCharacters(strPath.Substring(0, strPath.LastIndexOf(fileName)));
+                    directoryName = StripPathCharacters(strPath.Substring(0, strPath.LastIndexOf(fileName, StringComparison.Ordinal)));
                 }
             } else {
                 if (directoryName.Length > 1) {
@@ -522,7 +523,7 @@ namespace IronRuby.Builtins {
 
             string strOldPath = oldPath.ConvertToString();
             if (!FileExists(context, strOldPath) && !DirectoryExists(context, strOldPath)) {
-                throw RubyExceptions.CreateENOENT(String.Format("No such file or directory - {0}", oldPath));
+                throw RubyExceptions.CreateENOENT("No such file or directory - {0}", oldPath);
             }
 
             string strNewPath = newPath.ConvertToString();
@@ -605,7 +606,7 @@ namespace IronRuby.Builtins {
             [NotNull]MutableString/*!*/ path) {
             string strPath = path.ConvertToString();
             if (!FileExists(self.Context, strPath)) {
-                throw RubyExceptions.CreateENOENT(String.Format("No such file or directory - {0}", strPath));
+                throw RubyExceptions.CreateENOENT("No such file or directory - {0}", strPath);
             }
 
             FileInfo info = new FileInfo(strPath);
@@ -705,7 +706,7 @@ namespace IronRuby.Builtins {
                 if (TryCreate(context, path, out fsi)) {
                     return fsi;
                 } else {
-                    throw RubyExceptions.CreateENOENT(String.Format("No such file or directory - {0}", path));
+                    throw RubyExceptions.CreateENOENT("No such file or directory - {0}", path);
                 }
             }
 
@@ -716,7 +717,7 @@ namespace IronRuby.Builtins {
                     result = new FileInfo(path);                    
                 } else if (pal.DirectoryExists(path)) {
                     result = new DirectoryInfo(path);                    
-                } else if (path.ToUpper().Equals(NUL_VALUE)) {
+                } else if (path.ToUpperInvariant().Equals(NUL_VALUE)) {
                     result = new DeviceInfo(NUL_VALUE);
                 } else {
                     return false;
@@ -799,7 +800,7 @@ namespace IronRuby.Builtins {
             [RubyMethod("executable_real?")]
             public static bool IsExecutable(FileSystemInfo/*!*/ self) {
                 // TODO: Fix
-                return self.Extension.Equals(".exe", StringComparison.InvariantCulture);
+                return self.Extension.Equals(".exe", StringComparison.OrdinalIgnoreCase);
             }
 
             [RubyMethod("file?")]
@@ -829,7 +830,7 @@ namespace IronRuby.Builtins {
 
             [RubyMethod("inspect")]
             public static MutableString/*!*/ Inspect(RubyContext/*!*/ context, FileSystemInfo/*!*/ self) {
-               return MutableString.CreateAscii(String.Format(
+               return MutableString.CreateAscii(String.Format(CultureInfo.InvariantCulture, 
                     "#<File::Stat dev={0}, ino={1}, mode={2}, nlink={3}, uid={4}, gid={5}, rdev={6}, size={7}, blksize={8}, blocks={9}, atime={10}, mtime={11}, ctime={12}",
                     context.Inspect(DeviceId(self)),
                     context.Inspect(Inode(self)),

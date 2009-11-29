@@ -112,7 +112,7 @@ namespace IronRuby.Builtins {
             for (int i = 1; i < count; i++) {
                 if (index >= length) {
                     throw RubyExceptions.CreateArgumentError(
-                        String.Format("malformed UTF-8 character (expected {0} bytes, given {1} bytes)", count, i)
+                        "malformed UTF-8 character (expected {0} bytes, given {1} bytes)", count, i
                     );
                 }
                 b = data.GetByte(index++);
@@ -929,7 +929,7 @@ namespace IronRuby.Builtins {
                 } else if (c == 'L') {
                     return IntPtr.Size == 4 ? 'I' : 'Q';
                 } else {
-                    throw RubyExceptions.CreateArgumentError(String.Format("'{0}' allowed only after types sSiIlL", modifier));
+                    throw RubyExceptions.CreateArgumentError("'{0}' allowed only after types sSiIlL", modifier);
                 }
             }
 

@@ -44,7 +44,7 @@ namespace IronRuby.Builtins {
             TypeTracker tracker = self.GetTypeForArity(typeArgs.Length);
 
             if (tracker == null) {
-                throw RubyExceptions.CreateArgumentError(String.Format("Invalid number of type arguments for `{0}'", self.Name));
+                throw RubyExceptions.CreateArgumentError("Invalid number of type arguments for `{0}'", self.Name);
             }
 
             Type concreteType;
@@ -62,7 +62,7 @@ namespace IronRuby.Builtins {
         public static RubyModule/*!*/ Of(RubyContext/*!*/ context, TypeGroup/*!*/ self, int genericArity) {
             TypeTracker tracker = self.GetTypeForArity(genericArity);
             if (tracker == null) {
-                throw RubyExceptions.CreateArgumentError(String.Format("Type group `{0}' does not contain a type of generic arity {1}", self.Name, genericArity));
+                throw RubyExceptions.CreateArgumentError("Type group `{0}' does not contain a type of generic arity {1}", self.Name, genericArity);
             }
 
             return context.GetModule(tracker.Type);

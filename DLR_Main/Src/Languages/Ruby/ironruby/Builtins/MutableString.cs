@@ -768,7 +768,7 @@ namespace IronRuby.Builtins {
         
         public bool EndsWith(string/*!*/ value) {
             // TODO:
-            return _content.ConvertToString().EndsWith(value);
+            return _content.ConvertToString().EndsWith(value, StringComparison.Ordinal);
         }
         
         #endregion

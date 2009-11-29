@@ -291,7 +291,7 @@ namespace IronRuby.Runtime {
 
         // \u2111\u211c;{method-name};{file-name};{line-number};{dlr-suffix}
         internal static bool TryParseRubyMethodName(ref string methodName, ref string fileName, ref int line) {
-            if (methodName.StartsWith(RubyMethodPrefix)) {
+            if (methodName.StartsWith(RubyMethodPrefix, StringComparison.Ordinal)) {
                 string[] parts = methodName.Split(';');
                 if (parts.Length > 4) {
                     methodName = parts[1];
@@ -311,7 +311,7 @@ namespace IronRuby.Runtime {
         }
 
         private static string ParseRubyMethodName(string/*!*/ lambdaName) {
-            if (!lambdaName.StartsWith(RubyMethodPrefix)) {
+            if (!lambdaName.StartsWith(RubyMethodPrefix, StringComparison.Ordinal)) {
                 return lambdaName;
             }
 

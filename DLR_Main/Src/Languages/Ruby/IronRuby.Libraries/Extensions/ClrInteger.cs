@@ -872,11 +872,11 @@ namespace IronRuby.Builtins {
         [RubyMethod("to_s")]
         public static object ToString([NotNull]BigInteger/*!*/ self, int radix) {
             if (radix < 2 || radix > 36) {
-                throw RubyExceptions.CreateArgumentError("illegal radix " + radix.ToString());
+                throw RubyExceptions.CreateArgumentError("illegal radix {0}" , radix);
             }
             // TODO: Should we try to use a Fixnum specific ToString?
             // TODO: Can we do the ToLower in BigInteger?
-            return MutableString.CreateAscii(self.ToString(radix).ToLower());
+            return MutableString.CreateAscii(self.ToString(radix).ToLowerInvariant());
         }
 
         #endregion

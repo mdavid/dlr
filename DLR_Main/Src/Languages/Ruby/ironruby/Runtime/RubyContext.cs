@@ -1332,7 +1332,7 @@ namespace IronRuby.Runtime {
                 result = _objectClass;
                 int pos = 0;
                 while (true) {
-                    int pos2 = moduleName.IndexOf("::", pos);
+                    int pos2 = moduleName.IndexOf("::", pos, StringComparison.Ordinal);
                     string partialName;
                     if (pos2 < 0) {
                         partialName = moduleName.Substring(pos);

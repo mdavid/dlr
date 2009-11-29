@@ -196,12 +196,12 @@ namespace IronRuby.Builtins {
         public static Encoding/*!*/ GetEncodingByRubyName(string/*!*/ name) {
             ContractUtils.RequiresNotNull(name, "name");
 
-            switch (name.ToLower()) {
-                case "binary":
-                case "ascii":
-                case "ascii-8bit": return BinaryEncoding.Instance;
+            switch (name.ToUpperInvariant()) {
+                case "BINARY":
+                case "ASCII":
+                case "ASCII-8BIT": return BinaryEncoding.Instance;
 #if SILVERLIGHT
-                case "utf-8": return Encoding.UTF8;
+                case "UTF-8": return Encoding.UTF8;
                 default: throw new ArgumentException(String.Format("Unknown encoding: '{0}'", name));
 #else
                 default: return Encoding.GetEncoding(name);

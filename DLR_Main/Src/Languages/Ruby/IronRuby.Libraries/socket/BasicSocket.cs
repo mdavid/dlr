@@ -29,6 +29,7 @@ using IronRuby.Runtime;
 using IronRuby.StandardLibrary.FileControl;
 using Microsoft.Scripting.Math;
 using IronRuby.Runtime.Calls;
+using System.Globalization;
 
 namespace IronRuby.StandardLibrary.Sockets {
     [RubyClass("BasicSocket", BuildConfig = "!SILVERLIGHT")]
@@ -415,8 +416,8 @@ namespace IronRuby.StandardLibrary.Sockets {
                 default:
                     string name = Enum.GetName(typeof(AddressFamily), af);
                     return (name != null) ?
-                        "AF_" + name.ToUpper() :
-                        "unknown:" + ((int)af).ToString();
+                        "AF_" + name.ToUpperInvariant() :
+                        "unknown:" + ((int)af).ToString(CultureInfo.InvariantCulture);
             }
         }
 

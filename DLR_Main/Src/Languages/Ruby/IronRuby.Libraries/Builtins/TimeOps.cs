@@ -293,7 +293,7 @@ namespace IronRuby.Builtins {
                 Array.Reverse(newComponents);
                 components = newComponents;
             } else if (components.Length > 7 || components.Length == 0) {
-                throw RubyExceptions.CreateArgumentError(String.Format("wrong number of arguments ({0} for 7)", components.Length));
+                throw RubyExceptions.CreateArgumentError("wrong number of arguments ({0} for 7)", components.Length);
             }
             
             return new DateTime(
@@ -367,7 +367,7 @@ namespace IronRuby.Builtins {
                 Array.Reverse(newComponents);
                 components = newComponents;
             } else if (components.Length > 10 || components.Length == 0) {
-                throw RubyExceptions.CreateArgumentError(String.Format("wrong number of arguments ({0} for 7)", components.Length));
+                throw RubyExceptions.CreateArgumentError("wrong number of arguments ({0} for 7)", components.Length);
             }
 
             return new DateTime(

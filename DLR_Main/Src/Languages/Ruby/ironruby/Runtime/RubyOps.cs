@@ -2013,7 +2013,7 @@ namespace IronRuby.Runtime {
                 if (bignum.AsInt32(out fixnum)) {
                     return fixnum;
                 }
-                throw RubyExceptions.CreateRangeError(String.Format("bignum too big to convert into {0}", targetType));
+                throw RubyExceptions.CreateRangeError("bignum too big to convert into {0}", targetType);
             }
 
             throw RubyExceptions.CreateReturnTypeError(className, "to_int", "Integer");
@@ -2304,7 +2304,7 @@ namespace IronRuby.Runtime {
             immediateClass = (RubyClass)info.GetValue(RubyUtils.SerializationInfoClassKey, typeof(RubyClass));
             RubyInstanceData newInstanceData = null;
             foreach (SerializationEntry entry in info) {
-                if (entry.Name.StartsWith("@")) {
+                if (entry.Name.StartsWith("@", StringComparison.Ordinal)) {
                     if (newInstanceData == null) {
                         newInstanceData = new RubyInstanceData();
                     }

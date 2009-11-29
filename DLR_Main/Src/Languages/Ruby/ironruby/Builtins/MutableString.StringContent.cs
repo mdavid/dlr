@@ -208,7 +208,7 @@ namespace IronRuby.Builtins {
             }
 
             public override int IndexOf(string/*!*/ str, int start, int count) {
-                return _data.IndexOf(str, start, count);
+                return _data.IndexOf(str, start, count, StringComparison.Ordinal);
             }
 
             public override int IndexOf(byte[]/*!*/ bytes, int start, int count) {
@@ -232,7 +232,7 @@ namespace IronRuby.Builtins {
             }
 
             public override int LastIndexOf(string/*!*/ str, int start, int count) {
-                return _data.LastIndexOf(str, start, count);
+                return _data.LastIndexOf(str, start, count, StringComparison.Ordinal);
             }
 
             public override int LastIndexOf(byte[]/*!*/ bytes, int start, int count) {

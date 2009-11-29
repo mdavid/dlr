@@ -70,12 +70,12 @@ namespace IronRuby.Builtins {
 
         [RubyMethod("<=>")]
         public static int Compare(ClrName/*!*/ self, [DefaultProtocol, NotNull]string/*!*/ other) {
-            return Math.Sign(self.MangledName.CompareTo(other));
+            return Math.Sign(String.CompareOrdinal(self.MangledName, other));
         }
 
         [RubyMethod("<=>")]
         public static int Compare(ClrName/*!*/ self, [NotNull]ClrName/*!*/ other) {
-            return self.MangledName.CompareTo(other.MangledName);
+            return String.CompareOrdinal(self.MangledName, other.MangledName);
         }
 
         [RubyMethod("<=>")]

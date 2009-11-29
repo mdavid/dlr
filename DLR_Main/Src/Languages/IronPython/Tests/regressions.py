@@ -380,10 +380,10 @@ def test_conversions_cp19675():
 @skip("win32")
 def test_type_delegate_conversion():
     import clr
-    clr.AddReference('Microsoft.Scripting.Core')
     if is_net40:
       from System import Func    
     else:
+      clr.AddReference('Microsoft.Scripting.Core')
       from Microsoft.Scripting.Utils import Func    
       
     class x(object): pass
@@ -431,6 +431,14 @@ def test_cp24692():
     finally:
         nt.chmod(dir_name, stat.S_IWRITE)
         nt.rmdir(dir_name)
+
+# TODO: this test needs to run against Dev10 builds as well
+@skip("win32")
+def test_cp22735():
+    import System
+    if System.Environment.Version.Major < 4:
+        clr.AddReference("System.Core")
+    from System import Func
 
 #------------------------------------------------------------------------------
 #--General coverage.  These need to be extended.
@@ -522,6 +530,38 @@ def test_clr_exception_has_non_trivial_exception_message():
     except System.Exception as e:
         pass
     AreEqual(e.Message, "Python Exception: MyException")
+
+def test_cp23822():
+    from copy import deepcopy
+    def F():
+        a = 4
+        class C:
+            field=7
+            def G(self):
+                print a
+                b = 4
+                return deepcopy(locals().keys())
+        
+        c = C()
+        return c.G()
+    
+    temp_list = F()
+    temp_list.sort()
+    AreEqual(temp_list, ['a', 'b', 'deepcopy', 'self'])
+    
+def test_cp23823():
+    from copy import deepcopy
+    def f():
+        a = 10
+        def g1():
+            print a
+            return deepcopy(locals().keys())
+        def g2():
+            return deepcopy(locals().keys())
+        return (g1(), g2())
+    
+    AreEqual(f(), (['a', 'deepcopy'], ['deepcopy']))
+
 
 #------------------------------------------------------------------------------
 #--Main

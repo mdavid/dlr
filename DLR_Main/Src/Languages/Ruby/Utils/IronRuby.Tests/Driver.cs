@@ -28,6 +28,8 @@ using Microsoft.Scripting;
 using System.Diagnostics;
 using System.Reflection;
 using System.Text;
+using System.Globalization;
+using System.Threading;
 
 namespace IronRuby.Tests {
     public class TestCase {
@@ -220,11 +222,14 @@ namespace IronRuby.Tests {
 
         public static void Main(string[]/*!*/ arguments) {
             List<string> args = new List<string>(arguments);
+            string culture = Environment.GetEnvironmentVariable("IR_CULTURE");
+
             if (args.Contains("/partial")) {
                 Console.WriteLine("Running in partial trust");
 
                 PermissionSet ps = CreatePermissionSetByName();
                 AppDomainSetup setup = new AppDomainSetup();
+                
                 setup.ApplicationBase = Environment.CurrentDirectory;
                 AppDomain domain = AppDomain.CreateDomain("Tests", null, setup, ps);
 
@@ -233,6 +238,9 @@ namespace IronRuby.Tests {
                 
                 Environment.ExitCode = loader.ExitCode;
             } else {
+                if (!String.IsNullOrEmpty(culture)) {
+                    Thread.CurrentThread.CurrentCulture = new CultureInfo(culture, false);
+                }
                 Environment.ExitCode = Run(args);
             }
         }
@@ -276,6 +284,10 @@ namespace IronRuby.Tests {
         }       
 
         public static int Run(List<string>/*!*/ args) {
+            if (Thread.CurrentThread.CurrentCulture.ToString() != "en-US") {
+                Console.WriteLine("Current culture: {0}", Thread.CurrentThread.CurrentCulture);
+            }
+
             if (!ParseArguments(args)) {
                 return -3;
             }

@@ -24,6 +24,7 @@ using Microsoft.Scripting.Utils;
 using IronRuby.Compiler.Ast;
 using IronRuby.Runtime;
 using IronRuby.Builtins;
+using System.Globalization;
 
 namespace IronRuby.Compiler {
 
@@ -516,7 +517,7 @@ namespace IronRuby.Compiler {
         public static string/*!*/ TerminalToString(int terminal) {
             Debug.Assert(terminal >= 0);
             if (((Tokens)terminal).ToString() != terminal.ToString()) {
-                return IronRuby.Runtime.RubyUtils.TryMangleName(((Tokens)terminal).ToString()).ToUpper();
+                return IronRuby.Runtime.RubyUtils.TryMangleName(((Tokens)terminal).ToString()).ToUpperInvariant();
             } else {
                 return CharToString((char)terminal);
             }

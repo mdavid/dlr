@@ -256,7 +256,7 @@ namespace IronRuby.Builtins {
 
             public override int IndexOf(string/*!*/ str, int start, int count) {
                 // TODO: Unfortunately, BCL doesn't provide IndexOf on char[] (see CompareInfo):
-                return ToString().IndexOf(str, start, count);
+                return ToString().IndexOf(str, start, count, StringComparison.Ordinal);
             }
 
             public override int IndexOf(byte[]/*!*/ bytes, int start, int count) {
@@ -281,7 +281,7 @@ namespace IronRuby.Builtins {
 
             public override int LastIndexOf(string/*!*/ str, int start, int count) {
                 // TODO: Unfortunately, BCL doesn't provide IndexOf on char[] (see CompareInfo):
-                return ToString().LastIndexOf(str, start, count);
+                return ToString().LastIndexOf(str, start, count, StringComparison.Ordinal);
             }
 
             public override int LastIndexOf(byte[]/*!*/ bytes, int start, int count) {

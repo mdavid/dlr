@@ -49,6 +49,7 @@ namespace IronRuby.StandardLibrary.Win32API {
     using Ast = Expression;
     using AstExpressions = ReadOnlyCollectionBuilder<Expression>;
     using AstUtils = Microsoft.Scripting.Ast.Utils;
+    using System.Globalization;
 
     [RubyClass("Win32API", BuildConfig = "!SILVERLIGHT")]
     public class Win32API {
@@ -326,7 +327,7 @@ namespace IronRuby.StandardLibrary.Win32API {
 
         [Emitted]
         public static Exception/*!*/ InvalidParameterCountError(int expected, int actual) {
-            return new RuntimeError(String.Format("wrong number of parameters: expected {0}, got {1}", expected, actual));
+            return new RuntimeError(String.Format(CultureInfo.InvariantCulture, "wrong number of parameters: expected {0}, got {1}", expected, actual));
         }
 
         #endregion
