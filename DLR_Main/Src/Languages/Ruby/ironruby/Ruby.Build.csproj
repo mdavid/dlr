@@ -126,6 +126,7 @@
       <!--                            -->
       <Compile Include="Compiler\AstBlock.cs" />
       <Compile Include="Compiler\AstGenerator.cs" />
+      <Compile Include="Compiler\CollectionBuilder.cs" />
       <Compile Include="Compiler\Errors.cs" />
       <Compile Include="Compiler\ReflectionCache.cs" />
       <Compile Include="Compiler\ReflectionCache.Generated.cs" />
@@ -144,7 +145,7 @@
       <Compile Include="Compiler\Ast\BlockDefinition.cs" />
       <Compile Include="Compiler\Ast\BlockReference.cs" />
       <Compile Include="Compiler\Ast\Body.cs" />
-      <Compile Include="Compiler\Ast\CallBuilder.cs" />
+      <Compile Include="Compiler\Ast\CallSiteBuilder.cs" />
       <Compile Include="Compiler\Ast\Identifier.cs" />
       <Compile Include="Compiler\Ast\Maplet.cs" />
       <Compile Include="Compiler\Ast\Node.cs" />

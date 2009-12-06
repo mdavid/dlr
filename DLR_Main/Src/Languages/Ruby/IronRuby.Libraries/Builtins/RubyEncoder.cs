@@ -689,7 +689,7 @@ namespace IronRuby.Builtins {
             }
         }
 
-        private static void Write(Stream/*!*/ stream, ulong n, bool swap) {
+        internal static void Write(Stream/*!*/ stream, ulong n, bool swap) {
             if (swap) {
                 stream.WriteByte((byte)(n >> 56));
                 stream.WriteByte((byte)((n >> 48) & 0xff));
@@ -729,7 +729,7 @@ namespace IronRuby.Builtins {
             }
         }
 
-        private static void Write(Stream/*!*/ stream, uint n, bool swap) {
+        internal static void Write(Stream/*!*/ stream, uint n, bool swap) {
             if (swap) {
                 stream.WriteByte((byte)(n >> 24));
                 stream.WriteByte((byte)((n >> 16) & 0xff));

@@ -707,7 +707,7 @@ namespace IronRuby.Builtins {
 
         #endregion
 
-        #region delete, delete_at
+        #region delete, delete_at, reject, reject!
 
         public static bool Remove(BinaryOpStorage/*!*/ equals, IList/*!*/ self, object item) {
             int i = 0;
@@ -743,7 +743,7 @@ namespace IronRuby.Builtins {
         [RubyMethod("delete_at")]
         public static object DeleteAt(IList/*!*/ self, [DefaultProtocol]int index) {
             index = index < 0 ? index + self.Count : index;
-            if (index < 0 || index > self.Count) {
+            if (index < 0 || index >= self.Count) {
                 return null;
             }
 
@@ -764,6 +764,30 @@ namespace IronRuby.Builtins {
             bool changed, jumped;
             object result = DeleteIf(block, self, out changed, out jumped);
             return jumped ? result : changed ? self : null;
+        }
+
+        [RubyMethod("reject")]
+        public static object Reject(CallSiteStorage<EachSite>/*!*/ each, CallSiteStorage<Func<CallSite, RubyClass, object>>/*!*/ allocateStorage, 
+            BlockParam predicate, IList/*!*/ self) {
+            IList result = CreateResultArray(allocateStorage, self);
+
+            if (predicate == null && self.Count > 0) {
+                throw RubyExceptions.NoBlockGiven();
+            }
+
+            for (int i = 0; i < self.Count; i++) {
+                object item = self[i];
+                object blockResult;
+                if (predicate.Yield(item, out blockResult)) {
+                    return blockResult;
+                }
+
+                if (RubyOps.IsFalse(blockResult)) {
+                    result.Add(item);
+                }
+            }
+
+            return result;
         }
 
         private static object DeleteIf(BlockParam block, IList/*!*/ self, out bool changed, out bool jumped) {

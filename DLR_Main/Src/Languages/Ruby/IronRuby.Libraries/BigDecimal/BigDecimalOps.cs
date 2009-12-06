@@ -294,9 +294,9 @@ namespace IronRuby.StandardLibrary.BigDecimal {
         [RubyMethod("inspect")]
         public static MutableString/*!*/ Inspect(RubyContext/*!*/ context, BigDecimal/*!*/ self) {
             MutableString str = MutableString.CreateMutable(RubyEncoding.ClassName);
-            str.AppendFormat(CultureInfo.InvariantCulture, "#<{0}:", context.GetClassOf(self).Name);
+            str.AppendFormat("#<{0}:", context.GetClassOf(self).Name);
             RubyUtils.AppendFormatHexObjectId(str, RubyUtils.GetObjectId(context, self));
-            str.AppendFormat(CultureInfo.InvariantCulture, ",'{0}',{1}({2})>", 
+            str.AppendFormat(",'{0}',{1}({2})>", 
                 self.ToString(10),
                 self.PrecisionDigits,
                 self.MaxPrecisionDigits

@@ -212,6 +212,10 @@ namespace IronRuby.Runtime {
             return new LocalJumpError(FormatMessage(message, args));
         }
 
+        public static Exception/*!*/ CreateRuntimeError(string/*!*/ message, params object[] args) {
+            return new RuntimeError(FormatMessage(message, args));
+        }
+
         public static Exception/*!*/ NoBlockGiven() {
             return CreateLocalJumpError("no block given");
         }

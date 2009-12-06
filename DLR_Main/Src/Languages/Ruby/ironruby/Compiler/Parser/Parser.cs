@@ -406,6 +406,7 @@ namespace IronRuby.Compiler {
         }
 
         private static SuperCall/*!*/ MakeSuperCall(TokenValue args, SourceSpan location) {
+            Debug.Assert(args.Arguments != null);
             return new SuperCall(args.Arguments, args.Block, location);
         }
 

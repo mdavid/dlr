@@ -175,7 +175,6 @@ namespace IronRuby.Hosting {
                 case "--version":
                 case "-v":
                     CommonConsoleOptions.PrintVersion = true;
-                    CommonConsoleOptions.Exit = true;
                     goto case "-W2";
 
                 case "-W0":
@@ -271,7 +270,6 @@ namespace IronRuby.Hosting {
 #else
                             RubyEncoding.GetRubyEncoding(Console.InputEncoding);
 #endif
-                        CommonConsoleOptions.Exit = false;
                     } 
                     break;
             }

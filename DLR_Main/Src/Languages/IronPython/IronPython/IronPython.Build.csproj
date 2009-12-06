@@ -119,6 +119,8 @@
       <Compile Include="Compiler\Ast\DelStatement.cs" />
       <Compile Include="Compiler\Ast\DictionaryExpression.cs" />
       <Compile Include="Compiler\Ast\DottedName.cs" />
+      <Compile Include="Compiler\Ast\DynamicConvertExpression.cs" />
+      <Compile Include="Compiler\Ast\DynamicGetMemberExpression.cs" />
       <Compile Include="Compiler\Ast\EmptyStatement.cs" />
       <Compile Include="Compiler\Ast\ErrorExpression.cs" />
       <Compile Include="Compiler\Ast\ExecStatement.cs" />
@@ -129,6 +131,8 @@
       <Compile Include="Compiler\Ast\FromImportStatement.cs" />
       <Compile Include="Compiler\Ast\FunctionDefinition.cs" />
       <Compile Include="Compiler\Ast\GeneratorExpression.cs" />
+      <Compile Include="Compiler\Ast\GetGlobalContextExpression.cs" />
+      <Compile Include="Compiler\Ast\GetParentContextFromFunctionExpression.cs" />
       <Compile Include="Compiler\Ast\GlobalStatement.cs" />
       <Compile Include="Compiler\Ast\IfStatement.cs" />
       <Compile Include="Compiler\Ast\IfStatementTest.cs" />
@@ -136,6 +140,7 @@
       <Compile Include="Compiler\Ast\ImportStatement.cs" />
       <Compile Include="Compiler\Ast\IndexExpression.cs" />
       <Compile Include="Compiler\Ast\LambdaExpression.cs" />
+      <Compile Include="Compiler\Ast\LazyDynamicExpression.cs" />
       <Compile Include="Compiler\Ast\ListComprehension.cs" />
       <Compile Include="Compiler\Ast\ListComprehensionFor.cs" />
       <Compile Include="Compiler\Ast\ListComprehensionIf.cs" />
@@ -149,6 +154,7 @@
       <Compile Include="Compiler\Ast\ParenthesisExpression.cs" />
       <Compile Include="Compiler\Ast\PrintStatement.cs" />
       <Compile Include="Compiler\Ast\PythonAst.cs" />
+      <Compile Include="Compiler\Ast\PythonConstantExpression.cs" />
       <Compile Include="Compiler\Ast\PythonNameBinder.cs" />
       <Compile Include="Compiler\Ast\PythonOperator.cs" />
       <Compile Include="Compiler\Ast\PythonReference.cs" />
@@ -261,6 +267,7 @@
       <Compile Include="Runtime\PythonAsciiEncoding.cs" />
       <Compile Include="Runtime\PythonBuffer.cs" />
       <Compile Include="Runtime\PythonContext.cs" />
+      <Compile Include="Runtime\PythonContext.Generated.cs" />
       <Compile Include="Runtime\PythonDictionary.cs" />
       <Compile Include="Runtime\PythonDynamicStackFrame.cs" />
       <Compile Include="Runtime\PythonFile.cs" />

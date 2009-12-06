@@ -61,7 +61,7 @@ namespace IronRuby.Builtins {
     /// <summary>
     /// Mixed into System::String and System::Char.
     /// </summary>
-    [RubyModule("String", DefineIn = typeof(IronRubyOps.ClrOps))]
+    [RubyModule("String", DefineIn = typeof(IronRubyOps.Clr))]
     public static class ClrString {
         #region %, *, +
 

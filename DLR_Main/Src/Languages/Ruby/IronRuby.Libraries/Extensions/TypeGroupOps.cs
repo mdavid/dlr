@@ -36,8 +36,7 @@ namespace IronRuby.Builtins {
 
     [RubyClass(Extends = typeof(TypeGroup), Restrictions = ModuleRestrictions.None)]
     [Includes(typeof(Enumerable))]
-    public class TypeGroupOps {
-
+    public static class TypeGroupOps {
         [RubyMethod("of")]
         [RubyMethod("[]")]
         public static RubyModule/*!*/ Of(RubyContext/*!*/ context, TypeGroup/*!*/ self, [NotNull]params object[]/*!*/ typeArgs) {

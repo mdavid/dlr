@@ -264,8 +264,7 @@ namespace IronRuby.Builtins {
                 throw RubyExceptions.CreateArgumentError("tried to create Proc object without a block");
             }
 
-            // doesn't preserve the class:
-            return block.Proc.ToLambda();
+            return block.Proc.ToLambda(null);
         }
 
         #endregion

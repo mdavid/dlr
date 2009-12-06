@@ -80,7 +80,7 @@ namespace IronRuby.StandardLibrary.OpenSsl {
 #endif
 
                     if (algorithm == null) {
-                        throw new RuntimeError(String.Format(CultureInfo.InvariantCulture, "Unsupported digest algorithm ({0}).", algorithmName));
+                        throw RubyExceptions.CreateRuntimeError("Unsupported digest algorithm ({0}).", algorithmName);
                     }
 
                     self._algorithm = algorithm;
@@ -362,7 +362,7 @@ namespace IronRuby.StandardLibrary.OpenSsl {
                             return result.Append(":...>");
                         }
                         bool empty = self._certificate.Handle == IntPtr.Zero;
-                        result.AppendFormat(CultureInfo.InvariantCulture, " subject={0}, issuer={1}, serial={2}, not_before=nil, not_after=nil>", 
+                        result.AppendFormat(" subject={0}, issuer={1}, serial={2}, not_before=nil, not_after=nil>", 
                             empty ? "" : OpenSSLFormat(self._certificate.Subject),
                             empty ? "" : OpenSSLFormat(self._certificate.Issuer),
                             empty ? 0 : self.SerailNumber

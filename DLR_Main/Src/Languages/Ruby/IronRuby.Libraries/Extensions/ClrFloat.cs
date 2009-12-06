@@ -23,7 +23,7 @@ namespace IronRuby.Builtins {
     /// <summary>
     /// Mixed-in .NET floating point numeric primitive types (float, double).
     /// </summary>
-    [RubyModule("Float", DefineIn = typeof(IronRubyOps.ClrOps))]
+    [RubyModule("Float", DefineIn = typeof(IronRubyOps.Clr))]
     public static class ClrFloat {
 
         #region induced_from

@@ -29,7 +29,7 @@ using System.Diagnostics;
 
 namespace IronRuby.Builtins {
 
-    [RubyClass("Module", Extends = typeof(RubyModule), Inherits = typeof(Object))]
+    [RubyClass("Module", Extends = typeof(RubyModule), Inherits = typeof(Object), Restrictions = ModuleRestrictions.Builtin | ModuleRestrictions.NoUnderlyingType)]
     public static class ModuleOps {
 
         #region initialize, initialize_copy
@@ -322,19 +322,20 @@ namespace IronRuby.Builtins {
         // thread-safe:
         [RubyMethod("define_method", RubyMethodAttributes.PrivateInstance)]
         public static Proc/*!*/ DefineMethod(RubyScope/*!*/ scope, RubyModule/*!*/ self, 
-            [DefaultProtocol, NotNull]string/*!*/ methodName, [NotNull]Proc/*!*/ method) {
+            [DefaultProtocol, NotNull]string/*!*/ methodName, [NotNull]Proc/*!*/ block) {
 
             var visibility = GetDefinedMethodVisibility(scope, self, methodName);
-            self.AddMethod(scope.RubyContext, methodName, Proc.ToLambdaMethodInfo(method.ToLambda(), methodName, visibility, self));
-            return method;
+            var info = Proc.ToLambdaMethodInfo(block, methodName, visibility, self);
+            self.AddMethod(scope.RubyContext, methodName, info);
+            return info.Lambda;
         }
 
         // thread-safe:
         [RubyMethod("define_method", RubyMethodAttributes.PrivateInstance)]
         public static Proc/*!*/ DefineMethod(RubyScope/*!*/ scope, RubyModule/*!*/ self,
-            [NotNull]ClrName/*!*/ methodName, [NotNull]Proc/*!*/ method) {
+            [NotNull]ClrName/*!*/ methodName, [NotNull]Proc/*!*/ block) {
 
-            var result = DefineMethod(scope, self, methodName.MangledName, method);
+            var result = DefineMethod(scope, self, methodName.MangledName, block);
             if (methodName.HasMangledName) {
                 self.AddMethodAlias(methodName.ActualName, methodName.MangledName);
             }

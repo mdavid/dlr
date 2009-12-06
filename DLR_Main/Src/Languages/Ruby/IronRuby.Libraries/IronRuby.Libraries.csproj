@@ -181,7 +181,7 @@
     <Compile Include="Builtins\SymbolOps.cs" />
     <Compile Include="Builtins\ThreadGroup.cs" />
     <Compile Include="Builtins\ThreadOps.cs" />
-    <Compile Include="Builtins\TimeOps.cs" />
+    <Compile Include="Builtins\RubyTime.cs" />
     <Compile Include="Builtins\TrueClass.cs" />
     <Compile Include="Builtins\UnboundMethod.cs" />
     <Compile Include="Builtins\RubyEncoder.cs" />
@@ -196,7 +196,7 @@
     <Compile Include="Extensions\ClrNameOps.cs" />
     <Compile Include="Extensions\ClrStringOps.cs" />
     <Compile Include="Extensions\DecimalOps.cs" />
-    <Compile Include="Extensions\FlagEnumOps.cs" />
+    <Compile Include="Extensions\FlagEnumerationOps.cs" />
     <Compile Include="Extensions\IComparableOps.cs" />
     <Compile Include="Extensions\IDictionaryOps.cs" />
     <Compile Include="Extensions\IEnumerableOps.cs" />

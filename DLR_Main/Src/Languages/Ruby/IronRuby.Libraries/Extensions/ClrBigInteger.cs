@@ -26,7 +26,7 @@ namespace IronRuby.Builtins {
     /// Mixed-in all .NET numeric primitive types that cannot be widened to 32 bit signed integer.
     /// (uint, long, ulong, BigInteger). 
     /// </summary>
-    [RubyModule("BigInteger", DefineIn = typeof(IronRubyOps.ClrOps))]
+    [RubyModule("BigInteger", DefineIn = typeof(IronRubyOps.Clr))]
     public sealed class ClrBigInteger {
         #region Arithmetic Operators
 

@@ -28,7 +28,7 @@ namespace IronRuby.Builtins {
     /// 
     /// TODO: we might want to specialize some of the methods to preserve the exact type if possible (like adding byte and byte).
     /// </summary>
-    [RubyModule("Integer", DefineIn = typeof(IronRubyOps.ClrOps))]
+    [RubyModule("Integer", DefineIn = typeof(IronRubyOps.Clr))]
     public static class ClrInteger {
         public static readonly object Zero = ScriptingRuntimeHelpers.Int32ToObject(0);
         public static readonly object One = ScriptingRuntimeHelpers.Int32ToObject(1);

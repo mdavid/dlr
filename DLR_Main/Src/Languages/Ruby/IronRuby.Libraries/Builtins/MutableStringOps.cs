@@ -30,6 +30,7 @@ using Microsoft.Scripting.Runtime;
 using Microsoft.Scripting.Utils;
 
 namespace IronRuby.Builtins {
+    using BinaryOpStorageWithScope = CallSiteStorage<Func<CallSite, RubyScope, object, object, object>>;
 
     [RubyClass("String", Extends = typeof(MutableString), Inherits = typeof(Object))]
     [Includes(typeof(Enumerable), typeof(Comparable))]
@@ -1069,11 +1070,14 @@ namespace IronRuby.Builtins {
 
         #region dump, inspect
 
-        public static string/*!*/ GetQuotedStringRepresentation(MutableString/*!*/ self, RubyContext/*!*/ context, bool forceEscapes, char quote) {
+        public static string/*!*/ GetQuotedStringRepresentation(MutableString/*!*/ self, RubyContext/*!*/ context, bool isDump, char quote) {
+            bool is18 = context.RubyOptions.Compatibility == RubyCompatibility.Ruby18;
+            
             return self.AppendRepresentation(
-                new StringBuilder().Append(quote), 
-                context.RubyOptions.Compatibility == RubyCompatibility.Ruby18, 
-                forceEscapes,
+                new StringBuilder().Append(quote),
+                (isDump || !is18) ? null : context.KCode ?? RubyEncoding.Binary,
+                is18, 
+                isDump,
                 quote
             ).Append(quote).ToString();
         }
@@ -1086,12 +1090,12 @@ namespace IronRuby.Builtins {
             return self.CreateInstance().Append(GetQuotedStringRepresentation(self, context, true, '"')).TaintBy(self);
         }
 
-        // encoding aware
+        // encoding aware, uses the current KCODE
         [RubyMethod("inspect")]
         public static MutableString/*!*/ Inspect(RubyContext/*!*/ context, MutableString/*!*/ self) {
             // Note that "self" could be a subclass of MutableString, but the return value should 
             // always be just a MutableString
-            return MutableString.Create(GetQuotedStringRepresentation(self, context, false, '"'), self.Encoding).TaintBy(self);
+            return MutableString.Create(GetQuotedStringRepresentation(self, context, false, '"'), context.KCode ?? self.Encoding).TaintBy(self);
         }
 
         #endregion
@@ -1525,7 +1529,7 @@ namespace IronRuby.Builtins {
             RequireNoVersionChange(self);
 
             if (self.IsFrozen) {
-                throw new RuntimeError("string frozen");
+                throw RubyExceptions.CreateRuntimeError("string frozen");
             }
 
             // replace content of self with content of the builder:
@@ -1820,22 +1824,19 @@ namespace IronRuby.Builtins {
         }
 
         [RubyMethod("=~")]
-        public static object Match(CallSiteStorage<Func<CallSite, RubyScope, object, MutableString, object>>/*!*/ storage,
-            RubyScope/*!*/ scope, MutableString/*!*/ self, object obj) {
+        public static object Match(BinaryOpStorageWithScope/*!*/ storage, RubyScope/*!*/ scope, MutableString/*!*/ self, object obj) {
             var site = storage.GetCallSite("=~", new RubyCallSignature(1, RubyCallFlags.HasScope | RubyCallFlags.HasImplicitSelf));
             return site.Target(site, scope, obj, self);
         }
 
         [RubyMethod("match")]
-        public static object MatchRegexp(CallSiteStorage<Func<CallSite, RubyScope, RubyRegex, MutableString, object>>/*!*/ storage, 
-            RubyScope/*!*/ scope, MutableString/*!*/ self, [NotNull]RubyRegex/*!*/ regex) {
+        public static object Match(BinaryOpStorageWithScope/*!*/ storage, RubyScope/*!*/ scope, MutableString/*!*/ self, [NotNull]RubyRegex/*!*/ regex) {
             var site = storage.GetCallSite("match", new RubyCallSignature(1, RubyCallFlags.HasImplicitSelf | RubyCallFlags.HasScope));
             return site.Target(site, scope, regex, self);
         }
 
         [RubyMethod("match")]
-        public static object MatchObject(CallSiteStorage<Func<CallSite, RubyScope, RubyRegex, MutableString, object>>/*!*/ storage, 
-            RubyScope/*!*/ scope, MutableString/*!*/ self, [DefaultProtocol, NotNull]MutableString/*!*/ pattern) {
+        public static object Match(BinaryOpStorageWithScope/*!*/ storage, RubyScope/*!*/ scope, MutableString/*!*/ self, [DefaultProtocol, NotNull]MutableString/*!*/ pattern) {
             var site = storage.GetCallSite("match", new RubyCallSignature(1, RubyCallFlags.HasImplicitSelf | RubyCallFlags.HasScope));
             return site.Target(site, scope, new RubyRegex(pattern, RubyRegexOptions.NONE), self);
         }
@@ -1922,22 +1923,25 @@ namespace IronRuby.Builtins {
                 int nextIndex = GetIndexOfRightmostAlphaNumericCharacter(str, index - 1);
                 if (c == 'z') {
                     str.SetChar(index, 'a');
-                    if (nextIndex == -1)
-                        str.Insert(index, "a");
-                    else
+                    if (nextIndex == -1) {
+                        str.Insert(index, 'a');
+                    } else {
                         IncrementAlphaNumericChar(str, nextIndex);
+                    }
                 } else if (c == 'Z') {
                     str.SetChar(index, 'A');
-                    if (nextIndex == -1)
-                        str.Insert(index, "A");
-                    else
+                    if (nextIndex == -1) {
+                        str.Insert(index, 'A');
+                    } else {
                         IncrementAlphaNumericChar(str, nextIndex);
+                    }
                 } else {
                     str.SetChar(index, '0');
-                    if (nextIndex == -1)
-                        str.Insert(index, "1");
-                    else
+                    if (nextIndex == -1) {
+                        str.Insert(index, '1');
+                    } else {
                         IncrementAlphaNumericChar(str, nextIndex);
+                    }
                 }
             } else {
                 IncrementChar(str, index);
@@ -2623,7 +2627,7 @@ namespace IronRuby.Builtins {
 
         private static void RequireNoVersionChange(MutableString/*!*/ self) {
             if (self.HasChanged) {
-                throw new RuntimeError("string modified");
+                throw RubyExceptions.CreateRuntimeError("string modified");
             }
         }
     }

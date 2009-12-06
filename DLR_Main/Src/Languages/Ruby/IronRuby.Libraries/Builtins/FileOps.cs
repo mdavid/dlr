@@ -167,7 +167,7 @@ namespace IronRuby.Builtins {
         }
 
         [RubyMethod("atime", RubyMethodAttributes.PublicSingleton)]
-        public static Time AccessTime(RubyClass/*!*/ self, [DefaultProtocol]MutableString/*!*/ path) {
+        public static RubyTime AccessTime(RubyClass/*!*/ self, [DefaultProtocol]MutableString/*!*/ path) {
             return RubyStatOps.AccessTime(RubyStatOps.Create(self.Context, path));
         }
 
@@ -274,7 +274,7 @@ namespace IronRuby.Builtins {
         }
 
         [RubyMethod("ctime", RubyMethodAttributes.PublicSingleton)]
-        public static Time CreateTime(RubyClass/*!*/ self, [DefaultProtocol, NotNull]MutableString/*!*/ path) {
+        public static RubyTime CreateTime(RubyClass/*!*/ self, [DefaultProtocol, NotNull]MutableString/*!*/ path) {
             return RubyStatOps.CreateTime(RubyStatOps.Create(self.Context, path));
         }
 
@@ -504,7 +504,7 @@ namespace IronRuby.Builtins {
         }
 
         [RubyMethod("mtime", RubyMethodAttributes.PublicSingleton)]
-        public static Time ModifiedTime(RubyClass/*!*/ self, [DefaultProtocol, NotNull]MutableString/*!*/ path) {
+        public static RubyTime ModifiedTime(RubyClass/*!*/ self, [DefaultProtocol, NotNull]MutableString/*!*/ path) {
             return RubyStatOps.ModifiedTime(RubyStatOps.Create(self.Context, path));
         }
 
@@ -602,7 +602,7 @@ namespace IronRuby.Builtins {
         }
 
         [RubyMethod("utime", RubyMethodAttributes.PublicSingleton, BuildConfig = "!SILVERLIGHT")]
-        public static int UpdateTimes(RubyClass/*!*/ self, [NotNull]Time/*!*/ accessTime, [NotNull]Time/*!*/ modifiedTime, 
+        public static int UpdateTimes(RubyClass/*!*/ self, [NotNull]RubyTime/*!*/ accessTime, [NotNull]RubyTime/*!*/ modifiedTime, 
             [NotNull]MutableString/*!*/ path) {
             string strPath = path.ConvertToString();
             if (!FileExists(self.Context, strPath)) {
@@ -610,8 +610,8 @@ namespace IronRuby.Builtins {
             }
 
             FileInfo info = new FileInfo(strPath);
-            info.LastAccessTime = accessTime;
-            info.LastWriteTime = modifiedTime;
+            info.LastAccessTimeUtc = accessTime.ToUniversalTime();
+            info.LastWriteTimeUtc = modifiedTime.ToUniversalTime();
             return 1;
         }
 
@@ -619,8 +619,8 @@ namespace IronRuby.Builtins {
         public static int UpdateTimes(RubyClass/*!*/ self, object accessTime, object modifiedTime,
             [DefaultProtocol, NotNull, NotNullItems]params MutableString/*!*/[]/*!*/ paths) {
 
-            Time atime = MakeTime(self.Context, accessTime);
-            Time mtime = MakeTime(self.Context, modifiedTime);
+            RubyTime atime = MakeTime(self.Context, accessTime);
+            RubyTime mtime = MakeTime(self.Context, modifiedTime);
 
             foreach (MutableString path in paths) {
                 UpdateTimes(self, atime, mtime, path);
@@ -630,13 +630,15 @@ namespace IronRuby.Builtins {
         }
 #endif
 
-        private static Time MakeTime(RubyContext/*!*/ context, object obj) {
+        private static RubyTime MakeTime(RubyContext/*!*/ context, object obj) {
             if (obj == null) {
-                return DateTime.Now;
-            } else if (obj is Time) {
-                return (Time)obj;
+                return new RubyTime(DateTime.Now);
+            } else if (obj is RubyTime) {
+                return (RubyTime)obj;
             } else if (obj is int) {
-                return Time.Create(typeof(RubyFileOps), (int)obj);
+                return new RubyTime(RubyTime.Epoch.AddSeconds((int)obj));
+            } else if (obj is double) {
+                return new RubyTime(RubyTime.Epoch.AddSeconds((double)obj));
             } else {
                 string name = context.GetClassOf(obj).Name;
                 throw RubyExceptions.CreateTypeConversionError(name, "time");
@@ -648,7 +650,7 @@ namespace IronRuby.Builtins {
         #region Public Instance Methods
 
         [RubyMethod("atime")]
-        public static Time AccessTime(RubyContext/*!*/ context, RubyFile/*!*/ self) {
+        public static RubyTime AccessTime(RubyContext/*!*/ context, RubyFile/*!*/ self) {
             return RubyStatOps.AccessTime(RubyStatOps.Create(context, self.Path));
         }
 
@@ -656,7 +658,7 @@ namespace IronRuby.Builtins {
         //chown
 
         [RubyMethod("ctime")]
-        public static Time CreateTime(RubyContext/*!*/ context, RubyFile/*!*/ self) {
+        public static RubyTime CreateTime(RubyContext/*!*/ context, RubyFile/*!*/ self) {
             return RubyStatOps.CreateTime(RubyStatOps.Create(context, self.Path));
         }
 
@@ -668,7 +670,7 @@ namespace IronRuby.Builtins {
         }
 
         [RubyMethod("mtime")]
-        public static Time ModifiedTime(RubyContext/*!*/ context, RubyFile/*!*/ self) {
+        public static RubyTime ModifiedTime(RubyContext/*!*/ context, RubyFile/*!*/ self) {
             return RubyStatOps.ModifiedTime(RubyStatOps.Create(context, self.Path));
         }
 
@@ -733,7 +735,7 @@ namespace IronRuby.Builtins {
 
             [RubyMethod("<=>")]
             public static int Compare(FileSystemInfo/*!*/ self, [NotNull]FileSystemInfo/*!*/ other) {
-                return Time.CompareTo(self.LastWriteTime, other.LastWriteTime);
+                return self.LastWriteTime.CompareTo(other.LastWriteTime);
             }
 
             [RubyMethod("<=>")]
@@ -743,8 +745,8 @@ namespace IronRuby.Builtins {
             }
 
             [RubyMethod("atime")]
-            public static Time AccessTime(FileSystemInfo/*!*/ self) {
-                return self.LastAccessTime;
+            public static RubyTime/*!*/ AccessTime(FileSystemInfo/*!*/ self) {
+                return new RubyTime(self.LastAccessTime);
             }
 
             [RubyMethod("blksize")]
@@ -768,8 +770,8 @@ namespace IronRuby.Builtins {
             }
 
             [RubyMethod("ctime")]
-            public static Time CreateTime(FileSystemInfo/*!*/ self) {
-                return self.CreationTime;
+            public static RubyTime/*!*/ CreateTime(FileSystemInfo/*!*/ self) {
+                return new RubyTime(self.CreationTime);
             }
 
             [RubyMethod("dev")]
@@ -859,8 +861,8 @@ namespace IronRuby.Builtins {
             }
 
             [RubyMethod("mtime")]
-            public static Time ModifiedTime(FileSystemInfo/*!*/ self) {
-                return self.LastWriteTime;
+            public static RubyTime/*!*/ ModifiedTime(FileSystemInfo/*!*/ self) {
+                return new RubyTime(self.LastWriteTime);
             }
 
             [RubyMethod("nlink")]

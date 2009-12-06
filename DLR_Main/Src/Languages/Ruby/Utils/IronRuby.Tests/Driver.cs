@@ -79,6 +79,7 @@ namespace IronRuby.Tests {
             runtimeSetup.DebugMode = _driver.IsDebug;
             runtimeSetup.PrivateBinding = testCase.Options.PrivateBinding;
             languageSetup.Options["NoAdaptiveCompilation"] = _driver.NoAdaptiveCompilation;
+            languageSetup.Options["CompilationThreshold"] = _driver.CompilationThreshold;
             languageSetup.Options["Verbosity"] = 2;
             languageSetup.Options["Compatibility"] = testCase.Options.Compatibility;
 
@@ -104,6 +105,7 @@ namespace IronRuby.Tests {
         private static bool _displayList;
         private static bool _partialTrust;
         private static bool _noAdaptiveCompilation;
+        private static int _compilationThreshold;
         private static bool _runPython = true;
 
         public TestRuntime TestRuntime {
@@ -138,6 +140,10 @@ namespace IronRuby.Tests {
             get { return _noAdaptiveCompilation; }
         }
 
+        public int CompilationThreshold {
+            get { return _compilationThreshold; }
+        }
+
         public bool RunPython {
             get { return _runPython; }
         }
@@ -147,6 +153,8 @@ namespace IronRuby.Tests {
                 Console.WriteLine("Verbose                      : /verbose");
                 Console.WriteLine("Partial trust                : /partial");
                 Console.WriteLine("No adaptive compilation      : /noadaptive");
+                Console.WriteLine("Synchronous compilation      : /sync             (-X:CompilationThreshold 1)");
+                Console.WriteLine("Interpret only               : /interpret        (-X:CompilationThreshold Int32.MaxValue)");
                 Console.WriteLine("Save to assemblies           : /save");
                 Console.WriteLine("Debug Mode                   : /debug");
                 Console.WriteLine("Disable Python interop tests : /py-");
@@ -195,6 +203,16 @@ namespace IronRuby.Tests {
             if (args.Contains("/noadaptive")) {
                 args.Remove("/noadaptive");
                 _noAdaptiveCompilation = true;
+            }
+
+            if (args.Contains("/sync")) {
+                args.Remove("/sync");
+                _compilationThreshold = 1;
+            }
+
+            if (args.Contains("/interpret")) {
+                args.Remove("/interpret");
+                _compilationThreshold = Int32.MaxValue;
             }
 
             if (args.Contains("/py-")) {

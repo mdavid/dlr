@@ -240,10 +240,11 @@
     <Compile Include="Compiler\Ast\ScopeBuilder.cs" />
     <Compile Include="Compiler\Ast\Statements.cs" />
     <Compile Include="Compiler\Ast\Statements\ConditionalStatement.cs" />
-    <Compile Include="Compiler\Ast\CallBuilder.cs" />
+    <Compile Include="Compiler\Ast\CallSiteBuilder.cs" />
     <Compile Include="Compiler\Ast\Walkers\Walker.Generated.cs" />
     <Compile Include="Compiler\Ast\Walkers\NodeTypes.cs" />
     <Compile Include="Compiler\Ast\Walkers\Walker.cs" />
+    <Compile Include="Compiler\CollectionBuilder.cs" />
     <Compile Include="Compiler\Errors.cs" />
     <Compile Include="Compiler\Generation\IRubyType.cs" />
     <Compile Include="Compiler\Parser\ParserStack.cs" />
