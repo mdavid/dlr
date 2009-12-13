@@ -214,6 +214,7 @@ namespace Samples {
             Samples.CLoop.Loop1();
             Samples.CLoop.Loop2();
             Samples.CLoop.Loop3();
+            Samples.CLoop.Loop4();
 
             Samples.CMakeBinary.MakeBinary1();
             Samples.CMakeBinary.MakeBinary2();
