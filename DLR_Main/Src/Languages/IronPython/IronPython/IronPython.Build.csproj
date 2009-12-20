@@ -444,7 +444,7 @@
       <Compile Include="Runtime\Types\CachedNewTypeInfo.cs" />
       <Compile Include="Runtime\Types\ConstructorFunction.cs" />
       <Compile Include="Runtime\Types\CustomAttributeTracker.cs" />
-      <Compile Include="Runtime\Types\CustomOldClassDictionary.cs" />
+      <Compile Include="Runtime\Types\CustomInstanceDictionaryStorage.cs" />
       <Compile Include="Runtime\Types\DictProxy.cs" />
       <Compile Include="Runtime\Types\DocBuilder.cs" />
       <Compile Include="Runtime\Types\DynamicBaseTypeAttribute.cs" />
