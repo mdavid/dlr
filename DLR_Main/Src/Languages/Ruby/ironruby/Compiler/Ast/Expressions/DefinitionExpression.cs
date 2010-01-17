@@ -18,7 +18,7 @@ using Microsoft.Scripting.Utils;
 
 namespace IronRuby.Compiler.Ast {
 
-    public abstract class DeclarationExpression : Expression {
+    public abstract class DefinitionExpression : Expression {
         private readonly LexicalScope/*!*/ _definedScope;
         private readonly Body/*!*/ _body;
 
@@ -34,7 +34,7 @@ namespace IronRuby.Compiler.Ast {
             }
         }
 
-        protected DeclarationExpression(LexicalScope/*!*/ definedScope, Body/*!*/ body, SourceSpan location) 
+        protected DefinitionExpression(LexicalScope/*!*/ definedScope, Body/*!*/ body, SourceSpan location) 
             : base(location) {
             ContractUtils.RequiresNotNull(definedScope, "definedScope");
             ContractUtils.RequiresNotNull(body, "body");

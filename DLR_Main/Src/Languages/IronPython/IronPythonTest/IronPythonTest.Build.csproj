@@ -46,13 +46,16 @@
     <Reference Include="System" Condition=" '$(SilverlightBuild)' != 'true' " />
     <Reference Include="System.Data" Condition=" '$(SilverlightBuild)' != 'true' " />
     <Reference Include="System.Xml" Condition=" '$(SilverlightBuild)' != 'true' " />
-    <Reference Include="mscorlib, Version=1.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" Condition=" '$(SilverlightBuild)' == 'true' ">
+    <Reference Include="mscorlib, Version=2.0.5.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e" Condition=" '$(SilverlightBuild)' == 'true' ">
       <SpecificVersion>False</SpecificVersion>
       <HintPath>$(SilverlightSdkPath)\mscorlib.dll</HintPath>
     </Reference>
-    <Reference Include="System, Version=1.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" Condition=" '$(SilverlightBuild)' == 'true' ">
+    <Reference Include="System, Version=2.0.5.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e" Condition=" '$(SilverlightBuild)' == 'true' ">
       <SpecificVersion>False</SpecificVersion>
       <HintPath>$(SilverlightSdkPath)\System.dll</HintPath>
+    </Reference>
+    <Reference Include="Microsoft.CSharp">
+      <RequiredTargetFramework>4.0</RequiredTargetFramework>
     </Reference>
   </ItemGroup>
   <!-- Begin Generated Project Items By GenerateSystemCoreCsproj.py -->
@@ -70,6 +73,7 @@
       <Compile Include="DefaultParams.cs" />
       <Compile Include="DelegateTest.cs" />
       <Compile Include="DeTest.cs" />
+      <Compile Include="DynamicRegressions.cs" />
       <Compile Include="EngineTest.cs" />
       <Compile Include="Enums.cs" />
       <Compile Include="Events.cs" />

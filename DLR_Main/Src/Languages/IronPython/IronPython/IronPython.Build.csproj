@@ -230,6 +230,7 @@
       <Compile Include="Runtime\Descriptors.cs" />
       <Compile Include="Runtime\DictionaryOps.cs" />
       <Compile Include="Runtime\DictionaryStorage.cs" />
+      <Compile Include="Runtime\DictionaryTypeInfoAttribute.cs" />
       <Compile Include="Runtime\DontMapGetMemberNamesToDirAttribute.cs" />
       <Compile Include="Runtime\DontMapICollectionToLenAttribute.cs" />
       <Compile Include="Runtime\DontMapIDisposableToContextManagerAttribute.cs" />
@@ -285,6 +286,7 @@
       <Compile Include="Runtime\Reversed.cs" />
       <Compile Include="Runtime\RuntimeVariablesDictionaryStorage.cs" />
       <Compile Include="Runtime\ScopeDictionaryStorage.cs" />
+      <Compile Include="Runtime\SequenceTypeInfoAttribute.cs" />
       <Compile Include="Runtime\Set.cs" />
       <Compile Include="Runtime\SiteLocalStorage.cs" />
       <Compile Include="Runtime\Slice.cs" />

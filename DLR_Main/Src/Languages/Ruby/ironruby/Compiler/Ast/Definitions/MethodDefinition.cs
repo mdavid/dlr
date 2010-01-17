@@ -23,19 +23,17 @@ using IronRuby.Builtins;
 using IronRuby.Runtime;
 using IronRuby.Runtime.Calls;
 using Microsoft.Scripting;
-using Microsoft.Scripting.Runtime;
 using Microsoft.Scripting.Utils;
 using AstUtils = Microsoft.Scripting.Ast.Utils;
 using System;
-using Microsoft.Scripting.Actions;
-using System.Collections.ObjectModel;
-using System.Diagnostics;
-using Microsoft.Scripting.Interpreter;
-    
+using System.Runtime.CompilerServices;
+
 namespace IronRuby.Compiler.Ast {
     using Ast = MSA.Expression;
+    using AstExpressions = ReadOnlyCollectionBuilder<MSA.Expression>;
+    using AstParameters = ReadOnlyCollectionBuilder<MSA.ParameterExpression>;
     
-    public partial class MethodDeclaration : DeclarationExpression {
+    public partial class MethodDefinition : DefinitionExpression {
         // self, block
         internal const int HiddenParameterCount = 2;
             
@@ -59,7 +57,7 @@ namespace IronRuby.Compiler.Ast {
             get { return _parameters; }
         }
 
-        public MethodDeclaration(LexicalScope/*!*/ definedScope, Expression target, string/*!*/ name, Parameters parameters, Body/*!*/ body, 
+        public MethodDefinition(LexicalScope/*!*/ definedScope, Expression target, string/*!*/ name, Parameters parameters, Body/*!*/ body, 
             SourceSpan location)
             : base(definedScope, body, location) {
             Assert.NotNull(name);
@@ -69,30 +67,29 @@ namespace IronRuby.Compiler.Ast {
             _parameters = parameters ?? Parameters.Empty;
         }
 
-        private ScopeBuilder/*!*/ DefineLocals(out MSA.ParameterExpression/*!*/[]/*!*/ parameters) {
-            parameters = new MSA.ParameterExpression[
+        private ScopeBuilder/*!*/ DefineLocals(out AstParameters/*!*/ parameters) {
+            parameters = new AstParameters(
                 HiddenParameterCount +
                 (_parameters.Mandatory != null ? _parameters.Mandatory.Count : 0) +
                 (_parameters.Optional != null ? _parameters.Optional.Count : 0) +
                 (_parameters.Array != null ? 1 : 0)
-            ];
+            );
 
-            int paramIndex = 0;
             int closureIndex = 0;
             int firstClosureParam = 1;
-            parameters[paramIndex++] = Ast.Parameter(typeof(object), "#self");
+            parameters.Add(Ast.Parameter(typeof(object), "#self"));
 
             if (_parameters.Block != null) {
-                parameters[paramIndex++] = Ast.Parameter(typeof(Proc), _parameters.Block.Name);
+                parameters.Add(Ast.Parameter(typeof(Proc), _parameters.Block.Name));
                 _parameters.Block.SetClosureIndex(closureIndex++);
             } else {
-                parameters[paramIndex++] = Ast.Parameter(typeof(Proc), "#block");
+                parameters.Add(Ast.Parameter(typeof(Proc), "#block"));
                 firstClosureParam++;
             }
 
             if (_parameters.Mandatory != null) {
                 foreach (var param in _parameters.Mandatory) {
-                    parameters[paramIndex++] = Ast.Parameter(typeof(object), param.Name);
+                    parameters.Add(Ast.Parameter(typeof(object), param.Name));
                     param.SetClosureIndex(closureIndex++);
                 }
             }
@@ -100,17 +97,15 @@ namespace IronRuby.Compiler.Ast {
             if (_parameters.Optional != null) {
                 foreach (var lvalue in _parameters.Optional) {
                     var param = (LocalVariable)lvalue.Left;
-                    parameters[paramIndex++] = Ast.Parameter(typeof(object), param.Name);
+                    parameters.Add(Ast.Parameter(typeof(object), param.Name));
                     param.SetClosureIndex(closureIndex++);
                 }
             }
 
             if (_parameters.Array != null) {
-                parameters[paramIndex++] = Ast.Parameter(typeof(object), _parameters.Array.Name);
+                parameters.Add(Ast.Parameter(typeof(object), _parameters.Array.Name));
                 _parameters.Array.SetClosureIndex(closureIndex++);
             }
-
-            Debug.Assert(paramIndex == parameters.Length);
 
             // allocate closure slots for locals:
             int localCount = DefinedScope.AllocateClosureSlotsForLocals(closureIndex);
@@ -121,16 +116,15 @@ namespace IronRuby.Compiler.Ast {
         internal MSA.LambdaExpression/*!*/ TransformBody(AstGenerator/*!*/ gen, RubyScope/*!*/ declaringScope, RubyModule/*!*/ declaringModule) {
             string encodedName = RubyExceptionData.EncodeMethodName(_name, gen.SourcePath, Location);
 
-            MSA.ParameterExpression[] parameters;
+            AstParameters parameters;
             ScopeBuilder scope = DefineLocals(out parameters);
 
-            var currentMethodVariable = scope.DefineHiddenVariable("#method", typeof(RubyMethodInfo));
             var scopeVariable = scope.DefineHiddenVariable("#scope", typeof(RubyMethodScope));
             var selfParameter = parameters[0];
             var blockParameter = parameters[1];
 
             // exclude block parameter even if it is explicitly specified:
-            int visiblePrameterCountAndSignatureFlags = (parameters.Length - 2) << 2;
+            int visiblePrameterCountAndSignatureFlags = (parameters.Count - 2) << 2;
             if (_parameters.Block != null) {
                 visiblePrameterCountAndSignatureFlags |= RubyMethodScope.HasBlockFlag;
             }
@@ -215,43 +209,39 @@ namespace IronRuby.Compiler.Ast {
             return CreateLambda(encodedName, parameters, body);
         }
 
-        private static MSA.LambdaExpression/*!*/ CreateLambda(string/*!*/ name, MSA.ParameterExpression/*!*/[]/*!*/ parameters, MSA.Expression/*!*/ body) {
-            Type lambdaType = DynamicSiteHelpers.GetStandardDelegateType(AstFactory.GetSignature(parameters, typeof(object)));
-            if (lambdaType == null) {
-                // to many parameters for Func<> delegate -> use object[]:
-                MSA.ParameterExpression array = Ast.Parameter(typeof(object[]), "#params");
-                var actualParameters = new MSA.ParameterExpression[] { parameters[0], parameters[1], array };
-                parameters = ArrayUtils.ShiftLeft(parameters, 2);
+        private static MSA.LambdaExpression/*!*/ CreateLambda(string/*!*/ name, AstParameters/*!*/ parameters, MSA.Expression/*!*/ body) {
+            var result = MethodDispatcher.CreateRubyMethodLambda(body, name, parameters);
+            if (result != null) {
+                return result;
+            } 
 
-                var bodyWithParamInit = new MSA.Expression[parameters.Length + 1];
-                for (int i = 0; i < parameters.Length; i++) {
-                    bodyWithParamInit[i] = Ast.Assign(parameters[i], Ast.ArrayIndex(array, AstUtils.Constant(i)));
-                }
-                bodyWithParamInit[parameters.Length] = body;
+            // to many parameters for Func<> delegate -> use object[]:
+            MSA.ParameterExpression array = Ast.Parameter(typeof(object[]), "#params");
+            var actualParameters = new AstParameters() { parameters[0], parameters[1], array };
+            parameters.RemoveAt(0);
+            parameters.RemoveAt(1);
 
-                return Ast.Lambda<Func<object, Proc, object[], object>>(
-                    Ast.Block(
-                        new ReadOnlyCollection<MSA.ParameterExpression>(parameters), 
-                        new ReadOnlyCollection<MSA.Expression>(bodyWithParamInit)
-                    ),
-                    name,
-                    new ReadOnlyCollection<MSA.ParameterExpression>(actualParameters)
-                );
-            } else {
-                return Ast.Lambda(
-                    lambdaType,
-                    body,
-                    name,
-                    new ReadOnlyCollection<MSA.ParameterExpression>(parameters)
-                );
+            var bodyWithParamInit = new AstExpressions(parameters.Count + 1);
+            for (int i = 0; i < parameters.Count; i++) {
+                bodyWithParamInit[i] = Ast.Assign(parameters[i], Ast.ArrayIndex(array, AstUtils.Constant(i)));
             }
+            bodyWithParamInit[parameters.Count] = body;
+
+            return Ast.Lambda<Func<object, Proc, object[], object>>(
+                Ast.Block(
+                    parameters, 
+                    bodyWithParamInit
+                ),
+                name,
+                actualParameters
+            );
         }
 
         internal override MSA.Expression/*!*/ TransformRead(AstGenerator/*!*/ gen) {
             return Methods.DefineMethod.OpCall(
                 (_target != null) ? _target.TransformRead(gen) : AstUtils.Constant(null),
                 gen.CurrentScopeVariable,
-                Ast.Constant(new RubyMethodBody(gen.Context, this, gen.Document, gen.Encoding))
+                Ast.Constant(new RubyMethodBody(this, gen.Document, gen.Encoding))
             );
         }
     }

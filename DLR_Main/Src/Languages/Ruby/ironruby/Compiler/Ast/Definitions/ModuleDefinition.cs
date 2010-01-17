@@ -23,12 +23,13 @@ using Microsoft.Scripting;
 using Microsoft.Scripting.Utils;
 using IronRuby.Builtins;
 using IronRuby.Runtime;
-using AstUtils = Microsoft.Scripting.Ast.Utils;
 
 namespace IronRuby.Compiler.Ast {
     using Ast = MSA.Expression;
+    using AstUtils = Microsoft.Scripting.Ast.Utils;
+    using AstBlock = Microsoft.Scripting.Ast.BlockBuilder;
     
-    public partial class ModuleDeclaration : DeclarationExpression {
+    public partial class ModuleDefinition : DefinitionExpression {
         /// <summary>
         /// Singleton classes don't have a name.
         /// </summary>
@@ -42,14 +43,14 @@ namespace IronRuby.Compiler.Ast {
             get { return false; }
         }
 
-        public ModuleDeclaration(LexicalScope/*!*/ definedScope, ConstantVariable/*!*/ qualifiedName, Body/*!*/ body, SourceSpan location)
+        public ModuleDefinition(LexicalScope/*!*/ definedScope, ConstantVariable/*!*/ qualifiedName, Body/*!*/ body, SourceSpan location)
             : base(definedScope, body, location) {
             ContractUtils.RequiresNotNull(qualifiedName, "qualifiedName");
 
             _qualifiedName = qualifiedName;
         }
 
-        protected ModuleDeclaration(LexicalScope/*!*/ definedScope, Body/*!*/ body, SourceSpan location)
+        protected ModuleDefinition(LexicalScope/*!*/ definedScope, Body/*!*/ body, SourceSpan location)
             : base(definedScope, body, location) {
             _qualifiedName = null;
         }
@@ -66,7 +67,7 @@ namespace IronRuby.Compiler.Ast {
                     return Methods.DefineNestedModule.OpCall(gen.CurrentScopeVariable, name);
 
                 case StaticScopeKind.Explicit:
-                    return Methods.DefineModule.OpCall(gen.CurrentScopeVariable, AstFactory.Box(transformedQualifier), name);
+                    return Methods.DefineModule.OpCall(gen.CurrentScopeVariable, AstUtils.Box(transformedQualifier), name);
             }
 
             throw Assert.Unreachable;
@@ -77,7 +78,7 @@ namespace IronRuby.Compiler.Ast {
         }
 
         internal sealed override MSA.Expression/*!*/ TransformRead(AstGenerator/*!*/ gen) {
-            string debugString = (IsSingletonDeclaration) ? "SINGLETON" : ((this is ClassDeclaration) ? "CLASS" : "MODULE") + " " + QualifiedName.Name;
+            string debugString = (IsSingletonDeclaration) ? "SINGLETON" : ((this is ClassDefinition) ? "CLASS" : "MODULE") + " " + QualifiedName.Name;
 
             ScopeBuilder outerLocals = gen.CurrentScope;
                 
@@ -107,7 +108,7 @@ namespace IronRuby.Compiler.Ast {
             //   self = DefineModule/Class(... parent scope here ...)
             //   <body>
             // end
-            MSA.Expression result = AstFactory.Block(
+            MSA.Expression result = new AstBlock {
                 gen.DebugMarker(debugString),
                 Ast.Assign(selfVariable, definition),
                 scope.CreateScope(
@@ -125,7 +126,7 @@ namespace IronRuby.Compiler.Ast {
                 ),
                 gen.DebugMarker("END OF " + debugString),
                 resultVariable
-            );
+            };
 
             gen.LeaveModuleDefinition();
 

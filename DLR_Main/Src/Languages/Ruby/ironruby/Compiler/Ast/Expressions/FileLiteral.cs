@@ -12,35 +12,31 @@
  *
  *
  * ***************************************************************************/
-
 #if !CLR2
 using MSA = System.Linq.Expressions;
 #else
 using MSA = Microsoft.Scripting.Ast;
 #endif
 
+using System.Diagnostics;
 using Microsoft.Scripting;
-using Microsoft.Scripting.Utils;
+using IronRuby.Builtins;
 
 namespace IronRuby.Compiler.Ast {
-    public partial class SingletonDeclaration : ModuleDeclaration {
-        private readonly Expression/*!*/ _singleton;
+    using AstUtils = Microsoft.Scripting.Ast.Utils;
 
-        public Expression/*!*/ Singleton {
-            get { return _singleton; }
+    /// <summary>
+    /// Represents __FILE__ literal encoded by the containing source file encoding.
+    /// </summary>
+    public partial class FileLiteral : Expression {
+        internal FileLiteral(SourceSpan location)
+            : base(location) {
         }
 
-        protected override bool IsSingletonDeclaration { get { return true; } }
-
-        public SingletonDeclaration(LexicalScope/*!*/ definedScope, Expression/*!*/ singleton, Body/*!*/ body, SourceSpan location)
-            : base(definedScope, body, location) {
-            ContractUtils.RequiresNotNull(singleton, "singleton");
-
-            _singleton = singleton;
-        }
-
-        internal override MSA.Expression/*!*/ MakeDefinitionExpression(AstGenerator/*!*/ gen) {
-            return Methods.DefineSingletonClass.OpCall(gen.CurrentScopeVariable, AstFactory.Box(_singleton.TransformRead(gen)));
+        internal override MSA.Expression/*!*/ TransformRead(AstGenerator/*!*/ gen) {
+            return Methods.CreateMutableStringL.OpCall(
+                gen.SourcePathConstant, AstUtils.Constant(gen.Context.GetPathEncoding())
+            );
         }
     }
 }

@@ -29,14 +29,14 @@ namespace IronRuby.Compiler.Ast {
     // class Name
     //   <statements>
     // end
-    public partial class ClassDeclaration : ModuleDeclaration {
+    public partial class ClassDefinition : ModuleDefinition {
         private readonly Expression _superClass;
 
         public Expression SuperClass {
             get { return _superClass; }
         }
 
-        public ClassDeclaration(LexicalScope/*!*/ definedScope, ConstantVariable/*!*/ name, Expression superClass, Body/*!*/ body, SourceSpan location)
+        public ClassDefinition(LexicalScope/*!*/ definedScope, ConstantVariable/*!*/ name, Expression superClass, Body/*!*/ body, SourceSpan location)
             : base(definedScope, name, body, location) {
             ContractUtils.RequiresNotNull(name, "name");
             
@@ -46,7 +46,7 @@ namespace IronRuby.Compiler.Ast {
         internal override MSA.Expression/*!*/ MakeDefinitionExpression(AstGenerator/*!*/ gen) {
             MSA.Expression transformedQualifier;
             MSA.Expression name = QualifiedName.TransformName(gen);
-            MSA.Expression transformedSuper = (_superClass != null) ? AstFactory.Box(_superClass.TransformRead(gen)) : AstUtils.Constant(null);
+            MSA.Expression transformedSuper = (_superClass != null) ? AstUtils.Box(_superClass.TransformRead(gen)) : AstUtils.Constant(null);
 
             switch (QualifiedName.TransformQualifier(gen, out transformedQualifier)) {
                 case StaticScopeKind.Global:

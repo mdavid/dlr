@@ -124,9 +124,7 @@
       <!--                            -->
       <!--          Compiler          -->
       <!--                            -->
-      <Compile Include="Compiler\AstBlock.cs" />
       <Compile Include="Compiler\AstGenerator.cs" />
-      <Compile Include="Compiler\CollectionBuilder.cs" />
       <Compile Include="Compiler\Errors.cs" />
       <Compile Include="Compiler\ReflectionCache.cs" />
       <Compile Include="Compiler\ReflectionCache.Generated.cs" />
@@ -172,13 +170,13 @@
       <Compile Include="Compiler\Ast\Clauses\WhenClause.cs" />
     </ItemGroup>
     <ItemGroup>
-      <!--                                             -->
-      <!--          Compiler.Ast.Declarations          -->
-      <!--                                             -->
-      <Compile Include="Compiler\Ast\Declarations\ClassDeclaration.cs" />
-      <Compile Include="Compiler\Ast\Declarations\MethodDeclaration.cs" />
-      <Compile Include="Compiler\Ast\Declarations\ModuleDeclaration.cs" />
-      <Compile Include="Compiler\Ast\Declarations\SingletonDeclaration.cs" />
+      <!--                                            -->
+      <!--          Compiler.Ast.Definitions          -->
+      <!--                                            -->
+      <Compile Include="Compiler\Ast\Definitions\ClassDefinition.cs" />
+      <Compile Include="Compiler\Ast\Definitions\MethodDefinition.cs" />
+      <Compile Include="Compiler\Ast\Definitions\ModuleDefinition.cs" />
+      <Compile Include="Compiler\Ast\Definitions\SingletonDefinition.cs" />
     </ItemGroup>
     <ItemGroup>
       <!--                                            -->
@@ -192,10 +190,11 @@
       <Compile Include="Compiler\Ast\Expressions\CaseExpression.cs" />
       <Compile Include="Compiler\Ast\Expressions\ConditionalExpression.cs" />
       <Compile Include="Compiler\Ast\Expressions\ConditionalJumpExpression.cs" />
-      <Compile Include="Compiler\Ast\Expressions\DeclarationExpression.cs" />
+      <Compile Include="Compiler\Ast\Expressions\DefinitionExpression.cs" />
       <Compile Include="Compiler\Ast\Expressions\EncodingExpression.cs" />
       <Compile Include="Compiler\Ast\Expressions\ErrorExpression.cs" />
       <Compile Include="Compiler\Ast\Expressions\Expression.cs" />
+      <Compile Include="Compiler\Ast\Expressions\FileLiteral.cs" />
       <Compile Include="Compiler\Ast\Expressions\ForLoopExpression.cs" />
       <Compile Include="Compiler\Ast\Expressions\HashConstructor.cs" />
       <Compile Include="Compiler\Ast\Expressions\IfExpression.cs" />
