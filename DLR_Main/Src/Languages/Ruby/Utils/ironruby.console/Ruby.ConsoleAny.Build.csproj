@@ -8,10 +8,10 @@
     <AssemblyName>ir</AssemblyName>
     <WarningsNotAsErrors>618,1685,649</WarningsNotAsErrors>
     <WarningLevel>4</WarningLevel>
-    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+    <TreatWarningsAsErrors>false</TreatWarningsAsErrors>
     <GenerateAssemblyAttribute>false</GenerateAssemblyAttribute>
-<OutputPath>$(SolutionDir)\..\Bin\40\</OutputPath>
-<AssemblyOriginatorKeyFile>$(SolutionDir)\Runtime\MSSharedLibKey.snk</AssemblyOriginatorKeyFile>
+<OutputPath>$(SolutionDir)..\Bin\40\</OutputPath>
+<AssemblyOriginatorKeyFile>$(SolutionDir)Runtime\MSSharedLibKey.snk</AssemblyOriginatorKeyFile>
     <SignAssembly Condition="'$(SignAssembly)' == '' And Exists('$(AssemblyOriginatorKeyFile)')">true</SignAssembly>
     <SignedSym Condition="'$(SignAssembly)' == 'true'">SIGNED</SignedSym>
     <SignedDir Condition="'$(SignAssembly)' == 'true'">Signed</SignedDir>
@@ -27,16 +27,16 @@
     <DebugSymbols>true</DebugSymbols>
     <DebugType>full</DebugType>
     <Optimize>false</Optimize>
-    <OutputPath>$(SolutionDir)\..\Bin\40\</OutputPath>
-    <DefineConstants>DEBUG;TRACE;CODEPLEX_40;SYSTEM_CORE</DefineConstants>
+    <OutputPath>$(SolutionDir)..\Bin\40\</OutputPath>
+    <DefineConstants>DEBUG;TRACE;CODEPLEX_40;CLR4;SYSTEM_CORE</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <DebugType>pdbonly</DebugType>
     <Optimize>true</Optimize>
-    <OutputPath>$(SolutionDir)\..\Bin\40\</OutputPath>
-    <DefineConstants>TRACE;CODEPLEX_40;SYSTEM_CORE</DefineConstants>
+    <OutputPath>$(SolutionDir)..\Bin\40\</OutputPath>
+    <DefineConstants>TRACE;CODEPLEX_40;CLR4;SYSTEM_CORE</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>

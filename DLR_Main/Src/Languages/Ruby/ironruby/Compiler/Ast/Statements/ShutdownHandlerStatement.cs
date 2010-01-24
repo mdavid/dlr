@@ -19,36 +19,34 @@ using MSA = System.Linq.Expressions;
 using MSA = Microsoft.Scripting.Ast;
 #endif
 
-using System;
-using System.Collections.Generic;
 using Microsoft.Scripting;
-using Microsoft.Scripting.Utils;
 
 namespace IronRuby.Compiler.Ast {
+    using Ast = MSA.Expression;
+    using AstUtils = Microsoft.Scripting.Ast.Utils;
 
-    public partial class Initializer : Expression {
-        //	BEGIN { body }
+    /// <summary>
+    /// Implements END block. This block behaves like Kernel#at_exit with a true block definition. 
+    /// </summary>
+    public partial class ShutdownHandlerStatement : Expression {
+        private readonly BlockDefinition/*!*/ _block;
 
-        [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Performance", "CA1823:AvoidUnusedPrivateFields")] // TODO
-        private readonly LexicalScope/*!*/ _definedScope;
-        
-        // TODO:
-        private readonly Statements _statements;
-
-        public Statements Statements {
-            get { return _statements; }
+        public BlockDefinition/*!*/ Block {
+            get { return _block; }
         }
 
-        public Initializer(LexicalScope/*!*/ definedScope, Statements statements, SourceSpan location)
+        public ShutdownHandlerStatement(LexicalScope/*!*/ definedScope, Statements/*!*/ body, SourceSpan location)
             : base(location) {
-            Assert.NotNull(definedScope);
+            _block = new BlockDefinition(definedScope, CompoundLeftValue.UnspecifiedBlockSignature, body, location);
+        }
 
-            _definedScope = definedScope;
-            _statements = statements;
+        internal override MSA.Expression/*!*/ Transform(AstGenerator/*!*/ gen) {
+            return Methods.RegisterShutdownHandler.OpCall(_block.Transform(gen));
         }
 
         internal override MSA.Expression/*!*/ TransformRead(AstGenerator/*!*/ gen) {
-            throw new NotImplementedException();
+            return Ast.Block(Transform(gen), AstUtils.Constant(null));
         }
     }
+
 }

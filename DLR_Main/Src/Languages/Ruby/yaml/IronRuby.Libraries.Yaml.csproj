@@ -12,7 +12,7 @@
     <RootNamespace>IronRuby.Libraries.Yaml</RootNamespace>
     <AssemblyName>IronRuby.Libraries.Yaml</AssemblyName>
     <TargetFrameworkVersion>v2.0</TargetFrameworkVersion>
-<AssemblyOriginatorKeyFile>$(SolutionDir)\Runtime\MSSharedLibKey.snk</AssemblyOriginatorKeyFile>
+<AssemblyOriginatorKeyFile>$(SolutionDir)Runtime\MSSharedLibKey.snk</AssemblyOriginatorKeyFile>
     <SignAssembly Condition="'$(SignAssembly)' == '' And Exists('$(AssemblyOriginatorKeyFile)')">true</SignAssembly>
     <SignedSym Condition="'$(SignAssembly)' == 'true'">SIGNED</SignedSym>
     <DelaySign>true</DelaySign>
@@ -21,7 +21,7 @@
     <DebugSymbols>true</DebugSymbols>
     <DebugType>full</DebugType>
     <Optimize>false</Optimize>
-<OutputPath>$(SolutionDir)\..\Bin\Debug\</OutputPath>
+<OutputPath>$(SolutionDir)..\Bin\Debug\</OutputPath>
     <DefineConstants>DEBUG;TRACE;$(SignedSym);CLR2</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
@@ -29,7 +29,7 @@
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <DebugType>pdbonly</DebugType>
     <Optimize>true</Optimize>
-<OutputPath>$(SolutionDir)\..\Bin\Release\</OutputPath>
+<OutputPath>$(SolutionDir)..\Bin\Release\</OutputPath>
     <DefineConstants>TRACE;$(SignedSym);CLR2</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
@@ -38,7 +38,7 @@
     <DebugSymbols>true</DebugSymbols>
     <DebugType>full</DebugType>
     <Optimize>false</Optimize>
-<OutputPath>$(SolutionDir)\..\Bin\Debug\</OutputPath>
+<OutputPath>$(SolutionDir)..\Bin\Debug\</OutputPath>
     <DefineConstants>DEBUG;TRACE;CLR4;$(SignedSym)</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
@@ -47,7 +47,7 @@
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'V4 Release|AnyCPU' ">
     <DebugType>pdbonly</DebugType>
     <Optimize>true</Optimize>
-<OutputPath>$(SolutionDir)\..\Bin\Release\</OutputPath>
+<OutputPath>$(SolutionDir)..\Bin\Release\</OutputPath>
     <DefineConstants>TRACE;CLR4;$(SignedSym)</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>

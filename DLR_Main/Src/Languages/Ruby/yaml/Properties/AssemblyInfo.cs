@@ -36,9 +36,6 @@ using IronRuby.Runtime;
 [assembly: AssemblyVersion(RubyContext.IronRubyVersionString)]
 [assembly: AssemblyFileVersion(RubyContext.IronRubyVersionString)]
 [assembly: AllowPartiallyTrustedCallers]
-#if CODEPLEX_40
-[assembly: SecurityRules(SecurityRuleSet.Level1)]
-#endif
 [assembly: SecurityTransparent]
 
 #if !CLR2

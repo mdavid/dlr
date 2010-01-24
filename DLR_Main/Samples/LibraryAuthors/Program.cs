@@ -242,13 +242,14 @@ namespace Bags
                                     typeof(object)
                                 );
 
-                var target =
+                var target = Expression.Block(
                     Expression.Call(
                         Expression.Convert(self, typeof(FastNBag)),
                         typeof(FastNBag).GetMethod("SetValue"),
                         keyExpr,
                         valueExpr
-                    );
+                    ),
+                    valueExpr);
 
                 var restrictions = BindingRestrictions
                                       .GetTypeRestriction(self, typeof(FastNBag));

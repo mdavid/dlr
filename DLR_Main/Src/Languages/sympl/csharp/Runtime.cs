@@ -7,6 +7,7 @@ using System.Runtime.CompilerServices;
 using Microsoft.Scripting.Ast;
 using Microsoft.Scripting.Utils;
 #else
+using System.Linq;
 using System.Linq.Expressions;
 #endif
 using Path = System.IO.Path;

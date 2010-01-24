@@ -11,10 +11,10 @@ if clr.use35:
     from Microsoft.Scripting.Utils import (Action, Func)
 else:
     clr.AddReference("System.Core")
-    clr.AddReference("System.Dynamic")
+    clr.AddReference("Microsoft.Dynamic")
     
     import System.Linq.Expressions as Exprs
-    from System.Dynamic import ComBinder
+    from Microsoft.Scripting.ComInterop import ComBinder
     from System import (Action, Func)
 
 from System.Runtime.CompilerServices import CallSite

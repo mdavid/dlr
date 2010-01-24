@@ -67,7 +67,4 @@ using System.Security.Permissions;
 [assembly: AssemblyFileVersion("1.0.0.00")]
 [assembly: AssemblyInformationalVersion("1.0")]
 [assembly: AllowPartiallyTrustedCallers]
-#if CODEPLEX_40
-[assembly: SecurityRules(SecurityRuleSet.Level1)]
-#endif
 #endif

@@ -51,9 +51,6 @@ using System.Security;
 
 #if !SILVERLIGHT
 [assembly: AllowPartiallyTrustedCallers]
-#if CODEPLEX_40
-[assembly: SecurityRules(SecurityRuleSet.Level1)]
-#endif
 #if !CLR2
 [assembly: SecurityRules(SecurityRuleSet.Level1)]
 #endif
