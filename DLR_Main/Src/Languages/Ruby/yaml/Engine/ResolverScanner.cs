@@ -18,6 +18,7 @@
 
 // line 1 "src/org/jvyamlb/resolver_scanner.rl"
 
+using System.Diagnostics;
 namespace IronRuby.StandardLibrary.Yaml {
 
     public static class ResolverScanner {
@@ -343,7 +344,7 @@ namespace IronRuby.StandardLibrary.Yaml {
 
         // line 55 "src/org/jvyamlb/resolver_scanner.rl"
 
-        internal static string Recognize(string str) {
+        internal static string Recognize(string/*!*/ str) {
             // TODO: scanner should be char based
             byte[] data = System.Text.Encoding.ASCII.GetBytes(str);
             string tag = null;
@@ -446,7 +447,9 @@ namespace IronRuby.StandardLibrary.Yaml {
                 switch (_resolver_scanner_actions[_acts++]) {
                     case 0:
                         // line 10 "src/org/jvyamlb/resolver_scanner.rl"
-                        { tag = "tag:yaml.org,2002:bool"; }
+                        { 
+                            tag = ToBool(str).Value ? Tags.True : Tags.False;
+                        }
                         break;
                     case 1:
                         // line 11 "src/org/jvyamlb/resolver_scanner.rl" 
@@ -482,6 +485,24 @@ namespace IronRuby.StandardLibrary.Yaml {
 
             // line 78 "src/org/jvyamlb/resolver_scanner.rl"
             return tag;
+        }
+
+        // TODO: thsi should be distinguished by the parser:
+        internal static bool? ToBool(string value) {
+            switch (value.ToUpperInvariant()) {
+                case "YES":
+                case "TRUE":
+                case "ON":
+                    return true;
+
+                case "NO":
+                case "FALSE":
+                case "OFF":
+                    return false;
+
+                default:
+                    return null;
+            }
         }
     }
 }

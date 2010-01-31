@@ -116,6 +116,7 @@
       <Compile Include="Builtins\RubyRegex.Subclass.cs" />
       <Compile Include="Builtins\RubyRegexOptions.cs" />
       <Compile Include="Builtins\RubyStruct.cs" />
+      <Compile Include="Builtins\RubySymbol.cs" />
       <Compile Include="Builtins\Stubs.cs" />
       <Compile Include="Builtins\Subclasses.Generated.cs" />
       <Compile Include="Builtins\TypeDescriptor.Generated.cs" />

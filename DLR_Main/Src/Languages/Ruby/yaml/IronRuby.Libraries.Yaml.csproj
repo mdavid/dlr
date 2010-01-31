@@ -54,6 +54,10 @@
     <TargetFrameworkVersion>v4.0</TargetFrameworkVersion>
   </PropertyGroup>
   <ItemGroup>
+    <Compile Include="Engine\ScalarProperties.cs" />
+    <Compile Include="Engine\ScalarQuotingStyle.cs" />
+    <Compile Include="Engine\FlowStyle.cs" />
+    <Compile Include="Engine\Tags.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="BuiltinsOps.cs" />
     <Compile Include="Engine\NodeProvider.cs" />
@@ -71,7 +75,6 @@
     <Compile Include="Engine\PrivateType.cs" />
     <Compile Include="Engine\ReferenceEqualityComparer.cs" />
     <Compile Include="Engine\Representer.cs" />
-    <Compile Include="Engine\Resolver.cs" />
     <Compile Include="Engine\ResolverScanner.cs" />
     <Compile Include="Engine\Scanner.cs" />
     <Compile Include="Engine\Serializer.cs" />
@@ -86,6 +89,8 @@
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="RubyYaml.cs" />
+    <Compile Include="Syck.cs" />
+    <Compile Include="YamlCallSiteStorage.cs" />
     <Compile Include="YamlStream.cs" />
   </ItemGroup>
   <ItemGroup>
