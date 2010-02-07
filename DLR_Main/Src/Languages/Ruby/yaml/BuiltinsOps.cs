@@ -151,7 +151,7 @@ namespace IronRuby.StandardLibrary.Yaml {
             string name = self.ImmediateClass.GetNonSingletonClass().Name;
             if (name != null) {
                 string structPrefix = "Struct::";
-                if (name.StartsWith(structPrefix)) {
+                if (name.StartsWith(structPrefix, StringComparison.Ordinal)) {
                     name = name.Substring(structPrefix.Length);
                 }
             }
@@ -239,7 +239,7 @@ namespace IronRuby.StandardLibrary.Yaml {
             string str = self.ToString();
 
             ScalarQuotingStyle style = ScalarQuotingStyle.None;
-            if (str.StartsWith(":")) {
+            if (str.StartsWith(":", StringComparison.Ordinal)) {
                 style = ScalarQuotingStyle.Double;
             } else {
                 style = rep.GetYamlStyle(self);

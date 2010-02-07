@@ -270,6 +270,7 @@
       <Compile Include="Runtime\PythonContext.cs" />
       <Compile Include="Runtime\PythonContext.Generated.cs" />
       <Compile Include="Runtime\PythonDictionary.cs" />
+      <Compile Include="Runtime\PythonDocumentationProvider.cs" />
       <Compile Include="Runtime\PythonDynamicStackFrame.cs" />
       <Compile Include="Runtime\PythonFile.cs" />
       <Compile Include="Runtime\PythonFunction.cs" />
@@ -464,6 +465,7 @@
       <Compile Include="Runtime\Types\OldInstance.cs" />
       <Compile Include="Runtime\Types\OldInstance.Generated.cs" />
       <Compile Include="Runtime\Types\OperatorMapping.cs" />
+      <Compile Include="Runtime\Types\ParameterInfoWrapper.cs" />
       <Compile Include="Runtime\Types\PythonAssemblyOps.cs" />
       <Compile Include="Runtime\Types\PythonSiteCache.cs" />
       <Compile Include="Runtime\Types\PythonType.cs" />

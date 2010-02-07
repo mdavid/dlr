@@ -28,7 +28,6 @@ namespace IronRuby.StandardLibrary.Yaml {
         private readonly bool _useExplicitStart;
         private readonly bool _useExplicitEnd;
         private readonly Version _useVersion;
-        private readonly bool _useTags;
         private readonly string _anchorTemplate;
 
         private readonly Dictionary<Node, object>/*!*/ _serializedNodes = new Dictionary<Node, object>(ReferenceEqualityComparer<Node>.Instance);
@@ -49,7 +48,6 @@ namespace IronRuby.StandardLibrary.Yaml {
             if (opts.UseVersion) {
                 _useVersion = opts.Version;
             }
-            _useTags = opts.UseHeader;
             _anchorTemplate = opts.AnchorFormat ?? "id{0:000}";
             _emitter.Emit(StreamStartEvent.Instance);
         }
@@ -160,7 +158,7 @@ namespace IronRuby.StandardLibrary.Yaml {
                     } else {
                         // omit the tag for non-string scalars whose type can be recognized from their value:
                         string detectedTag = ResolverScanner.Recognize(scalar.Value);
-                        if (detectedTag != null && tag.StartsWith(detectedTag)) {
+                        if (detectedTag != null && tag.StartsWith(detectedTag, StringComparison.Ordinal)) {
                             tag = null;
                         }
                         type = ScalarValueType.Other;

@@ -580,7 +580,7 @@ namespace IronRuby.StandardLibrary.Yaml {
                 try {
                     Ensure(2, false);
                     str.Append(int.Parse(new string(_buffer, _pointer, 2), NumberStyles.HexNumber));
-                } catch (FormatException fe) {
+                } catch (FormatException) {
                     ReportError(
                         "while scanning a {0}: expected URI escape sequence of 2 hexadecimal numbers, but found `{0}' ({1}) and `{2}' ({3})",
                         name, Peek(1), Peek(2)

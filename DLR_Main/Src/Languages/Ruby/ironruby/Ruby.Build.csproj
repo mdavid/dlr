@@ -371,6 +371,7 @@
       <Compile Include="Runtime\Calls\CallArguments.cs" />
       <Compile Include="Runtime\Calls\CallSiteTracer.cs" />
       <Compile Include="Runtime\Calls\InteropBinder.cs" />
+      <Compile Include="Runtime\Calls\LibraryOverloadInfo.cs" />
       <Compile Include="Runtime\Calls\MetaObjectBuilder.cs" />
       <Compile Include="Runtime\Calls\MethodDispatcher.cs" />
       <Compile Include="Runtime\Calls\MethodDispatcher.Generated.cs" />

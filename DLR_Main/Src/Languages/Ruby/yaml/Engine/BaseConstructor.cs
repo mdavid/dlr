@@ -560,13 +560,13 @@ namespace IronRuby.StandardLibrary.Yaml {
             int @base = 10;
             if (value == "0") {
                 return 0;
-            } else if (value.StartsWith("0b")) {
+            } else if (value.StartsWith("0b", StringComparison.Ordinal)) {
                 value = value.Substring(2);
                 @base = 2;
-            } else if (value.StartsWith("0x")) {
+            } else if (value.StartsWith("0x", StringComparison.Ordinal)) {
                 value = value.Substring(2);
                 @base = 16;
-            } else if (value.StartsWith("0")) {
+            } else if (value.StartsWith("0", StringComparison.Ordinal)) {
                 value = value.Substring(1);
                 @base = 8;
             } else if (value.IndexOf(':') != -1) {
@@ -598,9 +598,9 @@ namespace IronRuby.StandardLibrary.Yaml {
             } else if (first == '+') {
                 value = value.Substring(1);
             }
-            string valLower = value.ToLower();
+            string valLower = value.ToLowerInvariant();
             if (valLower == ".inf") {
-                return sign == -1 ? double.NegativeInfinity : double.PositiveInfinity;
+                return sign == -1 ? Double.NegativeInfinity : Double.PositiveInfinity;
             } else if (valLower == ".nan") {
                 return double.NaN;
             } else if (value.IndexOf(':') != -1) {
@@ -658,7 +658,7 @@ namespace IronRuby.StandardLibrary.Yaml {
 
                 foreach (KeyValuePair<object, object> e in ctor.ConstructMapping(node)) {
                     string name = e.Key.ToString();
-                    name = "" + char.ToUpper(name[0]) + name.Substring(1);
+                    name = "" + name[0].ToUpperInvariant() + name.Substring(1);
                     PropertyInfo prop = type.GetProperty(name);
 
                     prop.SetValue(result, Convert.ChangeType(e.Value, prop.PropertyType), null);

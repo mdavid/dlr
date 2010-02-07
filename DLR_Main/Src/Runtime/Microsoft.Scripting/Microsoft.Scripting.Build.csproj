@@ -94,12 +94,18 @@
       <!--          Hosting          -->
       <!--                           -->
       <Compile Include="Hosting\CompiledCode.cs" />
+      <Compile Include="Hosting\DocumentationOperations.cs" />
       <Compile Include="Hosting\ErrorListener.cs" />
       <Compile Include="Hosting\ErrorListenerProxy.cs" />
       <Compile Include="Hosting\ErrorSinkProxyListener.cs" />
       <Compile Include="Hosting\ExceptionOperations.cs" />
       <Compile Include="Hosting\LanguageSetup.cs" />
+      <Compile Include="Hosting\MemberDoc.cs" />
+      <Compile Include="Hosting\MemberKind.cs" />
       <Compile Include="Hosting\ObjectOperations.cs" />
+      <Compile Include="Hosting\OverloadDoc.cs" />
+      <Compile Include="Hosting\ParameterDoc.cs" />
+      <Compile Include="Hosting\ParameterFlags.cs" />
       <Compile Include="Hosting\ScriptEngine.cs" />
       <Compile Include="Hosting\ScriptHost.cs" />
       <Compile Include="Hosting\ScriptHostProxy.cs" />
@@ -139,6 +145,7 @@
       <Compile Include="Runtime\BaseSymbolDictionary.cs" />
       <Compile Include="Runtime\ContextId.cs" />
       <Compile Include="Runtime\DlrConfiguration.cs" />
+      <Compile Include="Runtime\DocumentationProvider.cs" />
       <Compile Include="Runtime\DynamicOperations.cs" />
       <Compile Include="Runtime\DynamicRuntimeHostingProvider.cs" />
       <Compile Include="Runtime\InvariantContext.cs" />

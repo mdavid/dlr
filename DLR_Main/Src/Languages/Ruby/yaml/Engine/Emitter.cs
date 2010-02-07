@@ -36,8 +36,6 @@ namespace IronRuby.StandardLibrary.Yaml {
         private int _flowLevel;
         private readonly Stack<int> _indents = new Stack<int>();
         private int _indent = -1;
-        private bool _rootContext;
-        private bool _sequenceContext;
         private bool _mappingContext;
         
         private int _line;
@@ -580,7 +578,7 @@ namespace IronRuby.StandardLibrary.Yaml {
             string handle = null;
             string suffix = tag;
             foreach (string prefix in _tagPrefixes.Keys) {
-                if (prefix.Length < tag.Length && tag.StartsWith(prefix)) {
+                if (prefix.Length < tag.Length && tag.StartsWith(prefix, StringComparison.Ordinal)) {
                     handle = _tagPrefixes[prefix];
                     suffix = tag.Substring(prefix.Length);
                 }
@@ -589,7 +587,7 @@ namespace IronRuby.StandardLibrary.Yaml {
             // use short form if applicable ("tag:ruby.yaml.org,2002:foobar" -> "ruby/foobar")
             if (handle == null) {
                 int colonIdx;
-                if (tag.StartsWith("tag:") && (colonIdx = tag.IndexOf(':', 4)) != -1) {
+                if (tag.StartsWith("tag:", StringComparison.Ordinal) && (colonIdx = tag.IndexOf(':', 4)) != -1) {
                     string first = tag.Substring(4, tag.IndexOf('.', 4) - 4);
                     string rest = tag.Substring(colonIdx + 1);
                     handle = "!" + first + "/";
@@ -610,7 +608,6 @@ namespace IronRuby.StandardLibrary.Yaml {
         }
 
         private static Regex DOC_INDIC = new Regex("^(---|\\.\\.\\.)", RegexOptions.Compiled);
-        private static Regex FIRST_SPACE = new Regex("(^|\n) ", RegexOptions.Compiled);
         private static string NULL_BL_T_LINEBR = "\0 \t\r\n";
         private static string SPECIAL_INDIC = "#,[]{}#&*!|>'\"%@";
         private static string FLOW_INDIC = ",?[]{}";
@@ -1059,8 +1056,6 @@ namespace IronRuby.StandardLibrary.Yaml {
         }
 
         private void EmitNode(bool root, bool sequence, bool mapping, bool simpleKey) {
-            _rootContext = root;
-            _sequenceContext = sequence;
             _mappingContext = mapping;
             if (_event is AliasEvent) {
                 EmitAlias();

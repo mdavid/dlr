@@ -8,6 +8,7 @@
     <AssemblyName>ipyw</AssemblyName>
     <DebugSymbols>true</DebugSymbols>
     <DebugType>pdbonly</DebugType>
+    <OutputType>WinExe</OutputType>
     <BinPlaceSymbols>false</BinPlaceSymbols> 
     <Install>true</Install>
     <InstallFrom>Disk</InstallFrom>

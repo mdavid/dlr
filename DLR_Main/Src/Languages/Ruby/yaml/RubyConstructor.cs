@@ -186,11 +186,11 @@ namespace IronRuby.StandardLibrary.Yaml {
             if (scalar != null) {
                 string value = scalar.Value;                
                 int dotsIdx;
-                if ((dotsIdx = value.IndexOf("...")) != -1) {
+                if ((dotsIdx = value.IndexOf("...", StringComparison.Ordinal)) != -1) {
                     begin = ParseObject(ctor, value.Substring(0, dotsIdx));                
                     end = ParseObject(ctor, value.Substring(dotsIdx + 3));
                     excludeEnd = true;
-                } else if ((dotsIdx = value.IndexOf("..")) != -1) {
+                } else if ((dotsIdx = value.IndexOf("..", StringComparison.Ordinal)) != -1) {
                     begin = ParseObject(ctor, value.Substring(0, dotsIdx));
                     end = ParseObject(ctor, value.Substring(dotsIdx + 2));
                 } else {

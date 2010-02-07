@@ -555,7 +555,7 @@ namespace IronRuby.StandardLibrary.Yaml {
             string handle = tagToken.Handle;
             string suffix = tagToken.Suffix;
             int ix = -1;
-            if ((ix = suffix.IndexOf("^")) != -1) {
+            if ((ix = suffix.IndexOf('^')) != -1) {
                 if (ix > 0) {
                     _familyTypePrefix = suffix.Substring(0, ix);
                 }                
@@ -565,13 +565,13 @@ namespace IronRuby.StandardLibrary.Yaml {
                 if (!_tagHandles.ContainsKey(handle)) {
                     ReportError("while parsing a node: found undefined tag handle: {0}", handle);
                 }
-                if ((ix = suffix.IndexOf("/")) != -1) {
+                if ((ix = suffix.IndexOf('/')) != -1) {
                     string before = suffix.Substring(0, ix);
                     string after = suffix.Substring(ix + 1);
                     if (ONLY_WORD.IsMatch(before)) {
                         tag = "tag:" + before + ".yaml.org,2002:" + after;
                     } else {
-                        if (before.StartsWith("tag:")) {
+                        if (before.StartsWith("tag:", StringComparison.Ordinal)) {
                             tag = before + ":" + after;
                         } else {
                             tag = "tag:" + before + ":" + after;
