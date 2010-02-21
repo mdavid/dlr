@@ -810,7 +810,7 @@ namespace IronRuby.Compiler {
                 default:
                     if (!IsIdentifierInitial(c, _multiByteIdentifier)) {
                         // UTF-8 BOM detection:
-                        if (_compatibility == RubyCompatibility.Ruby18 && _currentLineIndex == 0 && _bufferPos == 1 &&
+                        if (_compatibility < RubyCompatibility.Ruby19 && _currentLineIndex == 0 && _bufferPos == 1 &&
                             (c == 0xEF && Peek() == 0xBB && Peek(1) == 0xBF)) {
                             ReportError(Errors.InvalidUseOfByteOrderMark);
                             // skip BOM and continue parsing as if it was whitespace:
@@ -2028,7 +2028,7 @@ namespace IronRuby.Compiler {
             }
 
             // encoding is ignored in 1.9:
-            if (_compatibility == RubyCompatibility.Ruby18) {
+            if (_compatibility < RubyCompatibility.Ruby19) {
                 return options | encoding;
             } else {
                 return options;

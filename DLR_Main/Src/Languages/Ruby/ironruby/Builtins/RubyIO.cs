@@ -23,7 +23,7 @@ namespace IronRuby.Builtins {
     /// <summary>
     /// IO builtin class. Wraps a BCL Stream object. Implementation of Ruby methods is in IoOps.cs in IronRuby.Libraries assembly.
     /// </summary>
-    public class RubyIO : IDisposable {
+    public partial class RubyIO : IDisposable {
         private RubyContext/*!*/ _context;
         private RubyEncoding/*!*/ _externalEncoding;
         private RubyEncoding _internalEncoding;

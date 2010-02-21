@@ -13,12 +13,21 @@
  *
  * ***************************************************************************/
 
-namespace IronRuby {
-    public enum RubyCompatibility {
-        Default = Ruby186,
-        Ruby186 = 0,
-        Ruby187 = 187,
-        Ruby19 = 190,
-        Ruby20 = 200,
+using IronRuby.Runtime;
+using Microsoft.Scripting.Utils;
+using IronRuby.Compiler.Generation;
+using System.Diagnostics;
+
+namespace IronRuby.Builtins {
+    public partial class RubyIO {
+        public sealed partial class Subclass : RubyIO, IRubyObject {
+            // called by Class#new rule when creating a Ruby subclass of IO:
+            public Subclass(RubyClass/*!*/ rubyClass) 
+                : base(rubyClass.Context) {
+                Assert.NotNull(rubyClass);
+                Debug.Assert(!rubyClass.IsSingletonClass);
+                ImmediateClass = rubyClass;
+            }
+        }
     }
 }

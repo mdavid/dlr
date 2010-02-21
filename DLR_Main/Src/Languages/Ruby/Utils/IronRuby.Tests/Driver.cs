@@ -265,7 +265,7 @@ namespace IronRuby.Tests {
             if (args.Contains("/partial")) {
                 Console.WriteLine("Running in partial trust");
 
-                PermissionSet ps = CreatePermissionSetByName();
+                PermissionSet ps = CreatePermissionSet();
                 AppDomainSetup setup = new AppDomainSetup();
                 
                 setup.ApplicationBase = Environment.CurrentDirectory;
@@ -296,7 +296,8 @@ namespace IronRuby.Tests {
             }
         }
 
-        private static PermissionSet/*!*/ CreatePermissionSetByName() {
+        private static PermissionSet/*!*/ CreatePermissionSet() {
+#if CLR2
             string name = "Internet";
             bool foundName = false;
             PermissionSet setIntersection = new PermissionSet(PermissionState.Unrestricted);
@@ -319,6 +320,11 @@ namespace IronRuby.Tests {
             }
 
             return setIntersection;
+#else
+            Evidence e = new Evidence();
+            e.AddHostEvidence(new Zone(SecurityZone.Internet));
+            return SecurityManager.GetStandardSandbox(e);
+#endif
         }       
 
         public static int Run(List<string>/*!*/ args) {

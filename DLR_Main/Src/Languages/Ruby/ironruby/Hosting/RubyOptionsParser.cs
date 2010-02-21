@@ -242,15 +242,19 @@ namespace IronRuby.Hosting {
                     LanguageSetup.Options["Profile"] = ScriptingRuntimeHelpers.True;
                     break;
 
-                case "-18":
-                    LanguageSetup.Options["Compatibility"] = RubyCompatibility.Ruby18;
+                case "-1.8.6":
+                    LanguageSetup.Options["Compatibility"] = RubyCompatibility.Ruby186;
                     break;
 
-                case "-19":
+                case "-1.8.7":
+                    LanguageSetup.Options["Compatibility"] = RubyCompatibility.Ruby187;
+                    break;
+
+                case "-1.9":
                     LanguageSetup.Options["Compatibility"] = RubyCompatibility.Ruby19;
                     break;
 
-                case "-20":
+                case "-2.0":
                     LanguageSetup.Options["Compatibility"] = RubyCompatibility.Ruby20;
                     break;
 
@@ -382,9 +386,10 @@ namespace IronRuby.Hosting {
 
                 { "-trace",                      "enable support for set_trace_func" },
                 { "-profile",                    "enable support for 'pi = IronRuby::Clr.profile { block_to_profile }'" },
-                { "-18",                         "Ruby 1.8 mode" },
-                { "-19",                         "Ruby 1.9 mode" },
-                { "-20",                         "Ruby 2.0 mode" },
+                { "-1.8.6",                      "Ruby 1.8.6 mode (default)" },
+                { "-1.8.7",                      "Ruby 1.8.7 mode" },
+                { "-1.9",                        "Ruby 1.9 mode" },
+                { "-2.0",                        "Ruby 2.0 mode" },
 
                 { "-X:ExceptionDetail",          "enable ExceptionDetail mode" },
                 { "-X:NoAdaptiveCompilation",    "disable adaptive compilation - all code will be compiled" },

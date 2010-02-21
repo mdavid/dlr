@@ -581,7 +581,7 @@ namespace IronRuby.Builtins {
 
         #region times (deprecated)
 #if !SILVERLIGHT
-        [RubyMethod("times", RubyMethodAttributes.PublicSingleton, Compatibility = RubyCompatibility.Ruby18, BuildConfig = "!SILVERLIGHT")]
+        [RubyMethod("times", RubyMethodAttributes.PublicSingleton, Compatibility = RubyCompatibility.Ruby186, BuildConfig = "!SILVERLIGHT")]
         public static RubyStruct/*!*/ Times(RubyClass/*!*/ self) {
             return RubyProcess.GetTimes(self);
         }
@@ -984,7 +984,7 @@ namespace IronRuby.Builtins {
                         break;
 
                     case 'z':
-                        if (context.RubyOptions.Compatibility > RubyCompatibility.Ruby18) {
+                        if (context.RubyOptions.Compatibility > RubyCompatibility.Ruby186) {
                             result.Append(self.FormatUtcOffset());
                         } else {
                             result.Append(RubyTime.GetCurrentZoneName());
@@ -992,7 +992,7 @@ namespace IronRuby.Builtins {
                         break;
 
                     default:
-                        if (context.RubyOptions.Compatibility > RubyCompatibility.Ruby18) {
+                        if (context.RubyOptions.Compatibility > RubyCompatibility.Ruby186) {
                             result.Append(c);
                             break;
                         } 
@@ -1005,7 +1005,7 @@ namespace IronRuby.Builtins {
             }
 
             if (inFormat) {
-                if (context.RubyOptions.Compatibility > RubyCompatibility.Ruby18) {
+                if (context.RubyOptions.Compatibility > RubyCompatibility.Ruby186) {
                     return result.Append('%');
                 }
                 return MutableString.CreateEmpty();
@@ -1050,7 +1050,7 @@ namespace IronRuby.Builtins {
         [RubyMethod("to_s")]
         public static MutableString/*!*/ ToString(RubyContext/*!*/ context, RubyTime/*!*/ self) {            
             return MutableString.CreateAscii(String.Format(CultureInfo.InvariantCulture, 
-                (context.RubyOptions.Compatibility == RubyCompatibility.Ruby18) ? 
+                (context.RubyOptions.Compatibility < RubyCompatibility.Ruby19) ? 
                     "{0:ddd MMM dd HH:mm:ss} {1} {0:yyyy}" :
                     "{0:yyyy-dd-MM HH:mm:ss} {1}",
                 self.DateTime,

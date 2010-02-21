@@ -13,6 +13,12 @@
  *
  * ***************************************************************************/
 
+#if !CLR2
+using System.Linq.Expressions;
+#else
+using Microsoft.Scripting.Ast;
+#endif
+
 using System;
 using Microsoft.Scripting.Utils;
 using System.Diagnostics;
@@ -22,6 +28,7 @@ using System.Collections;
 using System.Collections.Generic;
 using IronRuby.Builtins;
 using System.Globalization;
+using System.Dynamic;
 
 namespace IronRuby.Runtime {
     public static class Utils {
@@ -482,6 +489,11 @@ namespace IronRuby.Runtime {
             return str.ToLower(CultureInfo.InvariantCulture);
         }
 #endif
+        internal static IEnumerable<Expression/*!*/>/*!*/ ToExpressions(this IEnumerable<DynamicMetaObject>/*!*/ metaObjects) {
+            foreach (var metaObject in metaObjects) {
+                yield return metaObject != null ? metaObject.Expression : null;
+            }
+        }
     }
 }
 

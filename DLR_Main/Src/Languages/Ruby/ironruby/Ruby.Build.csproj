@@ -105,6 +105,7 @@
       <Compile Include="Builtins\RubyFile.cs" />
       <Compile Include="Builtins\RubyInputProvider.cs" />
       <Compile Include="Builtins\RubyIO.cs" />
+      <Compile Include="Builtins\RubyIO.Subclass.cs" />
       <Compile Include="Builtins\RubyMethod.cs" />
       <Compile Include="Builtins\RubyMethod.Meta.cs" />
       <Compile Include="Builtins\RubyModule.cs" />
@@ -395,6 +396,7 @@
       <Compile Include="Runtime\Calls\RubyMethodInfo.cs" />
       <Compile Include="Runtime\Calls\RubyOverloadGroupInfo.cs" />
       <Compile Include="Runtime\Calls\RubyOverloadResolver.cs" />
+      <Compile Include="Runtime\Calls\RubyScopeMethodMissingInfo.cs" />
       <Compile Include="Runtime\Calls\RuleGenerators.cs" />
       <Compile Include="Runtime\Calls\SuperCallAction.cs" />
       <Compile Include="Runtime\Calls\SuperForwarderInfo.cs" />

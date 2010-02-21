@@ -119,7 +119,7 @@ namespace IronRuby.Runtime {
             _hasSearchPaths = GetOption<object>(options, "SearchPaths", null) != null;
             _compatibility = GetCompatibility(options, "Compatibility", RubyCompatibility.Default);
 
-            if (_compatibility == RubyCompatibility.Ruby18) {
+            if (_compatibility < RubyCompatibility.Ruby19) {
                 _kcode = GetKCoding(options, "KCode", null);
             }
         }
@@ -134,7 +134,7 @@ namespace IronRuby.Runtime {
                 string str = value as string;
                 if (str != null) {
                     switch (str) {
-                        case "1.8": return RubyCompatibility.Ruby18;
+                        case "1.8": return RubyCompatibility.Ruby186;
                         case "1.9": return RubyCompatibility.Ruby19;
                         case "2.0": return RubyCompatibility.Ruby20;
                     }

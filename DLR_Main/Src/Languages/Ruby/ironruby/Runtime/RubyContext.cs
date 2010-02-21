@@ -51,9 +51,41 @@ namespace IronRuby.Runtime {
         private static int _RuntimeIdGenerator = 0;
 
         // MRI compliance:
-        public static readonly string/*!*/ MriVersion = "1.8.6";
-        public static readonly string/*!*/ MriReleaseDate = "2009-03-31";
-        public static readonly int MriPatchLevel = 368;
+        public string/*!*/ MriVersion { 
+            get {
+                switch(RubyOptions.Compatibility) {
+                    case RubyCompatibility.Ruby186: return "1.8.6";
+                    case RubyCompatibility.Ruby187: return "1.8.7";
+                    case RubyCompatibility.Ruby19: return "1.9.1";
+                    case RubyCompatibility.Ruby20: return "2.0.0";
+                    default: throw new InvalidOperationException();
+                }
+            } 
+        }
+
+        public string/*!*/ MriReleaseDate {
+            get {
+                switch (RubyOptions.Compatibility) {
+                    case RubyCompatibility.Ruby186: return "2009-03-31";
+                    case RubyCompatibility.Ruby187: return "2009-11-02";
+                    case RubyCompatibility.Ruby19: return "2009-05-12";
+                    case RubyCompatibility.Ruby20: return "2.0.0";
+                    default: throw new InvalidOperationException();
+                }
+            }
+        }
+
+        public int MriPatchLevel {
+            get {
+                switch (RubyOptions.Compatibility) {
+                    case RubyCompatibility.Ruby186: return 368;
+                    case RubyCompatibility.Ruby187: return 174;
+                    case RubyCompatibility.Ruby19: return 129;
+                    case RubyCompatibility.Ruby20: return 0;
+                    default: throw new InvalidOperationException();
+                }
+            }
+        }
 
         // IronRuby:
         public const string/*!*/ IronRubyVersionString = "0.9.4.0";
@@ -539,10 +571,10 @@ namespace IronRuby.Runtime {
         private void InitializeGlobalConstants() {
             Debug.Assert(_objectClass != null);
 
-            MutableString version = MutableString.CreateAscii(RubyContext.MriVersion);
+            MutableString version = MutableString.CreateAscii(MriVersion);
             MutableString platform = MakePlatformString();
 
-            MutableString releaseDate = MutableString.CreateAscii(RubyContext.MriReleaseDate);
+            MutableString releaseDate = MutableString.CreateAscii(MriReleaseDate);
             MutableString rubyEngine = MutableString.CreateAscii("ironruby");
 
             using (ClassHierarchyLocker()) {
@@ -550,7 +582,7 @@ namespace IronRuby.Runtime {
 
                 obj.SetConstantNoMutateNoLock("RUBY_ENGINE", rubyEngine);
                 obj.SetConstantNoMutateNoLock("RUBY_VERSION", version);
-                obj.SetConstantNoMutateNoLock("RUBY_PATCHLEVEL", RubyContext.MriPatchLevel);
+                obj.SetConstantNoMutateNoLock("RUBY_PATCHLEVEL", MriPatchLevel);
                 obj.SetConstantNoMutateNoLock("RUBY_PLATFORM", platform);
                 obj.SetConstantNoMutateNoLock("RUBY_RELEASE_DATE", releaseDate);
 
@@ -1875,7 +1907,7 @@ namespace IronRuby.Runtime {
         }
 
         private RubySymbol/*!*/ CreateSymbolInternal(MutableString/*!*/ mstr, bool clone) {
-            if (RubyOptions.Compatibility == RubyCompatibility.Ruby18) {
+            if (RubyOptions.Compatibility < RubyCompatibility.Ruby19) {
                 if (mstr.IsEmpty) {
                     throw RubyExceptions.CreateArgumentError("interning empty string");
                 }
@@ -1958,7 +1990,7 @@ namespace IronRuby.Runtime {
         /// </para>
         /// </summary>
         public RubyEncoding/*!*/ GetIdentifierEncoding() {
-            return _options.Compatibility == RubyCompatibility.Ruby18 ? (KCode ?? RubyEncoding.KCodeUTF8) : RubyEncoding.UTF8;
+            return _options.Compatibility < RubyCompatibility.Ruby19 ? (KCode ?? RubyEncoding.KCodeUTF8) : RubyEncoding.UTF8;
         }
 
         public RubySymbol/*!*/ EncodeIdentifier(string/*!*/ identifier) {
@@ -2133,7 +2165,7 @@ namespace IronRuby.Runtime {
 
         public RubyEncoding/*!*/ GetPathEncoding() {
             // we need to force UTF8 encoding since the path can contain non-ascii characters:
-            return _options.Compatibility == RubyCompatibility.Ruby18 ? (KCode ?? RubyEncoding.KCodeUTF8) : RubyEncoding.UTF8;
+            return _options.Compatibility < RubyCompatibility.Ruby19 ? (KCode ?? RubyEncoding.KCodeUTF8) : RubyEncoding.UTF8;
         }
 
         /// <summary>
@@ -2182,7 +2214,7 @@ namespace IronRuby.Runtime {
                 }
             } catch (DecoderFallbackException) {
                 throw RubyExceptions.CreateEINVAL("Invalid multi-byte sequence in path `{0}'", path.ToAsciiString(
-                    _options.Compatibility == RubyCompatibility.Ruby18
+                    _options.Compatibility < RubyCompatibility.Ruby19
                 ));
             }
         }
@@ -2394,18 +2426,7 @@ namespace IronRuby.Runtime {
 
             RubyGlobalScope result = new RubyGlobalScope(this, globalScope, mainObject, createHosted);
             if (bindGlobals) {
-                // method_missing:
-                mainSingleton.SetMethodNoEvent(this, Symbols.MethodMissing, 
-                    new RubyLibraryMethodInfo(new[] {
-                        LibraryOverload.Create(
-                            new Func<RubyScope, BlockParam, object, RubySymbol, object[], object>(RubyTopLevelScope.TopMethodMissing),
-                            true,
-                            0,
-                            0
-                        )
-                    }, RubyMemberFlags.Private, mainSingleton)
-                );
-
+                mainSingleton.SetMethodNoEvent(this, Symbols.MethodMissing, new RubyScopeMethodMissingInfo(RubyMemberFlags.Private, mainSingleton));
                 mainSingleton.SetGlobalScope(result);
             }
             return (RubyGlobalScope)globalScope.SetExtension(ContextId, result);
@@ -2686,7 +2707,7 @@ namespace IronRuby.Runtime {
         }
 
         private static SourceCodeReader/*!*/ GetSourceReader(Stream/*!*/ stream, Encoding/*!*/ defaultEncoding, RubyCompatibility compatibility) {
-            if (compatibility <= RubyCompatibility.Ruby18) {
+            if (compatibility <= RubyCompatibility.Ruby186) {
                 return new SourceCodeReader(new StreamReader(stream, defaultEncoding, false), defaultEncoding);
             }
 
@@ -2743,7 +2764,7 @@ namespace IronRuby.Runtime {
             if (ignoreCase) {
                 return base.CreateGetMemberBinder(name, ignoreCase);
             }
-            return new InteropBinder.GetMember(this, name);
+            return _metaBinderFactory.InteropGetMember(name);
         }
 
         public override InvokeMemberBinder/*!*/ CreateCallBinder(string/*!*/ name, bool ignoreCase, CallInfo/*!*/ callInfo) {
@@ -2751,20 +2772,20 @@ namespace IronRuby.Runtime {
             if (ignoreCase || callInfo.ArgumentNames.Count != 0) {
                 return base.CreateCallBinder(name, ignoreCase, callInfo);
             }
-            return new InteropBinder.InvokeMember(this, name, callInfo);
+            return _metaBinderFactory.InteropInvokeMember(name, callInfo);
         }
 
-        public override CreateInstanceBinder/*!*/ CreateCreateBinder(CallInfo /*!*/ callInfo) {
+        public override CreateInstanceBinder/*!*/ CreateCreateBinder(CallInfo/*!*/ callInfo) {
             // TODO:
             if (callInfo.ArgumentNames.Count != 0) {
                 return base.CreateCreateBinder(callInfo);
             }
 
-            return new InteropBinder.CreateInstance(this, callInfo);
+            return _metaBinderFactory.InteropCreateInstance(callInfo);
         }
 
         public override ConvertBinder/*!*/ CreateConvertBinder(Type toType, bool? explicitCast) {
-            return new InteropBinder.Convert(this, toType, explicitCast ?? true);
+            return _metaBinderFactory.InteropConvert(toType, explicitCast ?? true);
         }
 
         // TODO: override GetMemberNames?

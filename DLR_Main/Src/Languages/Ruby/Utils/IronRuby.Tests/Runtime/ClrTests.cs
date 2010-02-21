@@ -435,9 +435,9 @@ Baz(I): 1
             }
 
             // singletons:
-            AssertNoClrNames(Engine.Execute(@"class << self; instance_methods + private_instance_methods; end"), null);
-            AssertNoClrNames(Engine.Execute(@"class << self; class << self; instance_methods + private_instance_methods; end; end"), null);
-            AssertNoClrNames(Engine.Execute(@"class << Class; instance_methods + private_instance_methods; end"), null);
+            AssertNoClrNames(Engine.Execute<object>(@"class << self; instance_methods + private_instance_methods; end"), null);
+            AssertNoClrNames(Engine.Execute<object>(@"class << self; class << self; instance_methods + private_instance_methods; end; end"), null);
+            AssertNoClrNames(Engine.Execute<object>(@"class << Class; instance_methods + private_instance_methods; end"), null);
         }
 
         public void ClrMethodEnumeration2() {
@@ -1777,7 +1777,7 @@ end
 ");
             Assert(e.Data is IDictionary);
 
-            var obj = Engine.Execute(@"
+            object obj = Engine.Execute(@"
 class C < Object
   def equals(other); raise; end
   new

@@ -196,6 +196,7 @@
     <Compile Include="Builtins\CharacterMap.cs" />
     <Compile Include="Builtins\ConsoleStream.cs" />
     <None Include="Builtins\Subclasses.Generator.rb" />
+    <Compile Include="Builtins\RubyIO.Subclass.cs" />
     <Compile Include="Builtins\IOMode.cs" />
     <Compile Include="Builtins\MutableStringBuilder.cs" />
     <Compile Include="Builtins\RubyBufferedStream.cs" />
@@ -254,6 +255,7 @@
     <Compile Include="Compiler\Parser\ParserStack.cs" />
     <Compile Include="Runtime\BinaryContentProvider.cs" />
     <Compile Include="Runtime\CallSiteStorages.cs" />
+    <Compile Include="Runtime\Calls\RubyScopeMethodMissingInfo.cs" />
     <Compile Include="Runtime\Calls\LibraryOverloadInfo.cs" />
     <Compile Include="Runtime\ConstantSiteCache.cs" />
     <Compile Include="Runtime\ConstantStorage.cs" />

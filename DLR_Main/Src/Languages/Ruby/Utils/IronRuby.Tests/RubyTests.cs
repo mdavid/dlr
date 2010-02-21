@@ -409,6 +409,8 @@ namespace IronRuby.Tests {
                 RubyHosting1B,
                 RubyHosting1C,
                 RubyHosting1D,
+                RubyHosting1E,
+                RubyHosting1F,
                 RubyHosting2,
                 RubyHosting3,
                 RubyHosting4,
@@ -424,7 +426,11 @@ namespace IronRuby.Tests {
                 PythonInterop3,
                 PythonInterop4,
                 PythonInterop5,
-                // TODO (bug in IronPython): PythonInterop6,
+                // TODO: PythonInterop_InvokeMember_Fallback1,
+                PythonInterop_InvokeMember_Fallback2,
+                // TODO: PythonInterop_Indexers_Fallback1,
+                // TODO: PythonInterop_Operators_Fallback1,
+                PythonInterop_NamedIndexers1,
 
                 CustomTypeDescriptor1,
                 CustomTypeDescriptor2,
@@ -741,6 +747,7 @@ namespace IronRuby.Tests {
                 Dlr_Methods,
                 Dlr_Visibility,
                 Dlr_Languages,
+                Dlr_DynamicObject1, 
 
                 Serialization1,
             };

@@ -1076,7 +1076,7 @@ namespace IronRuby.Builtins {
         #region dump, inspect
 
         public static string/*!*/ GetQuotedStringRepresentation(MutableString/*!*/ self, RubyContext/*!*/ context, bool isDump, char quote) {
-            bool is18 = context.RubyOptions.Compatibility == RubyCompatibility.Ruby18;
+            bool is18 = context.RubyOptions.Compatibility < RubyCompatibility.Ruby19;
             
             return self.AppendRepresentation(
                 new StringBuilder().Append(quote),
@@ -1715,6 +1715,30 @@ namespace IronRuby.Builtins {
                 return false;
             }
             return true;
+        }
+
+        [RubyMethod("start_with?")]
+        public static bool StartsWith(RubyScope/*!*/ scope, MutableString/*!*/ self,
+            [DefaultProtocol, Optional]MutableString subString) {
+
+            // TODO: Deal with encodings
+
+            if (subString == null || (self.Length < subString.Length)) {
+                return false;
+            }
+            return self.GetSlice(0, subString.Length).Equals(subString);
+        }
+
+        [RubyMethod("end_with?")]
+        public static bool EndsWith(RubyScope/*!*/ scope, MutableString/*!*/ self,
+            [DefaultProtocol, Optional]MutableString subString) {
+
+            // TODO: Deal with encodings
+
+            if (subString == null || self.Length < subString.Length) {
+                return false;
+            }
+            return self.EndsWith(subString.ConvertToString());
         }
 
         #endregion

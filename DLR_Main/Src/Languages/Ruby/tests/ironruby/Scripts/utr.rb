@@ -1,3 +1,14 @@
+if RUBY_VERSION == '1.9.1' and RUBY_ENGINE == "ironruby"
+  # The 1.9 libraries are currently not included in ir.exe.config
+  $LOAD_PATH.unshift(File.expand_path('../External.LCA_RESTRICTED/Languages/Ruby/ruby-1.9.1p129/lib/ruby/1.9.1', ENV['MERLIN_ROOT']))
+  # We want IronRuby's version of thread.rb to get precedence
+  $LOAD_PATH.unshift(File.expand_path('Languages/Ruby/Libs', ENV['MERLIN_ROOT']))
+  # Rational is a core builtin type in 1.9
+  require File.expand_path('../External.LCA_RESTRICTED/Languages/Ruby/ruby-1.8.6p368/lib/ruby/1.8/rational', ENV['MERLIN_ROOT'])
+  # 1.9 Gems are in a different format
+  ENV['GEM_PATH'] = ENV['GEM_HOME'] = File.expand_path('gems19', ENV['TMP'])
+end
+
 class UnitTestRunner
   def self.ironruby?
     defined?(RUBY_ENGINE) and RUBY_ENGINE == "ironruby"
@@ -99,7 +110,8 @@ class UnitTestRunner
   def run_test()
     @one_test =~/(.*)#(test_.*)/
     class_name, test_name = $1, $2
-    test_class = Object.const_get(class_name)
+    # Use class_eval instead of const_get in case of nested names like TestSuite::TestCase
+    test_class = Object.class_eval(class_name)
 
     test_class.new(test_name).run(TestResultLogger.new) {}
 

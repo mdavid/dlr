@@ -280,9 +280,15 @@ namespace IronRuby.Runtime {
 
         internal static string/*!*/ EncodeMethodName(string/*!*/ methodName, string sourcePath, SourceSpan location) {
             // encodes line number, file name into the method name
-            string fileName = sourcePath != null ? Path.GetFileName(sourcePath) : null;
+            string fileName;
+            try {
+                fileName = sourcePath != null ? Path.GetFileName(sourcePath) : null;
+            } catch (System.ArgumentException) {
+                // sourcePath can be specified by the user. We have to deal with the case of it not being well-formed
+                fileName = sourcePath;
+            }
             return String.Format(RubyMethodPrefix + "{0};{1};{2};{3}", methodName, fileName, location.IsValid ? location.Start.Line : 0,
-                Interlocked.Increment(ref _Id));
+                    Interlocked.Increment(ref _Id));
         }
 
         // \u2111\u211c;{method-name};{file-name};{line-number};{dlr-suffix}

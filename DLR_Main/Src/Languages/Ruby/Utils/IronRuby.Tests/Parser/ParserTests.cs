@@ -295,7 +295,7 @@ namespace IronRuby.Tests {
             t.Load(new byte[] { 
                 0xEF, 0xBB, 0xBF, (byte)'=', (byte)'1' 
             }, (tok) => { 
-                tok.Compatibility = RubyCompatibility.Ruby18; tok.AllowNonAsciiIdentifiers = true; 
+                tok.Compatibility = RubyCompatibility.Ruby186; tok.AllowNonAsciiIdentifiers = true; 
             })
             [Tokens.Identifier][(Tokens)'='][1].EOF();
 
@@ -303,7 +303,7 @@ namespace IronRuby.Tests {
             t.Load(new byte[] { 
                 0xEF, 0xBB, 0xBF, (byte)'=', (byte)'1' 
             }, (tok) => { 
-                tok.Compatibility = RubyCompatibility.Ruby18; 
+                tok.Compatibility = RubyCompatibility.Ruby186; 
                 tok.AllowNonAsciiIdentifiers = false;
                 tok.Verbatim = true;
             }) 
@@ -667,7 +667,7 @@ namespace IronRuby.Tests {
             t.Expect();
         }
 
-        [Options(Compatibility = RubyCompatibility.Ruby18)]
+        [Options(Compatibility = RubyCompatibility.Ruby186)]
         private void UnicodeEscapes2() {
             AssertTokenizer t = NewAssertTokenizer();
 
@@ -722,12 +722,12 @@ namespace IronRuby.Tests {
             var sjisEngine = Ruby.CreateEngine((setup) => {
                 setup.Options["KCode"] = RubyEncoding.KCodeSJIS;
             });
-            Assert(sjisEngine.Execute("$KCODE").ToString() == "SJIS");
+            Assert(sjisEngine.Execute<object>("$KCODE").ToString() == "SJIS");
             
             var utf8Engine = Ruby.CreateEngine((setup) => {
                 setup.Options["KCode"] = RubyEncoding.KCodeUTF8;
             });
-            Assert(utf8Engine.Execute("$KCODE").ToString() == "UTF8");
+            Assert(utf8Engine.Execute<object>("$KCODE").ToString() == "UTF8");
 
             // using default encoding (UTF8) for Unicode string source (ignoring KCODE):
             var str = sjisEngine.Execute<MutableString>("Σ = 'Σ'");
@@ -826,7 +826,7 @@ p __ENCODING__
             AssertOutput(() => source2.Execute(), @"#<Encoding:utf-8>");
         }
 
-        [Options(Compatibility = RubyCompatibility.Ruby18)]
+        [Options(Compatibility = RubyCompatibility.Ruby186)]
         private void Encoding3() {
             AssertExceptionThrown<MissingMethodException>(() =>
                 CompilerTest("__ENCODING__")
