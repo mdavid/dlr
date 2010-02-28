@@ -307,6 +307,7 @@
       <!--                           -->
       <Compile Include="Hosting\RubyCommandLine.cs" />
       <Compile Include="Hosting\RubyOptionsParser.cs" />
+      <Compile Include="Hosting\RubyService.cs" />
     </ItemGroup>
     <ItemGroup>
       <!--                              -->
@@ -353,6 +354,7 @@
       <Compile Include="Runtime\RubyOptions.cs" />
       <Compile Include="Runtime\RubyScope.cs" />
       <Compile Include="Runtime\RubyScriptCode.cs" />
+      <Compile Include="Runtime\RubyStackTraceBuilder.cs" />
       <Compile Include="Runtime\RubyUtils.cs" />
       <Compile Include="Runtime\RuntimeErrorSink.cs" />
       <Compile Include="Runtime\StackUnwinder.cs" />

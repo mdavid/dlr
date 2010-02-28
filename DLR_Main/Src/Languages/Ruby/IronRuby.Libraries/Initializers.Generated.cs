@@ -7736,7 +7736,7 @@ namespace IronRuby.Builtins {
             
             DefineLibraryMethod(module, "zone", 0x51, 
                 0x00000000U, 
-                new Func<IronRuby.Builtins.RubyTime, IronRuby.Builtins.MutableString>(IronRuby.Builtins.RubyTimeOps.GetZone)
+                new Func<IronRuby.Runtime.RubyContext, IronRuby.Builtins.RubyTime, IronRuby.Builtins.MutableString>(IronRuby.Builtins.RubyTimeOps.GetZone)
             );
             
         }
@@ -8724,7 +8724,7 @@ namespace IronRuby.StandardLibrary.Sockets {
         #if !SILVERLIGHT
         private static void LoadTCPSocket_Instance(IronRuby.Builtins.RubyModule/*!*/ module) {
             DefineLibraryMethod(module, "initialize", 0x12, 
-                0x00040008U, 0x00140028U, 
+                0x00040000U, 0x00140000U, 
                 new Func<IronRuby.Runtime.ConversionStorage<IronRuby.Builtins.MutableString>, IronRuby.Runtime.ConversionStorage<System.Int32>, IronRuby.StandardLibrary.Sockets.TCPServer, IronRuby.Builtins.MutableString, System.Object, System.Int32, IronRuby.StandardLibrary.Sockets.TCPServer>(IronRuby.StandardLibrary.Sockets.TCPSocket.Reinitialize), 
                 new Func<IronRuby.Runtime.ConversionStorage<IronRuby.Builtins.MutableString>, IronRuby.Runtime.ConversionStorage<System.Int32>, IronRuby.StandardLibrary.Sockets.TCPServer, IronRuby.Builtins.MutableString, System.Object, IronRuby.Builtins.MutableString, System.Object, IronRuby.StandardLibrary.Sockets.TCPServer>(IronRuby.StandardLibrary.Sockets.TCPSocket.Reinitialize)
             );

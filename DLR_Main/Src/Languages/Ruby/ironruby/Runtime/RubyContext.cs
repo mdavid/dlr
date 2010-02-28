@@ -33,6 +33,7 @@ using IronRuby.Builtins;
 using IronRuby.Compiler;
 using IronRuby.Compiler.Ast;
 using IronRuby.Compiler.Generation;
+using IronRuby.Hosting;
 using IronRuby.Runtime.Calls;
 using IronRuby.Runtime.Conversions;
 using Microsoft.Scripting;
@@ -41,9 +42,6 @@ using Microsoft.Scripting.Runtime;
 using Microsoft.Scripting.Utils;
 
 namespace IronRuby.Runtime {
-    /// <summary>
-    /// An isolation context: could be per thread/request or shared accross certain threads.
-    /// </summary>
     [ReflectionCached]
     public sealed class RubyContext : LanguageContext {
         internal static readonly Guid RubyLanguageGuid = new Guid("F03C4640-DABA-473f-96F1-391400714DAB");
@@ -107,6 +105,7 @@ namespace IronRuby.Runtime {
         private readonly RubyMetaBinderFactory/*!*/ _metaBinderFactory;
         private readonly RubyBinder _binder;
         private DynamicDelegateCreator _delegateCreator;
+        private RubyService _rubyService;
 
         #region Global Variables (thread-safe access)
 
@@ -2678,6 +2677,10 @@ namespace IronRuby.Runtime {
         #region Language Context Overrides
 
         public override TService GetService<TService>(params object[] args) {
+            if (typeof(TService) == typeof(RubyService)) {
+                return (TService)(object)(_rubyService ?? (_rubyService = new RubyService(this, (Microsoft.Scripting.Hosting.ScriptEngine)args[0])));
+            } 
+            
             if (typeof(TService) == typeof(TokenizerService)) {
                 return (TService)(object)new Tokenizer();
             }

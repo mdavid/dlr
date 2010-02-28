@@ -111,7 +111,8 @@ namespace IronRuby.Builtins {
         }
 
         // binary (doesn't make a copy of the array):
-        private MutableString(byte[]/*!*/ bytes, int count, RubyEncoding/*!*/ encoding)
+        // used by RubyBufferedStream:
+        internal MutableString(byte[]/*!*/ bytes, int count, RubyEncoding/*!*/ encoding)
             : this(new BinaryContent(bytes, count, null), encoding) {
         }
 

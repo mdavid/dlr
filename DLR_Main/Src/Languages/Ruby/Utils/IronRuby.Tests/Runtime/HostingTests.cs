@@ -283,7 +283,7 @@ bar
             var searchPaths = Engine.GetSearchPaths();
             Assert(new List<string>(searchPaths)[searchPaths.Count - 1] == ".");
 
-            bool result = Engine.RequireRubyFile("fcntl");
+            bool result = Engine.RequireFile("fcntl");
             Assert(result == true);
 
             // built-in class:
@@ -321,6 +321,29 @@ IronRuby.globals.z = IronRuby.globals.x + FooBar
             object value = scope.foo();
             Assert((int)value == 1);
 #endif
+        }
+
+        [Options(NoRuntime = true)]
+        public void RubyHosting5() {
+            // app-domain creation:
+            if (_driver.PartialTrust) return;
+
+            AppDomain domain = AppDomain.CreateDomain("foo");
+
+            var rs = ScriptRuntimeSetup.ReadConfiguration();
+            LanguageSetup ls = rs.GetRubySetup();
+            Debug.Assert(ls.Names.IndexOf("IronRuby") != -1);
+
+            var newSetup = new ScriptRuntimeSetup();
+            newSetup.AddRubySetup((s) => {
+                s.Options["Compatibility"] = RubyCompatibility.Ruby19;
+                s.Options["LibraryPaths"] = ls.Options["LibraryPaths"];
+            });
+
+            ScriptRuntime runtime = ScriptRuntime.CreateRemote(domain, newSetup);
+            ScriptEngine engine = runtime.GetRubyEngine();
+            Assert(engine.RequireFile("fcntl") == true);
+            Assert(engine.Execute<bool>("Object.constants.include?(:Fcntl)") == true);
         }
 
         public void RubyHosting_Scopes1() {

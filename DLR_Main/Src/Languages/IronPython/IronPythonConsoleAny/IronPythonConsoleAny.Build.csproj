@@ -48,7 +48,7 @@
     <Compile Include="..\IronPythonConsole\Console.cs" />
   </ItemGroup>
   <ItemGroup>
-    <Content Include="ipy.ico" />
+    <Content Include="..\IronPythonConsole\ipy.ico" />
   </ItemGroup>
   <ItemGroup>
     <Reference Include="System" />

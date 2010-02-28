@@ -163,11 +163,12 @@ class UnitTestSetup
 
   # Helpers for Rails tests
   
-  def gather_rails_files
-    rails_tests_dir = File.expand_path '..\External.LCA_RESTRICTED\Languages\IronRuby\tests\RailsTests-2.3.5', ENV['MERLIN_ROOT']
+  def gather_rails_files(version = "2.3.5")
+    rails_tests_dir = File.expand_path "../External.LCA_RESTRICTED/Languages/IronRuby/tests/RailsTests-#{version}", ENV['MERLIN_ROOT']
     @root_dir = File.expand_path @name, rails_tests_dir
-    $LOAD_PATH << @root_dir + '/test'
-    @all_test_files = Dir.glob("#{@root_dir}/test/**/*_test.rb").sort
+    path_modifier = (version == '3.0.pre') ? '' : '/test'
+    $LOAD_PATH << @root_dir + path_modifier
+    @all_test_files = Dir.glob("#{@root_dir}#{path_modifier}/**/*_test.rb").sort
   end
 end         
 

@@ -87,6 +87,7 @@
       <Compile Include="IronMath.cs" />
       <Compile Include="LoadTest.cs" />
       <Compile Include="MemberMappingTests.cs" />
+      <Compile Include="MemberOverloadTest.cs" />
       <Compile Include="NestedClass.cs" />
       <Compile Include="NullableTest.cs" />
       <Compile Include="OperatorTest.cs" />

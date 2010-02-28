@@ -436,7 +436,8 @@ namespace IronRuby.Builtins {
         public static RubyArray/*!*/ ToA(RubyContext/*!*/ context, object self) {
             RubyArray result = new RubyArray();
             result.Add(self);
-            return context.TaintObjectBy(result, self);
+            result.IsTainted |= context.IsObjectTainted(self);
+            return result;
         }
 
         #endregion

@@ -58,7 +58,7 @@ namespace IronRuby.Runtime {
             return -1;
         }
 
-        internal static bool IsAscii(this string/*!*/ str) {
+        public static bool IsAscii(this string/*!*/ str) {
             for (int i = 0; i < str.Length; i++) {
                 if (str[i] > 0x7f) {
                     return false;
@@ -125,9 +125,14 @@ namespace IronRuby.Runtime {
         }
 
         internal static void TrimExcess<T>(ref T[] data, int count) {
-            if ((long)count * 10 < (long)data.Length * 9) {
+            if (IsSparse(count, data.Length)) {
                 Array.Resize(ref data, count);
             }
+        }
+
+        internal static bool IsSparse(int portionSize, int totalSize) {
+            Debug.Assert(portionSize <= totalSize);
+            return (long)portionSize * 10 < (long)totalSize * 9;
         }
 
         internal static void ResizeForInsertion<T>(ref T[]/*!*/ array, int itemCount, int index, int count) {

@@ -779,11 +779,17 @@ namespace IronRuby.Builtins {
         }
 
         [RubyMethod("zone")]
-        public static MutableString/*!*/ GetZone(RubyTime/*!*/ self) {
+        public static MutableString/*!*/ GetZone(RubyContext/*!*/ context, RubyTime/*!*/ self) {
             if (self.Kind == DateTimeKind.Utc) {
                 return MutableString.CreateAscii("UTC");
             } else {
-                return MutableString.Create(RubyTime.GetCurrentZoneName(), RubyEncoding.UTF8);
+                var name = RubyTime.GetCurrentZoneName();
+                if (name.IsAscii()) {
+                    return MutableString.CreateAscii(name);
+                } else {
+                    // TODO: what encoding should we use?
+                    return MutableString.Create(name, context.GetPathEncoding());
+                }
             }
         }
 
@@ -1070,7 +1076,7 @@ namespace IronRuby.Builtins {
             result.Add((int)self.DateTime.DayOfWeek);
             result.Add(self.DateTime.DayOfYear);
             result.Add(self.GetCurrentDst(context));
-            result.Add(GetZone(self));
+            result.Add(GetZone(context, self));
             return result;
         }
 

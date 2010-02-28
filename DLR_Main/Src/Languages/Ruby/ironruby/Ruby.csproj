@@ -253,6 +253,7 @@
     <Compile Include="Compiler\Errors.cs" />
     <Compile Include="Compiler\Generation\IRubyType.cs" />
     <Compile Include="Compiler\Parser\ParserStack.cs" />
+    <Compile Include="Hosting\RubyService.cs" />
     <Compile Include="Runtime\BinaryContentProvider.cs" />
     <Compile Include="Runtime\CallSiteStorages.cs" />
     <Compile Include="Runtime\Calls\RubyScopeMethodMissingInfo.cs" />
@@ -439,6 +440,7 @@
     <Compile Include="Runtime\RubyOptions.cs" />
     <Compile Include="Runtime\RubyScope.cs" />
     <Compile Include="Runtime\RubyScriptCode.cs" />
+    <Compile Include="Runtime\RubyStackTraceBuilder.cs" />
     <Compile Include="Runtime\RubyUtils.cs" />
     <Compile Include="Runtime\RubyOps.FlowControl.cs" />
     <Compile Include="Runtime\RuntimeErrorSink.cs" />

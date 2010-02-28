@@ -90,7 +90,7 @@ namespace IronRuby.Builtins {
             : this(context) {
             ContractUtils.RequiresNotNull(context, "context");
             ContractUtils.RequiresNotNull(stream, "stream");
-            _stream = new RubyBufferedStream(stream);
+            SetStream(stream);
             _mode = mode;
             _fileDescriptor = descriptor;
         }
@@ -187,7 +187,7 @@ namespace IronRuby.Builtins {
 
         public void SetStream(Stream/*!*/ stream) {
             ContractUtils.RequiresNotNull(stream, "stream");
-            _stream = new RubyBufferedStream(stream);
+            _stream = new RubyBufferedStream(stream, _context.RubyOptions.Compatibility >= RubyCompatibility.Ruby19);
         }
 
         public void RequireOpen() {
@@ -408,7 +408,7 @@ namespace IronRuby.Builtins {
         }
 
         public bool IsEndOfStream() {
-            return GetReadableStream().PeekByte(0) == -1;
+            return GetReadableStream().PeekByte() == -1;
         }
 
         // returns the number of bytes written to the stream:
