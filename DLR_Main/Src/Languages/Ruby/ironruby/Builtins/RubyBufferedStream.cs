@@ -389,7 +389,7 @@ namespace IronRuby.Builtins {
             if (separator == null) {
                 var result = MutableString.CreateBinary();
                 return AppendBytes(result, Int32.MaxValue, preserveEndOfLines) == 0 ? null : result;
-            } else if (separator.Length == 1 && separator.GetChar(0) == '\n') {
+            } else if (separator.GetLength() == 1 && separator.GetChar(0) == '\n') {
                 return ReadLine(encoding, preserveEndOfLines);
             } else if (separator.IsEmpty) {
                 return ReadParagraph(encoding, preserveEndOfLines);
@@ -487,13 +487,14 @@ namespace IronRuby.Builtins {
             }
 
             int separatorOffset = 0;
+            int separatorLength = separator.GetByteCount();
             MutableString result = MutableString.CreateBinary(encoding);
 
             do {
                 result.Append((byte)b);
 
                 if (b == separator.GetByte(separatorOffset)) {
-                    if (separatorOffset == separator.Length - 1) {
+                    if (separatorOffset == separatorLength - 1) {
                         break;
                     }
                     separatorOffset++;

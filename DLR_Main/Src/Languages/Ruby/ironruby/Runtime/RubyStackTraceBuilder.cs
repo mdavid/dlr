@@ -223,7 +223,7 @@ namespace IronRuby.Runtime {
         private const char NamePartsSeparator = ':';
         private const string RubyMethodPrefix = "\u2111\u211c:";
         private static int _Id = 0;
-        internal const int MaxDebugModePathSize = 512;
+        internal const int MaxDebugModePathSize = 256; // PDB limit
 
         internal static string/*!*/ EncodeMethodName(string/*!*/ methodName, string sourcePath, SourceSpan location, bool debugMode) {
             return new StringBuilder().

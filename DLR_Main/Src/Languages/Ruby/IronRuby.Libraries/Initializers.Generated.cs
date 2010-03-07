@@ -6352,6 +6352,11 @@ namespace IronRuby.Builtins {
                 new Func<IronRuby.Builtins.RubySymbol, System.Int32>(IronRuby.Builtins.SymbolOps.ToInteger)
             );
             
+            DefineLibraryMethod(module, "to_proc", 0x51, 
+                0x00000000U, 
+                new Func<IronRuby.Runtime.RubyScope, IronRuby.Builtins.RubySymbol, IronRuby.Builtins.Proc>(IronRuby.Builtins.SymbolOps.ToProc)
+            );
+            
             DefineLibraryMethod(module, "to_s", 0x51, 
                 0x00000000U, 
                 new Func<IronRuby.Builtins.RubySymbol, IronRuby.Builtins.MutableString>(IronRuby.Builtins.SymbolOps.ToString)
@@ -9937,7 +9942,7 @@ namespace IronRuby.StandardLibrary.StringScanner {
             
             DefineLibraryMethod(module, "scan", 0x11, 
                 0x00000002U, 
-                new Func<IronRuby.StandardLibrary.StringScanner.StringScanner, IronRuby.Builtins.RubyRegex, IronRuby.Builtins.MutableString>(IronRuby.StandardLibrary.StringScanner.StringScanner.Scan)
+                new Func<IronRuby.StandardLibrary.StringScanner.StringScanner, IronRuby.Builtins.RubyRegex, System.Object>(IronRuby.StandardLibrary.StringScanner.StringScanner.Scan)
             );
             
             DefineLibraryMethod(module, "scan_full", 0x11, 
@@ -9947,7 +9952,7 @@ namespace IronRuby.StandardLibrary.StringScanner {
             
             DefineLibraryMethod(module, "scan_until", 0x11, 
                 0x00000002U, 
-                new Func<IronRuby.StandardLibrary.StringScanner.StringScanner, IronRuby.Builtins.RubyRegex, IronRuby.Builtins.MutableString>(IronRuby.StandardLibrary.StringScanner.StringScanner.ScanUntil)
+                new Func<IronRuby.StandardLibrary.StringScanner.StringScanner, IronRuby.Builtins.RubyRegex, System.Object>(IronRuby.StandardLibrary.StringScanner.StringScanner.ScanUntil)
             );
             
             DefineLibraryMethod(module, "search_full", 0x11, 

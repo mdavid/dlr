@@ -63,14 +63,14 @@ namespace IronRuby.Builtins {
             // It is not a property of the final object. /foo/ should compare equal with /foo/o.
             _options = options & ~RubyRegexOptions.Once;
 
-            RubyEncoding kcoding = RubyEncoding.GetKCoding(options);
-            if (kcoding != null || pattern.Encoding.IsKCoding) {
-                _pattern = MutableString.CreateBinary(pattern.ToByteArray(), kcoding ?? RubyEncoding.Binary).Freeze();
+            RubyEncoding encoding = RubyEncoding.GetRegexEncoding(options);
+            if (encoding != null || pattern.Encoding.IsKCoding) {
+                _pattern = MutableString.CreateBinary(pattern.ToByteArray(), encoding ?? RubyEncoding.Binary).Freeze();
             } else {
-                _pattern = pattern.SwitchToCharacters().Clone().Freeze();
+                _pattern = pattern.PrepareForCharacterRead().Clone().Freeze();
             }
             
-            TransformPattern(kcoding, options & RubyRegexOptions.EncodingMask);
+            TransformPattern(encoding, options & RubyRegexOptions.EncodingMask);
         }
 
         /// <summary>
@@ -92,15 +92,15 @@ namespace IronRuby.Builtins {
 
         #region Transformation to CLR Regex
 
-        private Regex/*!*/ Transform(ref RubyEncoding kcoding, MutableString/*!*/ input, int start, out string strInput) {
+        private Regex/*!*/ Transform(ref RubyEncoding encoding, MutableString/*!*/ input, int start, out string strInput) {
             ContractUtils.RequiresNotNull(input, "input");
 
             // K-coding of the current operation (the current KCODE gets preference over the KCODE regex option):
             RubyRegexOptions kc = _options & RubyRegexOptions.EncodingMask;
             if (kc != 0) {
-                kcoding = _pattern.Encoding;
+                encoding = _pattern.Encoding;
             } else {
-                kc = RubyEncoding.ToRegexOption(kcoding);
+                kc = RubyEncoding.ToRegexOption(encoding);
             }
 
             // Convert input to a string. Force k-coding if necessary.
@@ -125,24 +125,20 @@ namespace IronRuby.Builtins {
                 // For now, we just detect if there are any non-ascii character escapes. If so we use a binary encoding accomodating case 3), 
                 // but breaking cases 1 and 2. Otherwise we encode using k-coding to make case 1 match.
                 if (HasEscapedNonAsciiBytes(_pattern)) {
-                    kcoding = RubyEncoding.Binary;
+                    encoding = RubyEncoding.Binary;
                     kc = 0;
                 }
                 
-                try {
-                    strInput = ForceEncoding(input, kcoding.StrictEncoding, start);
-                } catch (DecoderFallbackException) {
-                    throw RubyExceptions.CreateArgumentError(String.Format("invalid {0} character", kcoding.RealEncoding));
-                }
+                strInput = ForceEncoding(input, encoding.Encoding, start);
             } else if (input.Encoding.IsKCoding) {
                 strInput = input.ToString(BinaryEncoding.Instance);
             } else {
                 _pattern.RequireCompatibleEncoding(input);
-                input.SwitchToCharacters();
-                strInput = input.ToString();
+                input.PrepareForCharacterRead();
+                strInput = input.ConvertToString();
             }
 
-            return TransformPattern(kcoding, kc);
+            return TransformPattern(encoding, kc);
         }
 
         private Regex/*!*/ TransformPattern(RubyEncoding encoding, RubyRegexOptions kc) {
@@ -153,11 +149,7 @@ namespace IronRuby.Builtins {
 
             string pattern;
             if (kc != 0 || encoding == RubyEncoding.Binary) {
-                try {
-                    pattern = _pattern.ToString(encoding.StrictEncoding);
-                } catch (DecoderFallbackException) {
-                    throw RubyExceptions.CreateArgumentError(String.Format("invalid multi-byte sequence in {0} regex pattern", encoding));
-                }
+                pattern = _pattern.ToString(encoding.Encoding);
             } else {
                 pattern = _pattern.ConvertToString();
             }
@@ -296,7 +288,7 @@ namespace IronRuby.Builtins {
         /// <summary>
         /// Start is a number of bytes if kcode is given, otherwise it's a number of characters.
         /// </summary>
-        public MatchData Match(RubyEncoding kcode, MutableString/*!*/ input, int start) {
+        public MatchData Match(RubyEncoding kcode, MutableString/*!*/ input, int start, bool freezeInput) {
             string str;
             Regex regex = Transform(ref kcode, input, start, out str);
 
@@ -316,7 +308,7 @@ namespace IronRuby.Builtins {
                 match = regex.Match(str, start);
             }
 
-            return MatchData.Create(match, input, true, str, kcode, start);
+            return MatchData.Create(match, input, freezeInput, str, kcode, start);
         }
 
         public MatchData LastMatch(RubyEncoding kcode, MutableString/*!*/ input) {
@@ -494,8 +486,8 @@ namespace IronRuby.Builtins {
             return count;
         }
 
-        private static int SkipToUnescapedForwardSlash(MutableString/*!*/ pattern, int i) {
-            while (i < pattern.Length) {
+        private static int SkipToUnescapedForwardSlash(MutableString/*!*/ pattern, int patternLength, int i) {
+            while (i < patternLength) {
                 i = pattern.IndexOf('/', i);
                 if (i <= 0) {
                     return i;
@@ -512,18 +504,19 @@ namespace IronRuby.Builtins {
 
         private static MutableString/*!*/ AppendEscapeForwardSlash(MutableString/*!*/ result, MutableString/*!*/ pattern) {
             int first = 0;
-            int i = SkipToUnescapedForwardSlash(pattern, 0);
+            int patternLength = pattern.GetCharCount();
+            int i = SkipToUnescapedForwardSlash(pattern, patternLength, 0);
             while (i >= 0) {
-                Debug.Assert(i < pattern.Length);
+                Debug.Assert(i < patternLength);
                 Debug.Assert(pattern.GetChar(i) == '/' && (i == 0 || pattern.GetChar(i - 1) != '\\'));
 
                 result.Append(pattern, first, i - first);
                 result.Append('\\');
                 first = i; // include forward slash in the next append
-                i = SkipToUnescapedForwardSlash(pattern, i + 1);
+                i = SkipToUnescapedForwardSlash(pattern, patternLength, i + 1);
             }
 
-            result.Append(pattern, first, pattern.Length - first);
+            result.Append(pattern, first, patternLength - first);
             return result;
         }
 

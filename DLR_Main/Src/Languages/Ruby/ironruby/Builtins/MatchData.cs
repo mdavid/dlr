@@ -89,7 +89,7 @@ namespace IronRuby.Builtins {
             _originalString = other._originalString;
         }
 
-        internal static MatchData Create(Match/*!*/ match, MutableString/*!*/ input, bool inputMayMutate, string/*!*/ encodedInput, RubyEncoding kcoding, int kStart) {
+        internal static MatchData Create(Match/*!*/ match, MutableString/*!*/ input, bool freezeInput, string/*!*/ encodedInput, RubyEncoding kcoding, int kStart) {
             if (!match.Success) {
                 return null;
             }
@@ -103,8 +103,10 @@ namespace IronRuby.Builtins {
                 for (int i = 0; i < match.Groups.Count; i++) {
                     var group = match.Groups[i];
                     if (group.Success) {
-                        kIndices[i * 2] = encoding.GetByteCount(kCodedChars, 0, group.Index) + kStart;
-                        kIndices[i * 2 + 1] = encoding.GetByteCount(kCodedChars, group.Index, group.Length) + kStart;
+                        // group start index:
+                        kIndices[i * 2] = kStart + encoding.GetByteCount(kCodedChars, 0, group.Index);
+                        // group length:
+                        kIndices[i * 2 + 1] = encoding.GetByteCount(kCodedChars, group.Index, group.Length);
                     } else {
                         kIndices[i * 2] = -1;
                     }
@@ -113,7 +115,7 @@ namespace IronRuby.Builtins {
                 kIndices = null;
             }
 
-            if (inputMayMutate) {
+            if (freezeInput) {
                 input = input.Clone().Freeze();
             }
             return new MatchData(match, input, kIndices);

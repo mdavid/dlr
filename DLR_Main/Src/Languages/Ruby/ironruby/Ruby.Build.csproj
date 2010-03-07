@@ -84,6 +84,7 @@
       <Compile Include="Builtins\MutableString.CharArrayContent.cs" />
       <Compile Include="Builtins\MutableString.Content.cs" />
       <Compile Include="Builtins\MutableString.cs" />
+      <Compile Include="Builtins\MutableString.KBinaryContent.cs" />
       <Compile Include="Builtins\MutableString.StringContent.cs" />
       <Compile Include="Builtins\MutableString.Subclass.cs" />
       <Compile Include="Builtins\MutableStringBuilder.cs" />
@@ -321,6 +322,7 @@
       <!--                           -->
       <Compile Include="Runtime\Attributes.cs" />
       <Compile Include="Runtime\BinaryContentProvider.cs" />
+      <Compile Include="Runtime\BinaryDecoderFallback.cs" />
       <Compile Include="Runtime\BinaryEncoding.cs" />
       <Compile Include="Runtime\BlockParam.cs" />
       <Compile Include="Runtime\BlockParam.Meta.cs" />

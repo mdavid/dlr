@@ -812,7 +812,7 @@ namespace IronRuby.Compiler {
                         // UTF-8 BOM detection:
                         if (_compatibility < RubyCompatibility.Ruby19 && _currentLineIndex == 0 && _bufferPos == 1 &&
                             (c == 0xEF && Peek() == 0xBB && Peek(1) == 0xBF)) {
-                            ReportError(Errors.InvalidUseOfByteOrderMark);
+                            ReportWarning(Errors.ByteOrderMarkIgnored);
                             // skip BOM and continue parsing as if it was whitespace:
                             Read();
                             Read();
@@ -823,6 +823,11 @@ namespace IronRuby.Compiler {
                             MarkSingleLineTokenEnd();
                             return Tokens.InvalidCharacter;
                         }
+                    } else if (c == 0xfeff && _encoding == RubyEncoding.KCodeUTF8 && _currentLineIndex == 0 && _bufferPos == 1) {
+                        ReportWarning(Errors.ByteOrderMarkIgnored);
+                        // skip BOM and continue parsing as if it was whitespace:
+                        MarkSingleLineTokenEnd();
+                        return Tokens.Whitespace;
                     }
 
                     return MarkSingleLineTokenEnd(ReadIdentifier(c, cmdState));

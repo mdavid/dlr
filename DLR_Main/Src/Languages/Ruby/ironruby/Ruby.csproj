@@ -87,7 +87,7 @@
     <DebugSymbols>true</DebugSymbols>
     <DebugType>full</DebugType>
     <Optimize>false</Optimize>
-<OutputPath>$(SolutionDir)..\Bin\Debug\</OutputPath>
+<OutputPath>$(SolutionDir)..\Bin\V4 Debug\</OutputPath>
     <DefineConstants>TRACE;DEBUG;CLR4;$(SignedSym)</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
@@ -98,7 +98,7 @@
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'V4 Release|AnyCPU' ">
     <DebugType>pdbonly</DebugType>
     <Optimize>true</Optimize>
-<OutputPath>$(SolutionDir)..\Bin\Release\</OutputPath>
+<OutputPath>$(SolutionDir)..\Bin\V4 Release\</OutputPath>
     <DefineConstants>TRACE;CLR4;$(SignedSym)</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
@@ -196,6 +196,7 @@
     <Compile Include="Builtins\CharacterMap.cs" />
     <Compile Include="Builtins\ConsoleStream.cs" />
     <None Include="Builtins\Subclasses.Generator.rb" />
+    <Compile Include="Builtins\MutableString.KBinaryContent.cs" />
     <Compile Include="Builtins\RubyIO.Subclass.cs" />
     <Compile Include="Builtins\IOMode.cs" />
     <Compile Include="Builtins\MutableStringBuilder.cs" />
@@ -446,6 +447,7 @@
     <Compile Include="Runtime\RuntimeErrorSink.cs" />
     <Compile Include="Runtime\StackUnwinder.cs" />
     <Compile Include="Runtime\Key.cs" />
+    <Compile Include="Runtime\BinaryDecoderFallback.cs" />
     <Compile Include="Runtime\Union.cs" />
     <Compile Include="Runtime\Utils.cs" />
     <Compile Include="Builtins\MatchData.Subclass.cs" />

@@ -173,11 +173,14 @@ namespace IronRuby.Hosting {
                     throw new InvalidOptionException(String.Format("Option `{0}' not supported", optionName));
 
                 case "-d":
-                    // TODO: have a separate option
-                    RuntimeSetup.DebugMode = true;          // $DEBUG = true
+                    LanguageSetup.Options["DebugVariable"] = true; // $DEBUG = true
                     break;
 
                 case "--version":
+                    ConsoleOptions.PrintVersion = true;
+                    ConsoleOptions.Exit = true;
+                    break;
+
                 case "-v":
                     ConsoleOptions.DisplayVersion = true;
                     goto case "-W2";
@@ -348,6 +351,10 @@ namespace IronRuby.Hosting {
                 System.Threading.Thread.CurrentThread.CurrentCulture = new System.Globalization.CultureInfo(culture, false);
             }
 #endif
+            if (ConsoleOptions.DisplayVersion && ConsoleOptions.Command == null && ConsoleOptions.FileName == null) {
+                ConsoleOptions.PrintVersion = true;
+                ConsoleOptions.Exit = true;
+            }
         }
 
         public override void GetHelp(out string commandLine, out string[,] options, out string[,] environmentVariables, out string comments) {
@@ -379,7 +386,7 @@ namespace IronRuby.Hosting {
              // { "-T[level]",                   "turn on tainting checks" },
                 { "-v",                          "print version number, then turn on verbose mode" },
                 { "-w",                          "turn warnings on for your script" },
-                { "-W[level]",                   "set warning level; 0=silence, 1=medium, 2=verbose (default)" },
+                { "-W[level]",                   "set warning level; 0=silence, 1=medium (default), 2=verbose" },
              // { "-x[directory]",               "strip off text before #!ruby line and perhaps cd to directory" },
              // { "--copyright",                 "print the copyright" },
                 { "--version",                   "print the version" },

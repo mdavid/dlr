@@ -272,11 +272,14 @@ Backtrace6.rb:2:in `f1'
 Backtrace6.rb:0
 ");
         }
-
+        
         public void Backtrace7() {
             // TODO: start name by \0 -> bug in reflection?
             StringBuilder sb = new StringBuilder();
-            for (int i = 1; i <= Char.MaxValue; i++) {
+
+            int maxLength = _driver.IsDebug ? RubyStackTraceBuilder.MaxDebugModePathSize : Char.MaxValue;
+
+            for (int i = 1; i <= maxLength; i++) {
                 sb.Append((char)i);
             }
 
@@ -295,7 +298,7 @@ bar
 ", srcName).Execute<string>();
 
             if (_driver.IsDebug) {
-                Assert(frameInfo.StartsWith(srcName.Substring(0, RubyStackTraceBuilder.MaxDebugModePathSize)));
+                Assert(frameInfo.StartsWith(srcName.Substring(0, maxLength)));
             } else {
                 Assert(frameInfo.StartsWith(srcName + ":"));
             }

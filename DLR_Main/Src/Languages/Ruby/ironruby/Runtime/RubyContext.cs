@@ -44,6 +44,8 @@ using Microsoft.Scripting.Utils;
 namespace IronRuby.Runtime {
     [ReflectionCached]
     public sealed class RubyContext : LanguageContext {
+        #region Constants
+
         internal static readonly Guid RubyLanguageGuid = new Guid("F03C4640-DABA-473f-96F1-391400714DAB");
         private static readonly Guid LanguageVendor_Microsoft = new Guid(-1723120188, -6423, 0x11d2, 0x90, 0x3f, 0, 0xc0, 0x4f, 0xa3, 2, 0xa1);
         private static int _RuntimeIdGenerator = 0;
@@ -91,6 +93,8 @@ namespace IronRuby.Runtime {
         internal const string/*!*/ IronRubyDisplayName = "IronRuby";
         internal const string/*!*/ IronRubyNames = "IronRuby;Ruby;rb";
         internal const string/*!*/ IronRubyFileExtensions = ".rb";
+
+        #endregion
 
         // TODO: remove
         internal static RubyContext _Default;
@@ -536,8 +540,7 @@ namespace IronRuby.Runtime {
             DefineGlobalVariableNoLock("-F", Runtime.GlobalVariables.StringSeparator);
             DefineGlobalVariableNoLock("FILENAME", Runtime.GlobalVariables.InputFileName);
 
-            // TODO:
-            GlobalVariableInfo debug = new GlobalVariableInfo(DomainManager.Configuration.DebugMode);
+            GlobalVariableInfo debug = new GlobalVariableInfo(DomainManager.Configuration.DebugMode || RubyOptions.DebugVariable);
 
             DefineGlobalVariableNoLock("VERBOSE", Runtime.GlobalVariables.Verbose);
             DefineGlobalVariableNoLock("-v", Runtime.GlobalVariables.Verbose);

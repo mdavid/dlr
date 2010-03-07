@@ -32,6 +32,7 @@ namespace IronRuby.Runtime {
         private readonly string _mainFile;
         private readonly bool _enableTracing;
         private readonly int _verbosity;
+        private readonly bool _debugVariable;
         private readonly string _savePath;
         private readonly bool _loadFromDisk;
         private readonly bool _profile;
@@ -102,6 +103,13 @@ namespace IronRuby.Runtime {
             get { return _kcode; }
         }
 
+        /// <summary>
+        /// The initial value of $DEBUG variable.
+        /// </summary>
+        public bool DebugVariable {
+            get { return _debugVariable; }
+        }
+
         public RubyOptions(IDictionary<string, object>/*!*/ options)
             : base(options) {
             _arguments = GetStringCollectionOption(options, "Arguments") ?? EmptyStringCollection;
@@ -109,6 +117,7 @@ namespace IronRuby.Runtime {
 
             _mainFile = GetOption(options, "MainFile", (string)null);
             _verbosity = GetOption(options, "Verbosity", 1);
+            _debugVariable = GetOption(options, "DebugVariable", false);
             _enableTracing = GetOption(options, "EnableTracing", false);
             _savePath = GetOption(options, "SavePath", (string)null);
             _loadFromDisk = GetOption(options, "LoadFromDisk", false);
