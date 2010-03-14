@@ -342,6 +342,7 @@
       <Compile Include="Runtime\KCoding.cs" />
       <Compile Include="Runtime\Key.cs" />
       <Compile Include="Runtime\Loader.cs" />
+      <Compile Include="Runtime\LosslessDecoderFallback.cs" />
       <Compile Include="Runtime\MethodVisibility.cs" />
       <Compile Include="Runtime\Protocols.cs" />
       <Compile Include="Runtime\ReferenceEqualityComparer.cs" />

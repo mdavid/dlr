@@ -111,6 +111,22 @@ namespace IronPython.Runtime.Operations {
         }
 
         #region Binary operators
+
+        [SpecialName]
+        public static Complex Add(Complex x, Complex y) {
+            return x + y;
+        }
+
+        [SpecialName]
+        public static Complex Subtract(Complex x, Complex y) {
+            return x - y;
+        }
+
+        [SpecialName]
+        public static Complex Multiply(Complex x, Complex y) {
+            return x * y;
+        }
+
         [SpecialName]
         public static Complex Divide(Complex x, Complex y) {
             if (y.IsZero()) {
@@ -159,6 +175,11 @@ namespace IronPython.Runtime.Operations {
 #endif
 
             return x.Pow(y);
+        }
+
+        [PythonHidden]
+        public static Complex Power(Complex x, Complex y) {
+            return op_Power(x, y);
         }
 
         // floordiv for complex numbers is deprecated in the Python 2.
@@ -233,6 +254,11 @@ namespace IronPython.Runtime.Operations {
         public static object __coerce__(Complex x, object y) {
             Complex right;
             if (Converter.TryConvertToComplex(y, out right)) {
+#if !CLR2
+                if (double.IsInfinity(right.Real) && (y is BigInteger || y is Extensible<BigInteger>)) {
+                    throw new OverflowException("long int too large to convert to float");
+                }
+#endif
                 return PythonTuple.MakeTuple(x, right);
             }
 
