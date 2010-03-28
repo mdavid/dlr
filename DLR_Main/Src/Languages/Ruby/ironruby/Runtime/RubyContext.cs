@@ -2675,6 +2675,8 @@ namespace IronRuby.Runtime {
             return sb.ToString();
         }
 
+        public Action InterruptSignalHandler { get; set; }
+
         #endregion
 
         #region Language Context Overrides

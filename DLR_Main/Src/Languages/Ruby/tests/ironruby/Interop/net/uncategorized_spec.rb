@@ -203,9 +203,9 @@ describe "Enumerable blocks (Codeplex 1301)" do
 
 end
 
-describe "Monkeypatching Exception classes" do
+describe "Uncategorized specs" do
   #TODO This needs more complete testing, but this covers the regression case.
-  it "should call the monkey patched method" do
+  it "should call the monkey patched method for Exception class" do
     begin
       LoadError.metaclass_alias :_new, :new
       LoadError.metaclass_def(:new) {|message| ZeroDivisionError.new message }
@@ -214,11 +214,16 @@ describe "Monkeypatching Exception classes" do
       LoadError.metaclass_alias :new, :_new
     end
   end
-end
 
-describe "RubyGems platform information" do
-  it "sets Gem::Platform correctly" do
+  it "sets RbConfig::CONFIG['arch'] correctly for Gem::Platform" do
     require "rubygems"
     (Gem::Platform.local() === Gem::Platform.new("universal-dotnet")).should be_true
+  end
+  
+  it "uses System::Threading::Timer for Timeout.timeout instead of Thread.start" do
+    require "timeout"
+    Thread.should_not_receive(:start)
+    System::Threading::Timer.should_receive(:new)
+    Timeout.timeout(1) { 42 }.should == 42
   end
 end

@@ -223,6 +223,7 @@
       <Compile Include="Runtime\CompareUtil.cs" />
       <Compile Include="Runtime\CompiledLoader.cs" />
       <Compile Include="Runtime\CompileFlags.cs" />
+      <Compile Include="Runtime\ConstantDictionaryStorage.cs" />
       <Compile Include="Runtime\ConversionWrappers.cs" />
       <Compile Include="Runtime\Converter.cs" />
       <Compile Include="Runtime\CustomDictionaryStorage.cs" />
@@ -236,6 +237,7 @@
       <Compile Include="Runtime\DontMapIDisposableToContextManagerAttribute.cs" />
       <Compile Include="Runtime\DontMapIEnumerableToContainsAttribute.cs" />
       <Compile Include="Runtime\DontMapIEnumerableToIterAttribute.cs" />
+      <Compile Include="Runtime\EmptyDictionaryStorage.cs" />
       <Compile Include="Runtime\Enumerate.cs" />
       <Compile Include="Runtime\ErrorCodes.cs" />
       <Compile Include="Runtime\FunctionAttributes.cs" />

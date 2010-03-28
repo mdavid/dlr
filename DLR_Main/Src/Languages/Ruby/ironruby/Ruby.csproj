@@ -408,12 +408,11 @@
     <Compile Include="Compiler\Parser\Parser.Generated.cs" />
     <Compile Include="Compiler\Parser\Parser.cs" />
     <Compile Include="Compiler\Parser\Symbols.cs" />
-    <Compile Include="Compiler\Parser\StringTokenizer.cs" />
+    <Compile Include="Compiler\Parser\TokenSequenceState.cs" />
     <Compile Include="Compiler\Parser\Tokenizer.cs" />
     <Compile Include="Compiler\Parser\GPPG.cs" />
     <Compile Include="Compiler\Parser\TokenValue.cs" />
     <Compile Include="Compiler\RubyCompilerOptions.cs" />
-    <Compile Include="Compiler\Tokens.cs" />
     <Compile Include="Hosting\RubyCommandLine.cs" />
     <Compile Include="Hosting\RubyOptionsParser.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />

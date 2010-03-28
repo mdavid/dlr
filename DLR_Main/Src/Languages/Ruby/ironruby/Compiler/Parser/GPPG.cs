@@ -388,7 +388,7 @@ namespace IronRuby.Compiler {
 
         private string GetSyntaxErrorMessage() {
             StringBuilder errorMsg = new StringBuilder();
-            errorMsg.AppendFormat("syntax error, unexpected {0}", Parser.TerminalToString(_nextToken));
+            errorMsg.AppendFormat("syntax error, unexpected {0}", Tokenizer.GetTokenName((Tokens)_nextToken)); // TODO: actual value?
 
             if (_currentState.Actions.Count < 7) {
                 bool first = true;
@@ -399,7 +399,7 @@ namespace IronRuby.Compiler {
                         errorMsg.Append(", or ");
                     }
 
-                    errorMsg.Append(Parser.TerminalToString(terminal));
+                    errorMsg.Append(Tokenizer.GetTokenName((Tokens)terminal));
                     first = false;
                 }
             }
@@ -591,21 +591,21 @@ namespace IronRuby.Compiler {
             return "R(" + (-action) + ")"; 
         }
 
-        internal string NonTerminalToString(int nonTerminal) {
+        internal string GetNonTerminalName(int nonTerminal) {
             Debug.Assert(nonTerminal > 0);
             return _tables.NonTerminalNames[nonTerminal];
         }
 
         // < 0 -> non-terminal
         // > 0 -> terminal
-        internal string SymbolToString(int symbol) {
-            return (symbol < 0) ? NonTerminalToString(-symbol) : Parser.TerminalToString(symbol);
+        internal string GetSymbolName(int symbol) {
+            return (symbol < 0) ? GetNonTerminalName(-symbol) : Parser.GetTerminalName(symbol);
         }
 
         internal string RuleToString(int ruleIndex) {
             Debug.Assert(ruleIndex >= 0);
             StringBuilder sb = new StringBuilder();
-            sb.Append(NonTerminalToString(GetRuleLhsNonterminal(_tables.Rules[ruleIndex])));
+            sb.Append(GetNonTerminalName(GetRuleLhsNonterminal(_tables.Rules[ruleIndex])));
             sb.Append(" -> ");
 
             // index of the first RHS symbol:
@@ -613,7 +613,7 @@ namespace IronRuby.Compiler {
             if (rhsLength > 0) {
                 int first = _tables.RuleRhsSymbolIndexes[ruleIndex];
                 for (int i = 0; i < rhsLength; i++) {
-                    sb.Append(SymbolToString(_tables.RuleRhsSymbols[first + i]));
+                    sb.Append(GetSymbolName(_tables.RuleRhsSymbols[first + i]));
                     sb.Append(" ");
                 }
             } else {
@@ -660,7 +660,7 @@ namespace IronRuby.Compiler {
             output.Write("Default,");
             for (int t = 0; t < termCount; t++) {
                 if (terminals.ContainsKey(t)) {
-                    output.Write(Parser.TerminalToString(t));
+                    output.Write(Parser.GetTerminalName(t));
                     output.Write(",");
                 }
             }

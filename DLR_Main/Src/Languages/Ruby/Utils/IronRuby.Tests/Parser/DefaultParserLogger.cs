@@ -60,7 +60,7 @@ namespace IronRuby.Tests {
         }
 
         private void LogToken(string message, int tokenId) {
-            Log("{0}: {1}", message, Parser.TerminalToString(tokenId));
+            Log("{0}: {1}", message, Parser.GetTerminalName(tokenId));
         }
 
         private void LogState(string/*!*/ action, int stateId) {

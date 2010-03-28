@@ -37,20 +37,49 @@ namespace IronRuby.Builtins {
             return result;
         }
 
+        /// <summary>
+        /// Registers an interrupt handler. The host application is responsible for ensuring
+        /// that the handler will actually be called.
+        /// </summary>
         [RubyMethod("trap", RubyMethodAttributes.PublicSingleton)]
-        public static object Trap(RubyContext/*!*/ context, object self, object signalId, Proc proc) {
-            // TODO: For now, just ignore the signal handler. The full implementation will need to build on 
-            // the signal and raise functions in msvcrt.
+        public static object Trap(
+            RubyContext/*!*/ context, 
+            object self, 
+            object signalId, 
+            Proc proc) {
+
+            if ((signalId is MutableString) && ((MutableString)signalId).ConvertToString() == "INT") {
+                context.InterruptSignalHandler = delegate() { proc.Call(); };
+            } else {
+                // TODO: For now, just ignore unknown signals. This should be changed to throw an
+                // exception. We are not doing it yet as it is close to the V1 RTM, and throwing
+                // an exception might cause some app to misbehave whereas it might have happenned
+                // to work if no exception is thrown
+            }
             return null;
         }
 
+        /// <summary>
+        /// Registers an interrupt handler. The host application is responsible for ensuring
+        /// that the handler will actually be called.
+        /// </summary>
         [RubyMethod("trap", RubyMethodAttributes.PublicSingleton)]
-        public static object Trap(RubyContext/*!*/ context, BlockParam block, object self, object signalId) {
-            // TODO: For now, just ignore the signal handler. The full implementation will need to build on 
-            // the signal and raise functions in msvcrt.
+        public static object Trap(
+            RubyContext/*!*/ context, 
+            BlockParam block, 
+            object self, 
+            object signalId) {
+
+            if ((signalId is MutableString) && ((MutableString)signalId).ConvertToString() == "INT") {
+                context.InterruptSignalHandler = delegate() { object result; block.Yield(out result); };
+            } else {
+                // TODO: For now, just ignore unknown signals. This should be changed to throw an
+                // exception. We are not doing it yet as it is close to the V1 RTM, and throwing
+                // an exception might cause some app to misbehave whereas it might have happenned
+                // to work if no exception is thrown
+            }
             return null;
         }
-
 
         #endregion
     }

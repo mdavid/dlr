@@ -196,8 +196,13 @@ namespace IronRuby.Tests {
             return this;
         }
 
-        public AssertTokenizer/*!*/ this[Tokens token] {
-            get { return Read(token); }
+        public AssertTokenizer/*!*/ State(LexicalState expected) {
+            _tests.Assert(Tokenizer.LexicalState == expected);
+            return this;
+        }
+
+        public AssertTokenizer/*!*/ this[Tokens expected] {
+            get { return Read(expected); }
         }
 
         public AssertTokenizer/*!*/ this[string/*!*/ expected] {

@@ -14,13 +14,16 @@
  * ***************************************************************************/
 
 using System;
-using Microsoft.Scripting;
-using Microsoft.Scripting.Hosting;
-using Microsoft.Scripting.Hosting.Shell;
+using System.Threading;
 using IronRuby;
+using IronRuby.Builtins;
 using IronRuby.Hosting;
 using IronRuby.Runtime;
-using System.Dynamic.Utils;
+using Microsoft.Scripting;
+using Microsoft.Scripting.Hosting;
+using Microsoft.Scripting.Hosting.Providers;
+using Microsoft.Scripting.Hosting.Shell;
+using Microsoft.Scripting.Utils;
 
 internal sealed class RubyConsoleHost : ConsoleHost {
 
@@ -38,6 +41,34 @@ internal sealed class RubyConsoleHost : ConsoleHost {
 
     protected override LanguageSetup CreateLanguageSetup() {
         return Ruby.CreateRubySetup();
+    }
+
+    private static void OnCancelKey(object sender, ConsoleCancelEventArgs ev, RubyContext context, Thread mainThread) {
+        if (ev.SpecialKey == ConsoleSpecialKey.ControlC) {
+            ev.Cancel = true;
+            Action handler = context.InterruptSignalHandler;
+
+            if (handler != null) {
+                try {
+                    handler();
+                } catch (Exception e) {
+                    RubyUtils.RaiseAsyncException(mainThread, e);
+                }
+            }
+        }
+    }
+
+    protected override IConsole CreateConsole(ScriptEngine engine, CommandLine commandLine, ConsoleOptions options) {
+        IConsole console = base.CreateConsole(engine, commandLine, options);
+
+        Thread mainThread = Thread.CurrentThread;
+        RubyContext context = (RubyContext)HostingHelpers.GetLanguageContext(engine);
+        context.InterruptSignalHandler = delegate() { RubyUtils.RaiseAsyncException(mainThread, new Interrupt()); };
+        ((BasicConsole)console).ConsoleCancelEventHandler = delegate(object sender, ConsoleCancelEventArgs e) {
+            OnCancelKey(sender, e, context, mainThread); 
+        };
+
+        return console;
     }
 
     private static void SetHome() {

@@ -18,24 +18,21 @@ using System.Diagnostics;
 
 namespace IronRuby.Compiler {
 
-    internal abstract class StringTokenizer {
-        internal abstract Tokens Tokenize(Tokenizer/*!*/ tokenizer);
+    internal abstract class TokenSequenceState {
+        internal abstract Tokens TokenizeAndMark(Tokenizer/*!*/ tokenizer);
     }
 
     [Flags]
-    public enum StringType {
+    public enum StringProperties : short {
         Default = 0,
         ExpandsEmbedded = 1,
         RegularExpression = 2,
         Words = 4,
         Symbol = 8,
         IndentedHeredoc = 16,
-        FinalWordSeparator = 32,
     }
 
-    internal sealed class StringContentTokenizer : StringTokenizer {
-        private StringType _properties;
-
+    internal sealed class StringState : TokenSequenceState {
         // The number of opening parentheses that need to be closed before the string terminates.
         // The level is tracked for all currently opened strings.
         // For example, %< .. < .. < #{...} .. > .. > .. > comprises of 3 parts:
@@ -45,17 +42,19 @@ namespace IronRuby.Compiler {
         // After reading the first part the nested level for the string is set to 2.
         private int _nestingLevel;
 
+        private readonly StringProperties _properties;
+
         // The character terminating the string:
         private readonly char _terminator;
 
         // Parenthesis opening the string; if non-zero parenthesis of this kind is balanced before the string is closed:
         private readonly char _openingParenthesis;
 
-        public StringContentTokenizer(StringType properties, char terminator) 
+        public StringState(StringProperties properties, char terminator) 
             : this(properties, terminator, '\0') {
         }
 
-        public StringContentTokenizer(StringType properties, char terminator, char openingParenthesis) {
+        public StringState(StringProperties properties, char terminator, char openingParenthesis) {
             Debug.Assert(!Tokenizer.IsLetterOrDigit(terminator));
 
             _properties = properties;
@@ -64,9 +63,8 @@ namespace IronRuby.Compiler {
             _nestingLevel = 0;
         }
 
-        public StringType Properties {
+        public StringProperties Properties {
             get { return _properties; }
-            set { _properties = value; }
         }
 
         public int NestingLevel {
@@ -86,14 +84,13 @@ namespace IronRuby.Compiler {
             return String.Format("StringTerminator({0},{1},{2},{3},{4})", _properties, (int)_terminator, (int)_openingParenthesis, 0, _nestingLevel);
         }
 
-        internal override Tokens Tokenize(Tokenizer/*!*/ tokenizer) {
-            return tokenizer.TokenizeString(this);
+        internal override Tokens TokenizeAndMark(Tokenizer/*!*/ tokenizer) {
+            return tokenizer.TokenizeAndMarkString(this);
         }
     }
 
-    internal sealed class HeredocTokenizer : StringTokenizer {
-
-        private readonly StringType _properties;
+    internal sealed class HeredocState : TokenSequenceState {
+        private readonly StringProperties _properties;
         private readonly string _label;
         private readonly int _resumePosition;
         private readonly int _resumeLineLength;
@@ -101,7 +98,7 @@ namespace IronRuby.Compiler {
         private readonly int _firstLine;
         private readonly int _firstLineIndex;
 
-        public HeredocTokenizer(StringType properties, string label, int resumePosition, char[] resumeLine, int resumeLineLength, int firstLine, int firstLineIndex) {
+        public HeredocState(StringProperties properties, string label, int resumePosition, char[] resumeLine, int resumeLineLength, int firstLine, int firstLineIndex) {
             _properties = properties;
             _label = label;
             _resumePosition = resumePosition;
@@ -111,7 +108,7 @@ namespace IronRuby.Compiler {
             _firstLineIndex = firstLineIndex;
         }
 
-        public StringType Properties {
+        public StringProperties Properties {
             get { return _properties; }
         }
 
@@ -144,8 +141,22 @@ namespace IronRuby.Compiler {
             return String.Format("Heredoc({0},'{1}',{2},'{2}')", _properties, _label, _resumePosition, new String(_resumeLine));
         }
 
-        internal override Tokens Tokenize(Tokenizer/*!*/ tokenizer) {
-            return tokenizer.TokenizeHeredoc(this);
+        internal override Tokens TokenizeAndMark(Tokenizer/*!*/ tokenizer) {
+            return tokenizer.TokenizeAndMarkHeredoc(this);
+        }
+    }
+
+    internal sealed class MultiLineCommentState : TokenSequenceState {
+        internal static readonly MultiLineCommentState Instance = new MultiLineCommentState();
+
+        private MultiLineCommentState() {
+        }
+
+        internal override Tokens TokenizeAndMark(Tokenizer/*!*/ tokenizer) {
+            tokenizer.MarkTokenStart();
+            Tokens token = tokenizer.TokenizeMultiLineComment(false);
+            tokenizer.CaptureTokenSpan();
+            return token;
         }
     }
 }

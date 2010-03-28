@@ -51,7 +51,7 @@ namespace IronRuby.Compiler {
         public double Double { get { return _numeric.Double; } set { _numeric.Double = value; } }
 
         // Tokens: StringBegin, SymbolBegin, RegexBegin, ShellStringBegin
-        internal StringTokenizer/*!*/ StringTokenizer { get { return (StringTokenizer)_obj1; } set { _obj1 = value; } }
+        internal TokenSequenceState/*!*/ StringTokenizer { get { return (TokenSequenceState)_obj1; } set { _obj1 = value; } }
 
         internal int VariableFactory { get { return Integer1; } set { Integer1 = value; } }
 
@@ -117,7 +117,7 @@ namespace IronRuby.Compiler {
             StringContent = contentBuilder.ToValue();
         }
 
-        internal void SetStringTokenizer(StringTokenizer value) {
+        internal void SetStringTokenizer(TokenSequenceState value) {
             StringTokenizer = value;
         }
 

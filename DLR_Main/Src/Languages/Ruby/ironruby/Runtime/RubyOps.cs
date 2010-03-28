@@ -1735,7 +1735,11 @@ namespace IronRuby.Runtime {
             RubyContext ec = scope.RubyContext;
 
             // MRI doesn't call === here;
-            return ec.IsInstanceOf(ec.CurrentException, ec.StandardErrorClass);
+            bool result = ec.IsInstanceOf(ec.CurrentException, ec.StandardErrorClass);
+            if (result) {
+                RubyExceptionData.ActiveExceptionHandled(ec.CurrentException);
+            }
+            return result;
         }
 
         [Emitted]

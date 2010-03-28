@@ -40,16 +40,32 @@ print a[1][0]
         }
 
         public void Scenario_RubyArrays3() {
-            AssertOutput(delegate() {
-                CompilerTest(@"
+            TestOutput(@"
+puts %w{}.size
+puts %W{}.size
+puts %w{x}
+puts %W{x}
+puts %w{          y          }
+puts %W{          y          }
 puts %w{hello world}
+puts %W{hello world}
 puts %w<cup<T> cup<co-phi>>
+puts %W<cup<T> cup<co-phi>>
 puts %w{hello w#{0}r#{1}d}
 puts %W{hello w#{0}r#{1}d}
-");
-            }, @"
+", @"
+0
+0
+x
+x
+y
+y
 hello
 world
+hello
+world
+cup<T>
+cup<co-phi>
 cup<T>
 cup<co-phi>
 hello

@@ -92,7 +92,7 @@ namespace IronRuby.Compiler {
         public static readonly ErrorInfo ParenthesizeArguments = new ErrorInfo(WarningLevel1 + 1, "parenthesize argument(s) for future version");
         public static readonly ErrorInfo WhitespaceBeforeArgumentParentheses = new ErrorInfo(WarningLevel1 + 2, "don't put space before argument parentheses");
         public static readonly ErrorInfo InvalidCharacterSyntax = new ErrorInfo(WarningLevel1 + 3, "invalid character syntax; use ?\\{0}");
-        public static readonly ErrorInfo FileFinalizerInMethod = new ErrorInfo(WarningLevel1 + 4, "END in method; use at_exit");    
+        public static readonly ErrorInfo ShutdownHandlerInMethod = new ErrorInfo(WarningLevel1 + 4, "END in method; use at_exit");    
         
         // level 2 warnings:
         private const int WarningLevel2 = 0x3000;

@@ -504,13 +504,8 @@ namespace IronRuby.Compiler {
             return new WhileLoopExpression(condition, isWhileLoop, statement is Body, new Statements(statement), location);
         }
 
-        public static string/*!*/ TerminalToString(int terminal) {
-            Debug.Assert(terminal >= 0);
-            if (((Tokens)terminal).ToString() != terminal.ToString()) {
-                return IronRuby.Runtime.RubyUtils.TryMangleName(((Tokens)terminal).ToString()).ToUpperInvariant();
-            } else {
-                return CharToString((char)terminal);
-            }
+        public static string/*!*/ GetTerminalName(int terminal) {
+            return RubyUtils.TryMangleName(((Tokens)terminal).ToString()).ToUpperInvariant();
         }
 
         public static StringLiteral/*!*/ MakeStringLiteral(TokenValue token, SourceSpan location) {

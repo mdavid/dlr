@@ -32,17 +32,20 @@ using IronRuby.Compiler.Ast;
 %partial  
 %visibility public
 
-%token SINGLE_LINE_COMMENT MULTI_LINE_COMMENT WHITESPACE INVALID_CHARACTER END_OF_LINE
-%token WORD_SEPARATOR
+%token SINGLE_LINE_COMMENT MULTI_LINE_COMMENT WHITESPACE END_OF_LINE INVALID_CHARACTER POUND AT DOLLAR BACKSLASH 
+%token WORD_SEPARATOR NEW_LINE
 %token CLASS MODULE DEF UNDEF BEGIN RESCUE ENSURE END IF UNLESS THEN ELSIF ELSE
 %token CASE WHEN WHILE UNTIL FOR BREAK NEXT REDO RETRY IN DO LOOP_DO BLOCK_DO
 %token RETURN YIELD SUPER SELF NIL TRUE FALSE AND OR NOT IF_MOD UNLESS_MOD
 %token WHILE_MOD UNTIL_MOD RESCUE_MOD ALIAS DEFINED UPPERCASE_BEGIN UPPERCASE_END LINE FILE ENCODING
-%token UPLUS UMINUS POW CMP EQ EQQ NEQ GEQ LEQ LOGICAL_AND LOGICAL_OR MATCH NMATCH
-%token DOT2 DOT3 AREF ASET LSHFT RSHFT SEPARATING_DOUBLE_COLON LEADING_DOUBLE_COLON ASSOC LEFT_PAREN STRING_END
-%token LPAREN_ARG LBRACK LBRACE LBRACE_ARG STAR AMPERSAND 
+%token UNARY_PLUS UNARY_MINUS POW CMP EQUAL STRICT_EQUAL NOT_EQUAL GREATER_OR_EQUAL LESS_OR_EQUAL LOGICAL_AND LOGICAL_OR MATCH NMATCH
+%token DOUBLE_DOT TRIPLE_DOT ITEM_GETTER ITEM_SETTER LSHFT RSHFT SEPARATING_DOUBLE_COLON LEADING_DOUBLE_COLON DOUBLE_ARROW STRING_END
+%token SEMICOLON COMMA DOT STAR BLOCK_REFERENCE AMPERSAND BACKTICK
+%token LEFT_PARENTHESIS LEFT_EXPR_PARENTHESIS LEFT_ARG_PARENTHESIS RIGHT_PARENTHESIS
+%token LEFT_BLOCK_BRACE LEFT_BRACE LEFT_BLOCK_ARG_BRACE RIGHT_BRACE
+%token LEFT_BRACKET LEFT_INDEXING_BRACKET RIGHT_BRACKET
 
-%token<String> IDENTIFIER FUNCTION_IDENTIFIER GLOBAL_VARIABLE INSTANCE_VARIABLE CONSTANT_IDENTIFIER CLASS_VARIABLE ASSIGNMENT 
+%token<String> IDENTIFIER FUNCTION_IDENTIFIER GLOBAL_VARIABLE INSTANCE_VARIABLE CONSTANT_IDENTIFIER CLASS_VARIABLE OP_ASSIGNMENT 
 %token<Integer1> INTEGER 
 %token<BigInteger> BIG_INTEGER
 %token<Double> FLOAT 
@@ -129,27 +132,27 @@ using IronRuby.Compiler.Ast;
 %type<LeftValue> exc_var
 
 %nonassoc LOWEST
-%nonassoc LBRACE_ARG
+%nonassoc LEFT_BLOCK_ARG_BRACE
 %nonassoc  IF_MOD UNLESS_MOD WHILE_MOD UNTIL_MOD
 %left  OR AND
 %right NOT
 %nonassoc DEFINED
-%right '=' ASSIGNMENT
+%right ASSIGNMENT OP_ASSIGNMENT
 %left RESCUE_MOD
-%right '?' ':'
-%nonassoc DOT2 DOT3
+%right QUESTION_MARK COLON
+%nonassoc DOUBLE_DOT TRIPLE_DOT
 %left  LOGICAL_OR
 %left  LOGICAL_AND
-%nonassoc  CMP EQ EQQ NEQ MATCH NMATCH
-%left  '>' GEQ '<' LEQ
-%left  '|' '^'
-%left  '&'
+%nonassoc  CMP EQUAL STRICT_EQUAL NOT_EQUAL MATCH NMATCH
+%left  GREATER GREATER_OR_EQUAL LESS LESS_OR_EQUAL
+%left  PIPE CARET
+%left  AMPERSAND
 %left  LSHFT RSHFT
-%left  '+' '-'
-%left  '*' '/' '%'
-%right UMINUS_NUM UMINUS
+%left  PLUS MINUS
+%left  ASTERISK SLASH PERCENT
+%right NUMBER_NEGATION UNARY_MINUS
 %right POW
-%right '!' '~' UPLUS
+%right BANG TILDE UNARY_PLUS
 
 %token LAST_TOKEN
 
@@ -207,26 +210,26 @@ stmt:     alias_statement
                             
                 EnterTopScope();
             }
-          '{' compstmt '}'
+          LEFT_BLOCK_BRACE compstmt RIGHT_BRACE
             {
-                $$ = AddInitializer(new Initializer(CurrentScope, $4, @$));
+                $$ = AddInitializer(new FileInitializerStatement(CurrentScope, $4, @$));
                 LeaveScope();
             }
         | UPPERCASE_END
             {
                 if (InMethod) {
-                    _tokenizer.ReportWarning(Errors.FileFinalizerInMethod);
+                    _tokenizer.ReportWarning(Errors.ShutdownHandlerInMethod);
                 }
                 
                 // END block behaves like a block definition (allows variable closures, super, etc):
                 EnterNestedScope();
             } 
-          '{' compstmt '}'
+          LEFT_BLOCK_BRACE compstmt RIGHT_BRACE
             {                    
-                $$ = new Finalizer(CurrentScope, $4, @$);
+                $$ = new ShutdownHandlerStatement(CurrentScope, $4, @$);
                 LeaveScope();
             }        
-        | match_reference ASSIGNMENT command_call
+        | match_reference OP_ASSIGNMENT command_call
             {
                 MatchReferenceReadOnlyError($1);
                 $$ = new ErrorExpression(@$);
@@ -248,7 +251,7 @@ stmt:     alias_statement
 alias_statement:
       ALIAS method_name_or_symbol 
         {
-            _tokenizer.SetState(LexicalState.EXPR_FNAME);
+            _tokenizer.LexicalState = LexicalState.EXPR_FNAME;
         } 
       method_name_or_symbol
         {
@@ -318,51 +321,51 @@ expression_statement:
         {
             $$ = $1;
         }
-    | lhs '=' command_call
+    | lhs ASSIGNMENT command_call
         {
             $$ = new SimpleAssignmentExpression($1, $3, null, @$);
         }
-    | compound_lhs '=' command_call
+    | compound_lhs ASSIGNMENT command_call
         {
             $$ = new ParallelAssignmentExpression($1, new CompoundRightValue(new Expression[] { $3 }, null), @$);
         }
-    | var_lhs ASSIGNMENT command_call
+    | var_lhs OP_ASSIGNMENT command_call
         {
             $$ = new SimpleAssignmentExpression($1, $3, $2, @$);
         }
-    | primary '[' array_key ']' ASSIGNMENT command_call
+    | primary LEFT_INDEXING_BRACKET array_key RIGHT_BRACKET OP_ASSIGNMENT command_call
         {                
             $$ = new SimpleAssignmentExpression(new ArrayItemAccess($1, $3, @2), $6, $5, @$);
         }
-    | primary '.' IDENTIFIER ASSIGNMENT command_call
+    | primary DOT IDENTIFIER OP_ASSIGNMENT command_call
         {
             $$ = new MemberAssignmentExpression($1, $3, $4, $5, @$);
         }
-    | primary '.' CONSTANT_IDENTIFIER ASSIGNMENT command_call
+    | primary DOT CONSTANT_IDENTIFIER OP_ASSIGNMENT command_call
         {
             $$ = new MemberAssignmentExpression($1, $3, $4, $5, @$);
         }
-    | primary SEPARATING_DOUBLE_COLON IDENTIFIER ASSIGNMENT command_call
+    | primary SEPARATING_DOUBLE_COLON IDENTIFIER OP_ASSIGNMENT command_call
         {
             $$ = new MemberAssignmentExpression($1, $3, $4, $5, @$);
         }
-    | lhs '=' compound_rhs
+    | lhs ASSIGNMENT compound_rhs
         {
             $$ = new ParallelAssignmentExpression(new CompoundLeftValue(CollectionUtils.MakeList<LeftValue>($1), null, @1), $3, @$);
         }
-    | compound_lhs '=' arg
+    | compound_lhs ASSIGNMENT arg
         {
             $$ = new ParallelAssignmentExpression($1, new CompoundRightValue(new Expression[] { $3 }, null), @$);
         }
-    | compound_lhs '=' compound_rhs
+    | compound_lhs ASSIGNMENT compound_rhs
         {
             $$ = new ParallelAssignmentExpression($1, $3, @$);
         }
-    | arg '?' jump_statement_parameterless ':' arg
+    | arg QUESTION_MARK jump_statement_parameterless COLON arg
         {
             $$ = new ConditionalJumpExpression(ToCondition($1), $3, false, $5, @$);
         }
-    | arg '?' arg ':' jump_statement_parameterless
+    | arg QUESTION_MARK arg COLON jump_statement_parameterless
         {
             $$ = new ConditionalJumpExpression(ToCondition($1), $5, true, $3, @$);
         }
@@ -389,18 +392,18 @@ conditional_statement:
         {
             $$ = new RescueExpression($1, $3, MergeLocations(@2, @3), @$);
         }
-    | arg '?' jump_statement_parameterless ':' jump_statement_parameterless
+    | arg QUESTION_MARK jump_statement_parameterless COLON jump_statement_parameterless
         {
             $$ = new ConditionalStatement(ToCondition($1), false, $3, $5, @$);
         }
 ;
 
 compound_rhs: 
-      args ',' arg
+      args COMMA arg
         {
             $$ = new CompoundRightValue(PopArguments($1, $3), null);
         }
-    | args ',' STAR arg
+    | args COMMA STAR arg
         {
             $$ = new CompoundRightValue(PopArguments($1), $4);
         }
@@ -433,7 +436,7 @@ expr:
             // TODO: warning: string literal in condition
             $$ = new NotExpression($2, @$);
         }
-    | '!' command_call
+    | BANG command_call
         {
             // TODO: warning: string literal in condition
             $$ = new NotExpression($2, @$);
@@ -457,7 +460,7 @@ block_command:
         {
             $$ = $1;
         }
-    | block_call '.' operation2 command_args
+    | block_call DOT operation2 command_args
         {
             $$ = MakeMethodCall($1, $3, $4, @$);
         }
@@ -468,50 +471,51 @@ block_command:
 ;
 
 cmd_brace_block:
-      LBRACE_ARG
+      LEFT_BLOCK_ARG_BRACE
         {
             EnterNestedScope();
         }
-      block_parameters_opt compstmt '}'
+      block_parameters_opt compstmt RIGHT_BRACE
         {
             $$ = new BlockDefinition(CurrentScope, $3, $4, @$);
             LeaveScope();
         }
 ;
 
-command:  operation command_args                             %prec LOWEST
-            {
-                $$ = MakeMethodCall(null, $1, $2, @$);
-            }
-        | operation command_args cmd_brace_block
-            {
-                $$ = MakeMethodCall(null, $1, $2, $3, @$);
-            }
-        | primary '.' operation2 command_args                %prec LOWEST
-            {
-                $$ = MakeMethodCall($1, $3, $4, @$);
-            }
-        | primary '.' operation2 command_args cmd_brace_block
-            {
-                $$ = MakeMethodCall($1, $3, $4, $5, @$);
-            }
-        | primary SEPARATING_DOUBLE_COLON operation2 command_args            %prec LOWEST
-            {
-                $$ = MakeMethodCall($1, $3, $4, @$);
-            }
-        | primary SEPARATING_DOUBLE_COLON operation2 command_args cmd_brace_block
-            {
-                $$ = MakeMethodCall($1, $3, $4, $5, @$);
-            }
-        | SUPER command_args
-            {
-                $$ = MakeSuperCall($2, @$);
-            }
-        | YIELD command_args
-            {
-                $$ = new YieldCall(RequireNoBlockArg($2), @$);
-            }
-        ;
+command:  
+      operation command_args                                             %prec LOWEST
+        {
+            $$ = MakeMethodCall(null, $1, $2, @$);
+        }
+    | operation command_args cmd_brace_block
+        {
+            $$ = MakeMethodCall(null, $1, $2, $3, @$);
+        }
+    | primary DOT operation2 command_args                                %prec LOWEST
+        {
+            $$ = MakeMethodCall($1, $3, $4, @$);
+        }
+    | primary DOT operation2 command_args cmd_brace_block
+        {
+            $$ = MakeMethodCall($1, $3, $4, $5, @$);
+        }
+    | primary SEPARATING_DOUBLE_COLON operation2 command_args            %prec LOWEST
+        {
+            $$ = MakeMethodCall($1, $3, $4, @$);
+        }
+    | primary SEPARATING_DOUBLE_COLON operation2 command_args cmd_brace_block
+        {
+            $$ = MakeMethodCall($1, $3, $4, $5, @$);
+        }
+    | SUPER command_args
+        {
+            $$ = MakeSuperCall($2, @$);
+        }
+    | YIELD command_args
+        {
+            $$ = new YieldCall(RequireNoBlockArg($2), @$);
+        }
+;
 
 compound_lhs: 
       compound_lhs_head compound_lhs_item
@@ -524,7 +528,7 @@ compound_lhs:
               $1.Add(Placeholder.Singleton);
               $$ = new CompoundLeftValue($1, null, @$);
         }
-    | LEFT_PAREN compound_lhs ')'
+    | LEFT_EXPR_PARENTHESIS compound_lhs RIGHT_PARENTHESIS
         {
             $$ = new CompoundLeftValue(CollectionUtils.MakeList<LeftValue>($2), null, @$);
         }
@@ -550,11 +554,11 @@ compound_lhs_tail:
 ;
 
 compound_lhs_head:
-      compound_lhs_head compound_lhs_item ','
+      compound_lhs_head compound_lhs_item COMMA
         {
             ($$ = $1).Add($2);
         }
-    | compound_lhs_item ','
+    | compound_lhs_item COMMA
         {
             $$ = CollectionUtils.MakeList($1);
         }
@@ -565,7 +569,7 @@ compound_lhs_item:
         {
             $$ = $1;
         }
-    | LEFT_PAREN compound_lhs ')'
+    | LEFT_EXPR_PARENTHESIS compound_lhs RIGHT_PARENTHESIS
         {
             $$ = $2;
         }
@@ -576,11 +580,11 @@ compound_lhs_node:
         {
             $$ = VariableFactory.MakeLeftValue($<VariableFactory>1, this, $<String>1, @$);
         }
-    | primary '[' array_key ']'
+    | primary LEFT_INDEXING_BRACKET array_key RIGHT_BRACKET
         {
             $$ = new ArrayItemAccess($1, $3, @$);
         }
-    | primary '.' IDENTIFIER
+    | primary DOT IDENTIFIER
         {
             $$ = new AttributeAccess($1, $3, @$);
         }
@@ -588,7 +592,7 @@ compound_lhs_node:
         {
             $$ = new AttributeAccess($1, $3, @$);
         }
-    | primary '.' CONSTANT_IDENTIFIER
+    | primary DOT CONSTANT_IDENTIFIER
         {
             $$ = new AttributeAccess($1, $3, @$);
         }
@@ -612,11 +616,11 @@ lhs: variable
         {
             $$ = VariableFactory.MakeLeftValue($<VariableFactory>1, this, $<String>1, @$);
         }
-    | primary '[' array_key ']'
+    | primary LEFT_INDEXING_BRACKET array_key RIGHT_BRACKET
         {
             $$ = new ArrayItemAccess($1, $3, @$);
         }
-    | primary '.' IDENTIFIER
+    | primary DOT IDENTIFIER
         {
             $$ = new AttributeAccess($1, $3, @$);
         }
@@ -624,7 +628,7 @@ lhs: variable
         {
             $$ = new AttributeAccess($1, $3, @$);
         }
-    | primary '.' CONSTANT_IDENTIFIER
+    | primary DOT CONSTANT_IDENTIFIER
         {
             $$ = new AttributeAccess($1, $3, @$);
         }
@@ -685,12 +689,12 @@ method_name:
         }        
     | op
         {
-            _tokenizer.SetState(LexicalState.EXPR_END);
+            _tokenizer.LexicalState = LexicalState.EXPR_END;
             $$ = $1;
         }
     | reswords
         {
-            _tokenizer.SetState(LexicalState.EXPR_END);
+            _tokenizer.LexicalState = LexicalState.EXPR_END;
             $$ = $<String>1;
     }
 ;
@@ -711,9 +715,9 @@ undef_list:
         {
             $$ = CollectionUtils.MakeList<Identifier>(new Identifier($1, @1));
         }
-   | undef_list ',' 
+   | undef_list COMMA 
         {
-            _tokenizer.SetState(LexicalState.EXPR_FNAME);
+            _tokenizer.LexicalState = LexicalState.EXPR_FNAME;
         } 
      method_name_or_symbol
         {
@@ -722,108 +726,109 @@ undef_list:
 ;
 
 op:
-      '|'       { $$ = Symbols.BitwiseOr; }
-    | '^'       { $$ = Symbols.Xor; }
-    | '&'       { $$ = Symbols.BitwiseAnd; }
-    | CMP       { $$ = Symbols.Comparison; }
-    | EQ        { $$ = Symbols.Equal; }
-    | EQQ       { $$ = Symbols.StrictEqual; }
-    | MATCH     { $$ = Symbols.Match; }
-    | '>'       { $$ = Symbols.GreaterThan; }
-    | GEQ       { $$ = Symbols.GreaterEqual; }
-    | '<'       { $$ = Symbols.LessThan; }
-    | LEQ       { $$ = Symbols.LessEqual; }
-    | LSHFT     { $$ = Symbols.LeftShift; }
-    | RSHFT     { $$ = Symbols.RightShift; }
-    | '+'       { $$ = Symbols.Plus; }
-    | '-'       { $$ = Symbols.Minus; }
-    | '*'       { $$ = Symbols.Multiply; }
-    | STAR      { $$ = Symbols.Multiply; }
-    | '/'       { $$ = Symbols.Divide; }
-    | '%'       { $$ = Symbols.Mod; }
-    | POW       { $$ = Symbols.Power; }
-    | '~'       { $$ = Symbols.BitwiseNot; }
-    | UPLUS     { $$ = Symbols.UnaryPlus; }
-    | UMINUS    { $$ = Symbols.UnaryMinus; }
-    | AREF      { $$ = Symbols.ArrayItemRead; }
-    | ASET      { $$ = Symbols.ArrayItemWrite; }
-    | '`'       { $$ = Symbols.Backtick; }
+      PIPE              { $$ = Symbols.BitwiseOr; }
+    | CARET             { $$ = Symbols.Xor; }
+    | AMPERSAND         { $$ = Symbols.BitwiseAnd; }
+    | CMP               { $$ = Symbols.Comparison; }
+    | EQUAL             { $$ = Symbols.Equal; }
+    | STRICT_EQUAL      { $$ = Symbols.StrictEqual; }
+    | MATCH             { $$ = Symbols.Match; }
+    | GREATER           { $$ = Symbols.GreaterThan; }
+    | GREATER_OR_EQUAL  { $$ = Symbols.GreaterEqual; }
+    | LESS              { $$ = Symbols.LessThan; }
+    | LESS_OR_EQUAL     { $$ = Symbols.LessEqual; }
+    | LSHFT             { $$ = Symbols.LeftShift; }
+    | RSHFT             { $$ = Symbols.RightShift; }
+    | PLUS              { $$ = Symbols.Plus; }
+    | MINUS             { $$ = Symbols.Minus; }
+    | ASTERISK          { $$ = Symbols.Multiply; }
+    | STAR              { $$ = Symbols.Multiply; }
+    | SLASH             { $$ = Symbols.Divide; }
+    | PERCENT           { $$ = Symbols.Mod; }
+    | POW               { $$ = Symbols.Power; }
+    | TILDE             { $$ = Symbols.BitwiseNot; }
+    | UNARY_PLUS        { $$ = Symbols.UnaryPlus; }
+    | UNARY_MINUS       { $$ = Symbols.UnaryMinus; }
+    | ITEM_GETTER       { $$ = Symbols.ArrayItemRead; }
+    | ITEM_SETTER       { $$ = Symbols.ArrayItemWrite; }
+    | BACKTICK          { $$ = Symbols.Backtick; }
 ;
 
-reswords: LINE | FILE | ENCODING | UPPERCASE_BEGIN | UPPERCASE_END
-        | ALIAS | AND | BEGIN | BREAK | CASE | CLASS | DEF
-        | DEFINED | DO | BLOCK_DO | ELSE | ELSIF | END | ENSURE | FALSE
-        | FOR | IN | MODULE | NEXT | NIL | NOT
-        | OR | REDO | RESCUE | RETRY | RETURN | SELF | SUPER
-        | THEN | TRUE | UNDEF | WHEN | YIELD
-        | IF_MOD | UNLESS_MOD | WHILE_MOD | UNTIL_MOD | RESCUE_MOD
-        ;
+reswords: 
+      LINE | FILE | ENCODING | UPPERCASE_BEGIN | UPPERCASE_END
+    | ALIAS | AND | BEGIN | BREAK | CASE | CLASS | DEF
+    | DEFINED | DO | BLOCK_DO | ELSE | ELSIF | END | ENSURE | FALSE
+    | FOR | IN | MODULE | NEXT | NIL | NOT
+    | OR | REDO | RESCUE | RETRY | RETURN | SELF | SUPER
+    | THEN | TRUE | UNDEF | WHEN | YIELD
+    | IF_MOD | UNLESS_MOD | WHILE_MOD | UNTIL_MOD | RESCUE_MOD
+;
 
 arg:
-      lhs '=' arg
+      lhs ASSIGNMENT arg
         {
             $$ = new SimpleAssignmentExpression($1, $3, null, @$);
         }
-    | lhs '=' arg RESCUE_MOD arg
+    | lhs ASSIGNMENT arg RESCUE_MOD arg
         {
             $$ = new SimpleAssignmentExpression($1, new RescueExpression($3, $5, MergeLocations(@4, @5), MergeLocations(@3, @5)), null, @$);
         }
-    | lhs '=' arg RESCUE_MOD jump_statement_parameterless
+    | lhs ASSIGNMENT arg RESCUE_MOD jump_statement_parameterless
         {
             $$ = new SimpleAssignmentExpression($1, new RescueExpression($3, $5, MergeLocations(@4, @5), MergeLocations(@3, @5)), null, @$);
         }
-    | var_lhs ASSIGNMENT arg
+    | var_lhs OP_ASSIGNMENT arg
         {
             $$ = new SimpleAssignmentExpression($1, $3, $2, @$);
         }
-    | primary '[' array_key ']' ASSIGNMENT arg
+    | primary LEFT_INDEXING_BRACKET array_key RIGHT_BRACKET OP_ASSIGNMENT arg
         {
             $$ = new SimpleAssignmentExpression(new ArrayItemAccess($1, $3, @2), $6, $5, @$);
         }
-    | primary '.' IDENTIFIER ASSIGNMENT arg
+    | primary DOT IDENTIFIER OP_ASSIGNMENT arg
         {
             $$ = new MemberAssignmentExpression($1, $3, $4, $5, @$);
         }
-    | primary '.' CONSTANT_IDENTIFIER ASSIGNMENT arg
+    | primary DOT CONSTANT_IDENTIFIER OP_ASSIGNMENT arg
         {
             $$ = new MemberAssignmentExpression($1, $3, $4, $5, @$);
         }
-    | primary SEPARATING_DOUBLE_COLON IDENTIFIER ASSIGNMENT arg
+    | primary SEPARATING_DOUBLE_COLON IDENTIFIER OP_ASSIGNMENT arg
         {
             $$ = new MemberAssignmentExpression($1, $3, $4, $5, @$);
         }
-    | primary SEPARATING_DOUBLE_COLON CONSTANT_IDENTIFIER ASSIGNMENT arg
+    | primary SEPARATING_DOUBLE_COLON CONSTANT_IDENTIFIER OP_ASSIGNMENT arg
         {
             _tokenizer.ReportError(Errors.ConstantReassigned);
             $$ = new ErrorExpression(@$);
         }
-    | LEADING_DOUBLE_COLON CONSTANT_IDENTIFIER ASSIGNMENT arg
+    | LEADING_DOUBLE_COLON CONSTANT_IDENTIFIER OP_ASSIGNMENT arg
         {
             _tokenizer.ReportError(Errors.ConstantReassigned);
             $$ = new ErrorExpression(@$);
         }
-    | match_reference ASSIGNMENT arg
+    | match_reference OP_ASSIGNMENT arg
         {
             MatchReferenceReadOnlyError($1);
             $$ = new ErrorExpression(@$);
         }
-    | arg '+' arg
+    | arg PLUS arg
         {
             $$ = new MethodCall($1, Symbols.Plus, new Arguments($3), @$);
         }
-    | arg '-' arg
+    | arg MINUS arg
         {
             $$ = new MethodCall($1, Symbols.Minus, new Arguments($3), @$);
         }
-    | arg '*' arg
+    | arg ASTERISK arg
         {
             $$ = new MethodCall($1, Symbols.Multiply, new Arguments($3), @$);
         }
-    | arg '/' arg
+    | arg SLASH arg
         {
             $$ = new MethodCall($1, Symbols.Divide, new Arguments($3), @$);
         }
-    | arg '%' arg
+    | arg PERCENT arg
         {
             $$ = new MethodCall($1, Symbols.Mod, new Arguments($3), @$);
         }
@@ -831,36 +836,36 @@ arg:
         {
             $$ = new MethodCall($1, Symbols.Power, new Arguments($3), @$);
         }
-    | UMINUS_NUM INTEGER POW arg
+    | NUMBER_NEGATION INTEGER POW arg
         {
             // ** has precedence over unary minus, hence -number**arg is equivalent to -(number**arg)
             $$ = new MethodCall(new MethodCall(Literal.Integer($2, @2), Symbols.Power, new Arguments($4), @3), Symbols.UnaryMinus, Arguments.Empty, @$);
         }
-    | UMINUS_NUM BIG_INTEGER POW arg
+    | NUMBER_NEGATION BIG_INTEGER POW arg
         {
             $$ = new MethodCall(new MethodCall(Literal.BigInteger($2, @2), Symbols.Power, new Arguments($4), @3), Symbols.UnaryMinus, Arguments.Empty, @$);
         }
-    | UMINUS_NUM FLOAT POW arg
+    | NUMBER_NEGATION FLOAT POW arg
         {
             $$ = new MethodCall(new MethodCall(Literal.Double($2, @2), Symbols.Power, new Arguments($4), @3), Symbols.UnaryMinus, Arguments.Empty, @$);
         }
-    | UPLUS arg
+    | UNARY_PLUS arg
         {
             $$ = new MethodCall($2, Symbols.UnaryPlus, null, @$);
         }
-    | UMINUS arg
+    | UNARY_MINUS arg
         {
             $$ = new MethodCall($2, Symbols.UnaryMinus, null, @$);
         }
-    | arg '|' arg
+    | arg PIPE arg
         {
             $$ = new MethodCall($1, Symbols.BitwiseOr, new Arguments($3), @$);
         }
-    | arg '^' arg
+    | arg CARET arg
         {
             $$ = new MethodCall($1, Symbols.Xor, new Arguments($3), @$);
         }
-    | arg '&' arg
+    | arg AMPERSAND arg
         {
             $$ = new MethodCall($1, Symbols.BitwiseAnd, new Arguments($3), @$);
         }
@@ -868,31 +873,31 @@ arg:
         {
             $$ = new MethodCall($1, Symbols.Comparison, new Arguments($3), @$);
         }
-    | arg '>' arg
+    | arg GREATER arg
         {
             $$ = new MethodCall($1, Symbols.GreaterThan, new Arguments($3), @$);
         }
-    | arg GEQ arg
+    | arg GREATER_OR_EQUAL arg
         {
             $$ = new MethodCall($1, Symbols.GreaterEqual, new Arguments($3), @$);
         }
-    | arg '<' arg
+    | arg LESS arg
         {
             $$ = new MethodCall($1, Symbols.LessThan, new Arguments($3), @$);
         }
-    | arg LEQ arg
+    | arg LESS_OR_EQUAL arg
         {
             $$ = new MethodCall($1, Symbols.LessEqual, new Arguments($3), @$);
         }
-    | arg EQ arg
+    | arg EQUAL arg
         {
             $$ = new MethodCall($1, Symbols.Equal, new Arguments($3), @$);
         }
-    | arg EQQ arg
+    | arg STRICT_EQUAL arg
         {
             $$ = new MethodCall($1, Symbols.StrictEqual, new Arguments($3), @$);
         }
-    | arg NEQ arg
+    | arg NOT_EQUAL arg
         {
             $$ = new NotExpression(new MethodCall($1, Symbols.Equal, new Arguments($3), @$), @$);
         }
@@ -904,12 +909,12 @@ arg:
         {
             $$ = new NotExpression(MakeMatch($1, $3, @2), @$);
         }
-    | '!' arg
+    | BANG arg
         {
             // TODO: warning: string literal in condition
             $$ = new NotExpression($2, @$);
         }
-    | '~' arg
+    | TILDE arg
         {
             $$ = new MethodCall($2, Symbols.BitwiseNot, Arguments.Empty, @$);
         }
@@ -937,11 +942,11 @@ arg:
         {
             $$ = new ConditionalJumpExpression($1, $3, true, null, @$);
         }
-    | arg DOT2 arg
+    | arg DOUBLE_DOT arg
         {
             $$ = new RangeExpression($1, $3, false, @$);
         }
-    | arg DOT3 arg
+    | arg TRIPLE_DOT arg
         {
             $$ = new RangeExpression($1, $3, true, @$);
         }
@@ -949,7 +954,7 @@ arg:
         {
             $$ = new IsDefinedExpression($3, @$);
         }
-    | arg '?' arg ':' arg
+    | arg QUESTION_MARK arg COLON arg
         {
             $$ = new ConditionalExpression(ToCondition($1), $3, $5, @$);
         }
@@ -973,7 +978,7 @@ array_key:
         {
             PopAndSetArguments($1, null, null, null, @1);
         }
-    | args ',' STAR arg opt_nl
+    | args COMMA STAR arg opt_nl
         {
             PopAndSetArguments($1, null, $4, null, MergeLocations(@1, @4));
         }
@@ -988,21 +993,21 @@ array_key:
 ;
 
 paren_args:   
-      '(' /* empty */ ')'
+      LEFT_PARENTHESIS /* empty */ RIGHT_PARENTHESIS
         {
             SetArguments();
         }
-    | '(' open_args opt_nl ')'
+    | LEFT_PARENTHESIS open_args opt_nl RIGHT_PARENTHESIS
         {
             Debug.Assert($2.Arguments != null);
             $$ = $2;
         }
-    | '(' block_call opt_nl ')'
+    | LEFT_PARENTHESIS block_call opt_nl RIGHT_PARENTHESIS
         {
             _tokenizer.ReportWarning(Errors.ParenthesizeArguments);
             SetArguments($2);
         }
-    | '(' args ',' block_call opt_nl ')'
+    | LEFT_PARENTHESIS args COMMA block_call opt_nl RIGHT_PARENTHESIS
         {
             _tokenizer.ReportWarning(Errors.ParenthesizeArguments);    
             SetArguments(PopArguments($2, $4), null, null, null, @$);
@@ -1025,7 +1030,7 @@ open_args:
         {
             PopAndSetArguments($1, null, null, $2, @$);
         }
-    | args ',' STAR arg opt_block_reference
+    | args COMMA STAR arg opt_block_reference
         {
             PopAndSetArguments($1, null, $4, $5, @$);
         }
@@ -1033,15 +1038,15 @@ open_args:
         {
             SetArguments(null, $1, null, $2, @$);
         }
-    | maplets ',' STAR arg opt_block_reference
+    | maplets COMMA STAR arg opt_block_reference
         {
             SetArguments(null, $1, $4, $5, @$);
         }
-    | args ',' maplets opt_block_reference
+    | args COMMA maplets opt_block_reference
         {
             PopAndSetArguments($1, $3, null, $4, @$);
         }
-    | args ',' maplets ',' STAR arg opt_block_reference
+    | args COMMA maplets COMMA STAR arg opt_block_reference
         {
             PopAndSetArguments($1, $3, $6, $7, @$);
         }
@@ -1061,19 +1066,19 @@ open_args:
 ;
 
 closed_args:
-      arg ',' args opt_block_reference
+      arg COMMA args opt_block_reference
         {
             SetArguments(PopArguments($1, $3), null, null, $4, @$);
         }
-    | arg ',' block_reference
+    | arg COMMA block_reference
         {
             SetArguments($1, $3);
         }
-    | arg ',' STAR arg opt_block_reference
+    | arg COMMA STAR arg opt_block_reference
         {
             SetArguments(new Expression[] { $1 }, null, $4, $5, @$);
         }
-    | arg ',' args ',' STAR arg opt_block_reference
+    | arg COMMA args COMMA STAR arg opt_block_reference
         {
             SetArguments(PopArguments($1, $3), null, $6, $7, @$);
         }
@@ -1081,23 +1086,23 @@ closed_args:
         {
             SetArguments(null, $1, null, $2, @$);
         }
-    | maplets ',' STAR arg opt_block_reference
+    | maplets COMMA STAR arg opt_block_reference
         {
             SetArguments(null, $1, $4, $5, @$);
         }
-    | arg ',' maplets opt_block_reference
+    | arg COMMA maplets opt_block_reference
         {
             SetArguments(new Expression[] { $1 }, $3, null, $4, @$);
         }
-    | arg ',' args ',' maplets opt_block_reference
+    | arg COMMA args COMMA maplets opt_block_reference
         {
             SetArguments(PopArguments($1, $3), $5, null, $6, @$);
         }
-    | arg ',' maplets ',' STAR arg opt_block_reference
+    | arg COMMA maplets COMMA STAR arg opt_block_reference
         {
             SetArguments(new Expression[] { $1 }, $3, $6, $7, @$);
         }
-    | arg ',' args ',' maplets ',' STAR arg opt_block_reference
+    | arg COMMA args COMMA maplets COMMA STAR arg opt_block_reference
         {
             SetArguments(PopArguments($1, $3), $5, $8, $9, @$);
         }
@@ -1113,12 +1118,11 @@ closed_args:
 
 command_args:
         {
-            $<Integer1>$ = _tokenizer.CMDARG;
-            _tokenizer.CMDARG_PUSH(1);
+            $<Integer1>$ = _tokenizer.EnterCommandArguments();
         }
       command_args_content
         {
-            _tokenizer.CMDARG = $<Integer1>1;
+            _tokenizer.LeaveCommandArguments($<Integer1>1);
             $$ = $2;
         }
 ;
@@ -1129,20 +1133,20 @@ command_args_content:
             Debug.Assert($1.Arguments != null);
             $$ = $1;
         }
-    | LPAREN_ARG
+    | LEFT_ARG_PARENTHESIS
         {
-            _tokenizer.SetState(LexicalState.EXPR_ENDARG);
+            _tokenizer.LexicalState = LexicalState.EXPR_ENDARG;
         }
-      ')'
+      RIGHT_PARENTHESIS
         {
             _tokenizer.ReportWarning(Errors.WhitespaceBeforeArgumentParentheses);    
             SetArguments();
         }
-    | LPAREN_ARG closed_args
+    | LEFT_ARG_PARENTHESIS closed_args
         {
-            _tokenizer.SetState(LexicalState.EXPR_ENDARG);
+            _tokenizer.LexicalState = LexicalState.EXPR_ENDARG;
         }
-      ')'
+      RIGHT_PARENTHESIS
         {
             _tokenizer.ReportWarning(Errors.WhitespaceBeforeArgumentParentheses);    
             $$ = $2;
@@ -1150,14 +1154,14 @@ command_args_content:
 ;
 
 block_reference:
-      AMPERSAND arg
+      BLOCK_REFERENCE arg
         {
             $$ = new BlockReference($2, @$);
         }
 ;
 
 opt_block_reference:
-      ',' block_reference
+      COMMA block_reference
         {
             $$ = $2;
         }
@@ -1172,7 +1176,7 @@ args:
         {
             PushArgument(0, $1);
         }
-    | args ',' arg
+    | args COMMA arg
         {
             PushArgument($1, $3);
         }
@@ -1210,31 +1214,31 @@ primary:
         {
             $$ = new ConstantVariable(null, $2, @$);
         }
-    | primary '[' array_key ']'
+    | primary LEFT_INDEXING_BRACKET array_key RIGHT_BRACKET
         {
             $$ = new ArrayItemAccess($1, $3, @$);
         }
-    | LBRACK array_key ']'
+    | LEFT_BRACKET array_key RIGHT_BRACKET
         {
             $$ = new ArrayConstructor($2, @$);
         }
-    | LBRACE '}'
+    | LEFT_BRACE RIGHT_BRACE
         {
             $$ = new HashConstructor(null, null, @$);
         }
-    | LBRACE maplets trailer '}'
+    | LEFT_BRACE maplets trailer RIGHT_BRACE
         {
             $$ = new HashConstructor($2, null, @$);
         }
-    | LBRACE args trailer '}'
+    | LEFT_BRACE args trailer RIGHT_BRACE
         {
             $$ = new HashConstructor(null, PopHashArguments($2, @3), @$);
         }                        
-    | YIELD '(' open_args ')'
+    | YIELD LEFT_PARENTHESIS open_args RIGHT_PARENTHESIS
         {
             $$ = new YieldCall(RequireNoBlockArg($3), @$);
         }
-    | YIELD '(' ')'
+    | YIELD LEFT_PARENTHESIS RIGHT_PARENTHESIS
         {
             $$ = new YieldCall(Arguments.Empty, @$);
         }
@@ -1242,7 +1246,7 @@ primary:
         {
             $$ = new YieldCall(null, @1);
         }
-    | DEFINED opt_nl '(' expr ')'
+    | DEFINED opt_nl LEFT_PARENTHESIS expr RIGHT_PARENTHESIS
         {
             $$ = new IsDefinedExpression($4, @$);
         }
@@ -1266,11 +1270,11 @@ primary:
         }
     | WHILE
         {
-            _tokenizer.COND_PUSH(1);
+            _tokenizer.EnterLoopCondition();
         }
       expr do
         {
-            _tokenizer.COND_POP();
+            _tokenizer.LeaveLoopCondition();
         }
       compstmt END
         {
@@ -1278,11 +1282,11 @@ primary:
         }
     | UNTIL
         {
-            _tokenizer.COND_PUSH(1);
+            _tokenizer.EnterLoopCondition();
         }
       expr do
         {
-            _tokenizer.COND_POP();
+            _tokenizer.LeaveLoopCondition();
         }
       compstmt END
         {
@@ -1291,11 +1295,11 @@ primary:
     | case_expression
     | FOR block_parameters IN
         {
-            _tokenizer.COND_PUSH(1);
+            _tokenizer.EnterLoopCondition();
         }
       expr do
         {
-            _tokenizer.COND_POP();
+            _tokenizer.LeaveLoopCondition();
             EnterPaddingScope();
         }
       compstmt END
@@ -1313,18 +1317,18 @@ primary:
         }
 ;
         
-block_expression:        
-      LPAREN_ARG expr 
+block_expression:
+      LEFT_ARG_PARENTHESIS expr 
         {
-            _tokenizer.SetState(LexicalState.EXPR_ENDARG);
+            _tokenizer.LexicalState = LexicalState.EXPR_ENDARG;
         } 
-      opt_nl ')'
+      opt_nl RIGHT_PARENTHESIS
         {
             _tokenizer.ReportWarning(Errors.InterpretedAsGroupedExpression);            
             // BlockExpression behaves like an expression, so we don't need to create one here:
             $$ = $2;
         }
-    | LEFT_PAREN compstmt ')'
+    | LEFT_EXPR_PARENTHESIS compstmt RIGHT_PARENTHESIS
         {
             $$ = MakeBlockExpression($2, @$);
         }
@@ -1389,12 +1393,12 @@ definition_expression:
         }
     | DEF singleton dot_or_colon
         {
-            _tokenizer.SetState(LexicalState.EXPR_FNAME);
+            _tokenizer.LexicalState = LexicalState.EXPR_FNAME;
         }
       method_name
         {
             _inSingletonMethodDefinition++;
-            _tokenizer.SetState(LexicalState.EXPR_END);
+            _tokenizer.LexicalState = LexicalState.EXPR_END;
             EnterTopScope();
         }
       parameters_definition body END
@@ -1429,14 +1433,14 @@ case_expression:
 
 then:
       term
-    | ':'
+    | COLON
     | THEN
     | term THEN
 ;
 
 do: 
       term
-    | ':'
+    | COLON
     | LOOP_DO
 ;
 
@@ -1478,7 +1482,7 @@ block_parameters_opt:
         {
             $$ = CompoundLeftValue.UnspecifiedBlockSignature;
         }
-    | '|' '|' 
+    | PIPE PIPE 
         {
             $$ = CompoundLeftValue.EmptyBlockSignature;
         }
@@ -1486,7 +1490,7 @@ block_parameters_opt:
         {
             $$ = CompoundLeftValue.EmptyBlockSignature;
         }
-    | '|' block_parameters '|'
+    | PIPE block_parameters PIPE
         {
             $$ = $2;
         }
@@ -1509,7 +1513,7 @@ block_call:
         {                            
             SetBlock($$ = $1, $2);
         }
-    | block_call '.' operation2 opt_paren_args
+    | block_call DOT operation2 opt_paren_args
         {
             $$ = MakeMethodCall($1, $3, $4, @$);
         }
@@ -1524,7 +1528,7 @@ method_call:
         {
             $$ = MakeMethodCall(null, $1, $2, @$);
         }
-    | primary '.' operation2 opt_paren_args
+    | primary DOT operation2 opt_paren_args
         {
             $$ = MakeMethodCall($1, $3, $4, @$);
         }
@@ -1547,11 +1551,11 @@ method_call:
 ;
 
 brace_block: 
-      '{'
+      LEFT_BLOCK_BRACE
         {
             EnterNestedScope();
         }
-      block_parameters_opt compstmt '}'
+      block_parameters_opt compstmt RIGHT_BRACE
         {
             $$ = new BlockDefinition(CurrentScope, $3, $4, @$);
             LeaveScope();
@@ -1590,7 +1594,7 @@ when_args:
         {
             SetWhenClauseArguments($1, null);
         }
-    | args ',' STAR arg
+    | args COMMA STAR arg
         {
             SetWhenClauseArguments($1, $4);
         }
@@ -1639,7 +1643,7 @@ exc_var:
         {
             $$ = null;
         }
-    | ASSOC lhs
+    | DOUBLE_ARROW lhs
         {
             $$ = $2;
         }
@@ -1696,12 +1700,13 @@ regexp:
 ;
 
 words: 
-      WORDS_BEGIN WORD_SEPARATOR STRING_END
+      WORDS_BEGIN STRING_END
         {
             $$ = new ArrayConstructor(null, @$);
         }
-    | WORDS_BEGIN word_list STRING_END
+    | WORDS_BEGIN word_list word STRING_END
         {
+            $2.Add(new StringConstructor($3, StringKind.Mutable, @3));
             $$ = new ArrayConstructor(new Arguments($2.ToArray(), null, null, @2), @$);
         }
 ;
@@ -1729,12 +1734,13 @@ word:
 ;
 
 verbatim_words: 
-      VERBATIM_WORDS_BEGIN WORD_SEPARATOR STRING_END
+      VERBATIM_WORDS_BEGIN STRING_END
         {
             $$ = new ArrayConstructor(null, @$);
         }
-    | VERBATIM_WORDS_BEGIN verbatim_word_list STRING_END
+    | VERBATIM_WORDS_BEGIN verbatim_word_list STRING_CONTENT STRING_END
         {
+            $2.Add(MakeStringLiteral($3, @3));
             $$ = MakeVerbatimWords($2, @2, @$);
         }
 ;
@@ -1772,7 +1778,7 @@ string_content:
             _tokenizer.StringEmbeddedVariableEnd($1);
             $$ = $2;
         }
-    | STRING_EMBEDDED_CODE_BEGIN compstmt '}'
+    | STRING_EMBEDDED_CODE_BEGIN compstmt RIGHT_BRACE
         {
             _tokenizer.StringEmbeddedCodeEnd($1);
             $$ = MakeBlockExpression($2, @2);
@@ -1801,7 +1807,7 @@ string_embedded_variable:
 symbol:
     SYMBOL_BEGIN sym
       {
-          _tokenizer.SetState(LexicalState.EXPR_END);
+          _tokenizer.LexicalState = LexicalState.EXPR_END;
           $$ = $2;
       }
 ;
@@ -1834,17 +1840,17 @@ numeric_literal:
         {
             $$ = Literal.Double($1, @$);
         }
-    | UMINUS_NUM INTEGER                      %prec LOWEST
+    | NUMBER_NEGATION INTEGER                      %prec LOWEST
         {
             // cannot overflow INTEGER is unsigned and Int32.MaxValue < |Int32.MinValue|
             $$ = Literal.Integer(-$2, @$);
         }
-    | UMINUS_NUM BIG_INTEGER                  %prec LOWEST
+    | NUMBER_NEGATION BIG_INTEGER                  %prec LOWEST
         {
             // TODO: -|Int32.MinValue| actually ends up here (converted to bigint) instead of being Int32. We should fix that.
             $$ = Literal.BigInteger(-$2, @$);
         }
-    | UMINUS_NUM FLOAT                        %prec LOWEST
+    | NUMBER_NEGATION FLOAT                        %prec LOWEST
         {
             $$ = Literal.Double(-$2, @$);
         }
@@ -1891,9 +1897,9 @@ superclass:
         {
             $$ = null;
         }
-    | '<' 
+    | LESS 
         {
-            _tokenizer.SetState(LexicalState.EXPR_BEG);
+            _tokenizer.LexicalState = LexicalState.EXPR_BEG;
         }
       expr term
         {
@@ -1907,10 +1913,10 @@ superclass:
 ;
 
 parameters_definition:
-      '(' parameters opt_nl ')'
+      LEFT_PARENTHESIS parameters opt_nl RIGHT_PARENTHESIS
           {
               $$ = $2;
-              _tokenizer.SetState(LexicalState.EXPR_BEG);
+              _tokenizer.LexicalState = LexicalState.EXPR_BEG;
           }
     | parameters term
         {
@@ -1919,15 +1925,15 @@ parameters_definition:
 ;
 
 parameters: 
-      parameter_list ',' default_parameter_list ',' array_parameter block_parameter_opt
+      parameter_list COMMA default_parameter_list COMMA array_parameter block_parameter_opt
         {
             $$ = new Parameters($1, $3, $5, $6, @$);
         }
-    | parameter_list ',' default_parameter_list block_parameter_opt
+    | parameter_list COMMA default_parameter_list block_parameter_opt
         {
             $$ = new Parameters($1, $3, null, $4, @$);
         }
-    | parameter_list ',' array_parameter block_parameter_opt
+    | parameter_list COMMA array_parameter block_parameter_opt
         {
             $$ = new Parameters($1, null, $3, $4, @$);
         }
@@ -1935,7 +1941,7 @@ parameters:
         {
             $$ = new Parameters($1, null, null, $2, @$);
         }
-    | default_parameter_list ',' array_parameter block_parameter_opt
+    | default_parameter_list COMMA array_parameter block_parameter_opt
         {
             $$ = new Parameters(null, $1, $3, $4, @$);
         }
@@ -1989,14 +1995,14 @@ parameter_list:
         {
             $$ = CollectionUtils.MakeList<LocalVariable>($1);
         }
-    | parameter_list ',' parameter
+    | parameter_list COMMA parameter
         {
             ($$ = $1).Add($3);
         }
 ;
 
 default_parameter: 
-      parameter '=' arg
+      parameter ASSIGNMENT arg
         {        
             $$ = new SimpleAssignmentExpression($1, $3, null, @$);
         }
@@ -2007,14 +2013,14 @@ default_parameter_list:
         {
             $$ = CollectionUtils.MakeList<SimpleAssignmentExpression>($1);
         }
-    | default_parameter_list ',' default_parameter
+    | default_parameter_list COMMA default_parameter
         {
             ($$ = $1).Add($3);
         }
 ; 
 
 array_parameter_mark: 
-      '*'
+      ASTERISK
     | STAR
 ;
 
@@ -2030,8 +2036,8 @@ array_parameter:
 ;
 
 block_parameter_mark: 
-      '&'
-    | AMPERSAND
+      AMPERSAND
+    | BLOCK_REFERENCE
 ;
 
 block_parameter: 
@@ -2046,7 +2052,7 @@ block_parameter_opt:
        {
            $$ = null;
        }
-   | ',' block_parameter
+   | COMMA block_parameter
        {
            $$ = $2;
        }
@@ -2054,11 +2060,11 @@ block_parameter_opt:
 
 singleton: 
      var_ref
-   | '('
+   | LEFT_PARENTHESIS
        {
-           _tokenizer.SetState(LexicalState.EXPR_BEG);
+           _tokenizer.LexicalState = LexicalState.EXPR_BEG;
        }
-     expr opt_nl ')'
+     expr opt_nl RIGHT_PARENTHESIS
        {                        
            $$ = $3;
        }
@@ -2069,14 +2075,14 @@ maplets:
        {
            $$ = CollectionUtils.MakeList<Maplet>($1);
        }
-   | maplets ',' maplet
+   | maplets COMMA maplet
        {
            ($$ = $1).Add($3);
        }
 ;
 
 maplet: 
-     arg ASSOC arg
+     arg DOUBLE_ARROW arg
        {
            $$ = new Maplet($1, $3, @$);
        }
@@ -2102,7 +2108,7 @@ operation3:
 ;
 
 dot_or_colon: 
-     '.'
+     DOT
    | SEPARATING_DOUBLE_COLON
 ;
 
@@ -2113,23 +2119,23 @@ opt_terms:
 
 opt_nl:
       /* empty */
-    | '\n'
+    | NEW_LINE
 ;
 
 trailer: 
       /* empty */
-    | '\n'
-    | ','
+    | NEW_LINE
+    | COMMA
 ;
 
 term: 
-      ';'        { StopErrorRecovery(); }
-    | '\n'
+      SEMICOLON        { StopErrorRecovery(); }
+    | NEW_LINE
 ;
 
 terms: 
       term
-    | terms ';'  { StopErrorRecovery(); }
+    | terms SEMICOLON  { StopErrorRecovery(); }
 ;
     
 %%

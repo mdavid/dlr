@@ -279,10 +279,14 @@ namespace IronRuby.Tests {
         public void DumpTokenDetail(TextWriter/*!*/ output, Tokenizer/*!*/ tokenizer, Tokens token) {
             TokenValue value = tokenizer.TokenValue;
 
-            output.Write("{0}: ", Parser.TerminalToString((int)token));
+            output.Write("{0}: ", Parser.GetTerminalName((int)token));
 
             switch (token) {
                 default:
+                    break;
+
+                case Tokens.Identifier:
+                    output.Write(value.String);
                     break;
 
                 case Tokens.Float:
@@ -302,7 +306,11 @@ namespace IronRuby.Tests {
                     break;
 
                 case Tokens.StringContent:
-                    output.Write("String(\"{0}\")", Parser.EscapeString(value.String));
+                    if (value.StringContent is string) {
+                        output.Write("String(\"{0}\")", Parser.EscapeString((string)value.StringContent));
+                    } else {
+                        output.Write("String({0})", BitConverter.ToString((byte[])value.StringContent));
+                    }
                     break;
 
                 case Tokens.StringBegin:

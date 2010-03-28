@@ -87,8 +87,8 @@ namespace IronRuby.Tests {
             }
 #endif
         }
-                
-        public void Scenario_RubyTokenizer1() {
+        
+        public void Tokenizer1() {
             LoggingErrorSink log = new LoggingErrorSink();
 
             List<Tokens> tokens;
@@ -96,16 +96,16 @@ namespace IronRuby.Tests {
 
             Assert(tokens.Count == 14);
             Assert(tokens[0] == Tokens.Identifier);
-            Assert(tokens[1] == Tokens.LparenArg);
+            Assert(tokens[1] == Tokens.LeftArgParenthesis);
             Assert(tokens[2] == Tokens.While);
-            Assert(tokens[3] == Tokens.LeftParen);
+            Assert(tokens[3] == Tokens.LeftExprParenthesis);
             Assert(tokens[4] == Tokens.Identifier);
             Assert(tokens[5] == Tokens.Do);
             Assert(tokens[6] == Tokens.End);
-            Assert(tokens[7] == (Tokens)')');
+            Assert(tokens[7] == Tokens.RightParenthesis);
             Assert(tokens[8] == Tokens.LoopDo);
             Assert(tokens[9] == Tokens.End);
-            Assert(tokens[10] == (Tokens)')');
+            Assert(tokens[10] == Tokens.RightParenthesis);
             Assert(tokens[11] == Tokens.BlockDo);
             Assert(tokens[12] == Tokens.End);
             Assert(tokens[13] == Tokens.EndOfFile);
@@ -136,30 +136,91 @@ namespace IronRuby.Tests {
                 tokens[1] == Tokens.StringBegin &&
                 tokens[2] == Tokens.StringEnd &&
                 tokens[3] == Tokens.EndOfFile);
+
+            log.Errors.Clear();
+
+            tokens = GetRubyTokens(log, "f (1,2) {}");
+
+            Assert(tokens.ToArray().ValueEquals(new[] {
+                Tokens.Identifier,
+                Tokens.LeftArgParenthesis,
+                Tokens.Integer,
+                Tokens.Comma,
+                Tokens.Integer,
+                Tokens.RightParenthesis,
+                Tokens.LeftBlockArgBrace,
+                Tokens.RightBrace,
+                Tokens.EndOfFile,
+            }));
+
+            Assert(log.Errors.Count == 1 &&
+                log.Errors[0].Severity == Severity.Warning
+            );
+
+            log.Errors.Clear();
+        }
+        
+        private void TokenizerErrors1() {
+            LoggingErrorSink log = new LoggingErrorSink();
+
+            var tokens = GetRubyTokens(log, "def [");
+
+            Assert(tokens.ToArray().ValueEquals(new[] {
+                Tokens.Def,
+                Tokens.LeftIndexingBracket,
+            }));
+
+            Assert(log.Errors.Count == 1 &&
+                log.Errors[0].Severity == Severity.FatalError
+            );
+
+            log.Errors.Clear();
+
+            tokens = GetRubyTokens(log, "${");
+
+            Assert(tokens.ToArray().ValueEquals(new[] {
+                Tokens.Dollar,
+            }));
+
+            Assert(log.Errors.Count == 1 &&
+                log.Errors[0].Severity == Severity.FatalError
+            );
+
+            log.Errors.Clear();
         }
 
-        public void Scenario_RubyCategorizer1() {
-            TestCategorizer(Engine, "print 'foo' #bar", -1, new TokenInfo[] {
+        public void TokenCategorizer1() {
+            TestCategorizer(Engine, null, "print 'foo' #bar", 
+                // print
                 new TokenInfo(new SourceSpan(new SourceLocation(0, 1, 1), new SourceLocation(5, 1, 6)), TokenCategory.Identifier, TokenTriggers.None),
+                // ' '
                 new TokenInfo(new SourceSpan(new SourceLocation(5, 1, 6), new SourceLocation(6, 1, 7)), TokenCategory.WhiteSpace, TokenTriggers.None),
+                // '
                 new TokenInfo(new SourceSpan(new SourceLocation(6, 1, 7), new SourceLocation(7, 1, 8)), TokenCategory.StringLiteral, TokenTriggers.None),
+                // foo
                 new TokenInfo(new SourceSpan(new SourceLocation(7, 1, 8), new SourceLocation(10, 1, 11)), TokenCategory.StringLiteral, TokenTriggers.None),
+                // '
                 new TokenInfo(new SourceSpan(new SourceLocation(10, 1, 11), new SourceLocation(11, 1, 12)), TokenCategory.StringLiteral, TokenTriggers.None),
+                // ' '
                 new TokenInfo(new SourceSpan(new SourceLocation(11, 1, 12), new SourceLocation(12, 1, 13)), TokenCategory.WhiteSpace, TokenTriggers.None),
-                new TokenInfo(new SourceSpan(new SourceLocation(12, 1, 13), new SourceLocation(16, 1, 17)), TokenCategory.LineComment, TokenTriggers.None),
-            });
+                // #bar
+                new TokenInfo(new SourceSpan(new SourceLocation(12, 1, 13), new SourceLocation(16, 1, 17)), TokenCategory.LineComment, TokenTriggers.None)
+            );
 
-            TestCategorizer(Engine, "a\r\nb", -1, new TokenInfo[] { 
-                new TokenInfo(new SourceSpan(new SourceLocation(0, 1, 1), new SourceLocation(1, 1, 2)), TokenCategory.Identifier, TokenTriggers.None),   // a
-                new TokenInfo(new SourceSpan(new SourceLocation(1, 1, 2), new SourceLocation(3, 1, 4)), TokenCategory.WhiteSpace, TokenTriggers.None),   // \r\n
-                new TokenInfo(new SourceSpan(new SourceLocation(3, 2, 1), new SourceLocation(4, 2, 2)), TokenCategory.Identifier, TokenTriggers.None),   // b
-            });
+            TestCategorizer(Engine, null, "a\r\nb",
+                // a
+                new TokenInfo(new SourceSpan(new SourceLocation(0, 1, 1), new SourceLocation(1, 1, 2)), TokenCategory.Identifier, TokenTriggers.None),   
+                // \r\n
+                new TokenInfo(new SourceSpan(new SourceLocation(1, 1, 2), new SourceLocation(3, 2, 1)), TokenCategory.WhiteSpace, TokenTriggers.None),   
+                // b
+                new TokenInfo(new SourceSpan(new SourceLocation(3, 2, 1), new SourceLocation(4, 2, 2)), TokenCategory.Identifier, TokenTriggers.None)  
+            );
 
-            //                             11111111 11222222222233 333
-            //                   012345678901234567 89012345678901 234
-            TestCategorizer(Engine, "canvas.Event { |x|\nputs 'string'\n}", -1, new TokenInfo[] {
-            //                   1234567890123456789 12345678901234 12
-            //                            1111111111          11111   
+            //                                       11111111 11222222222233 333
+            //                             012345678901234567 89012345678901 234
+            TestCategorizer(Engine, null, "canvas.Event { |x|\nputs 'string'\n}", 
+            //                             1234567890123456789 12345678901234 12
+            //                                      1111111111          11111   
                 // line 1                    
                 new TokenInfo(new SourceSpan(new SourceLocation(0, 1, 1), new SourceLocation(6, 1, 7)), TokenCategory.Identifier, TokenTriggers.None),          // canvas
                 new TokenInfo(new SourceSpan(new SourceLocation(6, 1, 7), new SourceLocation(7, 1, 8)), TokenCategory.Delimiter, TokenTriggers.MemberSelect),   // .
@@ -170,17 +231,56 @@ namespace IronRuby.Tests {
                 new TokenInfo(new SourceSpan(new SourceLocation(15, 1, 16), new SourceLocation(16, 1, 17)), TokenCategory.Grouping, TokenTriggers.MatchBraces), // |
                 new TokenInfo(new SourceSpan(new SourceLocation(16, 1, 17), new SourceLocation(17, 1, 18)), TokenCategory.Identifier, TokenTriggers.None),      // x
                 new TokenInfo(new SourceSpan(new SourceLocation(17, 1, 18), new SourceLocation(18, 1, 19)), TokenCategory.Grouping, TokenTriggers.MatchBraces), // |
-                new TokenInfo(new SourceSpan(new SourceLocation(18, 1, 19), new SourceLocation(19, 1, 20)), TokenCategory.WhiteSpace, TokenTriggers.None),      // \n
+                new TokenInfo(new SourceSpan(new SourceLocation(18, 1, 19), new SourceLocation(19, 2, 1)), TokenCategory.WhiteSpace, TokenTriggers.None),       // \n
                 // line 2
                 new TokenInfo(new SourceSpan(new SourceLocation(19, 2, 1), new SourceLocation(23, 2, 5)), TokenCategory.Identifier, TokenTriggers.None),        // puts
                 new TokenInfo(new SourceSpan(new SourceLocation(23, 2, 5), new SourceLocation(24, 2, 6)), TokenCategory.WhiteSpace, TokenTriggers.None),        //  
                 new TokenInfo(new SourceSpan(new SourceLocation(24, 2, 6), new SourceLocation(25, 2, 7)), TokenCategory.StringLiteral, TokenTriggers.None),     // '
                 new TokenInfo(new SourceSpan(new SourceLocation(25, 2, 7), new SourceLocation(31, 2, 13)), TokenCategory.StringLiteral, TokenTriggers.None),    // string
                 new TokenInfo(new SourceSpan(new SourceLocation(31, 2, 13), new SourceLocation(32, 2, 14)), TokenCategory.StringLiteral, TokenTriggers.None),   // '
-                new TokenInfo(new SourceSpan(new SourceLocation(32, 2, 14), new SourceLocation(33, 2, 15)), TokenCategory.WhiteSpace, TokenTriggers.None),      // \n (significant)
+                new TokenInfo(new SourceSpan(new SourceLocation(32, 2, 14), new SourceLocation(33, 3, 1)), TokenCategory.WhiteSpace, TokenTriggers.None),       // \n (significant)
                 // line 3
-                new TokenInfo(new SourceSpan(new SourceLocation(33, 3, 1), new SourceLocation(34, 3, 2)), TokenCategory.Grouping, TokenTriggers.MatchBraces),   // }
-            });
+                new TokenInfo(new SourceSpan(new SourceLocation(33, 3, 1), new SourceLocation(34, 3, 2)), TokenCategory.Grouping, TokenTriggers.MatchBraces)    // }
+            );
+
+            // state transfer: strings //
+
+            object state = null;
+            state = TestCategorizer(Engine, state, "\"a\n", 
+                new TokenInfo(new SourceSpan(new SourceLocation(0, 1, 1), new SourceLocation(1, 1, 2)), TokenCategory.StringLiteral, TokenTriggers.None), // "
+                new TokenInfo(new SourceSpan(new SourceLocation(1, 1, 2), new SourceLocation(3, 2, 1)), TokenCategory.StringLiteral, TokenTriggers.None)  // a\n
+            );
+
+            state = TestCategorizer(Engine, state, "b\n",
+                new TokenInfo(new SourceSpan(new SourceLocation(0, 1, 1), new SourceLocation(2, 2, 1)), TokenCategory.StringLiteral, TokenTriggers.None)  // b\n
+            );
+
+            state = TestCategorizer(Engine, state, "\"",
+                new TokenInfo(new SourceSpan(new SourceLocation(0, 1, 1), new SourceLocation(1, 1, 2)), TokenCategory.StringLiteral, TokenTriggers.None)  // ""
+            );
+
+            // state transfer: multi-line comments //
+
+            state = null;
+            state = TestCategorizer(Engine, state, "=begin\n",
+                new TokenInfo(new SourceSpan(new SourceLocation(0, 1, 1), new SourceLocation(7, 2, 1)), TokenCategory.Comment, TokenTriggers.None)
+            );
+
+            for (int i = 0; i < 3; i++) {
+                state = TestCategorizer(Engine, state, "foo\n",
+                    new TokenInfo(new SourceSpan(new SourceLocation(0, 1, 1), new SourceLocation(4, 2, 1)), TokenCategory.Comment, TokenTriggers.None)
+                );
+            }
+
+            state = TestCategorizer(Engine, state, "a\nb\n",
+                new TokenInfo(new SourceSpan(new SourceLocation(0, 1, 1), new SourceLocation(4, 3, 1)), TokenCategory.Comment, TokenTriggers.None)
+            );
+
+            state = TestCategorizer(Engine, state, "=end",
+                new TokenInfo(new SourceSpan(new SourceLocation(0, 1, 1), new SourceLocation(4, 1, 5)), TokenCategory.Comment, TokenTriggers.None)
+            );
+
+            Assert(((Tokenizer.State)state).TokenSequence == null);
         }
 
         public void Identifiers1() {
@@ -276,20 +376,20 @@ namespace IronRuby.Tests {
 
             // 'variable' non-terminal needs to set $<String>$ even for keywords, 
             // otherwise the content of previous token is stored in token value and is interpreted as string.
-            t.Load("//\ntrue")[Tokens.RegexpBegin][Tokens.RegexpEnd][(Tokens)'\n'][Tokens.True].EOF();
+            t.Load("//\ntrue")[Tokens.RegexpBegin][Tokens.RegexpEnd][Tokens.NewLine][Tokens.True].EOF();
 
             t.Load("Σ = CΣ", (tok) => tok.AllowNonAsciiIdentifiers = true).
-                ReadSymbol(Tokens.Identifier, "Σ")[(Tokens)'='].ReadSymbol(Tokens.ConstantIdentifier, "CΣ").EOF();
+                ReadSymbol(Tokens.Identifier, "Σ")[Tokens.Assignment].ReadSymbol(Tokens.ConstantIdentifier, "CΣ").EOF();
 
             t.Load("Σ = CΣ")[Tokens.InvalidCharacter].Expect(Errors.InvalidCharacterInExpression);
 
             t.Load("@Σ=@@Σ=$Σ", (tok) => tok.AllowNonAsciiIdentifiers = true)
-                [Tokens.InstanceVariable][(Tokens)'=']
-                [Tokens.ClassVariable][(Tokens)'=']
+                [Tokens.InstanceVariable][Tokens.Assignment]
+                [Tokens.ClassVariable][Tokens.Assignment]
                 [Tokens.GlobalVariable].EOF();
 
             t.Load("def Σ;end", (tok) => tok.AllowNonAsciiIdentifiers = true)
-                [Tokens.Def][Tokens.Identifier][(Tokens)';'][Tokens.End].EOF();
+                [Tokens.Def][Tokens.Identifier][Tokens.Semicolon][Tokens.End].EOF();
 
             // we should report a warning if -KU is used and treat BOM as whitespace (MRI 1.8 treats the BOM as identifier):
             t.Load(new byte[] { 
@@ -309,12 +409,12 @@ namespace IronRuby.Tests {
                 tok.AllowNonAsciiIdentifiers = false;
                 tok.Verbatim = true;
             }) 
-            [Tokens.Whitespace][(Tokens)'='][1].Expect(Errors.ByteOrderMarkIgnored);
+            [Tokens.Whitespace][Tokens.Assignment][1].Expect(Errors.ByteOrderMarkIgnored);
             
             t.Expect();
         }
 
-        public void Scenario_ParseBigInts1() {
+        public void ParseBigInts1() {
             TestBigInt("00010010000_00100000_01001000_00010000_00000010_01001000_11111111_00010000_00100000_00000011", 2);
             TestBigInt("000100_afe1_1231_4980_6FEA_1470_5100_afe1_1231_4980_6FEA_1471", 16);
             TestBigInt("65_6465477756_5454111111_1112365414_65_4365414564_5463215467_3215456713", 8);
@@ -356,7 +456,7 @@ namespace IronRuby.Tests {
             Assert((x = Tokenizer.ParseInteger("-0b1000000_000000_0000000", 0)).Equals(-524288));
         }
 
-        private void Scenario_ParseNumbers1() {
+        private void TokenizeNumbers1() {
             AssertTokenizer t = NewAssertTokenizer();
 
             t.Load("0").Read(0);
@@ -425,7 +525,7 @@ namespace IronRuby.Tests {
             t.Load("0x").Read(0).Expect(Errors.NumericLiteralWithoutDigits);
             t.Load("0x_1").Read(0).Expect(Errors.NumericLiteralWithoutDigits);
 
-            t.Load(".20").Read((Tokens)'.').Expect(Errors.NoFloatingLiteral);
+            t.Load(".20").Read(Tokens.Dot).Expect(Errors.NoFloatingLiteral);
             t.Load("1.e").Read(1);
             t.Load("1.2e").Read(1.2D).Expect(Errors.TrailingEInNumber);
             t.Load("1e").Read(1).Expect(Errors.TrailingEInNumber);
@@ -442,13 +542,13 @@ namespace IronRuby.Tests {
             t.Expect();
         }
 
-        private void Scenario_ParseInstanceClassVariables1() {
+        private void TokenizeInstanceClassVariables1() {
             AssertTokenizer t = NewAssertTokenizer();
 
-            t.Load("@").Read((Tokens)'@');
-            t.Load("@@").Read((Tokens)'@');
-            t.Load("@1").Read((Tokens)'@').Expect(Errors.InvalidInstanceVariableName);
-            t.Load("@@1").Read((Tokens)'@').Expect(Errors.InvalidClassVariableName);
+            t.Load("@").Read(Tokens.At);
+            t.Load("@@").Read(Tokens.At);
+            t.Load("@1").Read(Tokens.At).Expect(Errors.InvalidInstanceVariableName);
+            t.Load("@@1").Read(Tokens.At).Expect(Errors.InvalidClassVariableName);
             t.Load("@_").ReadSymbol(Tokens.InstanceVariable, "@_");
             t.Load("@@_").ReadSymbol(Tokens.ClassVariable, "@@_");
             t.Load("@aA1_").ReadSymbol(Tokens.InstanceVariable, "@aA1_");
@@ -457,56 +557,56 @@ namespace IronRuby.Tests {
             t.Expect();
         }
 
-        private void ParseGlobalVariables1() {
+        private void TokenizeGlobalVariables1() {
             AssertTokenizer t = NewAssertTokenizer();
 
-            t.Load("$")[(Tokens)'$'].EOF();
+            t.Load("$")[Tokens.Dollar].EOF();
             t.Load("$_")[Tokens.GlobalVariable, "_"].EOF();
             t.Load("$_1")[Tokens.GlobalVariable, "_1"].EOF();
-            t.Load("$_-1")[Tokens.GlobalVariable, "_"][(Tokens)'-'][1].EOF();
+            t.Load("$_-1")[Tokens.GlobalVariable, "_"][Tokens.Minus][1].EOF();
             t.Load("$!")[Tokens.GlobalVariable, "!"].EOF();
             t.Load("$@")[Tokens.GlobalVariable, "@"].EOF();
             t.Load("$-")[Tokens.GlobalVariable, "-"].EOF();
-            t.Load("$--1")[Tokens.GlobalVariable, "-"][(Tokens)'-'][1].EOF();
+            t.Load("$--1")[Tokens.GlobalVariable, "-"][Tokens.Minus][1].EOF();
             t.Load("$-x")[Tokens.GlobalVariable, "-x"].EOF();
             
             t.Expect();
         }
 
-        private void ParseEolns1() {
+        private void TokenizeEolns1() {
             AssertTokenizer t = NewAssertTokenizer();
 
             // empty source:
             t.Load("").EOF();
 
             // escaped eoln:
-            t.Load("[\\\r\n]")[Tokens.Lbrack][(Tokens)']'].EOF();
-            t.Load("[\\\n]")[Tokens.Lbrack][(Tokens)']'].EOF();
-            t.Load("[\\\r]")[Tokens.Lbrack][(Tokens)'\\'][(Tokens)']'].EOF();
+            t.Load("[\\\r\n]")[Tokens.LeftBracket][Tokens.RightBracket].EOF();
+            t.Load("[\\\n]")[Tokens.LeftBracket][Tokens.RightBracket].EOF();
+            t.Load("[\\\r]")[Tokens.LeftBracket][Tokens.Backslash][Tokens.RightBracket].EOF();
 
             // eoln used to quote a string:
-            t.Load("x = %\r\nhello\r\n")[Tokens.Identifier][(Tokens)'='][Tokens.StringBegin][Tokens.StringContent, "hello"][Tokens.StringEnd].EOF();
-            t.Load("x = %\nhello\r\n")[Tokens.Identifier][(Tokens)'='][Tokens.StringBegin][Tokens.StringContent, "hello"][Tokens.StringEnd].EOF();
-            t.Load("x = %\rhello\r\n\r")[Tokens.Identifier][(Tokens)'='][Tokens.StringBegin][Tokens.StringContent, "hello\n"][Tokens.StringEnd].EOF();
+            t.Load("x = %\r\nhello\r\n")[Tokens.Identifier][Tokens.Assignment][Tokens.StringBegin][Tokens.StringContent, "hello"][Tokens.StringEnd].EOF();
+            t.Load("x = %\nhello\r\n")[Tokens.Identifier][Tokens.Assignment][Tokens.StringBegin][Tokens.StringContent, "hello"][Tokens.StringEnd].EOF();
+            t.Load("x = %\rhello\r\n\r")[Tokens.Identifier][Tokens.Assignment][Tokens.StringBegin][Tokens.StringContent, "hello\n"][Tokens.StringEnd].EOF();
 
             t.Load("%Q\r\nhello\n")[Tokens.StringBegin][Tokens.StringContent, "hello"][Tokens.StringEnd].EOF();
             t.Load("%Q\nhello\n")[Tokens.StringBegin][Tokens.StringContent, "hello"][Tokens.StringEnd].EOF();
             t.Load("%Q\rhello\r\n\r")[Tokens.StringBegin][Tokens.StringContent, "hello\n"][Tokens.StringEnd].EOF();
 
-            t.Load("%w[  foo]")[Tokens.VerbatimWordsBegin][Tokens.StringContent, "foo"][Tokens.WordSeparator][Tokens.StringEnd].EOF();
-            t.Load("%w[\n   foo]")[Tokens.VerbatimWordsBegin][Tokens.StringContent, "foo"][Tokens.WordSeparator][Tokens.StringEnd].EOF();
-            t.Load("%w(\rx\n \r\n  \nz\n)")[Tokens.VerbatimWordsBegin][Tokens.StringContent, "x"][Tokens.WordSeparator]
-                [Tokens.StringContent, "z"][Tokens.WordSeparator][Tokens.StringEnd].EOF();
+            t.Load("%w[  ]")[Tokens.VerbatimWordsBegin][Tokens.StringEnd].EOF();
+            t.Load("%w[  foo]")[Tokens.VerbatimWordsBegin][Tokens.StringContent, "foo"][Tokens.StringEnd].EOF();
+            t.Load("%w[\n   foo]")[Tokens.VerbatimWordsBegin][Tokens.StringContent, "foo"][Tokens.StringEnd].EOF();
+            t.Load("%w(\rx\n \r\n  \nz\n)")[Tokens.VerbatimWordsBegin][Tokens.StringContent, "x"][Tokens.WordSeparator][Tokens.StringContent, "z"][Tokens.StringEnd].EOF();
                     
-            t.Load("%1")[(Tokens)'%'].Expect(Errors.UnknownQuotedStringType)[1].EOF();
+            t.Load("%1")[Tokens.Percent].Expect(Errors.UnknownQuotedStringType)[1].EOF();
 
             // heredoc:
-            t.Load("p <<E\n\n1\n2\r3\r\nE\n")[Tokens.Identifier][Tokens.StringBegin]["\n1\n2\r3\n"][Tokens.StringEnd][(Tokens)'\n'].EOF();
-            t.Load("p <<E\nE\r\n")[Tokens.Identifier][Tokens.StringBegin][Tokens.StringEnd][(Tokens)'\n'].EOF();
+            t.Load("p <<E\n\n1\n2\r3\r\nE\n")[Tokens.Identifier][Tokens.StringBegin]["\n1\n2\r3\n"][Tokens.StringEnd][Tokens.NewLine].EOF();
+            t.Load("p <<E\nE\r\n")[Tokens.Identifier][Tokens.StringBegin][Tokens.StringEnd][Tokens.NewLine].EOF();
             t.Expect();
         }
 
-        private void ParseEscapes1() {
+        private void TokenizeEscapes1() {
             AssertTokenizer t = NewAssertTokenizer();
             t.DefaultEncoding = RubyEncoding.Binary;
 
@@ -554,7 +654,7 @@ namespace IronRuby.Tests {
             t.Expect();
         }
 
-        private void Scenario_ParseRegex1() {
+        private void TokenizeRegex1() {
             AssertTokenizer t = NewAssertTokenizer();
 
             t.Load("//")[Tokens.RegexpBegin][Tokens.RegexpEnd].EOF();
@@ -568,7 +668,7 @@ namespace IronRuby.Tests {
             t.Expect();
         }
 
-        private void StringLiterals1() {
+        private void TokenizeStrings1() {
             AssertTokenizer t = NewAssertTokenizer();
 
             for (int i = 0; i < 128; i++) {
@@ -590,11 +690,11 @@ namespace IronRuby.Tests {
                         var str = "%" + (char)i + "foo" + (char)i;
 
                         if (Tokenizer.IsDecimalDigit(i)) {
-                            t.Load(str)[(Tokens)'%'][Tokens.Integer][Tokens.Identifier].Expect(Errors.UnknownQuotedStringType).EOF();
+                            t.Load(str)[Tokens.Percent][Tokens.Integer][Tokens.Identifier].Expect(Errors.UnknownQuotedStringType).EOF();
                         } else if (Tokenizer.IsUpperLetter(i)) {
-                            t.Load(str)[(Tokens)'%'][Tokens.ConstantIdentifier].Expect(Errors.UnknownQuotedStringType).EOF();
+                            t.Load(str)[Tokens.Percent][Tokens.ConstantIdentifier].Expect(Errors.UnknownQuotedStringType).EOF();
                         } else if (Tokenizer.IsLowerLetter(i)) {
-                            t.Load(str)[(Tokens)'%'][Tokens.Identifier].Expect(Errors.UnknownQuotedStringType).EOF();
+                            t.Load(str)[Tokens.Percent][Tokens.Identifier].Expect(Errors.UnknownQuotedStringType).EOF();
                         } else {
                             t.Load(str)[Tokens.StringBegin]["foo"][Tokens.StringEnd].EOF();
                         }
@@ -605,7 +705,24 @@ namespace IronRuby.Tests {
             t.Expect();
         }
 
-        private void Escapes1() {
+        private void TokenizeStrings2() {
+            //AssertTokenizer t = NewAssertTokenizer();
+            //t.Load(@"""abc#{""x#@hello y""}def""")
+            //    [Tokens.StringBegin]
+            //    [Tokens.StringContent]
+            //        [Tokens.StringEmbeddedCodeBegin]
+            //            [Tokens.StringBegin]
+            //            [Tokens.StringContent]
+            //            [Tokens.StringEmbeddedVariableBegin][Tokens.InstanceVariable]
+            //            [Tokens.StringContent]
+            //            [Tokens.StringEnd]
+            //       [Tokens.RightBrace]
+            //       [Tokens.StringContent]
+            //    [Tokens.StringEnd].
+            //EOF();
+        }
+
+        private void TokenizeEscapes2() {
             AssertTokenizer t = NewAssertTokenizer();
      
             // hexa:
@@ -681,33 +798,126 @@ namespace IronRuby.Tests {
             t.Expect();
         }
 
+        private void LexicalState1() {
+            AssertTokenizer t = NewAssertTokenizer();
+
+            // command mode:
+            t.Load("a")[Tokens.Identifier, "a"].State(LexicalState.EXPR_CMDARG).EOF();
+            t.Load("1;a")[1][Tokens.Semicolon][Tokens.Identifier, "a"].State(LexicalState.EXPR_CMDARG).EOF();
+
+            t.Load("a(b c)")
+                [Tokens.Identifier, "a"].State(LexicalState.EXPR_CMDARG)
+                [Tokens.LeftParenthesis].State(LexicalState.EXPR_BEG)       // switches to command mode for the next non-whitespace token
+                [Tokens.Identifier, "b"].State(LexicalState.EXPR_CMDARG)
+                [Tokens.Identifier, "c"].State(LexicalState.EXPR_ARG)       // command mode switched off
+                [Tokens.RightParenthesis].State(LexicalState.EXPR_END).EOF();
+
+            t.Load("a\nb")
+                [Tokens.Identifier, "a"].State(LexicalState.EXPR_CMDARG)
+                [Tokens.NewLine].State(LexicalState.EXPR_BEG)                 // switches to command mode for the next non-whitespace token
+                [Tokens.Identifier, "b"].State(LexicalState.EXPR_CMDARG).EOF();
+        }
+
         private void Heredoc1() {
             AssertTokenizer t = NewAssertTokenizer();
 
             t.Load("<<LABEL\nhello\nLABEL")
-                [Tokens.StringBegin]["hello\n"][Tokens.StringEnd][(Tokens)'\n'].EOF();
+                [Tokens.StringBegin]["hello\n"][Tokens.StringEnd][Tokens.NewLine].EOF();
 
             t.Load("<<\"LABEL\"\nhello\nLABEL")
-                [Tokens.StringBegin]["hello\n"][Tokens.StringEnd][(Tokens)'\n'].EOF();
+                [Tokens.StringBegin]["hello\n"][Tokens.StringEnd][Tokens.NewLine].EOF();
 
             t.Load("<<'LABEL'\nhello\nLABEL")
-                [Tokens.StringBegin]["hello\n"][Tokens.StringEnd][(Tokens)'\n'].EOF();
+                [Tokens.StringBegin]["hello\n"][Tokens.StringEnd][Tokens.NewLine].EOF();
 
             t.Load("<<`LABEL`\nhello\nLABEL")
-                [Tokens.ShellStringBegin]["hello\n"][Tokens.StringEnd][(Tokens)'\n'].EOF();
+                [Tokens.ShellStringBegin]["hello\n"][Tokens.StringEnd][Tokens.NewLine].EOF();
 
             t.Load("<<LABEL\nLABEL123\nLABEL")
-                [Tokens.StringBegin]["LABEL123\n"][Tokens.StringEnd][(Tokens)'\n'].EOF();
+                [Tokens.StringBegin]["LABEL123\n"][Tokens.StringEnd][Tokens.NewLine].EOF();
+
+            t.Load("puts <<L1, 1, <<L2, 2\naaa\nL1\nbbb\nL2\n3")
+                [Tokens.Identifier, "puts"]
+                [Tokens.StringBegin]["aaa\n"][Tokens.StringEnd]
+                [Tokens.Comma][1][Tokens.Comma]
+                [Tokens.StringBegin]["bbb\n"][Tokens.StringEnd]
+                [Tokens.Comma][2]
+                [Tokens.NewLine]
+                [3].EOF();
 
             t.Expect();
+
+            // index:                                111111111122 2222 222 2333 333 3 3
+            //                             0123456789012345678901 2345 678 9012 345 6 7
+            TestCategorizer(Engine, null, "puts <<L1, 1, <<L2, 2\naaa\nL1\nbbb\nL2\r\n3", 
+            // column:                     1234567890123456789012 1234 123 1234 123 4 1 
+            // line:                       1111111111111111111111 2222 333 4444 555 5 6
+            // 
+                // puts
+                new TokenInfo(new SourceSpan(new SourceLocation(0, 1, 1), new SourceLocation(4, 1, 5)), TokenCategory.Identifier, TokenTriggers.None),
+                // ' '
+                new TokenInfo(new SourceSpan(new SourceLocation(4, 1, 5), new SourceLocation(5, 1, 6)), TokenCategory.WhiteSpace, TokenTriggers.None),
+                // <<L1
+                new TokenInfo(new SourceSpan(new SourceLocation(5, 1, 6), new SourceLocation(9, 1, 10)), TokenCategory.StringLiteral, TokenTriggers.None),
+                // aaa
+                new TokenInfo(new SourceSpan(new SourceLocation(22, 2, 1), new SourceLocation(26, 3, 1)), TokenCategory.StringLiteral, TokenTriggers.None),
+                // L1\n
+                new TokenInfo(new SourceSpan(new SourceLocation(26, 3, 1), new SourceLocation(29, 4, 1)), TokenCategory.StringLiteral, TokenTriggers.None),
+                // ,
+                new TokenInfo(new SourceSpan(new SourceLocation(9, 1, 10), new SourceLocation(10, 1, 11)), TokenCategory.Delimiter, TokenTriggers.ParameterNext),
+                // ' '
+                new TokenInfo(new SourceSpan(new SourceLocation(10, 1, 11), new SourceLocation(11, 1, 12)), TokenCategory.WhiteSpace, TokenTriggers.None),
+                // 1
+                new TokenInfo(new SourceSpan(new SourceLocation(11, 1, 12), new SourceLocation(12, 1, 13)), TokenCategory.NumericLiteral, TokenTriggers.None),
+                // ,
+                new TokenInfo(new SourceSpan(new SourceLocation(12, 1, 13), new SourceLocation(13, 1, 14)), TokenCategory.Delimiter, TokenTriggers.ParameterNext),
+                // ' '
+                new TokenInfo(new SourceSpan(new SourceLocation(13, 1, 14), new SourceLocation(14, 1, 15)), TokenCategory.WhiteSpace, TokenTriggers.None),
+                // <<L2
+                new TokenInfo(new SourceSpan(new SourceLocation(14, 1, 15), new SourceLocation(18, 1, 19)), TokenCategory.StringLiteral, TokenTriggers.None),
+                // bbb
+                new TokenInfo(new SourceSpan(new SourceLocation(29, 4, 1), new SourceLocation(33, 5, 1)), TokenCategory.StringLiteral, TokenTriggers.None),
+                // L2\r\n
+                new TokenInfo(new SourceSpan(new SourceLocation(33, 5, 1), new SourceLocation(37, 6, 1)), TokenCategory.StringLiteral, TokenTriggers.None),
+                // ,
+                new TokenInfo(new SourceSpan(new SourceLocation(18, 1, 19), new SourceLocation(19, 1, 20)), TokenCategory.Delimiter, TokenTriggers.ParameterNext),
+                // ' '
+                new TokenInfo(new SourceSpan(new SourceLocation(19, 1, 20), new SourceLocation(20, 1, 21)), TokenCategory.WhiteSpace, TokenTriggers.None),
+                // 2
+                new TokenInfo(new SourceSpan(new SourceLocation(20, 1, 21), new SourceLocation(21, 1, 22)), TokenCategory.NumericLiteral, TokenTriggers.None),
+                // \n
+                new TokenInfo(new SourceSpan(new SourceLocation(21, 1, 22), new SourceLocation(22, 2, 1)), TokenCategory.WhiteSpace, TokenTriggers.None),
+                // 3
+                new TokenInfo(new SourceSpan(new SourceLocation(37, 6, 1), new SourceLocation(38, 6, 2)), TokenCategory.NumericLiteral, TokenTriggers.None)
+            );
+
+            // index:                                 1111
+            //                             0123456789 0123
+            TestCategorizer(Engine, null, "puts <<L1\naaa", 
+            // column:                     1234567890 1234
+            // line:                       1111111111 2222
+            // 
+                // puts
+                new TokenInfo(new SourceSpan(new SourceLocation(0, 1, 1), new SourceLocation(4, 1, 5)), TokenCategory.Identifier, TokenTriggers.None),
+                // ' '
+                new TokenInfo(new SourceSpan(new SourceLocation(4, 1, 5), new SourceLocation(5, 1, 6)), TokenCategory.WhiteSpace, TokenTriggers.None),
+                // <<L1
+                new TokenInfo(new SourceSpan(new SourceLocation(5, 1, 6), new SourceLocation(9, 1, 10)), TokenCategory.StringLiteral, TokenTriggers.None),
+                // aaa
+                new TokenInfo(new SourceSpan(new SourceLocation(10, 2, 1), new SourceLocation(13, 2, 4)), TokenCategory.StringLiteral, TokenTriggers.None),
+                // <missing heredoc end>
+                new TokenInfo(new SourceSpan(new SourceLocation(13, 2, 4), new SourceLocation(13, 2, 4)), TokenCategory.StringLiteral, TokenTriggers.None),
+                // \n
+                new TokenInfo(new SourceSpan(new SourceLocation(9, 1, 10), new SourceLocation(10, 2, 1)), TokenCategory.WhiteSpace, TokenTriggers.None)
+            );
         }
 
-        public void ParsingSymbols1() {
+        public void ParseSymbols1() {
             AssertTokens(":''", Tokens.SymbolBegin, Tokens.StringEnd, Tokens.EndOfFile);
             AssertTokens(":do", Tokens.SymbolBegin, Tokens.Do, Tokens.EndOfFile);
             AssertTokens("foo :do", Tokens.Identifier, Tokens.SymbolBegin, Tokens.BlockDo, Tokens.EndOfFile);
         }
-    
+
         private void AssertTokens(string/*!*/ source, params Tokens[] expected) {
             var tokens = new List<Tokens>();
             var parser = new Parser() {
@@ -1048,14 +1258,12 @@ add 'foo', 'bar'
             }
         }
 
-        public void TestCategorizer(ScriptEngine engine, string src, int charCount, params TokenInfo[] expected) {
-            if (charCount == -1) charCount = src.Length;
-
+        public object TestCategorizer(ScriptEngine engine, object state, string/*!*/ src, params TokenInfo[]/*!*/ expected) {
             TokenCategorizer categorizer = engine.GetService<TokenCategorizer>();
 
-            categorizer.Initialize(null, engine.CreateScriptSourceFromString(src), SourceLocation.MinValue);
-            IEnumerable<TokenInfo> actual = categorizer.ReadTokens(charCount);
-
+            categorizer.Initialize(state, engine.CreateScriptSourceFromString(src), SourceLocation.MinValue);
+            IEnumerable<TokenInfo> actual = categorizer.ReadTokens(Int32.MaxValue);
+            
             int i = 0;
             foreach (TokenInfo info in actual) {
                 Assert(i < expected.Length);
@@ -1065,6 +1273,12 @@ add 'foo', 'bar'
                 i++;
             }
             Assert(i == expected.Length);
+
+            TokenInfo t = categorizer.ReadToken();
+            SourceLocation end = expected[expected.Length - 1].SourceSpan.End;
+            Assert(t.Equals(new TokenInfo(new SourceSpan(end, end), TokenCategory.EndOfStream, TokenTriggers.None)));
+
+            return categorizer.CurrentState;
         }
 
         private AssertTokenizer/*!*/ AssertTokenBigInteger(string/*!*/ source, int @base) {
