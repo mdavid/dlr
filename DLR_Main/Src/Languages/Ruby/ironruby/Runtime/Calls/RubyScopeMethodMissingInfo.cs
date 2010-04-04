@@ -138,7 +138,7 @@ namespace IronRuby.Runtime.Calls {
                 }
 
                 var scopeLookup = Ast.NotEqual(
-                    Ast.Assign(scopeLookupResultVar, AstUtils.LightDynamic(RubyMetaBinderFactory.InteropTryGetMemberExact(name), typeof(object), scopeVar)),
+                    Ast.Assign(scopeLookupResultVar, AstUtils.LightDynamic(context.MetaBinderFactory.InteropTryGetMemberExact(name), typeof(object), scopeVar)),
                     Expression.Constant(OperationFailed.Value)
                 );
 
@@ -147,7 +147,7 @@ namespace IronRuby.Runtime.Calls {
                     scopeLookup = Ast.OrElse(
                         scopeLookup,
                         Ast.NotEqual(
-                            Ast.Assign(scopeLookupResultVar, AstUtils.LightDynamic(RubyMetaBinderFactory.InteropTryGetMemberExact(unmanagled), typeof(object), scopeVar)),
+                            Ast.Assign(scopeLookupResultVar, AstUtils.LightDynamic(context.MetaBinderFactory.InteropTryGetMemberExact(unmanagled), typeof(object), scopeVar)),
                             Expression.Constant(OperationFailed.Value)
                         )
                     );

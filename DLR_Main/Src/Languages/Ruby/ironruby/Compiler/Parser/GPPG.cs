@@ -388,19 +388,22 @@ namespace IronRuby.Compiler {
 
         private string GetSyntaxErrorMessage() {
             StringBuilder errorMsg = new StringBuilder();
-            errorMsg.AppendFormat("syntax error, unexpected {0}", Tokenizer.GetTokenName((Tokens)_nextToken)); // TODO: actual value?
+            errorMsg.AppendFormat("syntax error, unexpected {0}", Tokenizer.GetTokenDescription((Tokens)_nextToken)); // TODO: actual value?
 
             if (_currentState.Actions.Count < 7) {
-                bool first = true;
+                int i = 0;
+                int last = _currentState.Actions.Keys.Count - 1;
                 foreach (int terminal in _currentState.Actions.Keys) {
-                    if (first) {
+                    if (i == 0) {
                         errorMsg.Append(", expecting ");
-                    } else {
+                    } else if (i == last) {
                         errorMsg.Append(", or ");
+                    } else {
+                        errorMsg.Append(", ");
                     }
 
-                    errorMsg.Append(Tokenizer.GetTokenName((Tokens)terminal));
-                    first = false;
+                    errorMsg.Append(Tokenizer.GetTokenDescription((Tokens)terminal));
+                    i++;
                 }
             }
             return errorMsg.ToString();

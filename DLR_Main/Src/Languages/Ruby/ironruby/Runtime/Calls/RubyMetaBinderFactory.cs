@@ -64,9 +64,9 @@ namespace IronRuby.Runtime.Calls {
         private Dictionary<CallInfo, InteropBinder.Invoke> _interopInvoke;
         private Dictionary<Key<string, CallInfo>, InteropBinder.InvokeMember> _interopInvokeMember;
         private Dictionary<string, InteropBinder.GetMember> _interopGetMember;
-        private static Dictionary<string, InteropBinder.TryGetMemberExact> _interopTryGetMemberExact;
+        private Dictionary<string, InteropBinder.TryGetMemberExact> _interopTryGetMemberExact;
         private Dictionary<string, InteropBinder.SetMember> _interopSetMember;
-        private static Dictionary<string, InteropBinder.SetMemberExact> _interopSetMemberExact;
+        private Dictionary<string, InteropBinder.SetMemberExact> _interopSetMemberExact;
         private Dictionary<CallInfo, InteropBinder.GetIndex> _interopGetIndex;
         private Dictionary<CallInfo, InteropBinder.SetIndex> _interopSetIndex;
         private Dictionary<Key<string, CallInfo>, InteropBinder.SetIndexedProperty> _interopSetIndexedProperty;
@@ -213,7 +213,7 @@ namespace IronRuby.Runtime.Calls {
             }
         }
 
-        public static InteropBinder.TryGetMemberExact/*!*/ InteropTryGetMemberExact(string/*!*/ name) {
+        public InteropBinder.TryGetMemberExact/*!*/ InteropTryGetMemberExact(string/*!*/ name) {
             if (_interopTryGetMemberExact == null) {
                 _interopTryGetMemberExact = new Dictionary<string, InteropBinder.TryGetMemberExact>();
             }
@@ -221,7 +221,7 @@ namespace IronRuby.Runtime.Calls {
             lock (_interopTryGetMemberExact) {
                 InteropBinder.TryGetMemberExact result;
                 if (!_interopTryGetMemberExact.TryGetValue(name, out result)) {
-                    _interopTryGetMemberExact.Add(name, result = new InteropBinder.TryGetMemberExact(name));
+                    _interopTryGetMemberExact.Add(name, result = new InteropBinder.TryGetMemberExact(_context, name));
                 }
                 return result;
             }
@@ -241,7 +241,7 @@ namespace IronRuby.Runtime.Calls {
             }
         }
 
-        public static InteropBinder.SetMemberExact/*!*/ InteropSetMemberExact(string/*!*/ name) {
+        public InteropBinder.SetMemberExact/*!*/ InteropSetMemberExact(string/*!*/ name) {
             if (_interopSetMemberExact == null) {
                 _interopSetMemberExact = new Dictionary<string, InteropBinder.SetMemberExact>();
             }
@@ -249,7 +249,7 @@ namespace IronRuby.Runtime.Calls {
             lock (_interopSetMemberExact) {
                 InteropBinder.SetMemberExact result;
                 if (!_interopSetMemberExact.TryGetValue(name, out result)) {
-                    _interopSetMemberExact.Add(name, result = new InteropBinder.SetMemberExact(name));
+                    _interopSetMemberExact.Add(name, result = new InteropBinder.SetMemberExact(_context, name));
                 }
                 return result;
             }

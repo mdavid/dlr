@@ -24,6 +24,7 @@ using System.Collections;
 using System.Diagnostics;
 using System.Dynamic;
 using System.Reflection;
+using System.Runtime.CompilerServices;
 using Microsoft.Scripting.Runtime;
 using Microsoft.Scripting.Utils;
 using Microsoft.Scripting.Generation;
@@ -55,6 +56,16 @@ namespace IronRuby.Runtime.Calls {
                 get { return _context; }
             }
 
+            public override T BindDelegate<T>(CallSite<T>/*!*/ site, object[]/*!*/ args) {
+                if (_context.Options.NoAdaptiveCompilation) {
+                    return null;
+                }
+
+                var result = this.LightBind(site, args, _context.Options.CompilationThreshold);
+                CacheTarget(result);
+                return result;
+            }
+
             public override DynamicMetaObject/*!*/ FallbackCreateInstance(DynamicMetaObject/*!*/ target, DynamicMetaObject/*!*/[]/*!*/ args,
                 DynamicMetaObject errorSuggestion) {
 
@@ -80,6 +91,16 @@ namespace IronRuby.Runtime.Calls {
 
             public RubyContext Context {
                 get { return _context; }
+            }
+
+            public override T BindDelegate<T>(CallSite<T>/*!*/ site, object[]/*!*/ args) {
+                if (_context.Options.NoAdaptiveCompilation) {
+                    return null;
+                }
+
+                var result = this.LightBind(site, args, _context.Options.CompilationThreshold);
+                CacheTarget(result);
+                return result;
             }
 
             public override DynamicMetaObject/*!*/ FallbackInvoke(DynamicMetaObject/*!*/ target, DynamicMetaObject/*!*/[]/*!*/ args, 
@@ -124,6 +145,16 @@ namespace IronRuby.Runtime.Calls {
 
             public RubyContext Context {
                 get { return _context; }
+            }
+
+            public override T BindDelegate<T>(CallSite<T>/*!*/ site, object[]/*!*/ args) {
+                if (_context.Options.NoAdaptiveCompilation) {
+                    return null;
+                }
+
+                var result = this.LightBind(site, args, _context.Options.CompilationThreshold);
+                CacheTarget(result);
+                return result;
             }
 
             public override DynamicMetaObject/*!*/ FallbackInvoke(DynamicMetaObject/*!*/ target, DynamicMetaObject/*!*/[]/*!*/ args, 
@@ -183,6 +214,16 @@ namespace IronRuby.Runtime.Calls {
 
             public RubyContext Context {
                 get { return _context; }
+            }
+
+            public override T BindDelegate<T>(CallSite<T>/*!*/ site, object[]/*!*/ args) {
+                if (_context.Options.NoAdaptiveCompilation) {
+                    return null;
+                }
+
+                var result = this.LightBind(site, args, _context.Options.CompilationThreshold);
+                CacheTarget(result);
+                return result;
             }
 
             #region Ruby -> DLR
@@ -300,6 +341,16 @@ namespace IronRuby.Runtime.Calls {
                 get { return false; }
             }
 
+            public override T BindDelegate<T>(CallSite<T>/*!*/ site, object[]/*!*/ args) {
+                if (_context.Options.NoAdaptiveCompilation) {
+                    return null;
+                }
+
+                var result = this.LightBind(site, args, _context.Options.CompilationThreshold);
+                CacheTarget(result);
+                return result;
+            }
+
             #region Ruby -> DLR
 
             public override DynamicMetaObject/*!*/ FallbackGetMember(DynamicMetaObject/*!*/ target, DynamicMetaObject errorSuggestion) {
@@ -360,12 +411,26 @@ namespace IronRuby.Runtime.Calls {
         /// No name mangling is performed.
         /// </summary>
         internal sealed class TryGetMemberExact : GetMemberBinder, IInvokeOnGetBinder {
-            internal TryGetMemberExact(string/*!*/ name)
+            private readonly RubyContext/*!*/ _context;
+
+            internal TryGetMemberExact(RubyContext/*!*/ context, string/*!*/ name)
                 : base(name, false) {
+                Assert.NotNull(context);
+                _context = context;
             }
 
             bool IInvokeOnGetBinder.InvokeOnGet {
                 get { return false; }
+            }
+
+            public override T BindDelegate<T>(CallSite<T>/*!*/ site, object[]/*!*/ args) {
+                if (_context.Options.NoAdaptiveCompilation) {
+                    return null;
+                }
+
+                var result = this.LightBind(site, args, _context.Options.CompilationThreshold);
+                CacheTarget(result);
+                return result;
             }
 
             #region Ruby -> DLR
@@ -404,18 +469,28 @@ namespace IronRuby.Runtime.Calls {
 
                 _name = name;
                 _context = context;
-                _tryGetMember = RubyMetaBinderFactory.InteropTryGetMemberExact(name);
-                _setMember = RubyMetaBinderFactory.InteropSetMemberExact(name);
+                _tryGetMember = context.MetaBinderFactory.InteropTryGetMemberExact(name);
+                _setMember = context.MetaBinderFactory.InteropSetMemberExact(name);
 
                 string unmanagled = RubyUtils.TryUnmangleMethodName(name);
                 if (unmanagled != null) {
-                    _setMemberUnmangled = RubyMetaBinderFactory.InteropSetMemberExact(unmanagled);
-                    _tryGetMemberUnmangled = RubyMetaBinderFactory.InteropTryGetMemberExact(unmanagled);
+                    _setMemberUnmangled = context.MetaBinderFactory.InteropSetMemberExact(unmanagled);
+                    _tryGetMemberUnmangled = context.MetaBinderFactory.InteropTryGetMemberExact(unmanagled);
                 }
             }
 
             public RubyContext Context {
                 get { return _context; }
+            }
+
+            public override T BindDelegate<T>(CallSite<T>/*!*/ site, object[]/*!*/ args) {
+                if (_context.Options.NoAdaptiveCompilation) {
+                    return null;
+                }
+
+                var result = this.LightBind(site, args, _context.Options.CompilationThreshold);
+                CacheTarget(result);
+                return result;
             }
 
             #region Ruby -> DLR
@@ -485,8 +560,22 @@ namespace IronRuby.Runtime.Calls {
         }
 
         internal sealed class SetMemberExact : SetMemberBinder {
-            internal SetMemberExact(string/*!*/ name)
+            private readonly RubyContext/*!*/ _context;
+
+            internal SetMemberExact(RubyContext/*!*/ context, string/*!*/ name)
                 : base(name, false) {
+                Assert.NotNull(context);
+                _context = context;
+            }
+
+            public override T BindDelegate<T>(CallSite<T>/*!*/ site, object[]/*!*/ args) {
+                if (_context.Options.NoAdaptiveCompilation) {
+                    return null;
+                }
+
+                var result = this.LightBind(site, args, _context.Options.CompilationThreshold);
+                CacheTarget(result);
+                return result;
             }
 
             public override DynamicMetaObject/*!*/ FallbackSetMember(DynamicMetaObject/*!*/ target, DynamicMetaObject/*!*/ value,
@@ -524,6 +613,16 @@ namespace IronRuby.Runtime.Calls {
                 : base(callInfo) {
                 Assert.NotNull(context);
                 _context = context;
+            }
+
+            public override T BindDelegate<T>(CallSite<T>/*!*/ site, object[]/*!*/ args) {
+                if (_context.Options.NoAdaptiveCompilation) {
+                    return null;
+                }
+
+                var result = this.LightBind(site, args, _context.Options.CompilationThreshold);
+                CacheTarget(result);
+                return result;
             }
 
             #region Ruby -> DLR
@@ -577,6 +676,16 @@ namespace IronRuby.Runtime.Calls {
                 : base(callInfo) {
                 Assert.NotNull(context);
                 _context = context;
+            }
+
+            public override T BindDelegate<T>(CallSite<T>/*!*/ site, object[]/*!*/ args) {
+                if (_context.Options.NoAdaptiveCompilation) {
+                    return null;
+                }
+
+                var result = this.LightBind(site, args, _context.Options.CompilationThreshold);
+                CacheTarget(result);
+                return result;
             }
 
             #region Ruby -> DLR
@@ -641,6 +750,16 @@ namespace IronRuby.Runtime.Calls {
                 _setIndex = context.MetaBinderFactory.InteropSetIndex(callInfo);
             }
 
+            public override T BindDelegate<T>(CallSite<T>/*!*/ site, object[]/*!*/ args) {
+                if (_context.Options.NoAdaptiveCompilation) {
+                    return null;
+                }
+
+                var result = this.LightBind(site, args, _context.Options.CompilationThreshold);
+                CacheTarget(result);
+                return result;
+            }
+
             #region Ruby -> DLR
 
             public override DynamicMetaObject/*!*/ Bind(DynamicMetaObject/*!*/ target, DynamicMetaObject/*!*/[]/*!*/ args) {
@@ -675,6 +794,16 @@ namespace IronRuby.Runtime.Calls {
                 _context = context;
             }
 
+            public override T BindDelegate<T>(CallSite<T>/*!*/ site, object[]/*!*/ args) {
+                if (_context.Options.NoAdaptiveCompilation) {
+                    return null;
+                }
+
+                var result = this.LightBind(site, args, _context.Options.CompilationThreshold);
+                CacheTarget(result);
+                return result;
+            }
+
             public override DynamicMetaObject/*!*/ FallbackBinaryOperation(DynamicMetaObject/*!*/ target, DynamicMetaObject/*!*/ arg, DynamicMetaObject errorSuggestion) {
                 return InvokeMember.FallbackInvokeMember(this, RubyUtils.MapOperator(Operation), _CallInfo, target, new[] { arg }, errorSuggestion);
             }
@@ -707,6 +836,16 @@ namespace IronRuby.Runtime.Calls {
                 _context = context;
             }
 
+            public override T BindDelegate<T>(CallSite<T>/*!*/ site, object[]/*!*/ args) {
+                if (_context.Options.NoAdaptiveCompilation) {
+                    return null;
+                }
+
+                var result = this.LightBind(site, args, _context.Options.CompilationThreshold);
+                CacheTarget(result);
+                return result;
+            }
+
             public override DynamicMetaObject/*!*/ FallbackUnaryOperation(DynamicMetaObject/*!*/ target, DynamicMetaObject errorSuggestion) {
                 return InvokeMember.FallbackInvokeMember(this, RubyUtils.MapOperator(Operation), _CallInfo, target, DynamicMetaObject.EmptyMetaObjects, errorSuggestion);
             }
@@ -734,6 +873,16 @@ namespace IronRuby.Runtime.Calls {
                 : base(type, isExplicit) {
                 Assert.NotNull(context);
                 _context = context;
+            }
+
+            public override T BindDelegate<T>(CallSite<T>/*!*/ site, object[]/*!*/ args) {
+                if (_context.Options.NoAdaptiveCompilation) {
+                    return null;
+                }
+
+                var result = this.LightBind(site, args, _context.Options.CompilationThreshold);
+                CacheTarget(result);
+                return result;
             }
 
             public override DynamicMetaObject/*!*/ FallbackConvert(DynamicMetaObject/*!*/ target, DynamicMetaObject errorSuggestion) {
@@ -774,6 +923,16 @@ namespace IronRuby.Runtime.Calls {
                 : base(typeof(IList), true) {
                 Assert.NotNull(context);
                 _context = context;
+            }
+
+            public override T BindDelegate<T>(CallSite<T>/*!*/ site, object[]/*!*/ args) {
+                if (_context.Options.NoAdaptiveCompilation) {
+                    return null;
+                }
+
+                var result = this.LightBind(site, args, _context.Options.CompilationThreshold);
+                CacheTarget(result);
+                return result;
             }
 
             public override DynamicMetaObject/*!*/ FallbackConvert(DynamicMetaObject/*!*/ target, DynamicMetaObject errorSuggestion) {

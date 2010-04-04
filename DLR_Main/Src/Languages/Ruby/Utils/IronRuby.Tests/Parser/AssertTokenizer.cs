@@ -36,6 +36,7 @@ namespace IronRuby.Tests {
         private List<Tokens>/*!*/ _allTokens;
         private List<object>/*!*/ _allValues;
         public RubyCompatibility Compatibility { get; set; }
+        public bool Verbatim { get; set; }
 
         public AssertTokenizer(Tests/*!*/ tests) {
             _log = new LoggingErrorSink();
@@ -91,7 +92,8 @@ namespace IronRuby.Tests {
             _tokenizer = new Tokenizer(false, DummyVariableResolver.AllMethodNames) {
                 ErrorSink = _log,
                 Compatibility = Compatibility,
-                Encoding = encoding
+                Encoding = encoding,
+                Verbatim = Verbatim,
             };
 
             _tokenizer.Initialize(sourceUnit);

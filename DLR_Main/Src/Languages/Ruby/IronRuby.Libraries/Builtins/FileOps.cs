@@ -485,7 +485,6 @@ namespace IronRuby.Builtins {
         #endregion
 
 #if !SILVERLIGHT
-
         [RubyMethod("expand_path", RubyMethodAttributes.PublicSingleton, BuildConfig = "!SILVERLIGHT")]
         public static MutableString/*!*/ ExpandPath(
             RubyClass/*!*/ self, 
@@ -731,9 +730,11 @@ namespace IronRuby.Builtins {
                 if (pal.FileExists(path)) {
                     result = new FileInfo(path);                    
                 } else if (pal.DirectoryExists(path)) {
-                    result = new DirectoryInfo(path);                    
+                    result = new DirectoryInfo(path);
+#if !SILVERLIGHT
                 } else if (path.ToUpperInvariant().Equals(NUL_VALUE)) {
                     result = new DeviceInfo(NUL_VALUE);
+#endif
                 } else {
                     return false;
                 }
@@ -913,9 +914,11 @@ namespace IronRuby.Builtins {
 
             [RubyMethod("size")]
             public static int Size(FileSystemInfo/*!*/ self) {
+#if !SILVERLIGHT
                 if (self is DeviceInfo) {
                     return 0;
                 }
+#endif
 
                 FileInfo info = (self as FileInfo);
                 return (info == null) ? 0 : (int)info.Length;
@@ -923,9 +926,11 @@ namespace IronRuby.Builtins {
 
             [RubyMethod("size?")]
             public static object NullableSize(FileSystemInfo/*!*/ self) {
+#if !SILVERLIGHT
                 if (self is DeviceInfo) {
                     return 0;
                 }
+#endif
 
                 FileInfo info = (self as FileInfo);
                 if (info == null) {
@@ -964,14 +969,19 @@ namespace IronRuby.Builtins {
 
             [RubyMethod("zero?")]
             public static bool IsZeroLength(FileSystemInfo/*!*/ self) {
+#if !SILVERLIGHT
                 if (self is DeviceInfo) {
                     return true;
                 }
+#endif
 
                 FileInfo info = (self as FileInfo);
                 return (info == null) ? false : info.Length == 0;
             }
 
+#if !SILVERLIGHT
+            // cannot inherit from FileSystemInfo in Silverlight because the
+            // constructor is SecurityCritical
             internal class DeviceInfo : FileSystemInfo {
                 
                 private string/*!*/ _name;
@@ -992,8 +1002,8 @@ namespace IronRuby.Builtins {
                     get { return _name; }
                 }
             }
+#endif
         }
-
         #endregion
     }
 }

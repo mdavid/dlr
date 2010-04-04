@@ -317,7 +317,7 @@ namespace IronRuby.Tests {
                 case Tokens.RegexpBegin:
                 case Tokens.ShellStringBegin:
                 case Tokens.SymbolBegin:
-                    output.Write(value.StringTokenizer);
+                    output.Write(((Tokenizer.State)tokenizer.CurrentState).CurrentSequence);
                     break;
             }
 

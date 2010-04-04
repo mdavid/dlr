@@ -17,13 +17,22 @@ using System;
 using System.Diagnostics;
 
 namespace IronRuby.Compiler {
+    internal class TokenSequenceState {
+        internal static readonly TokenSequenceState None = new TokenSequenceState();
+        
+        internal virtual Tokens TokenizeAndMark(Tokenizer/*!*/ tokenizer) {
+            Tokens result = tokenizer.Tokenize();
+            tokenizer.CaptureTokenSpan();
+            return result;
+        }
 
-    internal abstract class TokenSequenceState {
-        internal abstract Tokens TokenizeAndMark(Tokenizer/*!*/ tokenizer);
+        public override string ToString() {
+            return "";
+        }
     }
 
     [Flags]
-    public enum StringProperties : short {
+    public enum StringProperties : byte {
         Default = 0,
         ExpandsEmbedded = 1,
         RegularExpression = 2,
@@ -32,7 +41,41 @@ namespace IronRuby.Compiler {
         IndentedHeredoc = 16,
     }
 
-    internal sealed class StringState : TokenSequenceState {
+    internal sealed class CodeState : TokenSequenceState, IEquatable<CodeState> {
+        internal readonly LexicalState LexicalState;
+
+        // true if the following identifier is treated as a command name (sets LexicalState.CMDARG):
+        internal readonly byte CommandMode;
+
+        // true if the previous token is Tokens.Whitespace:
+        internal readonly byte WhitespaceSeen;
+
+        public CodeState(LexicalState lexicalState, byte commandMode, byte whitespaceSeen) {
+            LexicalState = lexicalState;
+            CommandMode = commandMode;
+            WhitespaceSeen = whitespaceSeen;
+        }
+
+        public override bool Equals(object other) {
+            return Equals(other as CodeState);
+        }
+
+        public bool Equals(CodeState other) {
+            return ReferenceEquals(other, this) || (other != null
+                && LexicalState == other.LexicalState
+                && CommandMode == other.CommandMode
+                && WhitespaceSeen == other.WhitespaceSeen
+            );
+        }
+
+        public override int GetHashCode() {
+            return (int)LexicalState
+                 ^ (int)CommandMode
+                 ^ (int)WhitespaceSeen;
+        }
+    }
+
+    internal sealed class StringState : TokenSequenceState, IEquatable<StringState> {
         // The number of opening parentheses that need to be closed before the string terminates.
         // The level is tracked for all currently opened strings.
         // For example, %< .. < .. < #{...} .. > .. > .. > comprises of 3 parts:
@@ -40,7 +83,7 @@ namespace IronRuby.Compiler {
         //   #{...}
         //   .. > .. > .. >
         // After reading the first part the nested level for the string is set to 2.
-        private int _nestingLevel;
+        private readonly int _nestingLevel;
 
         private readonly StringProperties _properties;
 
@@ -51,16 +94,40 @@ namespace IronRuby.Compiler {
         private readonly char _openingParenthesis;
 
         public StringState(StringProperties properties, char terminator) 
-            : this(properties, terminator, '\0') {
+            : this(properties, terminator, '\0', 0) {
         }
 
-        public StringState(StringProperties properties, char terminator, char openingParenthesis) {
+        public StringState(StringProperties properties, char terminator, char openingParenthesis, int nestingLevel) {
             Debug.Assert(!Tokenizer.IsLetterOrDigit(terminator));
 
             _properties = properties;
             _terminator = terminator;
             _openingParenthesis = openingParenthesis;
-            _nestingLevel = 0;
+            _nestingLevel = nestingLevel;
+        }
+
+        public override bool Equals(object other) {
+            return Equals(other as StringState);
+        }
+
+        public bool Equals(StringState other) {
+            return ReferenceEquals(other, this) || (other != null  
+                && _nestingLevel == other._nestingLevel 
+                && _properties == other._properties
+                && _terminator == other._terminator
+                && _openingParenthesis == other._openingParenthesis
+            );
+        }
+
+        public override int GetHashCode() {
+            return _nestingLevel
+                ^ (int)_properties 
+                ^ (int)_terminator 
+                ^ (int)_openingParenthesis;
+        }
+
+        public StringState/*!*/ SetNesting(int level) {
+            return (_nestingLevel == level) ? this : new StringState(_properties, _terminator, _openingParenthesis, level);
         }
 
         public StringProperties Properties {
@@ -69,7 +136,6 @@ namespace IronRuby.Compiler {
 
         public int NestingLevel {
             get { return _nestingLevel; }
-            set { _nestingLevel = value; }
         }
 
         public char TerminatingCharacter {
@@ -85,27 +151,29 @@ namespace IronRuby.Compiler {
         }
 
         internal override Tokens TokenizeAndMark(Tokenizer/*!*/ tokenizer) {
-            return tokenizer.TokenizeAndMarkString(this);
+            Tokens result = tokenizer.TokenizeString(this);
+            tokenizer.CaptureTokenSpan();
+            return result;
         }
     }
 
-    internal sealed class HeredocState : TokenSequenceState {
+    internal abstract class HeredocStateBase : TokenSequenceState {
         private readonly StringProperties _properties;
-        private readonly string _label;
-        private readonly int _resumePosition;
-        private readonly int _resumeLineLength;
-        private readonly char[] _resumeLine;
-        private readonly int _firstLine;
-        private readonly int _firstLineIndex;
+        private readonly string/*!*/ _label;
 
-        public HeredocState(StringProperties properties, string label, int resumePosition, char[] resumeLine, int resumeLineLength, int firstLine, int firstLineIndex) {
+        public HeredocStateBase(StringProperties properties, string/*!*/ label) {
             _properties = properties;
             _label = label;
-            _resumePosition = resumePosition;
-            _resumeLine = resumeLine;
-            _resumeLineLength = resumeLineLength;
-            _firstLine = firstLine;
-            _firstLineIndex = firstLineIndex;
+        }
+
+        protected bool Equals(HeredocStateBase/*!*/ other) {
+            return _properties == other._properties
+                && _label == other._label;
+        }
+
+        protected int GetBaseHashCode() {
+            return (int)_properties
+                ^ _label.GetHashCode();
         }
 
         public StringProperties Properties {
@@ -114,6 +182,79 @@ namespace IronRuby.Compiler {
 
         public string Label {
             get { return _label; }
+        }
+
+        internal abstract Tokens Finish(Tokenizer/*!*/ tokenizer, int labelStart);
+    }
+
+    internal sealed class VerbatimHeredocState : HeredocStateBase, IEquatable<VerbatimHeredocState> {
+        public VerbatimHeredocState(StringProperties properties, string/*!*/ label) 
+            : base(properties, label) {
+        }
+
+        public override bool Equals(object other) {
+            return Equals(other as VerbatimHeredocState);
+        }
+
+        public bool Equals(VerbatimHeredocState other) {
+            return ReferenceEquals(other, this) || (other != null
+                && base.Equals(other)
+            );
+        }
+
+        public override int GetHashCode() {
+            return GetBaseHashCode();
+        }
+
+        internal override Tokens TokenizeAndMark(Tokenizer/*!*/ tokenizer) {
+            return tokenizer.TokenizeAndMarkHeredoc(this);
+        }
+
+        internal override Tokens Finish(Tokenizer tokenizer, int labelStart) {
+            return tokenizer.FinishVerbatimHeredoc(this, labelStart);
+        }
+
+        public override string ToString() {
+            return String.Format("VerbatimHeredoc({0},'{1}')", Properties, Label);
+        }
+    }
+
+    internal sealed class HeredocState : HeredocStateBase, IEquatable<HeredocState> {
+        private readonly int _resumePosition;
+        private readonly int _resumeLineLength;
+        private readonly char[] _resumeLine;
+        private readonly int _firstLine;
+        private readonly int _firstLineIndex;
+
+        internal HeredocState(StringProperties properties, string/*!*/ label, int resumePosition, char[] resumeLine, int resumeLineLength, int firstLine, int firstLineIndex)
+            : base(properties, label) {
+            _resumePosition = resumePosition;
+            _resumeLine = resumeLine;
+            _resumeLineLength = resumeLineLength;
+            _firstLine = firstLine;
+            _firstLineIndex = firstLineIndex;
+        }
+
+        public override bool Equals(object other) {
+            return Equals(other as HeredocState);
+        }
+
+        public bool Equals(HeredocState other) {
+            return ReferenceEquals(other, this) || (other != null  
+                && base.Equals(other)
+                && _resumePosition == other._resumePosition
+                // TODO: ??? && _resumeLineLength == other._resumeLineLength
+                // TODO: ??? && _resumeLine.ValueEquals(other._resumeLine)
+                && _firstLine == other._firstLine
+                && _firstLineIndex == other._firstLineIndex
+            );
+        }
+
+        public override int GetHashCode() {
+            return GetBaseHashCode()
+                ^ _resumePosition
+                ^ _firstLine
+                ^ _firstLineIndex;
         }
         
         public int ResumePosition {
@@ -137,12 +278,16 @@ namespace IronRuby.Compiler {
             get { return _firstLineIndex; }
         }
 
-        public override string ToString() {
-            return String.Format("Heredoc({0},'{1}',{2},'{2}')", _properties, _label, _resumePosition, new String(_resumeLine));
-        }
-
         internal override Tokens TokenizeAndMark(Tokenizer/*!*/ tokenizer) {
             return tokenizer.TokenizeAndMarkHeredoc(this);
+        }
+
+        internal override Tokens Finish(Tokenizer/*!*/ tokenizer, int labelStart) {
+            return tokenizer.FinishHeredoc(this, labelStart);
+        }
+
+        public override string ToString() {
+            return String.Format("Heredoc({0},'{1}',{2},'{2}')", Properties, Label, _resumePosition, new String(_resumeLine));
         }
     }
 

@@ -67,4 +67,6 @@ using System.Security.Permissions;
 [assembly: AssemblyFileVersion("1.0.1.00")]
 [assembly: AssemblyInformationalVersion("1.0.1")]
 [assembly: AllowPartiallyTrustedCallers]
+[assembly: TypeForwardedTo(typeof(Microsoft.Scripting.Runtime.DynamicStackFrame))]
 #endif
+

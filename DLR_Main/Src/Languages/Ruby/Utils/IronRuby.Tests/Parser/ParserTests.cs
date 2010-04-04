@@ -92,6 +92,7 @@ namespace IronRuby.Tests {
             LoggingErrorSink log = new LoggingErrorSink();
 
             List<Tokens> tokens;
+
             tokens = GetRubyTokens(log, "foo (while (f do end) do end) do end");
 
             Assert(tokens.Count == 14);
@@ -158,6 +159,33 @@ namespace IronRuby.Tests {
             );
 
             log.Errors.Clear();
+
+            
+            tokens = GetRubyTokens(log, "f \"a#{g.h /x/}\" do\nend");
+
+            Assert(tokens.ToArray().ValueEquals(new[] {
+                Tokens.Identifier,
+                Tokens.StringBegin,
+                Tokens.StringContent,
+                Tokens.StringEmbeddedCodeBegin,
+                Tokens.Identifier,
+                Tokens.Dot,
+                Tokens.Identifier,
+                Tokens.RegexpBegin,
+                Tokens.StringContent,
+                Tokens.RegexpEnd,
+                Tokens.StringEmbeddedCodeEnd,
+                Tokens.StringEnd,
+                Tokens.BlockDo,
+                Tokens.End,
+                Tokens.EndOfFile
+            }));
+
+            Assert(log.Errors.Count == 1 &&
+                log.Errors[0].Severity == Severity.Warning
+            );
+
+            log.Errors.Clear();
         }
         
         private void TokenizerErrors1() {
@@ -189,7 +217,44 @@ namespace IronRuby.Tests {
             log.Errors.Clear();
         }
 
+        [Options(NoRuntime = true)]
         public void TokenCategorizer1() {
+            var allTokens = Enum.GetValues(typeof(Tokens));
+            foreach (Tokens token in allTokens) {
+                if (token != Tokens.None && token != Tokens.Lowest && token != Tokens.LastToken) {
+                    var info = Tokenizer.GetTokenInfo(token);
+                    Assert(info.Category != TokenCategory.None);
+                }
+            }
+            foreach (Tokens token in allTokens) {
+                if (token != Tokens.None && token != Tokens.Lowest && token != Tokens.LastToken) {
+                    Assert(!String.IsNullOrEmpty(Tokenizer.GetTokenDescription(token)));
+                }
+            }
+        }
+
+        public void TokenCategorizer2() {
+            // initial position:
+            TestCategorizer(Engine, null, "1\n2", new SourceLocation(10, 2, 5),
+                // 1
+                new TokenInfo(new SourceSpan(new SourceLocation(10, 2, 5), new SourceLocation(11, 2, 6)), TokenCategory.NumericLiteral, TokenTriggers.None),
+                // \n
+                new TokenInfo(new SourceSpan(new SourceLocation(11, 2, 6), new SourceLocation(12, 3, 1)), TokenCategory.WhiteSpace, TokenTriggers.None),
+                // 2
+                new TokenInfo(new SourceSpan(new SourceLocation(12, 3, 1), new SourceLocation(13, 3, 2)), TokenCategory.NumericLiteral, TokenTriggers.None)
+            );
+
+            // regexes:
+            TestCategorizer(Engine, null, "/x/",
+                // /
+                new TokenInfo(new SourceSpan(new SourceLocation(0, 1, 1), new SourceLocation(1, 1, 2)), TokenCategory.StringLiteral, TokenTriggers.None),
+                // hello
+                new TokenInfo(new SourceSpan(new SourceLocation(1, 1, 2), new SourceLocation(2, 1, 3)), TokenCategory.StringLiteral, TokenTriggers.None),
+                // /
+                new TokenInfo(new SourceSpan(new SourceLocation(2, 1, 3), new SourceLocation(3, 1, 4)), TokenCategory.StringLiteral, TokenTriggers.None)
+            );
+
+            // whitespace:
             TestCategorizer(Engine, null, "print 'foo' #bar", 
                 // print
                 new TokenInfo(new SourceSpan(new SourceLocation(0, 1, 1), new SourceLocation(5, 1, 6)), TokenCategory.Identifier, TokenTriggers.None),
@@ -207,6 +272,7 @@ namespace IronRuby.Tests {
                 new TokenInfo(new SourceSpan(new SourceLocation(12, 1, 13), new SourceLocation(16, 1, 17)), TokenCategory.LineComment, TokenTriggers.None)
             );
 
+            // eolns:
             TestCategorizer(Engine, null, "a\r\nb",
                 // a
                 new TokenInfo(new SourceSpan(new SourceLocation(0, 1, 1), new SourceLocation(1, 1, 2)), TokenCategory.Identifier, TokenTriggers.None),   
@@ -280,10 +346,36 @@ namespace IronRuby.Tests {
                 new TokenInfo(new SourceSpan(new SourceLocation(0, 1, 1), new SourceLocation(4, 1, 5)), TokenCategory.Comment, TokenTriggers.None)
             );
 
-            Assert(((Tokenizer.State)state).TokenSequence == null);
+            Assert(((Tokenizer.State)state).CurrentSequence == TokenSequenceState.None);
+
+            // state transfer: nested strings //
+
+            state = null;
+            state = TestCategorizer(Engine, state, "\"a",
+                new TokenInfo(new SourceSpan(new SourceLocation(0, 1, 1), new SourceLocation(1, 1, 2)), TokenCategory.StringLiteral, TokenTriggers.None),
+                new TokenInfo(new SourceSpan(new SourceLocation(1, 1, 2), new SourceLocation(2, 1, 3)), TokenCategory.StringLiteral, TokenTriggers.None)
+            );
+
+            state = TestCategorizer(Engine, state, "#{",
+                new TokenInfo(new SourceSpan(new SourceLocation(0, 1, 1), new SourceLocation(2, 1, 3)), TokenCategory.Grouping, TokenTriggers.MatchBraces)
+            );
+
+            state = TestCategorizer(Engine, state, "1",
+                new TokenInfo(new SourceSpan(new SourceLocation(0, 1, 1), new SourceLocation(1, 1, 2)), TokenCategory.NumericLiteral, TokenTriggers.None)
+            );
+
+            state = TestCategorizer(Engine, state, "}",
+                new TokenInfo(new SourceSpan(new SourceLocation(0, 1, 1), new SourceLocation(1, 1, 2)), TokenCategory.Grouping, TokenTriggers.MatchBraces)
+            );
+
+            state = TestCategorizer(Engine, state, "\"",
+                new TokenInfo(new SourceSpan(new SourceLocation(0, 1, 1), new SourceLocation(1, 1, 2)), TokenCategory.StringLiteral, TokenTriggers.None)
+            );
+
+            Assert(((Tokenizer.State)state).CurrentSequence == TokenSequenceState.None);
         }
 
-        public void Identifiers1() {
+        public void TokenizeIdentifiers1() {
             string surrogate = "\ud800\udc00";
 
             Assert(Tokenizer.IsConstantName("C", false));
@@ -706,20 +798,95 @@ namespace IronRuby.Tests {
         }
 
         private void TokenizeStrings2() {
-            //AssertTokenizer t = NewAssertTokenizer();
-            //t.Load(@"""abc#{""x#@hello y""}def""")
-            //    [Tokens.StringBegin]
-            //    [Tokens.StringContent]
-            //        [Tokens.StringEmbeddedCodeBegin]
-            //            [Tokens.StringBegin]
-            //            [Tokens.StringContent]
-            //            [Tokens.StringEmbeddedVariableBegin][Tokens.InstanceVariable]
-            //            [Tokens.StringContent]
-            //            [Tokens.StringEnd]
-            //       [Tokens.RightBrace]
-            //       [Tokens.StringContent]
-            //    [Tokens.StringEnd].
-            //EOF();
+            AssertTokenizer t = new AssertTokenizer(this) {
+                Verbatim = true
+            };
+            
+            // string nested in a string:
+            t.Load(@"""abc#{""x#@hello#{{}}y""}def""")
+                [Tokens.StringBegin]
+                [Tokens.StringContent]
+                [Tokens.StringEmbeddedCodeBegin]
+                    [Tokens.StringBegin]
+                    [Tokens.StringContent]
+                    [Tokens.StringEmbeddedVariableBegin]
+                        [Tokens.InstanceVariable]
+                    [Tokens.StringEmbeddedCodeBegin]
+                        [Tokens.LeftBrace]
+                        [Tokens.RightBrace]
+                    [Tokens.StringEmbeddedCodeEnd]
+                    [Tokens.StringContent]
+                    [Tokens.StringEnd]
+                [Tokens.StringEmbeddedCodeEnd]
+                [Tokens.StringContent]
+                [Tokens.StringEnd].
+            EOF();
+
+            // nested braces:
+            t.Load(@"""a#{{{""#{{""#{1}""=>""c""}}""=>""#{2}""}=>""#{3}""}}a""")
+                [Tokens.StringBegin]
+                [Tokens.StringContent]
+                [Tokens.StringEmbeddedCodeBegin]
+                    [Tokens.LeftBrace]
+                        [Tokens.LeftBrace]
+                            [Tokens.StringBegin]
+                            [Tokens.StringEmbeddedCodeBegin]
+                                [Tokens.LeftBrace]
+                                    [Tokens.StringBegin]
+                                    [Tokens.StringEmbeddedCodeBegin]
+                                        [1]
+                                    [Tokens.StringEmbeddedCodeEnd]
+                                    [Tokens.StringEnd]
+                                [Tokens.DoubleArrow]
+                                    [Tokens.StringBegin]
+                                    [Tokens.StringContent]
+                                    [Tokens.StringEnd]
+                                [Tokens.RightBrace]
+                            [Tokens.StringEmbeddedCodeEnd]
+                            [Tokens.StringEnd]
+                        [Tokens.DoubleArrow]
+                            [Tokens.StringBegin]
+                            [Tokens.StringEmbeddedCodeBegin]
+                                [2]
+                            [Tokens.StringEmbeddedCodeEnd]
+                            [Tokens.StringEnd]
+                        [Tokens.RightBrace]
+                    [Tokens.DoubleArrow]
+                        [Tokens.StringBegin]
+                        [Tokens.StringEmbeddedCodeBegin]
+                            [3]
+                        [Tokens.StringEmbeddedCodeEnd]
+                        [Tokens.StringEnd]
+                    [Tokens.RightBrace]
+                [Tokens.StringEmbeddedCodeEnd]
+                [Tokens.StringContent]
+                [Tokens.StringEnd].
+            EOF();
+            
+            // =begin .. =end nested in a string:
+            t.Load("\"hello#{\n=begin\nxxx\n=end\nidf\n}world\"")
+                [Tokens.StringBegin]
+                [Tokens.StringContent]
+                    [Tokens.StringEmbeddedCodeBegin]
+                    [Tokens.EndOfLine]
+                    [Tokens.MultiLineComment]
+                    [Tokens.Identifier, "idf"]
+                    [Tokens.NewLine]
+                    [Tokens.StringEmbeddedCodeEnd]
+                [Tokens.StringContent]
+                [Tokens.StringEnd].
+            EOF();
+
+            // braces nesting in word array:
+            t.Load("%w{#$a #{b + 1} c}")
+                [Tokens.VerbatimWordsBegin]
+                [Tokens.StringContent, "#$a"][Tokens.WordSeparator]
+                [Tokens.StringContent, "#{b"][Tokens.WordSeparator]
+                [Tokens.StringContent, "+"][Tokens.WordSeparator]
+                [Tokens.StringContent, "1}"][Tokens.WordSeparator]
+                [Tokens.StringContent, "c"]
+                [Tokens.StringEnd].
+            EOF();
         }
 
         private void TokenizeEscapes2() {
@@ -819,8 +986,7 @@ namespace IronRuby.Tests {
         }
 
         private void Heredoc1() {
-            AssertTokenizer t = NewAssertTokenizer();
-
+            AssertTokenizer t = new AssertTokenizer(this) { Verbatim = false };
             t.Load("<<LABEL\nhello\nLABEL")
                 [Tokens.StringBegin]["hello\n"][Tokens.StringEnd][Tokens.NewLine].EOF();
 
@@ -845,6 +1011,119 @@ namespace IronRuby.Tests {
                 [Tokens.NewLine]
                 [3].EOF();
 
+            t.Load("puts <<A,1\\\n...\nA\n,2")
+                [Tokens.Identifier, "puts"]
+                [Tokens.StringBegin]
+                ["...\n"]
+                [Tokens.StringEnd].State(LexicalState.EXPR_END)
+                [Tokens.Comma].State(LexicalState.EXPR_BEG)
+                [1].State(LexicalState.EXPR_END)    // \\n is a whitespace
+                [Tokens.Comma].State(LexicalState.EXPR_BEG)
+                [2].State(LexicalState.EXPR_END).
+            EOF();
+
+            t.Load("puts <<A,(f\\\n...\nA\n())")
+                [Tokens.Identifier, "puts"]
+                [Tokens.StringBegin]
+                ["...\n"]
+                [Tokens.StringEnd].State(LexicalState.EXPR_END)
+                [Tokens.Comma].State(LexicalState.EXPR_BEG)
+                [Tokens.LeftExprParenthesis].State(LexicalState.EXPR_BEG)  // CommandMode == true
+                [Tokens.Identifier, "f"].State(LexicalState.EXPR_CMDARG)   // \\n is a whitespace, WhitespaceSeen == true
+                [Tokens.LeftArgParenthesis].State(LexicalState.EXPR_BEG)
+                [Tokens.RightParenthesis]
+                [Tokens.RightParenthesis].
+            EOF();
+
+            t.Expect();
+
+            AssertTokenizer vt = new AssertTokenizer(this) { Verbatim = true };
+
+            vt.Load("puts <<A,1\\\n...\nA\n,2")
+                [Tokens.Identifier, "puts"]
+                [Tokens.Whitespace]
+                [Tokens.VerbatimHeredocBegin]
+                [Tokens.Comma].State(LexicalState.EXPR_BEG)
+                [1].State(LexicalState.EXPR_END)    
+                [Tokens.Whitespace]                             // \\n 
+                [Tokens.StringContent, "...\n"]
+                [Tokens.VerbatimHeredocEnd].State(LexicalState.EXPR_END) // A label
+                [Tokens.Comma].State(LexicalState.EXPR_BEG)
+                [2].State(LexicalState.EXPR_END).
+            EOF();
+
+            vt.Load("puts <<A,(f\\\n...\nA\n())")
+                [Tokens.Identifier, "puts"]
+                [Tokens.Whitespace]
+                [Tokens.VerbatimHeredocBegin]
+                [Tokens.Comma].State(LexicalState.EXPR_BEG)
+                [Tokens.LeftExprParenthesis].State(LexicalState.EXPR_BEG)  // CommandMode == true
+                [Tokens.Identifier, "f"].State(LexicalState.EXPR_CMDARG)   
+                [Tokens.Whitespace]
+                ["...\n"]
+                [Tokens.VerbatimHeredocEnd].State(LexicalState.EXPR_CMDARG)       
+                [Tokens.LeftArgParenthesis].State(LexicalState.EXPR_BEG)
+                [Tokens.RightParenthesis]
+                [Tokens.RightParenthesis].
+            EOF();
+
+            vt.Load(@"puts <<A,<<B
+1
+2#{f <<C,<<D}3#{g <<E}4
+c
+C
+d#{f <<F}d
+f
+F
+D
+e
+E
+5
+A
+b
+b
+B")
+                [Tokens.Identifier, "puts"]
+                [Tokens.Whitespace]
+                [Tokens.VerbatimHeredocBegin] // <<A
+                [Tokens.Comma]
+                [Tokens.VerbatimHeredocBegin] // <<B
+                [Tokens.EndOfLine]
+                ["1\n2"]
+                [Tokens.StringEmbeddedCodeBegin]
+                [Tokens.Identifier, "f"]
+                [Tokens.Whitespace]
+                [Tokens.VerbatimHeredocBegin] // <<C
+                [Tokens.Comma]
+                [Tokens.VerbatimHeredocBegin] // <<D
+                [Tokens.StringEmbeddedCodeEnd]
+                ["3"]
+                [Tokens.StringEmbeddedCodeBegin]
+                [Tokens.Identifier, "g"]
+                [Tokens.Whitespace]
+                [Tokens.VerbatimHeredocBegin] // <<E
+                [Tokens.StringEmbeddedCodeEnd]
+                ["4\n"]
+                ["c\n"]
+                [Tokens.VerbatimHeredocEnd]   // C
+                ["d"]
+                [Tokens.StringEmbeddedCodeBegin]
+                [Tokens.Identifier, "f"]
+                [Tokens.Whitespace]
+                [Tokens.VerbatimHeredocBegin] // <<F
+                [Tokens.StringEmbeddedCodeEnd]
+                ["d\n"]
+                ["f\n"]
+                [Tokens.VerbatimHeredocEnd]   // F
+                [Tokens.VerbatimHeredocEnd]   // D
+                ["e\n"]
+                [Tokens.VerbatimHeredocEnd]   // E
+                ["5\n"]
+                [Tokens.VerbatimHeredocEnd]   // A
+                ["b\nb\n"]
+                [Tokens.VerbatimHeredocEnd]   // B
+            .EOF();
+
             t.Expect();
 
             // index:                                111111111122 2222 222 2333 333 3 3
@@ -859,10 +1138,6 @@ namespace IronRuby.Tests {
                 new TokenInfo(new SourceSpan(new SourceLocation(4, 1, 5), new SourceLocation(5, 1, 6)), TokenCategory.WhiteSpace, TokenTriggers.None),
                 // <<L1
                 new TokenInfo(new SourceSpan(new SourceLocation(5, 1, 6), new SourceLocation(9, 1, 10)), TokenCategory.StringLiteral, TokenTriggers.None),
-                // aaa
-                new TokenInfo(new SourceSpan(new SourceLocation(22, 2, 1), new SourceLocation(26, 3, 1)), TokenCategory.StringLiteral, TokenTriggers.None),
-                // L1\n
-                new TokenInfo(new SourceSpan(new SourceLocation(26, 3, 1), new SourceLocation(29, 4, 1)), TokenCategory.StringLiteral, TokenTriggers.None),
                 // ,
                 new TokenInfo(new SourceSpan(new SourceLocation(9, 1, 10), new SourceLocation(10, 1, 11)), TokenCategory.Delimiter, TokenTriggers.ParameterNext),
                 // ' '
@@ -875,10 +1150,6 @@ namespace IronRuby.Tests {
                 new TokenInfo(new SourceSpan(new SourceLocation(13, 1, 14), new SourceLocation(14, 1, 15)), TokenCategory.WhiteSpace, TokenTriggers.None),
                 // <<L2
                 new TokenInfo(new SourceSpan(new SourceLocation(14, 1, 15), new SourceLocation(18, 1, 19)), TokenCategory.StringLiteral, TokenTriggers.None),
-                // bbb
-                new TokenInfo(new SourceSpan(new SourceLocation(29, 4, 1), new SourceLocation(33, 5, 1)), TokenCategory.StringLiteral, TokenTriggers.None),
-                // L2\r\n
-                new TokenInfo(new SourceSpan(new SourceLocation(33, 5, 1), new SourceLocation(37, 6, 1)), TokenCategory.StringLiteral, TokenTriggers.None),
                 // ,
                 new TokenInfo(new SourceSpan(new SourceLocation(18, 1, 19), new SourceLocation(19, 1, 20)), TokenCategory.Delimiter, TokenTriggers.ParameterNext),
                 // ' '
@@ -887,6 +1158,14 @@ namespace IronRuby.Tests {
                 new TokenInfo(new SourceSpan(new SourceLocation(20, 1, 21), new SourceLocation(21, 1, 22)), TokenCategory.NumericLiteral, TokenTriggers.None),
                 // \n
                 new TokenInfo(new SourceSpan(new SourceLocation(21, 1, 22), new SourceLocation(22, 2, 1)), TokenCategory.WhiteSpace, TokenTriggers.None),
+                // aaa\n
+                new TokenInfo(new SourceSpan(new SourceLocation(22, 2, 1), new SourceLocation(26, 3, 1)), TokenCategory.StringLiteral, TokenTriggers.None),
+                // L1\n
+                new TokenInfo(new SourceSpan(new SourceLocation(26, 3, 1), new SourceLocation(29, 4, 1)), TokenCategory.StringLiteral, TokenTriggers.None),
+                // bbb\n
+                new TokenInfo(new SourceSpan(new SourceLocation(29, 4, 1), new SourceLocation(33, 5, 1)), TokenCategory.StringLiteral, TokenTriggers.None),
+                // L2\r\n
+                new TokenInfo(new SourceSpan(new SourceLocation(33, 5, 1), new SourceLocation(37, 6, 1)), TokenCategory.StringLiteral, TokenTriggers.None),
                 // 3
                 new TokenInfo(new SourceSpan(new SourceLocation(37, 6, 1), new SourceLocation(38, 6, 2)), TokenCategory.NumericLiteral, TokenTriggers.None)
             );
@@ -903,12 +1182,32 @@ namespace IronRuby.Tests {
                 new TokenInfo(new SourceSpan(new SourceLocation(4, 1, 5), new SourceLocation(5, 1, 6)), TokenCategory.WhiteSpace, TokenTriggers.None),
                 // <<L1
                 new TokenInfo(new SourceSpan(new SourceLocation(5, 1, 6), new SourceLocation(9, 1, 10)), TokenCategory.StringLiteral, TokenTriggers.None),
-                // aaa
+                // \n
+                new TokenInfo(new SourceSpan(new SourceLocation(9, 1, 10), new SourceLocation(10, 2, 1)), TokenCategory.WhiteSpace, TokenTriggers.None),
+                // aaa\n
                 new TokenInfo(new SourceSpan(new SourceLocation(10, 2, 1), new SourceLocation(13, 2, 4)), TokenCategory.StringLiteral, TokenTriggers.None),
                 // <missing heredoc end>
-                new TokenInfo(new SourceSpan(new SourceLocation(13, 2, 4), new SourceLocation(13, 2, 4)), TokenCategory.StringLiteral, TokenTriggers.None),
+                new TokenInfo(new SourceSpan(new SourceLocation(13, 2, 4), new SourceLocation(13, 2, 4)), TokenCategory.StringLiteral, TokenTriggers.None)
+            );
+
+            // index:                                1 1111 11111
+            //                             01234567890 1234 56789
+            TestCategorizer(Engine, null, "puts <<-L1\naaa\n  L1",
+            // column:                     12345678901 1234 12345
+            // line:                       11111111111 2222 33333
+            // 
+                // puts
+                new TokenInfo(new SourceSpan(new SourceLocation(0, 1, 1), new SourceLocation(4, 1, 5)), TokenCategory.Identifier, TokenTriggers.None),
+                // ' '
+                new TokenInfo(new SourceSpan(new SourceLocation(4, 1, 5), new SourceLocation(5, 1, 6)), TokenCategory.WhiteSpace, TokenTriggers.None),
+                // <<-L1
+                new TokenInfo(new SourceSpan(new SourceLocation(5, 1, 6), new SourceLocation(10, 1, 11)), TokenCategory.StringLiteral, TokenTriggers.None),
                 // \n
-                new TokenInfo(new SourceSpan(new SourceLocation(9, 1, 10), new SourceLocation(10, 2, 1)), TokenCategory.WhiteSpace, TokenTriggers.None)
+                new TokenInfo(new SourceSpan(new SourceLocation(10, 1, 11), new SourceLocation(11, 2, 1)), TokenCategory.WhiteSpace, TokenTriggers.None),
+                // aaa\n
+                new TokenInfo(new SourceSpan(new SourceLocation(11, 2, 1), new SourceLocation(15, 3, 1)), TokenCategory.StringLiteral, TokenTriggers.None),
+                // L1
+                new TokenInfo(new SourceSpan(new SourceLocation(17, 3, 3), new SourceLocation(19, 3, 5)), TokenCategory.StringLiteral, TokenTriggers.None)
             );
         }
 
@@ -1256,29 +1555,6 @@ add 'foo', 'bar'
                     optimizedTime.ElapsedMilliseconds,
                     universalTime.ElapsedMilliseconds);
             }
-        }
-
-        public object TestCategorizer(ScriptEngine engine, object state, string/*!*/ src, params TokenInfo[]/*!*/ expected) {
-            TokenCategorizer categorizer = engine.GetService<TokenCategorizer>();
-
-            categorizer.Initialize(state, engine.CreateScriptSourceFromString(src), SourceLocation.MinValue);
-            IEnumerable<TokenInfo> actual = categorizer.ReadTokens(Int32.MaxValue);
-            
-            int i = 0;
-            foreach (TokenInfo info in actual) {
-                Assert(i < expected.Length);
-                if (!info.Equals(expected[i])) {
-                    Assert(false);
-                }
-                i++;
-            }
-            Assert(i == expected.Length);
-
-            TokenInfo t = categorizer.ReadToken();
-            SourceLocation end = expected[expected.Length - 1].SourceSpan.End;
-            Assert(t.Equals(new TokenInfo(new SourceSpan(end, end), TokenCategory.EndOfStream, TokenTriggers.None)));
-
-            return categorizer.CurrentState;
         }
 
         private AssertTokenizer/*!*/ AssertTokenBigInteger(string/*!*/ source, int @base) {

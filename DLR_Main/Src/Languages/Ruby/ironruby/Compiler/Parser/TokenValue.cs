@@ -50,9 +50,6 @@ namespace IronRuby.Compiler {
         public int Integer2 { get { return _numeric.Integer2; } set { _numeric.Integer2 = value; } }
         public double Double { get { return _numeric.Double; } set { _numeric.Double = value; } }
 
-        // Tokens: StringBegin, SymbolBegin, RegexBegin, ShellStringBegin
-        internal TokenSequenceState/*!*/ StringTokenizer { get { return (TokenSequenceState)_obj1; } set { _obj1 = value; } }
-
         internal int VariableFactory { get { return Integer1; } set { Integer1 = value; } }
 
         public int ArgumentCount { get { return _numeric.Integer1; } set { _numeric.Integer1 = value; } }
@@ -115,10 +112,6 @@ namespace IronRuby.Compiler {
         internal void SetStringContent(MutableStringBuilder/*!*/ contentBuilder) {
             Assert.NotNull(contentBuilder);
             StringContent = contentBuilder.ToValue();
-        }
-
-        internal void SetStringTokenizer(TokenSequenceState value) {
-            StringTokenizer = value;
         }
 
         internal void SetRegexOptions(RubyRegexOptions value) {

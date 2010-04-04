@@ -47,9 +47,9 @@ namespace Microsoft.Scripting.Interpreter {
         // negative: default
         internal readonly int _compilationThreshold;
 
-        private readonly LocalVariables _locals;
-        internal readonly int[] _boxedLocals;
+        private readonly int _localCount;
         private readonly Dictionary<LabelTarget, BranchLabel> _labelMapping;
+        private readonly Dictionary<ParameterExpression, LocalVariable> _closureVariables;
 
         private readonly InstructionArray _instructions;
         internal readonly object[] _objects;
@@ -63,8 +63,8 @@ namespace Microsoft.Scripting.Interpreter {
             InstructionArray instructions, ExceptionHandler[] handlers, DebugInfo[] debugInfos, int compilationThreshold) {
 
             _lambda = lambda;
-            _locals = locals;
-            _boxedLocals = locals.GetBoxed();
+            _localCount = locals.LocalCount;
+            _closureVariables = locals.ClosureVariables;
                 
             _instructions = instructions;
             _objects = instructions.Objects;
@@ -76,6 +76,21 @@ namespace Microsoft.Scripting.Interpreter {
             _compilationThreshold = compilationThreshold;
         }
 
+        internal int ClosureSize {
+            get {
+                if (_closureVariables == null) {
+                    return 0;
+                }
+                return _closureVariables.Count;
+            }
+        }
+
+        internal int LocalCount {
+            get {
+                return _localCount;
+            }
+        }
+
         internal bool CompileSynchronously {
             get { return _compilationThreshold <= 1; }
         }
@@ -84,8 +99,8 @@ namespace Microsoft.Scripting.Interpreter {
             get { return _instructions; }
         }
 
-        internal LocalVariables Locals {
-            get { return _locals; } 
+        internal Dictionary<ParameterExpression, LocalVariable> ClosureVariables {
+            get { return _closureVariables; } 
         }
 
         internal Dictionary<LabelTarget, BranchLabel> LabelMapping {
@@ -113,38 +128,82 @@ namespace Microsoft.Scripting.Interpreter {
                     }
                     return;
                 } catch (Exception exception) {
-                    frame.SaveTraceToException(exception);
-                    frame.FaultingInstruction = frame.InstructionIndex;
-                    ExceptionHandler handler;
-                    frame.InstructionIndex += GotoHandler(frame, exception, out handler);
-
-                    if (handler == null || handler.IsFault) {
-                        // run finally/fault blocks:
-                        Run(frame);
-
-                        // a finally block can throw an exception caught by a handler, which cancels the previous exception:
-                        if (frame.InstructionIndex == RethrowOnReturn) {
-                            throw;
-                        }
-                        return;
+                    switch (HandleException(frame, exception)) {
+                        case ExceptionHandlingResult.Rethrow: throw;
+                        case ExceptionHandlingResult.Continue: continue;
+                        case ExceptionHandlingResult.Return: return;
                     }
-
-                    // stay in the current catch so that ThreadAbortException is not rethrown by CLR:
-                    var abort = exception as ThreadAbortException;
-                    if (abort != null) {
-                        _anyAbortException = abort;
-                        frame.CurrentAbortHandler = handler;
-                        Run(frame);
-                        return;
-                    }
-                    exception = null;
                 }
             }
         }
 
+        private ExceptionHandlingResult HandleException(InterpretedFrame frame, Exception exception) {
+            frame.SaveTraceToException(exception);
+            frame.FaultingInstruction = frame.InstructionIndex;
+            ExceptionHandler handler;
+            frame.InstructionIndex += GotoHandler(frame, exception, out handler);
+
+            if (handler == null || handler.IsFault) {
+                // run finally/fault blocks:
+                Run(frame);
+
+                // a finally block can throw an exception caught by a handler, which cancels the previous exception:
+                if (frame.InstructionIndex == RethrowOnReturn) {
+                    return ExceptionHandlingResult.Rethrow;
+                }
+                return ExceptionHandlingResult.Return;
+            }
+
+            // stay in the current catch so that ThreadAbortException is not rethrown by CLR:
+            var abort = exception as ThreadAbortException;
+            if (abort != null) {
+                _anyAbortException = abort;
+                frame.CurrentAbortHandler = handler;
+            }
+
+            while (true) {
+                try {
+                    var instructions = _instructions.Instructions;
+                    int index = frame.InstructionIndex;
+
+                    while (index < instructions.Length) {
+                        var curInstr = instructions[index];                        
+
+                        index += curInstr.Run(frame);
+                        frame.InstructionIndex = index;
+                        
+                        if (curInstr is LeaveExceptionHandlerInstruction) {
+                            // we've completed handling of this exception
+                            return ExceptionHandlingResult.Continue;
+                        }
+                    }
+
+                    if (frame.InstructionIndex == RethrowOnReturn) {
+                        return ExceptionHandlingResult.Rethrow;
+                    }
+
+                    return ExceptionHandlingResult.Return;
+                } catch (Exception nestedException) {                    
+                    switch (HandleException(frame, nestedException)) {
+                        case ExceptionHandlingResult.Rethrow: throw;
+                        case ExceptionHandlingResult.Continue: continue;
+                        case ExceptionHandlingResult.Return: return ExceptionHandlingResult.Return;
+                        default: throw Assert.Unreachable;
+                    }
+                }
+            }
+        }
+
+        enum ExceptionHandlingResult {
+            Rethrow,
+            Continue,
+            Return
+        }
+
         // To get to the current AbortReason object on Thread.CurrentThread 
         // we need to use ExceptionState property of any ThreadAbortException instance.
-        private static ThreadAbortException _anyAbortException;
+        [ThreadStatic]
+        private static ThreadAbortException _anyAbortException = null;
 
         internal static void AbortThreadIfRequested(InterpretedFrame frame, int targetLabelIndex) {
             var abortHandler = frame.CurrentAbortHandler;
@@ -154,6 +213,7 @@ namespace Microsoft.Scripting.Interpreter {
                 var currentThread = Thread.CurrentThread;
                 if ((currentThread.ThreadState & System.Threading.ThreadState.AbortRequested) != 0) {
                     Debug.Assert(_anyAbortException != null);
+
                     // The current abort reason needs to be preserved.
 #if SILVERLIGHT
                     currentThread.Abort();
@@ -176,7 +236,7 @@ namespace Microsoft.Scripting.Interpreter {
             return best;
         }
 
-        private int ReturnAndRethrowLabelIndex {
+        internal int ReturnAndRethrowLabelIndex {
             get {
                 // the last label is "return and rethrow" label:
                 Debug.Assert(_labels[_labels.Length - 1].Index == RethrowOnReturn);

@@ -59,7 +59,7 @@ namespace IronRuby.Tests {
                 Scenario_ParserLogging,
                 Tokenizer1,
                 TokenizerErrors1,
-                Identifiers1,
+                TokenizeIdentifiers1,
                 Identifiers2,
                 ParseBigInts1,
                 ParseIntegers1,
@@ -77,6 +77,7 @@ namespace IronRuby.Tests {
                 ParseSymbols1,
 
                 TokenCategorizer1,
+                TokenCategorizer2,
                 NameMangling1,
                 NameMangling2,
                 DelegateChainClone1,

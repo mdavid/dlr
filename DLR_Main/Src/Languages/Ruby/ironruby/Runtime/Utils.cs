@@ -809,6 +809,23 @@ namespace IronRuby.Runtime {
             return true;
         }
 
+        internal static bool ValueEquals<T>(T[] array, int arrayCount, T[] other, int otherCount) {
+            Debug.Assert(arrayCount <= array.Length);
+            Debug.Assert(otherCount <= other.Length);
+
+            if (arrayCount != otherCount) {
+                return false;
+            }
+
+            for (int i = 0; i < arrayCount; i++) {
+                if (!Object.Equals(array[i], other[i])) {
+                    return false;
+                }
+            }
+
+            return true;
+        }
+
         public static TOutput[]/*!*/ ConvertAll<TInput, TOutput>(this TInput[]/*!*/ array, Converter<TInput, TOutput>/*!*/ converter) {
             var result = new TOutput[array.Length];
             for (int i = 0; i < array.Length; i++) {

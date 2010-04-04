@@ -358,8 +358,39 @@ namespace IronRuby.Tests {
             }
         }
 
+        #region Parser, Tokenizer
+
+        public object TestCategorizer(ScriptEngine engine, object state, string/*!*/ src, params TokenInfo[]/*!*/ expected) {
+            return TestCategorizer(engine, state, src, SourceLocation.MinValue, expected);
+        }
+
+        public object TestCategorizer(ScriptEngine engine, object state, string/*!*/ src, SourceLocation initial, params TokenInfo[]/*!*/ expected) {
+            TokenCategorizer categorizer = engine.GetService<TokenCategorizer>();
+
+            categorizer.Initialize(state, engine.CreateScriptSourceFromString(src), initial);
+            IEnumerable<TokenInfo> actual = categorizer.ReadTokens(Int32.MaxValue);
+
+            int i = 0;
+            foreach (TokenInfo info in actual) {
+                Assert(i < expected.Length);
+                if (!info.Equals(expected[i])) {
+                    Assert(false);
+                }
+                i++;
+            }
+            Assert(i == expected.Length);
+
+            TokenInfo t = categorizer.ReadToken();
+            SourceLocation end = expected[expected.Length - 1].SourceSpan.End;
+            Assert(t.Equals(new TokenInfo(new SourceSpan(end, end), TokenCategory.EndOfStream, TokenTriggers.None)));
+
+            return categorizer.CurrentState;
+        }
+
+        #endregion
+
         #region Bugs
-        
+
         // Helpers for tests which are currently failing. Using these helpers will ensure that when the bug is fixed, 
         // you are forced to update the test case. In the meantime, it makes sure that the test can atleast be executed
         // and documents the incorrect result

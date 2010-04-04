@@ -133,7 +133,6 @@
       <Compile Include="Compiler\ReflectionCache.Generated.cs" />
       <Compile Include="Compiler\ResultOperation.cs" />
       <Compile Include="Compiler\RubyCompilerOptions.cs" />
-      <Compile Include="Compiler\Tokens.cs" />
       <Compile Include="Compiler\UnsignedBigIntegerParser.cs" />
     </ItemGroup>
     <ItemGroup>
@@ -296,9 +295,9 @@
       <Compile Include="Compiler\Parser\Parser.cs" />
       <Compile Include="Compiler\Parser\Parser.Generated.cs" />
       <Compile Include="Compiler\Parser\ParserStack.cs" />
-      <Compile Include="Compiler\Parser\StringTokenizer.cs" />
       <Compile Include="Compiler\Parser\Symbols.cs" />
       <Compile Include="Compiler\Parser\Tokenizer.cs" />
+      <Compile Include="Compiler\Parser\TokenSequenceState.cs" />
       <Compile Include="Compiler\Parser\TokenValue.cs" />
       <Compile Include="Compiler\Parser\VariableFactory.cs" />
     </ItemGroup>

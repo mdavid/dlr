@@ -2668,9 +2668,11 @@ namespace IronRuby.Runtime {
             if (lineSource != null) {
                 sb.Append(lineSource);
                 sb.AppendLine();
-                sb.Append(' ', column);
-                sb.Append('^');
-                sb.AppendLine();
+                if (column > 0) {
+                    sb.Append(' ', column - 1);
+                    sb.Append('^');
+                    sb.AppendLine();
+                }
             }
             return sb.ToString();
         }
@@ -2773,6 +2775,16 @@ namespace IronRuby.Runtime {
                 return base.CreateGetMemberBinder(name, ignoreCase);
             }
             return _metaBinderFactory.InteropGetMember(name);
+        }
+
+        public override SetMemberBinder/*!*/ CreateSetMemberBinder(string name, bool ignoreCase) {
+            // TODO:
+            if (ignoreCase) {
+                return base.CreateSetMemberBinder(name, ignoreCase);
+            }
+
+            // TODO: name mangling
+            return _metaBinderFactory.InteropSetMemberExact(name);
         }
 
         public override InvokeMemberBinder/*!*/ CreateCallBinder(string/*!*/ name, bool ignoreCase, CallInfo/*!*/ callInfo) {

@@ -442,13 +442,16 @@ namespace Microsoft.Scripting.Interpreter {
 
 
     internal sealed class ThrowInstruction : Instruction {
-        internal static readonly ThrowInstruction Throw = new ThrowInstruction(true);
-        internal static readonly ThrowInstruction VoidThrow = new ThrowInstruction(false);
+        internal static readonly ThrowInstruction Throw = new ThrowInstruction(true, false);
+        internal static readonly ThrowInstruction VoidThrow = new ThrowInstruction(false, false);
+        internal static readonly ThrowInstruction Rethrow = new ThrowInstruction(true, true);
+        internal static readonly ThrowInstruction VoidRethrow = new ThrowInstruction(false, true);
 
-        private readonly bool _hasResult;
+        private readonly bool _hasResult, _rethrow;
 
-        private ThrowInstruction(bool hasResult) {
+        private ThrowInstruction(bool hasResult, bool isRethrow) {
             _hasResult = hasResult;
+            _rethrow = isRethrow;
         }
 
         public override int ProducedStack {
@@ -456,11 +459,18 @@ namespace Microsoft.Scripting.Interpreter {
         }
 
         public override int ConsumedStack {
-            get { return 1; }
+            get {
+                return 1; 
+            }
         }
 
         public override int Run(InterpretedFrame frame) {
-            throw (Exception)frame.Pop();
+            var ex = (Exception)frame.Pop();
+            if (_rethrow) {
+                ExceptionHandler handler;
+                return frame.Interpreter.GotoHandler(frame, ex, out handler);
+            }
+            throw ex;
         }
     }
 
@@ -483,12 +493,16 @@ namespace Microsoft.Scripting.Interpreter {
 
     internal sealed class EnterLoopInstruction : Instruction {
         private readonly int _instructionIndex;
+        private Dictionary<ParameterExpression, LocalVariable> _variables;
+        private Dictionary<ParameterExpression, LocalVariable> _closureVariables;
         private LoopExpression _loop;
         private int _loopEnd;
         private int _compilationThreshold;
 
-        internal EnterLoopInstruction(LoopExpression loop, int compilationThreshold, int instructionIndex) {
+        internal EnterLoopInstruction(LoopExpression loop, LocalVariables locals, int compilationThreshold, int instructionIndex) {
             _loop = loop;
+            _variables = locals.CopyLocals();
+            _closureVariables = locals.ClosureVariables;
             _compilationThreshold = compilationThreshold;
             _instructionIndex = instructionIndex;
         }
@@ -537,7 +551,7 @@ namespace Microsoft.Scripting.Interpreter {
                 PerfTrack.NoteEvent(PerfTrack.Categories.Compiler, "Interpreted loop compiled");
 
                 InterpretedFrame frame = (InterpretedFrame)frameObj;
-                var compiler = new LoopCompiler(_loop, frame.Interpreter.LabelMapping, frame.Interpreter.Locals, _instructionIndex, _loopEnd);
+                var compiler = new LoopCompiler(_loop, frame.Interpreter.LabelMapping, _variables, _closureVariables, _instructionIndex, _loopEnd);
                 var instructions = frame.Interpreter.Instructions.Instructions;
 
                 // replace this instruction with an optimized one:
@@ -545,6 +559,8 @@ namespace Microsoft.Scripting.Interpreter {
 
                 // invalidate this instruction, some threads may still hold on it:
                 _loop = null;
+                _variables = null;
+                _closureVariables = null;
             }
         }
     }

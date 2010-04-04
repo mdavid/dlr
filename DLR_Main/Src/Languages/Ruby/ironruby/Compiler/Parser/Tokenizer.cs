@@ -14,19 +14,19 @@
  * ***************************************************************************/
 
 using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.Globalization;
 using System.IO;
-using System.Dynamic;
 using System.Text;
-using Microsoft.Scripting;
-using Microsoft.Scripting.Runtime;
-using Microsoft.Scripting.Math;
-using Microsoft.Scripting.Utils;
+using System.Text.RegularExpressions;
 using IronRuby.Builtins;
 using IronRuby.Compiler.Ast;
-using System.Text.RegularExpressions;
 using IronRuby.Runtime;
+using Microsoft.Scripting;
+using Microsoft.Scripting.Math;
+using Microsoft.Scripting.Runtime;
+using Microsoft.Scripting.Utils;
 
 namespace IronRuby.Compiler {
     internal enum LexicalState : byte {
@@ -79,12 +79,48 @@ namespace IronRuby.Compiler {
 
         private SourceUnit _sourceUnit;
         private ErrorSink/*!*/ _errorSink;
-        
+
         #region State
 
-        internal sealed class State {
-            internal TokenSequenceState TokenSequence;
+        internal struct NestedTokenSequence : IEquatable<NestedTokenSequence> {
+            internal static readonly NestedTokenSequence[] EmptyArray = new NestedTokenSequence[0];
+
+            public readonly TokenSequenceState State;
+            public readonly int OpenedBracesInEmbeddedCode;
+
+            public NestedTokenSequence(TokenSequenceState/*!*/ state, int openedBracesInEmbeddedCode) {
+                State = state;
+                OpenedBracesInEmbeddedCode = openedBracesInEmbeddedCode;
+            }
+
+            public override bool Equals(object other) {
+                return other is NestedTokenSequence && Equals((NestedTokenSequence)other);
+            }
+
+            public bool Equals(NestedTokenSequence other) {
+                return ReferenceEquals(State, other.State) || (State != null && State.Equals(other.State)
+                    && OpenedBracesInEmbeddedCode == other.OpenedBracesInEmbeddedCode
+                );
+            }
+
+            public override int GetHashCode() {
+                return State.GetHashCode() ^ OpenedBracesInEmbeddedCode;
+            }
+        }
+
+        internal sealed class State : IEquatable<State> {
+            internal TokenSequenceState/*!*/ _currentSequence;
+            internal NestedTokenSequence[]/*!*/ _nestedSequences;
+            internal int _nestedSequenceCount;
+
+            // Verbatim mode only: a queue of heredocs that were started on the current line.
+            // The queued heredocs will be pushed to the _nestedSequences stack at the end of the line.
+            internal List<VerbatimHeredocState> VerbatimHeredocQueue; // TODO eql, hash
+
             internal LexicalState LexicalState;
+
+            // the number of unmatched left braces since the start of last string embedded code:
+            internal int OpenedBracesInEmbeddedCode;
 
             // true if the following identifier is treated as a command name (sets LexicalState.CMDARG):
             internal byte _commandMode;
@@ -92,6 +128,9 @@ namespace IronRuby.Compiler {
             // true if the previous token is Tokens.Whitespace:
             internal byte _whitespaceSeen;
 
+            // true if the previous token is Tokens.StringEmbeddedVariableBegin:
+            internal byte _inStringEmbeddedVariable;
+            
             // Non-zero => End of the last heredoc that finished reading content.
             // While non-zero the current stream position doesn't correspond the current line and line index 
             // (the stream is ahead, we are reading from a buffer restored by the last heredoc).
@@ -105,18 +144,135 @@ namespace IronRuby.Compiler {
                     _whitespaceSeen = src._whitespaceSeen;
                     HeredocEndLine = src.HeredocEndLine;
                     HeredocEndLineIndex = src.HeredocEndLineIndex;
-                    TokenSequence = src.TokenSequence;
+                    _currentSequence = src._currentSequence;
+                    _nestedSequenceCount = src._nestedSequenceCount;
+                    if (_nestedSequenceCount > 0) {
+                        _nestedSequences = new NestedTokenSequence[_nestedSequenceCount];
+                        Array.Copy(src._nestedSequences, 0, _nestedSequences, 0, _nestedSequenceCount);
+                    } else {
+                        _nestedSequences = NestedTokenSequence.EmptyArray;
+                    }
                 } else {
                     LexicalState = LexicalState.EXPR_BEG;
                     _commandMode = 1;
                     _whitespaceSeen = 0;
                     HeredocEndLine = 0;
                     HeredocEndLineIndex = -1;
-                    TokenSequence = null;
+                    _currentSequence = TokenSequenceState.None;
+                    _nestedSequences = NestedTokenSequence.EmptyArray;
+                    _nestedSequenceCount = 0;
                 }
+            }
+
+            public override bool Equals(object other) {
+                return Equals(other as State);
+            }
+
+            public bool Equals(State other) {
+                return ReferenceEquals(this, other) || (other != null
+                    && _currentSequence == other._currentSequence
+                    && Utils.ValueEquals(_nestedSequences, _nestedSequenceCount, other._nestedSequences, other._nestedSequenceCount)
+                    && LexicalState == other.LexicalState
+                    && OpenedBracesInEmbeddedCode == other.OpenedBracesInEmbeddedCode
+                    && _commandMode == other._commandMode
+                    && _whitespaceSeen == other._whitespaceSeen
+                    && _inStringEmbeddedVariable == other._inStringEmbeddedVariable
+                    && HeredocEndLine == other.HeredocEndLine
+                    && HeredocEndLineIndex == other.HeredocEndLineIndex
+                );
+            }
+
+            public override int GetHashCode() {
+                return _currentSequence.GetHashCode()
+                     ^ _nestedSequences.GetValueHashCode(0, _nestedSequenceCount)
+                     ^ _nestedSequenceCount
+                     ^ (int)LexicalState
+                     ^ OpenedBracesInEmbeddedCode
+                     ^ _commandMode
+                     ^ _whitespaceSeen
+                     ^ _inStringEmbeddedVariable
+                     ^ HeredocEndLine
+                     ^ HeredocEndLineIndex;
+            }
+
+            internal TokenSequenceState/*!*/ CurrentSequence {
+                get { return _currentSequence; }
+                set {
+                    Assert.NotNull(value);
+                    _currentSequence = value;
+                }
+            }
+
+            private void PushNestedSequence(NestedTokenSequence sequence) {
+                if (_nestedSequences.Length == _nestedSequenceCount) {
+                    Array.Resize(ref _nestedSequences, _nestedSequences.Length * 2 + 1);
+                }
+                _nestedSequences[_nestedSequenceCount++] = sequence;
+            }
+
+            private NestedTokenSequence PopNestedSequence() {
+                Debug.Assert(_nestedSequenceCount > 0);
+                var result = _nestedSequences[_nestedSequenceCount - 1];
+                _nestedSequences[_nestedSequenceCount - 1] = default(NestedTokenSequence);
+                _nestedSequenceCount--;
+                return result;
+            }
+
+            internal void StartStringEmbeddedCode() {
+                PushNestedSequence(new NestedTokenSequence(_currentSequence, OpenedBracesInEmbeddedCode));
+                OpenedBracesInEmbeddedCode = 0;
+                _currentSequence = TokenSequenceState.None;
+            }
+
+            internal void EndStringEmbeddedCode() {
+                var nestedSeq = PopNestedSequence();
+                _currentSequence = nestedSeq.State;
+                OpenedBracesInEmbeddedCode = nestedSeq.OpenedBracesInEmbeddedCode;
+                Debug.Assert(OpenedBracesInEmbeddedCode >= 0);
+            }
+
+            internal void EnqueueVerbatimHeredoc(VerbatimHeredocState/*!*/ heredoc) {
+                if (VerbatimHeredocQueue == null) {
+                    VerbatimHeredocQueue = new List<VerbatimHeredocState>();
+                }
+                VerbatimHeredocQueue.Add(heredoc);
+            }
+
+            internal void DequeueVerbatimHeredocs() {
+                Debug.Assert(VerbatimHeredocQueue != null && VerbatimHeredocQueue.Count > 0);
+                // TODO:
+                if (_currentSequence == TokenSequenceState.None) {
+                    PushNestedSequence(new NestedTokenSequence(new CodeState(LexicalState, _commandMode, _whitespaceSeen), OpenedBracesInEmbeddedCode));
+                } else {
+                    PushNestedSequence(new NestedTokenSequence(_currentSequence, OpenedBracesInEmbeddedCode));
+                }
+
+                for (int i = VerbatimHeredocQueue.Count - 1; i > 0; i--) {
+                    PushNestedSequence(new NestedTokenSequence(VerbatimHeredocQueue[i], OpenedBracesInEmbeddedCode));
+                }
+                _currentSequence = VerbatimHeredocQueue[0];
+                VerbatimHeredocQueue = null;
+            }
+
+            internal void FinishVerbatimHeredoc() {
+                var nestedSeq = PopNestedSequence();
+                // TODO:
+                CodeState codeState = nestedSeq.State as CodeState;
+                if (codeState != null) {
+                    LexicalState = codeState.LexicalState;
+                    _commandMode = codeState.CommandMode;
+                    _whitespaceSeen = codeState.WhitespaceSeen;
+                    _currentSequence = TokenSequenceState.None;
+                } else {
+                    _currentSequence = nestedSeq.State;
+                }
+                OpenedBracesInEmbeddedCode = nestedSeq.OpenedBracesInEmbeddedCode;
+                Debug.Assert(OpenedBracesInEmbeddedCode >= 0);
             }
         }
 
+        private bool InStringEmbeddedCode { get { return _state._nestedSequenceCount > 0; } }
+        private bool InStringEmbeddedVariable { get { return _state._inStringEmbeddedVariable == 1; } set { _state._inStringEmbeddedVariable = value ? (byte)1 : (byte)0; } }
         private bool WhitespaceSeen { get { return _state._whitespaceSeen == 1; } set { _state._whitespaceSeen = value ? (byte)1 : (byte)0; } }
         private bool CommandMode { get { return _state._commandMode == 1; } set { _state._commandMode = value ? (byte)1 : (byte)0; } } 
 
@@ -144,7 +300,6 @@ namespace IronRuby.Compiler {
         private int _currentLine;
         private int _currentLineIndex;
 
-        
         // out: whether the last token terminated
         private bool _unterminatedToken;
         private bool _eofReached;
@@ -271,7 +426,7 @@ namespace IronRuby.Compiler {
 
         #endregion
 
-        #region Parser API, State Operations
+        #region Parser Driven State
 
         internal LexicalState LexicalState {
             get { return _state.LexicalState; }
@@ -333,7 +488,7 @@ namespace IronRuby.Compiler {
             BitStackPush(ref _commandArgsStateStack, 0);
         }
 
-        private void LeaveParenthesisedExpression() {
+        internal void LeaveParenthesisedExpression() {
             BitStackOrPop(ref _commandArgsStateStack);
 
             // was: BitStackOrPop(ref _loopConditionStateStack);
@@ -342,34 +497,17 @@ namespace IronRuby.Compiler {
             BitStackPop(ref _loopConditionStateStack);
         }
 
-        // Stores the current string tokenizer into the StringEmbeddedVariableBegin token.
-        // It is restored later via call to StringEmbeddedVariableEnd. 
         private Tokens StringEmbeddedVariableBegin() {
-            _tokenValue.SetStringTokenizer(_state.TokenSequence);
-            _state.TokenSequence = null;
+            InStringEmbeddedVariable = true;
             LexicalState = LexicalState.EXPR_BEG;
             return Tokens.StringEmbeddedVariableBegin;
         }
 
-        // Stores the current string tokenizer into the StringEmbeddedCodeBegin token.
-        // It is restored later via call to StringEmbeddedCodeEnd. 
         private Tokens StringEmbeddedCodeBegin() {
-            _tokenValue.SetStringTokenizer(_state.TokenSequence);
-            _state.TokenSequence = null;
+            _state.StartStringEmbeddedCode();
             LexicalState = LexicalState.EXPR_BEG;
             EnterParenthesisedExpression();
             return Tokens.StringEmbeddedCodeBegin;
-        }
-
-        // called from parser at the end of the embedded variable
-        internal void StringEmbeddedVariableEnd(TokenSequenceState stringTokenizer) {
-            _state.TokenSequence = stringTokenizer;
-        }
-
-        // called from parser at the end of the embedded code
-        internal void StringEmbeddedCodeEnd(TokenSequenceState terminator) {
-            _state.TokenSequence = terminator;
-            LeaveParenthesisedExpression();
         }
 
         #endregion
@@ -539,6 +677,10 @@ namespace IronRuby.Compiler {
             return true;
         }
 
+        private bool AtEndOfLine {
+            get { return _bufferPos == _lineLength && _bufferPos > 0 && _lineBuffer[_bufferPos - 1] == '\n'; }
+        }
+
         private bool is_bol() {
             return _bufferPos == 0;
         }
@@ -548,6 +690,11 @@ namespace IronRuby.Compiler {
         }
 
         private bool LineContentEquals(string str, bool skipWhitespace) {
+            int strStart;
+            return LineContentEquals(str, skipWhitespace, out strStart);
+        }
+
+        private bool LineContentEquals(string str, bool skipWhitespace, out int strStart) {
             int p = 0;
             int n;
 
@@ -557,6 +704,7 @@ namespace IronRuby.Compiler {
                 }
             }
 
+            strStart = p;
             n = _lineLength - (p + str.Length);
             if (n < 0 || (n > 0 && _lineBuffer[p + str.Length] != '\n' && _lineBuffer[p + str.Length] != '\r')) {
                 return false;
@@ -621,10 +769,14 @@ namespace IronRuby.Compiler {
         private SourceLocation GetCurrentLocation() {
             if (_lineBuffer == null) {
                 return _initialLocation;
-            } else if (_bufferPos == _lineLength && _bufferPos > 0 && _lineBuffer[_bufferPos - 1] == '\n') {
+            } else if (AtEndOfLine) {
                 return new SourceLocation(_currentLineIndex + _bufferPos, _currentLine + 1, 1);
             } else {
-                return new SourceLocation(_currentLineIndex + _bufferPos, _currentLine, _bufferPos + 1);
+                return new SourceLocation(
+                    _currentLineIndex + _bufferPos, 
+                    _currentLine, 
+                    (_currentLine == _initialLocation.Line ? _initialLocation.Column : 1) + _bufferPos
+                );
             }
         }
 
@@ -646,14 +798,15 @@ namespace IronRuby.Compiler {
                 // TODO:
                 RefillBuffer();
 
-                Tokens token;
-                if (_state.TokenSequence != null) {
-                    token = _state.TokenSequence.TokenizeAndMark(this);
-                } else {
-                    token = Tokenize();
-                    CaptureTokenSpan();
-                }
+                Tokens token = _state.CurrentSequence.TokenizeAndMark(this);
                 DumpToken(token);
+
+                // Do not set WhitespaceSeen and ComamndMode states as they already were set by FinishVerbatimHeredoc.
+                if (token == Tokens.VerbatimHeredocEnd) {
+                    // no heredoc can start on the current line:
+                    Debug.Assert(_state.VerbatimHeredocQueue == null); 
+                    return token;
+                }
 
                 WhitespaceSeen = token == Tokens.Whitespace;
                 switch (token) {
@@ -662,12 +815,16 @@ namespace IronRuby.Compiler {
                     case Tokens.EndOfLine:
                     case Tokens.Whitespace:
                         // ignore the token unless in verbatim mode
-                        break;
+                        if (_verbatim) {
+                            break;
+                        } else {
+                            continue;
+                        }
 
                     case Tokens.EndOfFile:
                         _eofReached = true;
                         CommandMode = false;
-                        return token;
+                        break;
 
                     case Tokens.NewLine:
                     case Tokens.Semicolon:
@@ -675,20 +832,22 @@ namespace IronRuby.Compiler {
                     case Tokens.LeftArgParenthesis:
                     case Tokens.LeftExprParenthesis:
                         CommandMode = true;
-                        return token;
+                        break;
 
                     default:
                         CommandMode = false;
-                        return token;
+                        break;
                 }
 
-                if (_verbatim) {
-                    return token;
+                if (_verbatim && _state.VerbatimHeredocQueue != null && AtEndOfLine) {
+                    _state.DequeueVerbatimHeredocs();
                 }
+
+                return token;
             }
         }
 
-        private Tokens Tokenize() {
+        internal Tokens Tokenize() {
             MarkTokenStart();
             int c = Read();
 
@@ -821,7 +980,7 @@ namespace IronRuby.Compiler {
                     return TokenizeClosing(Tokens.RightBracket);                    
 
                 case '}':
-                    return TokenizeClosing(Tokens.RightBrace);
+                    return TokenizeClosingBrace();
 
                 case '%':
                     return TokenizePercent();
@@ -1152,7 +1311,7 @@ namespace IronRuby.Compiler {
                 if (c == -1) {
                     _unterminatedToken = true;
                     if (_verbatim) {
-                        _state.TokenSequence = MultiLineCommentState.Instance;
+                        _state.CurrentSequence = MultiLineCommentState.Instance;
                         MarkMultiLineTokenEnd();
                         return _currentTokenStart.Index == _currentTokenEnd.Index ? Tokens.EndOfFile : Tokens.MultiLineComment;
                     } else {
@@ -1170,7 +1329,7 @@ namespace IronRuby.Compiler {
                 }
             }
 
-            _state.TokenSequence = null;
+            _state.CurrentSequence = TokenSequenceState.None;
             _bufferPos = _lineLength;
             MarkMultiLineTokenEnd();
             return Tokens.MultiLineComment;
@@ -1499,12 +1658,28 @@ namespace IronRuby.Compiler {
             return Tokens.Percent;
         }
 
-        // Closing tokens: ), }, ]
+        // Closing tokens: ), ]
         private Tokens TokenizeClosing(Tokens token) {
             LeaveParenthesisedExpression();
             LexicalState = LexicalState.EXPR_END;
             MarkSingleLineTokenEnd();
             return token;
+        }
+
+        // Closing tokens: }, StringEmbeddedCodeEnd
+        private Tokens TokenizeClosingBrace() {
+            if (_state.OpenedBracesInEmbeddedCode > 0) {
+                _state.OpenedBracesInEmbeddedCode--;
+                return TokenizeClosing(Tokens.RightBrace);
+            } 
+            
+            if (InStringEmbeddedCode) {
+                _state.EndStringEmbeddedCode();
+                return TokenizeClosing(Tokens.StringEmbeddedCodeEnd);
+            } 
+            
+            // unmatched brace:
+            return TokenizeClosing(Tokens.RightBrace);
         }
 
         // Braces: {
@@ -1519,6 +1694,7 @@ namespace IronRuby.Compiler {
                 result = Tokens.LeftBrace;           // hash
             }
 
+            _state.OpenedBracesInEmbeddedCode++;
             EnterParenthesisedExpression();
             LexicalState = LexicalState.EXPR_BEG;
             return result;
@@ -1596,8 +1772,7 @@ namespace IronRuby.Compiler {
         // Literals: /... (regex start)
         private Tokens ReadSlash() {
             if (LexicalState == LexicalState.EXPR_BEG || LexicalState == LexicalState.EXPR_MID) {
-                _state.TokenSequence = new StringState(StringProperties.RegularExpression | StringProperties.ExpandsEmbedded, '/');
-                _tokenValue.SetStringTokenizer(_state.TokenSequence);
+                _state.CurrentSequence = new StringState(StringProperties.RegularExpression | StringProperties.ExpandsEmbedded, '/');
                 return Tokens.RegexpBegin;
             }
 
@@ -1612,8 +1787,7 @@ namespace IronRuby.Compiler {
             if (InArgs && WhitespaceSeen) {
                 if (!IsWhiteSpace(c)) {
                     ReportWarning(Errors.AmbiguousFirstArgument);
-                    _state.TokenSequence = new StringState(StringProperties.RegularExpression | StringProperties.ExpandsEmbedded, '/');
-                    _tokenValue.SetStringTokenizer(_state.TokenSequence);
+                    _state.CurrentSequence = new StringState(StringProperties.RegularExpression | StringProperties.ExpandsEmbedded, '/');
                     return Tokens.RegexpBegin;
                 }
             }
@@ -1657,21 +1831,20 @@ namespace IronRuby.Compiler {
             switch (c) {
                 case '\'':
                     Skip(c);
-                    _state.TokenSequence = new StringState(StringProperties.Symbol, '\'');
+                    _state.CurrentSequence = new StringState(StringProperties.Symbol, '\'');
                     break;
 
                 case '"':
                     Skip(c);
-                    _state.TokenSequence = new StringState(StringProperties.Symbol | StringProperties.ExpandsEmbedded, '"');
+                    _state.CurrentSequence = new StringState(StringProperties.Symbol | StringProperties.ExpandsEmbedded, '"');
                     break;
 
                 default:
-                    Debug.Assert(_state.TokenSequence == null);
+                    Debug.Assert(_state.CurrentSequence == TokenSequenceState.None);
                     break;
             }
 
             LexicalState = LexicalState.EXPR_FNAME;
-            _tokenValue.SetStringTokenizer(_state.TokenSequence);
             return Tokens.SymbolBegin;
         }
 
@@ -1842,8 +2015,7 @@ namespace IronRuby.Compiler {
                 return Tokens.Backtick;
             }
 
-            _state.TokenSequence = new StringState(StringProperties.ExpandsEmbedded, '`');
-            _tokenValue.SetStringTokenizer(_state.TokenSequence);
+            _state.CurrentSequence = new StringState(StringProperties.ExpandsEmbedded, '`');
             return Tokens.ShellStringBegin;
         }
 
@@ -2390,15 +2562,13 @@ namespace IronRuby.Compiler {
 
         // String: "...
         private Tokens ReadDoubleQuote() {
-            _state.TokenSequence = new StringState(StringProperties.ExpandsEmbedded, '"');
-            _tokenValue.SetStringTokenizer(_state.TokenSequence);
+            _state.CurrentSequence = new StringState(StringProperties.ExpandsEmbedded, '"');
             return Tokens.StringBegin;
         }
 
         // String: '...
         private Tokens ReadSingleQuote() {
-            _state.TokenSequence = new StringState(StringProperties.Default, '\'');
-            _tokenValue.SetStringTokenizer(_state.TokenSequence);
+            _state.CurrentSequence = new StringState(StringProperties.Default, '\'');
             return Tokens.StringBegin;
         }
 
@@ -2514,7 +2684,13 @@ namespace IronRuby.Compiler {
         // - StringEmbeddedCodeBegin      ... #{ (start of an embedded expression)
         // - StringContent                ... string data
         //
-        internal Tokens TokenizeAndMarkString(StringState/*!*/ info) {
+        internal Tokens TokenizeString(StringState/*!*/ info) {
+            // global or instance variable in a string:
+            if (InStringEmbeddedVariable) {
+                InStringEmbeddedVariable = false;
+                return Tokenize();
+            }
+
             StringProperties properties = info.Properties;
             bool whitespaceSeen = false;
 
@@ -2527,7 +2703,6 @@ namespace IronRuby.Compiler {
             if (c == -1) {
                 _unterminatedToken = true;
                 MarkSingleLineTokenEnd();
-                CaptureTokenSpan();
                 if (_verbatim) {
                     return Tokens.EndOfFile;
                 } else {
@@ -2598,22 +2773,16 @@ namespace IronRuby.Compiler {
 
             int nestingLevel = info.NestingLevel;
             ReadStringContent(content, properties, info.TerminatingCharacter, info.OpeningParenthesis, ref nestingLevel);
-            info.NestingLevel = nestingLevel;
+            _state.CurrentSequence = info.SetNesting(nestingLevel);
 
             _tokenValue.SetStringContent(content);
             MarkMultiLineTokenEnd();
-            return StringContent();
-        }
-
-        private Tokens StringContent() {
-            CaptureTokenSpan();
             return Tokens.StringContent;
         }
 
         private Tokens FinishString(Tokens endToken) {
-            _state.TokenSequence = null;
+            _state.CurrentSequence = TokenSequenceState.None;
             LexicalState = LexicalState.EXPR_END;
-            CaptureTokenSpan();
             return endToken;
         }
 
@@ -2684,14 +2853,42 @@ namespace IronRuby.Compiler {
             // note that if we allow \n in the label we must change this to multi-line token!
             MarkSingleLineTokenEnd();
             
-            // skip the rest of the line (the content is stored in heredoc string terminal and tokenized upon restore)
-            int resume = _bufferPos;
-            _bufferPos = _lineLength;
-            _state.TokenSequence = new HeredocState(stringType, label, resume, _lineBuffer, _lineLength, _currentLine, _currentLineIndex);
-            _lineBuffer = new char[InitialBufferSize];
-            _tokenValue.SetStringTokenizer(_state.TokenSequence);
+            if (_verbatim) {
+                // enqueue a new verbatim heredoc state, it will be dequeued at the end of the current line:
+                _state.EnqueueVerbatimHeredoc(new VerbatimHeredocState(stringType, label));
+                return Tokens.VerbatimHeredocBegin;
+            } else {
+                // skip the rest of the line (the content is stored in heredoc string terminal and tokenized upon restore)
+                int resume = _bufferPos;
+                _bufferPos = _lineLength;
+                _state.CurrentSequence = new HeredocState(stringType, label, resume, _lineBuffer, _lineLength, _currentLine, _currentLineIndex);
+                _lineBuffer = new char[InitialBufferSize];
+                return term == '`' ? Tokens.ShellStringBegin : Tokens.StringBegin;
+            }
+        }
 
-            return term == '`' ? Tokens.ShellStringBegin : Tokens.StringBegin;
+        private void MarkHeredocEnd(HeredocStateBase/*!*/ heredoc, int labelStart) {
+            if (labelStart < 0) {
+                MarkTokenStart();
+                MarkSingleLineTokenEnd();
+            } else {
+                SeekRelative(labelStart);
+                MarkTokenStart();
+                SeekRelative(heredoc.Label.Length);
+                if (TryReadEndOfLine()) {
+                    MarkMultiLineTokenEnd();
+                } else {
+                    MarkSingleLineTokenEnd();
+                }
+            }
+        }
+
+        internal Tokens FinishVerbatimHeredoc(VerbatimHeredocState/*!*/ heredoc, int labelStart) {
+            Debug.Assert(_verbatim);
+            MarkHeredocEnd(heredoc, labelStart);
+            _state.FinishVerbatimHeredoc();
+            CaptureTokenSpan();
+            return Tokens.VerbatimHeredocEnd;
         }
 
         // 
@@ -2702,21 +2899,13 @@ namespace IronRuby.Compiler {
         // ... heredoc content tokens ...
         // END
         //
-        private Tokens FinishHeredoc(HeredocState/*!*/ heredoc) {
-            if (_unterminatedToken) {
-                MarkSingleLineTokenEnd();
-            } else {
-                SeekRelative(heredoc.Label.Length);
-                if (TryReadEndOfLine()) {
-                    MarkMultiLineTokenEnd();
-                } else {
-                    MarkSingleLineTokenEnd();
-                }
-            }
+        internal Tokens FinishHeredoc(HeredocState/*!*/ heredoc, int labelStart) {
+            Debug.Assert(!_verbatim);
 
+            MarkHeredocEnd(heredoc, labelStart);
             _state.HeredocEndLine = _currentTokenEnd.Line;
             _state.HeredocEndLineIndex = _currentTokenEnd.Index;
-            _state.TokenSequence = null;
+            _state.CurrentSequence = TokenSequenceState.None;
             LexicalState = LexicalState.EXPR_END;
             
             // restore buffer:
@@ -2726,40 +2915,39 @@ namespace IronRuby.Compiler {
             _currentLine = heredoc.FirstLine;
             _currentLineIndex = heredoc.FirstLineIndex;
 
-            // In verbatim mode we position the end token correctly so that token stream consumers (like colorizer) get it right.
-            if (_verbatim) {
-                CaptureTokenSpan();
-            }
-
+            // We pretend the end token is zero-width and immediately follows the opening heredoc token.
+            // This makes locations merging in the parser work w/o introducing an additional complexity.
             MarkTokenStart();
             MarkSingleLineTokenEnd();
-
-            // Otherwise we pretend the end token is zero-width and immediately follows the opening heredoc token.
-            // This makes locations merging in the parser work w/o introducing an additional complexity.
-            if (!_verbatim) {
-                CaptureTokenSpan();
-            }
-
+            CaptureTokenSpan();
             return Tokens.StringEnd;
         }
 
-        internal Tokens TokenizeAndMarkHeredoc(HeredocState/*!*/ heredoc) {
+        internal Tokens TokenizeAndMarkHeredoc(HeredocStateBase/*!*/ heredoc) {
+            // global or instance variable in heredoc:
+            if (InStringEmbeddedVariable) {
+                InStringEmbeddedVariable = false;
+                CaptureTokenSpan();
+                return Tokenize();
+            }
+            
             StringProperties stringKind = heredoc.Properties;
             bool isIndented = (stringKind & StringProperties.IndentedHeredoc) != 0;
-
-            MarkTokenStart();
 
             if (Peek() == -1) {
                 ReportError(Errors.UnterminatedHereDoc, heredoc.Label);
                 _unterminatedToken = true;
-                return FinishHeredoc(heredoc);
+                return heredoc.Finish(this, -1);
             }
 
             // label reached - it becomes a string-end token:
             // (note that label is single line, MRI allows multiline, but such label is never matched)
-            if (is_bol() && LineContentEquals(heredoc.Label, isIndented)) {
-                return FinishHeredoc(heredoc);
+            int labelStart;
+            if (is_bol() && LineContentEquals(heredoc.Label, isIndented, out labelStart)) {
+                return heredoc.Finish(this, labelStart);
             }
+
+            MarkTokenStart();
 
             if ((stringKind & StringProperties.ExpandsEmbedded) == 0) {
 
@@ -2768,13 +2956,16 @@ namespace IronRuby.Compiler {
                 // do not restore buffer, the next token query will invoke 'if (EOF)' or 'if (line contains label)' above:
                 SetStringToken(str.ToString());
                 MarkMultiLineTokenEnd();
-                return StringContent();
+                CaptureTokenSpan();
+                return Tokens.StringContent;
             }
 
-            return TokenizeExpandingHeredocContent(heredoc);
+            Tokens result = TokenizeExpandingHeredocContent(heredoc);
+            CaptureTokenSpan();
+            return result;
         }
 
-        private StringBuilder/*!*/ ReadNonexpandingHeredocContent(HeredocState/*!*/ heredoc) {
+        private StringBuilder/*!*/ ReadNonexpandingHeredocContent(HeredocStateBase/*!*/ heredoc) {
             bool isIndented = (heredoc.Properties & StringProperties.IndentedHeredoc) != 0;
             var result = new StringBuilder();
 
@@ -2820,7 +3011,7 @@ namespace IronRuby.Compiler {
             return result;
         }
 
-        private Tokens TokenizeExpandingHeredocContent(HeredocState/*!*/ heredoc) {
+        private Tokens TokenizeExpandingHeredocContent(HeredocStateBase/*!*/ heredoc) {
             MutableStringBuilder content;
 
             int c = Peek();
@@ -2857,8 +3048,13 @@ namespace IronRuby.Compiler {
                     break;
                 }
 
-                // adds \n
+                // append \n
                 content.Append((char)ReadNormalizeEndOfLine());
+
+                // if we are in verbatim mode we need to yield to heredocs that were defined on the current line:
+                if (c == '\n' && _verbatim && _state.VerbatimHeredocQueue != null) {
+                    break;
+                }
 
                 // TODO:
                 RefillBuffer();
@@ -2872,7 +3068,7 @@ namespace IronRuby.Compiler {
 
             _tokenValue.SetStringContent(content);
             MarkMultiLineTokenEnd();
-            return StringContent();
+            return Tokens.StringContent;
         }
 
         #endregion
@@ -2979,8 +3175,7 @@ namespace IronRuby.Compiler {
                 MarkSingleLineTokenEnd();
             }
 
-            _state.TokenSequence = new StringState(type, (char)terminator, (char)parenthesis);
-            _tokenValue.SetStringTokenizer(_state.TokenSequence);
+            _state.CurrentSequence = new StringState(type, (char)terminator, (char)parenthesis, 0);
             return token;
         }
 
@@ -3909,11 +4104,14 @@ namespace IronRuby.Compiler {
         }
 
         public override TokenInfo ReadToken() {
-            TokenInfo result = new TokenInfo();
-
             Tokens token = GetNextToken();
+            TokenInfo result = GetTokenInfo(token);
             result.SourceSpan = TokenSpan;
+            return result;
+        }
 
+        internal static TokenInfo GetTokenInfo(Tokens token) {
+            TokenInfo result = new TokenInfo();
             switch (token) {
                 case Tokens.Undef:
                 case Tokens.Rescue:
@@ -3952,6 +4150,7 @@ namespace IronRuby.Compiler {
                 case Tokens.Defined:
                 case Tokens.Line:
                 case Tokens.File:
+                case Tokens.Encoding:
                     result.Category = TokenCategory.Keyword;
                     break;
 
@@ -4017,14 +4216,16 @@ namespace IronRuby.Compiler {
                     result.Trigger = TokenTriggers.MemberSelect;
                     break;
 
-                case Tokens.LeftBracket:           // [
-                case Tokens.LeftIndexingBracket:   // [
-                case Tokens.RightBracket:          // ]
-                case Tokens.LeftBrace:             // {
-                case Tokens.LeftBlockArgBrace:     // {
-                case Tokens.LeftBlockBrace:        // {
-                case Tokens.RightBrace:            // }
-                case Tokens.Pipe:                  // |
+                case Tokens.LeftBracket:             // [
+                case Tokens.LeftIndexingBracket:     // [
+                case Tokens.RightBracket:            // ]
+                case Tokens.LeftBrace:               // {
+                case Tokens.LeftBlockArgBrace:       // {
+                case Tokens.LeftBlockBrace:          // {
+                case Tokens.RightBrace:              // }
+                case Tokens.Pipe:                    // |
+                case Tokens.StringEmbeddedCodeBegin: // #{ in string
+                case Tokens.StringEmbeddedCodeEnd:   // } in string
                     result.Category = TokenCategory.Grouping;
                     result.Trigger = TokenTriggers.MatchBraces;
                     break;
@@ -4055,16 +4256,19 @@ namespace IronRuby.Compiler {
                     result.Trigger = TokenTriggers.MemberSelect;
                     break;
 
-                case Tokens.StringEnd:             
+                case Tokens.StringEnd:
+                case Tokens.VerbatimHeredocBegin:
+                case Tokens.VerbatimHeredocEnd:
                     result.Category = TokenCategory.StringLiteral;
                     break;
 
                 case Tokens.StringEmbeddedVariableBegin: // # in string followed by @ or $
-                case Tokens.StringEmbeddedCodeBegin:     // # in string followed by {
-                case Tokens.Semicolon:
+                case Tokens.Semicolon:                   // ;
+                case Tokens.WordSeparator:               // <whitespace>
                     result.Category = TokenCategory.Delimiter;
                     break;
 
+                case Tokens.SymbolBegin:
                 case Tokens.Identifier:
                 case Tokens.FunctionIdentifier:
                 case Tokens.GlobalVariable:
@@ -4077,18 +4281,18 @@ namespace IronRuby.Compiler {
 
                 case Tokens.Integer:
                 case Tokens.Float:
+                case Tokens.BigInteger:
                     result.Category = TokenCategory.NumericLiteral;
                     break;
 
                 case Tokens.StringContent:
                 case Tokens.StringBegin:
                 case Tokens.ShellStringBegin:
-                case Tokens.SymbolBegin:
                 case Tokens.WordsBegin:
                 case Tokens.VerbatimWordsBegin:
                 case Tokens.RegexpBegin:
                 case Tokens.RegexpEnd:
-                    // TODO: distingush various kinds of string content (regex, string, heredoc)
+                    // TODO: distingush various kinds of string content (regex, string, heredoc, symbols, words)
                     result.Category = TokenCategory.StringLiteral;
                     break;
 
@@ -4129,114 +4333,116 @@ namespace IronRuby.Compiler {
             return result;
         }
 
-        internal static string/*!*/ GetTokenName(Tokens token) {
+        internal static string/*!*/ GetTokenDescription(Tokens token) {
             switch (token) {
-                case Tokens.Undef:                       return "undef";
+                case Tokens.Undef:                       return "`undef'";
                 case Tokens.Rescue:                      
-                case Tokens.RescueMod:                   return "rescue";
-                case Tokens.Ensure:                      return "ensure";
+                case Tokens.RescueMod:                   return "`rescue'";
+                case Tokens.Ensure:                      return "`ensure'";
                 case Tokens.If:                          
-                case Tokens.IfMod:                       return "if";
+                case Tokens.IfMod:                       return "`if'";
                 case Tokens.Unless:                      
-                case Tokens.UnlessMod:                   return "unless";
-                case Tokens.Then:                        return "then";
-                case Tokens.Elsif:                       return "elsif";
-                case Tokens.Else:                        return "else";
-                case Tokens.Case:                        return "case";
-                case Tokens.When:                        return "when";
+                case Tokens.UnlessMod:                   return "`unless'";
+                case Tokens.Then:                        return "`then'";
+                case Tokens.Elsif:                       return "`elsif'";
+                case Tokens.Else:                        return "`else'";
+                case Tokens.Case:                        return "`case'";
+                case Tokens.When:                        return "`when'";
                 case Tokens.While:                       
-                case Tokens.WhileMod:                    return "while";
+                case Tokens.WhileMod:                    return "`while'";
                 case Tokens.Until:                       
-                case Tokens.UntilMod:                    return "until";
-                case Tokens.For:                         return "for";
-                case Tokens.Break:                       return "break";
-                case Tokens.Next:                        return "next";
-                case Tokens.Redo:                        return "redo";
-                case Tokens.Retry:                       return "retry";
-                case Tokens.In:                          return "in";
-                case Tokens.Return:                      return "return";
-                case Tokens.Yield:                       return "yield";
-                case Tokens.Super:                       return "super";
-                case Tokens.Self:                        return "self";
-                case Tokens.Nil:                         return "nil";
-                case Tokens.True:                        return "true";
-                case Tokens.False:                       return "false";
-                case Tokens.And:                         return "and";
-                case Tokens.Or:                          return "or";
-                case Tokens.Not:                         return "not";
-                case Tokens.Alias:                       return "alias";
-                case Tokens.Defined:                     return "defined";
-                case Tokens.Line:                        return "__LINE__";
-                case Tokens.File:                        return "__FILE__";
-                case Tokens.Def:                         return "def";
-                case Tokens.Class:                       return "class";
-                case Tokens.Module:                      return "module";
-                case Tokens.End:                         return "end";
-                case Tokens.Begin:                       return "begin";
-                case Tokens.UppercaseBegin:              return "BEGIN";
-                case Tokens.UppercaseEnd:                return "END";
+                case Tokens.UntilMod:                    return "`until'";
+                case Tokens.For:                         return "`for'";
+                case Tokens.Break:                       return "`break'";
+                case Tokens.Next:                        return "`next'";
+                case Tokens.Redo:                        return "`redo'";
+                case Tokens.Retry:                       return "`retry'";
+                case Tokens.In:                          return "`in'";
+                case Tokens.Return:                      return "`return'";
+                case Tokens.Yield:                       return "`yield'";
+                case Tokens.Super:                       return "`super'";
+                case Tokens.Self:                        return "`self'";
+                case Tokens.Nil:                         return "`nil'";
+                case Tokens.True:                        return "`true'";
+                case Tokens.False:                       return "`false'";
+                case Tokens.And:                         return "`and'";
+                case Tokens.Or:                          return "`or'";
+                case Tokens.Not:                         return "`not'";
+                case Tokens.Alias:                       return "`alias'";
+                case Tokens.Defined:                     return "`defined'";
+                case Tokens.Line:                        return "`__LINE__'";
+                case Tokens.File:                        return "`__FILE__'";
+                case Tokens.Encoding:                    return "`__ENCODING__'";
+                case Tokens.Def:                         return "`def'";
+                case Tokens.Class:                       return "`class'";
+                case Tokens.Module:                      return "`module'";
+                case Tokens.End:                         return "`end'";
+                case Tokens.Begin:                       return "`begin'";
+                case Tokens.UppercaseBegin:              return "`BEGIN'";
+                case Tokens.UppercaseEnd:                return "`END'";
                 case Tokens.Do:                          
                 case Tokens.LoopDo:                      
-                case Tokens.BlockDo:                     return "do";
-                case Tokens.Plus:                        return "+";
-                case Tokens.UnaryPlus:                   return "+@";
-                case Tokens.Minus:                       return "-";
-                case Tokens.UnaryMinus:                  return "-@";
-                case Tokens.Pow:                         return "**";
-                case Tokens.Cmp:                         return "<=>";
-                case Tokens.Equal:                       return "==";
-                case Tokens.StrictEqual:                 return "===";
-                case Tokens.NotEqual:                    return "!=";
-                case Tokens.Greater:                     return ">";
-                case Tokens.GreaterOrEqual:              return ">=";
-                case Tokens.Less:                        return "<";
-                case Tokens.LessOrEqual:                 return "<";
-                case Tokens.LogicalAnd:                  return "&&";
-                case Tokens.LogicalOr:                   return "||";
-                case Tokens.Match:                       return "=~";
-                case Tokens.Nmatch:                      return "!~";
-                case Tokens.DoubleDot:                   return "..";
-                case Tokens.TripleDot:                   return "...";
-                case Tokens.ItemGetter:                  return "[]";
-                case Tokens.ItemSetter:                  return "[]=";
-                case Tokens.Lshft:                       return "<<";
-                case Tokens.Rshft:                       return ">>";
-                case Tokens.DoubleArrow:                 return "=>";
+                case Tokens.BlockDo:                     return "`do'";
+                case Tokens.Plus:                        return "`+'";
+                case Tokens.UnaryPlus:                   return "`+@'";
+                case Tokens.Minus:                       return "`-'";
+                case Tokens.UnaryMinus:                  return "`-@'";
+                case Tokens.Pow:                         return "`**'";
+                case Tokens.Cmp:                         return "`<=>'";
+                case Tokens.Equal:                       return "`=='";
+                case Tokens.StrictEqual:                 return "`==='";
+                case Tokens.NotEqual:                    return "`!='";
+                case Tokens.Greater:                     return "`>'";
+                case Tokens.GreaterOrEqual:              return "`>='";
+                case Tokens.Less:                        return "`<'";
+                case Tokens.LessOrEqual:                 return "`<'";
+                case Tokens.LogicalAnd:                  return "`&&'";
+                case Tokens.LogicalOr:                   return "`||'";
+                case Tokens.Match:                       return "`=~'";
+                case Tokens.Nmatch:                      return "`!~'";
+                case Tokens.DoubleDot:                   return "`..'";
+                case Tokens.TripleDot:                   return "`...'";
+                case Tokens.ItemGetter:                  return "`[]'";
+                case Tokens.ItemSetter:                  return "`[]='";
+                case Tokens.Lshft:                       return "`<<'";
+                case Tokens.Rshft:                       return "`>>'";
+                case Tokens.DoubleArrow:                 return "`=>'";
                 case Tokens.Star:                        
-                case Tokens.Asterisk:                    return "*";
+                case Tokens.Asterisk:                    return "`*'";
                 case Tokens.BlockReference:              
-                case Tokens.Ampersand:                   return "&";
-                case Tokens.Percent:                     return "%";
-                case Tokens.Assignment:                  return "=";
-                case Tokens.Caret:                       return "^";
-                case Tokens.Colon:                       return ":";
-                case Tokens.QuestionMark:                return "?";
-                case Tokens.Bang:                        return "!";
-                case Tokens.Slash:                       return "/";
-                case Tokens.Tilde:                       return "~";
+                case Tokens.Ampersand:                   return "`&'";
+                case Tokens.Percent:                     return "`%'";
+                case Tokens.Assignment:                  return "`='";
+                case Tokens.Caret:                       return "`^'";
+                case Tokens.Colon:                       return "`:'";
+                case Tokens.QuestionMark:                return "`?'";
+                case Tokens.Bang:                        return "`!'";
+                case Tokens.Slash:                       return "`/'";
+                case Tokens.Tilde:                       return "`~'";
                 case Tokens.Backtick:                    return "`";
                 case Tokens.SeparatingDoubleColon:       
-                case Tokens.LeadingDoubleColon:          return "::";
+                case Tokens.LeadingDoubleColon:          return "`::'";
                 case Tokens.LeftBracket:                 
-                case Tokens.LeftIndexingBracket:         return "[";
-                case Tokens.RightBracket:                return "]";
+                case Tokens.LeftIndexingBracket:         return "`['";
+                case Tokens.RightBracket:                return "`]'";
                 case Tokens.LeftBrace:                   
                 case Tokens.LeftBlockArgBrace:           
-                case Tokens.LeftBlockBrace:              return "{";
-                case Tokens.RightBrace:                  return "}";
-                case Tokens.Pipe:                        return "|";
+                case Tokens.LeftBlockBrace:              return "`{'";
+                case Tokens.RightBrace:                  return "`}'";
+                case Tokens.Pipe:                        return "`|'";
                 case Tokens.LeftParenthesis:             
                 case Tokens.LeftArgParenthesis:          
-                case Tokens.LeftExprParenthesis:         return "(";
-                case Tokens.RightParenthesis:            return ")";
-                case Tokens.Comma:                       return ",";
-                case Tokens.Dot:                         return ".";
-                case Tokens.Semicolon:                   return ";";
+                case Tokens.LeftExprParenthesis:         return "`('";
+                case Tokens.RightParenthesis:            return "`)'";
+                case Tokens.Comma:                       return "`,'";
+                case Tokens.Dot:                         return "`.'";
+                case Tokens.Semicolon:                   return "`;'";
 
                 case Tokens.NumberNegation:              return "negative number";
                 case Tokens.OpAssignment:                return "assignment with operation";
-                case Tokens.StringEmbeddedVariableBegin: return "#@ or #$"; 
-                case Tokens.StringEmbeddedCodeBegin:     return "#{";       
+                case Tokens.StringEmbeddedVariableBegin: return "`#@' or `#$'"; 
+                case Tokens.StringEmbeddedCodeBegin:     return "`#{'";
+                case Tokens.StringEmbeddedCodeEnd:       return "`}'";
                 case Tokens.Identifier:                  return "identifier";
                 case Tokens.FunctionIdentifier:          return "function name";
                 case Tokens.GlobalVariable:              return "global variable";
@@ -4245,28 +4451,31 @@ namespace IronRuby.Compiler {
                 case Tokens.ClassVariable:               return "class variable";
                 case Tokens.MatchReference:              return "$&, $`, $', $+, or $1-9";
                 case Tokens.Integer:                     return "integer";
+                case Tokens.BigInteger:                  return "big integer";
                 case Tokens.Float:                       return "float";
                 case Tokens.StringBegin:                 return "quote";
+                case Tokens.VerbatimHeredocBegin:        return "heredoc start";
                 case Tokens.StringContent:               return "string content";
                 case Tokens.StringEnd:                   return "string terminator";
-                case Tokens.ShellStringBegin:            return "`";
-                case Tokens.SymbolBegin:                 return ":";
-                case Tokens.WordsBegin:                  return "%W";
-                case Tokens.VerbatimWordsBegin:          return "%w";
+                case Tokens.VerbatimHeredocEnd:          return "heredoc terminator";
+                case Tokens.ShellStringBegin:            return "shell command (`...`)";
+                case Tokens.SymbolBegin:                 return "symbol";
+                case Tokens.WordsBegin:                  return "`%W'";
+                case Tokens.VerbatimWordsBegin:          return "`%w'";
                 case Tokens.WordSeparator:               return "word separator";
                 case Tokens.RegexpBegin:                 return "regex start";
                 case Tokens.RegexpEnd:                   return "regex end";
-                case Tokens.Pound:                       return "#";
+                case Tokens.Pound:                       return "`#'";
                 case Tokens.EndOfFile:                   return "end of file";
                 case Tokens.NewLine:                     
-                case Tokens.EndOfLine:                   return "\\n";
+                case Tokens.EndOfLine:                   return "end of line";
                 case Tokens.Whitespace:                  return "space";
                 case Tokens.SingleLineComment:           return "# comment";
                 case Tokens.MultiLineComment:            return "=begin ... =end";
                 case Tokens.Error:                       return "error";
-                case Tokens.Backslash:                   return "\\";
-                case Tokens.At:                          return "@";
-                case Tokens.Dollar:                      return "$";
+                case Tokens.Backslash:                   return "`\\'";
+                case Tokens.At:                          return "`@'";
+                case Tokens.Dollar:                      return "`$'";
                 case Tokens.InvalidCharacter:            return "invalid character";
                 default:
                     throw Assert.Unreachable;
