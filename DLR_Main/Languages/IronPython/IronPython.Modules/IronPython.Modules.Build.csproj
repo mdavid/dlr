@@ -81,6 +81,7 @@
       <Compile Include="marshal.cs" />
       <Compile Include="math.cs" />
       <Compile Include="math.Generated.cs" />
+      <Compile Include="mmap.cs" />
       <Compile Include="ModuleOps.cs" />
       <Compile Include="nt.cs" />
       <Compile Include="operator.cs" />
