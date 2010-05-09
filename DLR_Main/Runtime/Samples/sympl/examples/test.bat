@@ -1,6 +1,6 @@
 @setlocal enableextensions
 
-%~1 > new.bsl
+%~1 norepl > new.bsl
 if not "%errorlevel%"=="0" (
     echo Test failed execution
     exit /b 1

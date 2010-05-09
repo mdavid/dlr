@@ -14,7 +14,7 @@
     <TargetFrameworkVersion>v3.5</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
     <RunPostBuildEvent>OnBuildSuccess</RunPostBuildEvent>
-    <AssemblyOriginatorKeyFile>$(SolutionDir)..\Solutions\MSSharedLibKey.snk</AssemblyOriginatorKeyFile>
+    <AssemblyOriginatorKeyFile>$(SolutionDir)..\Internal\MSSharedLibKey.snk</AssemblyOriginatorKeyFile>
     <SignAssembly Condition="'$(SignAssembly)' == '' And Exists('$(AssemblyOriginatorKeyFile)')">true</SignAssembly>
     <SignedSym Condition="'$(SignAssembly)' == 'true'">SIGNED</SignedSym>
     <SignedDir Condition="'$(SignAssembly)' == 'true'">Signed</SignedDir>
@@ -86,7 +86,7 @@
     <Compile Include="LanguageInfo.cs" />
     <Compile Include="Notification.cs" />
     <Compile Include="XapHttpHandler.cs" />
-    <Compile Include="LCA_RESTRICTED\Zip.cs" />
+    <Compile Include="Zip.cs" />
     <Compile Include="MimeTypeSection.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="HttpServer.cs" />
@@ -105,6 +105,9 @@
   <ItemGroup>
     <None Include="App.config">
     </None>
+  </ItemGroup>
+  <ItemGroup>
+    <Folder Include="LCA_RESTRICTED\" />
   </ItemGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

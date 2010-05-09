@@ -44,6 +44,8 @@ namespace IronPython.Runtime {
         , IValueEquality
 #endif
     {
+        private const int INITIAL_SIZE = 20;
+
         internal int _size;
         internal volatile object[] _data;
 
@@ -67,6 +69,18 @@ namespace IronPython.Runtime {
                 _data[i++] = item;
             }
             _size = i;
+        }
+
+        public void __init__([NotNull] SetCollection sequence) {
+            List list = sequence._items.GetItems();
+            _size = list._size;
+            _data = list._data;
+        }
+
+        public void __init__([NotNull] FrozenSetCollection sequence) {
+            List list = sequence._items.GetItems();
+            _size = list._size;
+            _data = list._data;
         }
 
         public void __init__([NotNull] List sequence) {
@@ -103,12 +117,12 @@ namespace IronPython.Runtime {
                     _size = 0;
                     extend(sequence);
                 } else {
-                    _data = new object[20];
+                    _data = new object[INITIAL_SIZE];
                     _size = 0;
                     extend(sequence);
                 }
             } catch (MissingMemberException) {
-                _data = new object[20];
+                _data = new object[INITIAL_SIZE];
                 _size = 0;
                 extend(sequence);
             }
@@ -187,7 +201,7 @@ namespace IronPython.Runtime {
                 _data = new object[ilen];
                 extend(sequence);
             } else {
-                _data = new object[20];
+                _data = new object[INITIAL_SIZE];
                 extend(sequence);
             }
         }

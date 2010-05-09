@@ -41,10 +41,11 @@ namespace IronRuby.Builtins {
         private bool _hasGAnchor;
 
         internal static string Transform(string/*!*/ rubyPattern, RubyRegexOptions options, out bool hasGAnchor) {
+            // nested quantifiers {n}+ are not supported:
             if (rubyPattern == "\\Af(?=[[:xdigit:]]{2}+\\z)") {
                 // pp.rb uses this pattern. The real fix requires cracking the entire regexp and so is left for later
                 hasGAnchor = false;
-                return "\\Af(?=(?:[[:xdigit:]]{2})+\\z)";
+                return "\\Af(?=(?:[A-Fa-f0-9]{2})+\\z)";
             }
             RegexpTransformer transformer = new RegexpTransformer(rubyPattern);
             var result = transformer.Transform();
