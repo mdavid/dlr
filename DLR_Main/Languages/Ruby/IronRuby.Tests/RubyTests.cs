@@ -763,6 +763,8 @@ namespace IronRuby.Tests {
                 Dlr_Visibility,
                 Dlr_Languages,
                 Dlr_DynamicObject1, 
+                Dlr_DynamicObject2, 
+                Dlr_DynamicObject3, 
 
                 Serialization1,
 #if !CLR2

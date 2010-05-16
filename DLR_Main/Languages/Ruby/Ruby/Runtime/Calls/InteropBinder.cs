@@ -443,7 +443,7 @@ namespace IronRuby.Runtime.Calls {
                 }
 #endif
 
-                return new DynamicMetaObject(
+                return errorSuggestion ?? new DynamicMetaObject(
                     Expression.Constant(OperationFailed.Value, typeof(object)),
                     target.Restrict(CompilerHelpers.GetType(target.Value)).Restrictions
                 );

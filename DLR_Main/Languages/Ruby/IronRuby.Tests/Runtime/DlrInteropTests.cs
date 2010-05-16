@@ -880,6 +880,43 @@ p C.methods(false)
 ['test2', 'test3']
 ");
         }
+
+        public class DynamicObject2 : DynamicObject {
+            public override bool TryGetMember(GetMemberBinder binder, out object result) {
+                result = 123;
+                return binder.Name == "foo";
+            }
+        }
+
+        public void Dlr_DynamicObject2() {
+            // TODO:
+//            Context.ObjectClass.SetConstant("C", new DynamicObject2());
+//            TestOutput(@"
+//p C.foo
+//", @"
+//123
+//");
+        }
+
+        public class DynamicObject3 : DynamicObject {
+            public List<string> Lookups = new List<string>();
+
+            public override bool TryGetMember(GetMemberBinder binder, out object result) {
+                Lookups.Add(binder.Name);
+                result = null;
+                return false;
+            }
+        }
+
+        /// <summary>
+        /// Scope variable lookup uses InteropBinder.TryGetMemberExact which should use errorSuggestion correctly.
+        /// </summary>
+        public void Dlr_DynamicObject3() {
+            var obj = new DynamicObject3();
+            var s = Engine.CreateScope(obj);
+            Assert(Engine.Execute<int>("foo_bar rescue 123", s) == 123);
+            Assert(obj.Lookups.ToArray().ValueEquals(new[] { "foo_bar", "FooBar" }));
+        }
     }
 }
 
