@@ -1,12 +1,12 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
-<RuleSet Name="Migrated rules for Microsoft.Scripting.Core.ruleset" Description="This rule set was created from the CodeAnalysisRules property for the &quot;FxCop (Any CPU)&quot; configuration in project &quot;D:\rft\vsl\dlr\Runtime\Microsoft.Scripting.Core\Microsoft.Scripting.Core.csproj&quot;." ToolsVersion="10.0">
+<RuleSet Name="Migrated rules for IronPythonConsole.ruleset" Description="This rule set was created from the CodeAnalysisRules property for the &quot;FxCop (Any CPU)&quot; configuration in project &quot;D:\rft\vsl\dlr\Languages\IronPython\IronPythonConsole\IronPythonConsole.csproj&quot;." ToolsVersion="10.0">
   <IncludeAll Action="Warning" />
   <Rules AnalyzerId="Microsoft.Analyzers.ManagedCodeAnalysis" RuleNamespace="Microsoft.Rules.Managed">
     <Rule Id="CA1000" Action="Error" />
     <Rule Id="CA1001" Action="Error" />
     <Rule Id="CA1002" Action="Error" />
     <Rule Id="CA1003" Action="Error" />
-    <Rule Id="CA1004" Action="None" />
+    <Rule Id="CA1004" Action="Error" />
     <Rule Id="CA1005" Action="Error" />
     <Rule Id="CA1006" Action="Error" />
     <Rule Id="CA1007" Action="Error" />
@@ -22,7 +22,7 @@
     <Rule Id="CA1018" Action="Error" />
     <Rule Id="CA1019" Action="Error" />
     <Rule Id="CA1020" Action="Error" />
-    <Rule Id="CA1021" Action="None" />
+    <Rule Id="CA1021" Action="Error" />
     <Rule Id="CA1023" Action="Error" />
     <Rule Id="CA1024" Action="Error" />
     <Rule Id="CA1025" Action="Error" />
@@ -59,6 +59,7 @@
     <Rule Id="CA1059" Action="Error" />
     <Rule Id="CA1060" Action="Error" />
     <Rule Id="CA1061" Action="Error" />
+    <Rule Id="CA1062" Action="None" />
     <Rule Id="CA1063" Action="Error" />
     <Rule Id="CA1064" Action="Error" />
     <Rule Id="CA1065" Action="Error" />
@@ -97,14 +98,14 @@
     <Rule Id="CA1601" Action="Error" />
     <Rule Id="CA1700" Action="Error" />
     <Rule Id="CA1701" Action="Error" />
-    <Rule Id="CA1702" Action="None" />
+    <Rule Id="CA1702" Action="Error" />
     <Rule Id="CA1703" Action="Error" />
-    <Rule Id="CA1704" Action="None" />
+    <Rule Id="CA1704" Action="Error" />
     <Rule Id="CA1707" Action="Error" />
     <Rule Id="CA1708" Action="Error" />
     <Rule Id="CA1709" Action="Error" />
-    <Rule Id="CA1710" Action="None" />
-    <Rule Id="CA1711" Action="None" />
+    <Rule Id="CA1710" Action="Error" />
+    <Rule Id="CA1711" Action="Error" />
     <Rule Id="CA1712" Action="Error" />
     <Rule Id="CA1713" Action="Error" />
     <Rule Id="CA1714" Action="Error" />
@@ -112,12 +113,12 @@
     <Rule Id="CA1716" Action="Error" />
     <Rule Id="CA1717" Action="Error" />
     <Rule Id="CA1719" Action="Error" />
-    <Rule Id="CA1720" Action="None" />
+    <Rule Id="CA1720" Action="Error" />
     <Rule Id="CA1721" Action="Error" />
     <Rule Id="CA1722" Action="Error" />
     <Rule Id="CA1724" Action="Error" />
     <Rule Id="CA1725" Action="Error" />
-    <Rule Id="CA1726" Action="None" />
+    <Rule Id="CA1726" Action="Error" />
     <Rule Id="CA1800" Action="Error" />
     <Rule Id="CA1801" Action="Error" />
     <Rule Id="CA1802" Action="Error" />
@@ -139,6 +140,7 @@
     <Rule Id="CA1824" Action="Error" />
     <Rule Id="CA1900" Action="Error" />
     <Rule Id="CA1901" Action="Error" />
+    <Rule Id="CA1903" Action="Error" />
     <Rule Id="CA2001" Action="Error" />
     <Rule Id="CA2002" Action="Error" />
     <Rule Id="CA2003" Action="Error" />
@@ -167,9 +169,9 @@
     <Rule Id="CA2123" Action="Error" />
     <Rule Id="CA2124" Action="Error" />
     <Rule Id="CA2126" Action="Error" />
-    <Rule Id="CA2127" Action="Error" />
-    <Rule Id="CA2128" Action="Error" />
-    <Rule Id="CA2129" Action="Error" />
+    <Rule Id="CA2136" Action="Error" />
+    <Rule Id="CA2140" Action="Error" />
+    <Rule Id="CA2147" Action="Error" />
     <Rule Id="CA2200" Action="Error" />
     <Rule Id="CA2201" Action="Error" />
     <Rule Id="CA2205" Action="Error" />

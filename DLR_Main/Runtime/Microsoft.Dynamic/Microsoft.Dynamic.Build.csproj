@@ -14,7 +14,7 @@
     <RunCodeAnalysis>false</RunCodeAnalysis>
     <GenerateAssemblyAttribute>false</GenerateAssemblyAttribute>
     <OutputPath>$(SuiteBinPath)\dlr</OutputPath>
-    <AssemblyOriginatorKeyFile>$(SolutionDir)..\Internal\MSSharedLibKey.snk</AssemblyOriginatorKeyFile>
+    <AssemblyOriginatorKeyFile>$(SolutionDir)..\..\Internal\MSSharedLibKey.snk</AssemblyOriginatorKeyFile>
     <SignAssembly Condition="'$(SignAssembly)' == '' And Exists('$(AssemblyOriginatorKeyFile)')">true</SignAssembly>
     <SignedSym Condition="'$(SignAssembly)' == 'true'">SIGNED</SignedSym>
     <DelaySign>true</DelaySign>
@@ -110,6 +110,7 @@
       <Compile Include="Actions\ExtensionPropertyTracker.cs" />
       <Compile Include="Actions\ExtensionUnaryOperationBinder.cs" />
       <Compile Include="Actions\FieldTracker.cs" />
+      <Compile Include="Actions\ILightExceptionBinder.cs" />
       <Compile Include="Actions\Interceptor.cs" />
       <Compile Include="Actions\MemberGroup.cs" />
       <Compile Include="Actions\MemberRequestKind.cs" />
@@ -184,14 +185,19 @@
       <Compile Include="Ast\GeneratorRewriter.cs" />
       <Compile Include="Ast\IfStatementBuilder.cs" />
       <Compile Include="Ast\IfStatementTest.cs" />
+      <Compile Include="Ast\ILightExceptionAwareExpression.cs" />
       <Compile Include="Ast\LambdaBuilder.cs" />
       <Compile Include="Ast\LambdaParameterRewriter.cs" />
+      <Compile Include="Ast\LightCheckAndThrowExpression.cs" />
       <Compile Include="Ast\LightDynamicExpression.cs" />
+      <Compile Include="Ast\LightExceptionConvertingExpression.cs" />
+      <Compile Include="Ast\LightExceptionRewriter.cs" />
+      <Compile Include="Ast\LightLambdaExpression.cs" />
+      <Compile Include="Ast\LightThrowExpression.cs" />
       <Compile Include="Ast\LoopStatement.cs" />
       <Compile Include="Ast\MethodCallExpression.cs" />
       <Compile Include="Ast\NewArrayExpression.cs" />
       <Compile Include="Ast\NewExpression.cs" />
-      <Compile Include="Ast\SkipInterpretExpression.cs" />
       <Compile Include="Ast\SourceFileInformation.cs" />
       <Compile Include="Ast\SymbolConstantExpression.cs" />
       <Compile Include="Ast\TryStatementBuilder.cs" />
@@ -316,7 +322,6 @@
       <Compile Include="Interpreter\ILightCallSiteBinder.cs" />
       <Compile Include="Interpreter\InterpretedFrame.cs" />
       <Compile Include="Interpreter\Interpreter.cs" />
-      <Compile Include="Interpreter\LastFaultingLineExpression.cs" />
       <Compile Include="Interpreter\LightCompiler.cs" />
       <Compile Include="Interpreter\LightDelegateCreator.cs" />
       <Compile Include="Interpreter\LightLambda.cs" />
@@ -345,6 +350,7 @@
       <Compile Include="Interpreter\Instructions\Instruction.cs" />
       <Compile Include="Interpreter\Instructions\InstructionFactory.cs" />
       <Compile Include="Interpreter\Instructions\InstructionList.cs" />
+      <Compile Include="Interpreter\Instructions\LabelInfo.cs" />
       <Compile Include="Interpreter\Instructions\LessThanInstruction.cs" />
       <Compile Include="Interpreter\Instructions\LocalAccess.cs" />
       <Compile Include="Interpreter\Instructions\NotEqualInstruction.cs" />
@@ -391,7 +397,6 @@
       <Compile Include="Runtime\DynamicDelegateCreator.cs" />
       <Compile Include="Runtime\DynamicLanguageProviderAttribute.cs" />
       <Compile Include="Runtime\DynamicNull.cs" />
-      <Compile Include="Runtime\DynamicStackFrame.cs" />
       <Compile Include="Runtime\ExceptionHelpers.cs" />
       <Compile Include="Runtime\ExplicitConversionMethodAttribute.cs" />
       <Compile Include="Runtime\Extensible.cs" />
@@ -407,6 +412,8 @@
       <Compile Include="Runtime\ISlice.cs" />
       <Compile Include="Runtime\LanguageBoundTextContentProvider.cs" />
       <Compile Include="Runtime\LegacyScriptCode.cs" />
+      <Compile Include="Runtime\LightExceptions.cs" />
+      <Compile Include="Runtime\LightThrowingAttribute.cs" />
       <Compile Include="Runtime\LocalsDictionary.cs" />
       <Compile Include="Runtime\MetaObjectExtensions.cs" />
       <Compile Include="Runtime\ModuleChangeEventArgs.cs" />
@@ -447,6 +454,7 @@
       <Compile Include="Utils\ExceptionFactory.Generated.cs" />
       <Compile Include="Utils\ExceptionUtils.cs" />
       <Compile Include="Utils\HashSet.cs" />
+      <Compile Include="Utils\HybridReferenceDictionary.cs" />
       <Compile Include="Utils\IOUtils.cs" />
       <Compile Include="Utils\ListEqualityComparer.cs" />
       <Compile Include="Utils\MathUtils.cs" />

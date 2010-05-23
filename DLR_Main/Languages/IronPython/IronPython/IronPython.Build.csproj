@@ -166,6 +166,7 @@
       <Compile Include="Compiler\Ast\ScopeStatement.cs" />
       <Compile Include="Compiler\Ast\SequenceExpression.cs" />
       <Compile Include="Compiler\Ast\SerializedScopeStatement.cs" />
+      <Compile Include="Compiler\Ast\SetExpression.cs" />
       <Compile Include="Compiler\Ast\SliceExpression.cs" />
       <Compile Include="Compiler\Ast\Statement.cs" />
       <Compile Include="Compiler\Ast\SuiteStatement.cs" />
@@ -291,6 +292,7 @@
       <Compile Include="Runtime\ScopeDictionaryStorage.cs" />
       <Compile Include="Runtime\SequenceTypeInfoAttribute.cs" />
       <Compile Include="Runtime\Set.cs" />
+      <Compile Include="Runtime\SetStorage.cs" />
       <Compile Include="Runtime\SiteLocalStorage.cs" />
       <Compile Include="Runtime\Slice.cs" />
       <Compile Include="Runtime\StringDictionaryStorage.cs" />
@@ -298,10 +300,12 @@
       <Compile Include="Runtime\StringFormatter.cs" />
       <Compile Include="Runtime\Super.cs" />
       <Compile Include="Runtime\Symbols.Generated.cs" />
+      <Compile Include="Runtime\SysModuleDictionaryStorage.cs" />
       <Compile Include="Runtime\ThrowingErrorSink.cs" />
       <Compile Include="Runtime\UnboundNameException.cs" />
       <Compile Include="Runtime\WarningInfo.cs" />
       <Compile Include="Runtime\WeakRef.cs" />
+      <Compile Include="Runtime\Win32Native.cs" />
       <Compile Include="Runtime\WrapperDescriptorAttribute.cs" />
       <Compile Include="Runtime\WrapperDictionary.cs" />
       <Compile Include="Runtime\XRange.cs" />
@@ -371,6 +375,7 @@
       <!--          Runtime.Exceptions          -->
       <!--                                      -->
       <Compile Include="Runtime\Exceptions\AssertionException.Generated.cs" />
+      <Compile Include="Runtime\Exceptions\AttributeErrorException.cs" />
       <Compile Include="Runtime\Exceptions\BufferException.Generated.cs" />
       <Compile Include="Runtime\Exceptions\BytesWarningException.cs" />
       <Compile Include="Runtime\Exceptions\DeprecationWarningException.Generated.cs" />
@@ -387,6 +392,7 @@
       <Compile Include="Runtime\Exceptions\OldInstanceException.cs" />
       <Compile Include="Runtime\Exceptions\OSException.Generated.cs" />
       <Compile Include="Runtime\Exceptions\PendingDeprecationWarningException.Generated.cs" />
+      <Compile Include="Runtime\Exceptions\PythonException.cs" />
       <Compile Include="Runtime\Exceptions\PythonExceptions.cs" />
       <Compile Include="Runtime\Exceptions\PythonExceptions.Generated.cs" />
       <Compile Include="Runtime\Exceptions\ReferenceException.Generated.cs" />
@@ -397,6 +403,7 @@
       <Compile Include="Runtime\Exceptions\SystemExitException.cs" />
       <Compile Include="Runtime\Exceptions\TabException.cs" />
       <Compile Include="Runtime\Exceptions\TraceBack.cs" />
+      <Compile Include="Runtime\Exceptions\TypeErrorException.cs" />
       <Compile Include="Runtime\Exceptions\UnicodeException.Generated.cs" />
       <Compile Include="Runtime\Exceptions\UnicodeTranslateException.Generated.cs" />
       <Compile Include="Runtime\Exceptions\UnicodeWarningException.Generated.cs" />
@@ -443,7 +450,6 @@
       <!--          Runtime.Types          -->
       <!--                                 -->
       <Compile Include="Runtime\Types\BuiltinFunction.cs" />
-      <Compile Include="Runtime\Types\BuiltinFunction.Generated.cs" />
       <Compile Include="Runtime\Types\BuiltinFunctionOverloadMapper.cs" />
       <Compile Include="Runtime\Types\BuiltinMethodDescriptor.cs" />
       <Compile Include="Runtime\Types\CachedNewTypeInfo.cs" />

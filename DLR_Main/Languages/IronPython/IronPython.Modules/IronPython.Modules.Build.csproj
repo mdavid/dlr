@@ -83,10 +83,12 @@
       <Compile Include="math.Generated.cs" />
       <Compile Include="mmap.cs" />
       <Compile Include="ModuleOps.cs" />
+      <Compile Include="NativeSignal.cs" />
       <Compile Include="nt.cs" />
       <Compile Include="operator.cs" />
       <Compile Include="re.cs" />
       <Compile Include="select.cs" />
+      <Compile Include="signal.cs" />
       <Compile Include="socket.cs" />
       <Compile Include="thread.cs" />
       <Compile Include="time.cs" />

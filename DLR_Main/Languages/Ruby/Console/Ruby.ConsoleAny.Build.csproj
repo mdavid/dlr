@@ -64,6 +64,7 @@
   <ItemGroup>
     <ProjectReference Include="..\..\..\Runtime\Microsoft.Scripting\Microsoft.Scripting.Build.csproj" />
     <ProjectReference Include="..\Ruby\Ruby.Build.csproj" />
+    <ProjectReference Include="..\Libraries.LCA_RESTRICTED\IronRuby.Libraries.Build.csproj" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="Properties\" />
