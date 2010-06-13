@@ -114,6 +114,9 @@
       <Compile Include="Compiler\Ast\BreakStatement.cs" />
       <Compile Include="Compiler\Ast\CallExpression.cs" />
       <Compile Include="Compiler\Ast\ClassDefinition.cs" />
+      <Compile Include="Compiler\Ast\Comprehension.cs" />
+      <Compile Include="Compiler\Ast\ComprehensionFor.cs" />
+      <Compile Include="Compiler\Ast\ComprehensionIf.cs" />
       <Compile Include="Compiler\Ast\ConditionalExpression.cs" />
       <Compile Include="Compiler\Ast\ConstantExpression.cs" />
       <Compile Include="Compiler\Ast\ContinueStatement.cs" />
@@ -141,9 +144,6 @@
       <Compile Include="Compiler\Ast\ImportStatement.cs" />
       <Compile Include="Compiler\Ast\IndexExpression.cs" />
       <Compile Include="Compiler\Ast\LambdaExpression.cs" />
-      <Compile Include="Compiler\Ast\ListComprehension.cs" />
-      <Compile Include="Compiler\Ast\ListComprehensionFor.cs" />
-      <Compile Include="Compiler\Ast\ListComprehensionIf.cs" />
       <Compile Include="Compiler\Ast\ListExpression.cs" />
       <Compile Include="Compiler\Ast\MemberExpression.cs" />
       <Compile Include="Compiler\Ast\ModuleName.cs" />

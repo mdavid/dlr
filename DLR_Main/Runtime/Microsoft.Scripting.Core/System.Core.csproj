@@ -64,9 +64,9 @@
     <NoWarn>
     </NoWarn>
   </PropertyGroup>
-  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Silverlight Debug|AnyCPU' ">
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Silverlight3Debug|AnyCPU' ">
     <DebugSymbols>true</DebugSymbols>
-<OutputPath>$(SolutionDir)..\bin\Silverlight Debug\</OutputPath>
+<OutputPath>$(SolutionDir)..\bin\Silverlight3Debug\</OutputPath>
     <DefineConstants>TRACE;DEBUG;SILVERLIGHT</DefineConstants>
     <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
     <DebugType>full</DebugType>
@@ -79,8 +79,8 @@
     <SilverlightBuild>true</SilverlightBuild>
     <SilverlightSdkPath>$(ProgramFiles)\Microsoft Silverlight\2.0.31005.0</SilverlightSdkPath>
   </PropertyGroup>
-  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Silverlight Release|AnyCPU' ">
-<OutputPath>$(SolutionDir)..\bin\Silverlight Release\</OutputPath>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Silverlight3Release|AnyCPU' ">
+<OutputPath>$(SolutionDir)..\bin\Silverlight3Release\</OutputPath>
     <DefineConstants>TRACE;SILVERLIGHT</DefineConstants>
 <DocumentationFile>$(OutputPath)\System.Scripting.Core.xml</DocumentationFile>
     <TreatWarningsAsErrors>true</TreatWarningsAsErrors>

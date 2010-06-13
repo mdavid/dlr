@@ -98,9 +98,9 @@
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
-  <PropertyGroup Condition=" '$(Configuration)' == 'Silverlight Debug' ">
+  <PropertyGroup Condition=" '$(Configuration)' == 'Silverlight3Debug' ">
     <DebugSymbols>true</DebugSymbols>
-    <OutputPath>..\..\bin\Silverlight Debug</OutputPath>
+    <OutputPath>..\..\bin\Silverlight3Debug</OutputPath>
     <DefineConstants>TRACE;DEBUG;SILVERLIGHT</DefineConstants>
     <DebugType>full</DebugType>
     <PlatformTarget>AnyCPU</PlatformTarget>
@@ -129,8 +129,8 @@
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
-  <PropertyGroup Condition=" '$(Configuration)' == 'Silverlight Release' ">
-    <OutputPath>..\..\bin\Silverlight Release</OutputPath>
+  <PropertyGroup Condition=" '$(Configuration)' == 'Silverlight3Release' ">
+    <OutputPath>..\..\bin\Silverlight3Release</OutputPath>
     <DefineConstants>TRACE;SILVERLIGHT</DefineConstants>
     <NoStdLib>true</NoStdLib>
     <DebugType>pdbonly</DebugType>

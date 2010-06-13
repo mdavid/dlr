@@ -25,7 +25,7 @@
     <CreateTestPage>true</CreateTestPage>
     <ValidateXaml>true</ValidateXaml>
     <ThrowErrorsInValidation>false</ThrowErrorsInValidation>
-    <DLRAssembliesPath>..\..\..\..\Bin\Silverlight Release\</DLRAssembliesPath>
+    <DLRAssembliesPath>..\..\..\..\Bin\Silverlight3Release\</DLRAssembliesPath>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <DebugSymbols>true</DebugSymbols>

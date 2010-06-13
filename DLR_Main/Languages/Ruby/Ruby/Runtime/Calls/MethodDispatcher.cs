@@ -35,14 +35,51 @@ using IronRuby.Compiler;
 
 namespace IronRuby.Runtime.Calls {
     using Ast = Expression;
-    
-    public abstract partial class MethodDispatcher {
+
+    public abstract partial class MemberDispatcher {
         internal int Version;
 
+        public abstract object/*!*/ CreateDelegate(bool isUntyped);
+
+        internal static object CreateDispatcher(Type/*!*/ func, int mandatoryParamCount, bool hasScope, bool hasBlock, int version,
+            Func<MethodDispatcher> parameterlessFactory, Type[] genericFactories) {
+            Type[] funcArgs = func.GetGenericArguments();
+
+            // Func<CallSite, (RubyScope)?, TSelf, (Proc)?, T1, ... TN, object>
+            int selfIndex = 1 + (hasScope ? 1 : 0);
+            int firstParameterIndex = selfIndex + 1 + (hasBlock ? 1 : 0);
+            int parameterCount = funcArgs.Length - firstParameterIndex - 1;
+
+            // invalid number of arguments passed to the site:
+            if (parameterCount != mandatoryParamCount) {
+                return null;
+            }
+
+            if (parameterCount > MethodDispatcher.MaxPrecompiledArity) {
+                return null;
+            }
+
+            // self must be an object:
+            if (funcArgs[selfIndex] != typeof(object)) {
+                return null;
+            }
+
+            if (parameterCount == 0) {
+                return parameterlessFactory();
+            }
+
+            // TODO: cache?
+            // remove "self":
+            var types = funcArgs.GetSlice(firstParameterIndex, parameterCount);
+            return Activator.CreateInstance(genericFactories[parameterCount - 1].MakeGenericType(types));
+        }
+    }
+
+    public abstract class MethodDispatcher : MemberDispatcher {
         internal static MethodDispatcher CreateRubyObjectDispatcher(Type/*!*/ func, Delegate/*!*/ method, int mandatoryParamCount, 
             bool hasScope, bool hasBlock, int version) {
 
-            var dispatcher = CreateDispatcher(func, mandatoryParamCount, hasScope, hasBlock, version,
+            var dispatcher = (MethodDispatcher)CreateDispatcher(func, mandatoryParamCount, hasScope, hasBlock, version,
                 () => 
                 hasScope ?
                     (hasBlock ? (MethodDispatcher)new RubyObjectMethodDispatcherWithScopeAndBlock() : new RubyObjectMethodDispatcherWithScope()) :
@@ -58,41 +95,6 @@ namespace IronRuby.Runtime.Calls {
             return dispatcher;
         }
 
-        internal static MethodDispatcher CreateDispatcher(Type/*!*/ func, int mandatoryParamCount, bool hasScope, bool hasBlock, int version,
-            Func<MethodDispatcher> parameterlessFactory, Type[] genericFactories) {
-            Type[] funcArgs = func.GetGenericArguments();
-
-            // Func<CallSite, (RubyScope)?, TSelf, (Proc)?, T1, ... TN, object>
-            int selfIndex = 1 + (hasScope ? 1 : 0);
-            int firstParameterIndex = selfIndex + 1 + (hasBlock ? 1 : 0);
-            int parameterCount = funcArgs.Length - firstParameterIndex - 1;
-
-            // invalid number of arguments passed to the site:
-            if (parameterCount != mandatoryParamCount) {
-                return null;
-            }
-
-            if (parameterCount > MaxPrecompiledArity) {
-                return null;
-            }
-
-            // self must be an object:
-            if (funcArgs[selfIndex] != typeof(object)) {
-                return null;
-            }
-
-            if (parameterCount == 0) {
-                return parameterlessFactory();
-            } else {
-                // TODO: cache?
-
-                // remove "self":
-                var types = funcArgs.GetSlice(firstParameterIndex, parameterCount);
-                return (MethodDispatcher)Activator.CreateInstance(genericFactories[parameterCount - 1].MakeGenericType(types));
-            }
-        }
-
-        public abstract object/*!*/ CreateDelegate(bool isUntyped);
         internal abstract void Initialize(Delegate/*!*/ method, int version);
     }
 
@@ -106,58 +108,66 @@ namespace IronRuby.Runtime.Calls {
         }
     }
 
-    public abstract class InterpretedDispatcher {
-        internal object _rule;
-        internal Delegate _compiled;
+    public abstract class AttributeDispatcher : MemberDispatcher {
+        internal string/*!*/ Name;
 
-        internal T/*!*/ CreateDelegate<T>(Expression/*!*/ binding, int compilationThreshold) where T : class {
-            Delegate d = Stitch<T>(binding).LightCompile(compilationThreshold);
-            T result = (T)(object)d;
+        internal static AttributeDispatcher CreateRubyObjectWriterDispatcher(Type/*!*/ delegateType, string/*!*/ name, int version) {
+            var dispatcher = (AttributeDispatcher)CreateDispatcher(delegateType, 1, true, false, version, null, RubyObjectAttributeWriterDispatchersWithScope);
+            if (dispatcher != null) {
+                dispatcher.Initialize(name, version);
+            }
+            return dispatcher;
+        }
 
-            LightLambda lambda = d.Target as LightLambda;
-            if (lambda != null) {
-                _rule = result;
-                lambda.Compile += (_, e) => _compiled = e.Compiled;
-                return (T)GetInterpretingDelegate();
+        internal abstract void Initialize(string/*!*/ name, int version);
+    }
+
+    public sealed class RubyObjectAttributeReaderDispatcherWithScope : AttributeDispatcher {
+        internal override void Initialize(string/*!*/ name, int version) {
+            Name = name;
+            Version = version;
+        }
+
+        public override object/*!*/ CreateDelegate(bool isUntyped) {
+            return isUntyped ?
+                (object)new Func<CallSite, object, object, object>(Invoke<object>) :
+                (object)new Func<CallSite, RubyScope, object, object>(Invoke<RubyScope>);
+        }
+        
+        public object Invoke<TScope>(CallSite/*!*/ callSite, TScope/*!*/ scope, object self) {
+            IRubyObject obj = self as IRubyObject;
+            if (obj != null && obj.ImmediateClass.Version.Method == Version) {
+                // TODO: optimize
+                RubyInstanceData data = obj.TryGetInstanceData();
+                return (data != null) ? data.GetInstanceVariable(Name) : null;
             } else {
-                PerfTrack.NoteEvent(PerfTrack.Categories.Rules, "Rule not interpreted");
-                return result;
+                return ((CallSite<Func<CallSite, TScope, object, object>>)callSite).Update(callSite, scope, self);
             }
         }
+    }
 
-        // TODO: This is a copy of CallSiteBinder.Stitch.
-        private LambdaExpression/*!*/ Stitch<T>(Expression/*!*/ binding) where T : class {
-            Expression updLabel = Expression.Label(CallSiteBinder.UpdateLabel);
-
-            var site = Expression.Parameter(typeof(CallSite), "$site");
-            var @params = ArrayUtils.Insert(site, Parameters);
-
-            var body = Expression.Block(
-                binding,
-                updLabel,
-                Expression.Label(
-                    ReturnLabel,
-                    Expression.Invoke(
-                        Expression.Property(
-                            Ast.Convert(site, typeof(CallSite<T>)),
-                            typeof(CallSite<T>).GetProperty("Update")
-                        ),
-                        @params
-                    )
-                )
-            );
-
-            return Expression.Lambda<T>(
-                body,
-                InterpretedCallSiteName,
-                true, // always compile the rules with tail call optimization
-                @params
-            );
+    public sealed class RubyObjectAttributeWriterDispatcherWithScope<T0> : AttributeDispatcher {
+        internal override void Initialize(string/*!*/ name, int version) {
+            Name = name;
+            Version = version;
         }
 
-        internal const string InterpretedCallSiteName = "CallSite.Target";
-        internal abstract ReadOnlyCollection<ParameterExpression> Parameters { get; }
-        internal abstract LabelTarget ReturnLabel { get; }
-        internal abstract object/*!*/ GetInterpretingDelegate();
+        public override object/*!*/ CreateDelegate(bool isUntyped) {
+            return isUntyped ?
+                (object)new Func<CallSite, object, object, T0, object>(Invoke<object>) :
+                (object)new Func<CallSite, RubyScope, object, T0, object>(Invoke<RubyScope>);
+        }
+
+        public object Invoke<TScope>(CallSite/*!*/ callSite, TScope/*!*/ scope, object self, T0 arg0) {
+            IRubyObject obj = self as IRubyObject;
+            if (obj != null && obj.ImmediateClass.Version.Method == Version) {
+                var result = (object)arg0;
+                // TODO: optimize
+                obj.ImmediateClass.Context.SetInstanceVariable(obj, Name, result);
+                return result;
+            } else {
+                return ((CallSite<Func<CallSite, TScope, object, T0, object>>)callSite).Update(callSite, scope, self, arg0);
+            }
+        }
     }
 }
