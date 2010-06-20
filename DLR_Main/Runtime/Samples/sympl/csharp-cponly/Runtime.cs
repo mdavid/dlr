@@ -2,13 +2,10 @@ using System;
 using System.Collections.Generic;
 using System.Dynamic;
 using System.Reflection;
-#if USE35
-using Microsoft.Scripting.Ast;
-using Microsoft.Scripting.Utils;
-using Microsoft.Scripting.ComInterop;
-#else
 using System.Linq.Expressions;
-#endif
+using Microsoft.Scripting.ComInterop;
+using Microsoft.Scripting.Utils;
+using System.Linq;
 using System.Runtime.CompilerServices;
 using Path = System.IO.Path;
 using File = System.IO.File;
@@ -175,60 +172,6 @@ namespace SymplSample {
             System.Array.Resize(ref array, array.Length - 1);
             return array;
         }
-
-#if USE35
-        // Need to reproduce these helpers from DLR codeplex-only sources and
-        // from LINQ functionality to avoid referencing System.Core.dll and
-        // Microsoft.Scripting.Core.dll for internal building.
-
-        internal static IEnumerable<U> Select<T, U>(this IEnumerable<T> enumerable, Func<T, U> select) {
-            foreach (T t in enumerable) {
-                yield return select(t);
-            }
-        }
-
-        internal static IEnumerable<T> Where<T>(this IEnumerable<T> enumerable, Func<T, bool> where) {
-            foreach (T t in enumerable) {
-                if (where(t)) {
-                    yield return t;
-                }
-            }
-        }
-
-        internal static bool Any<T>(this IEnumerable<T> source, Func<T, bool> predicate) {
-            foreach (T element in source) {
-                if (predicate(element)) {
-                    return true;
-                }
-            }
-            return false;
-        }
-
-        internal static T[] ToArray<T>(this IEnumerable<T> enumerable) {
-            var c = enumerable as ICollection<T>;
-            if (c != null) {
-                var result = new T[c.Count];
-                c.CopyTo(result, 0);
-                return result;
-            }
-            return new List<T>(enumerable).ToArray();
-        }
-
-        internal static TSource Last<TSource>(this IList<TSource> list) {
-            if (list == null) throw new ArgumentNullException("list");
-            int count = list.Count;
-            if (count > 0) return list[count - 1];
-            throw new ArgumentException("list is empty");
-        }
-
-        internal static bool Contains<TSource>(this IEnumerable<TSource> source, TSource value) {
-            IEqualityComparer<TSource> comparer = EqualityComparer<TSource>.Default;
-            if (source == null) throw new ArgumentNullException("source");
-            foreach (TSource element in source)
-                if (comparer.Equals(element, value)) return true;
-            return false;
-        }
-#endif
       
   
         ///////////////////////////////////////

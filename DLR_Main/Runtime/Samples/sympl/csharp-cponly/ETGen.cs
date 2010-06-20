@@ -1,10 +1,7 @@
 using System;
 using System.Dynamic;
-#if USE35
-using Microsoft.Scripting.Ast;
-#else
 using System.Linq.Expressions;
-#endif
+using System.Linq;
 using System.Collections.Generic;
 
 namespace SymplSample {

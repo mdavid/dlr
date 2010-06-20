@@ -4,14 +4,9 @@ using System.Dynamic;
 using System.Text;
 using Microsoft.Scripting.Runtime;
 
-#if USE35
-// Needed for type language implementers need to support DLR Hosting, such as
-// ScriptCode.
-using Microsoft.Scripting;
-using Microsoft.Scripting.Ast;
-#else
+using System.Linq;
 using System.Linq.Expressions;
-#endif
+using Microsoft.Scripting;
 
 using Microsoft.Scripting.Utils;
 

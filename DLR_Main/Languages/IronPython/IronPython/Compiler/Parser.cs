@@ -24,6 +24,7 @@ using Microsoft.Scripting.Utils;
 using IronPython.Compiler.Ast;
 using IronPython.Hosting;
 using IronPython.Runtime;
+using IronPython.Runtime.Exceptions;
 using IronPython.Runtime.Types;
 
 #if CLR2
@@ -101,7 +102,7 @@ namespace IronPython.Compiler {
 
             PythonCompilerOptions compilerOptions = context.Options as PythonCompilerOptions;
             if (options == null) {
-                throw new ArgumentException(Resources.PythonContextRequired);
+                throw new ValueErrorException(Resources.PythonContextRequired);
             }
 
             SourceCodeReader reader;
@@ -762,7 +763,7 @@ namespace IronPython.Compiler {
                         Resources.UnexpectedToken,
                         token.Kind);
                     Debug.Assert(false, message);
-                    throw new ArgumentException(message);
+                    throw new ValueErrorException(message);
             }
         }
 
@@ -1428,7 +1429,7 @@ namespace IronPython.Compiler {
             parameters = ParseVarArgsList(TokenKind.Colon);
             var mid = GetEnd();
 
-            FunctionDefinition func = new FunctionDefinition(name, parameters);
+            FunctionDefinition func = new FunctionDefinition(name, parameters ?? new Parameter[0]); // new Parameter[0] for error handling of incomplete lambda
             func.HeaderIndex =  mid;
             func.StartIndex = start;
 

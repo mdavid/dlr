@@ -2,12 +2,9 @@ using System;
 using System.Dynamic;
 using System.IO;
 using System.Reflection;
-#if USE35
-using Microsoft.Scripting.Ast;
-using Microsoft.Scripting.Hosting;
-#else
 using System.Linq.Expressions;
-#endif
+using Microsoft.Scripting;
+using Microsoft.Scripting.Hosting;
 
 namespace SymplSample
 {

@@ -1,13 +1,8 @@
 using System;
 using System.Collections.Generic;
 using System.Dynamic;
-
-#if USE35
-using Microsoft.Scripting.Ast;
-using Microsoft.Scripting.Utils;
-#else
 using System.Linq.Expressions;
-#endif
+using System.Linq;
 
 using Scope = Microsoft.Scripting.Runtime.Scope;
 

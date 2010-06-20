@@ -1,7 +1,6 @@
 <Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003" ToolsVersion="4.0">
   
 
-
   <PropertyGroup>
     <OutputType>Library</OutputType>
     <RootNamespace>IronPython</RootNamespace>
@@ -254,6 +253,7 @@
       <Compile Include="Runtime\List.cs" />
       <Compile Include="Runtime\LiteralParser.cs" />
       <Compile Include="Runtime\Method.cs" />
+      <Compile Include="Runtime\Method.Generated.cs" />
       <Compile Include="Runtime\MissingParameter.cs" />
       <Compile Include="Runtime\ModuleContext.cs" />
       <Compile Include="Runtime\ModuleDictionaryStorage.cs" />
@@ -408,6 +408,7 @@
       <Compile Include="Runtime\Exceptions\UnicodeTranslateException.Generated.cs" />
       <Compile Include="Runtime\Exceptions\UnicodeWarningException.Generated.cs" />
       <Compile Include="Runtime\Exceptions\UserWarningException.Generated.cs" />
+      <Compile Include="Runtime\Exceptions\ValueErrorException.cs" />
       <Compile Include="Runtime\Exceptions\WarningException.Generated.cs" />
       <Compile Include="Runtime\Exceptions\Win32Exception.cs" />
     </ItemGroup>

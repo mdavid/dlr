@@ -2,11 +2,7 @@ using System;
 using System.Dynamic;
 using System.IO;
 using System.Reflection;
-#if USE35
-using Microsoft.Scripting.Ast;
-#else
 using System.Linq.Expressions;
-#endif
 
 namespace SymplSample
 {
