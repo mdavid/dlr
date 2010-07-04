@@ -78,6 +78,7 @@
       <Compile Include="Runtime\BoolAndConditionalTests.cs" />
       <Compile Include="Runtime\CloningTests.cs" />
       <Compile Include="Runtime\ClrTests.cs" />
+      <Compile Include="Runtime\ClrTests_Globals.cs" />
       <Compile Include="Runtime\ConstantTests.cs" />
       <Compile Include="Runtime\DeclarationTests.cs" />
       <Compile Include="Runtime\DefinedTests.cs" />

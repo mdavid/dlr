@@ -70,8 +70,8 @@ namespace IronRuby.Compiler {
         private static MethodInfo _ConvertMutableStringToFloat;
         public static MethodInfo/*!*/ ConvertStringToFloat { get { return _ConvertStringToFloat ?? (_ConvertStringToFloat = CallInstruction.CacheFunc<IronRuby.Runtime.RubyContext, System.String, System.Double>(RubyOps.ConvertStringToFloat)); } }
         private static MethodInfo _ConvertStringToFloat;
-        public static MethodInfo/*!*/ ConvertSymbolIdToClrString { get { return _ConvertSymbolIdToClrString ?? (_ConvertSymbolIdToClrString = CallInstruction.CacheFunc<IronRuby.Runtime.RubyContext, System.Int32, System.String>(RubyOps.ConvertSymbolIdToClrString)); } }
-        private static MethodInfo _ConvertSymbolIdToClrString;
+        public static MethodInfo/*!*/ ConvertRubySymbolToClrString { get { return _ConvertRubySymbolToClrString ?? (_ConvertRubySymbolToClrString = CallInstruction.CacheFunc<IronRuby.Runtime.RubyContext, System.Int32, System.String>(RubyOps.ConvertRubySymbolToClrString)); } }
+        private static MethodInfo _ConvertRubySymbolToClrString;
         public static MethodInfo/*!*/ ConvertSymbolToClrString { get { return _ConvertSymbolToClrString ?? (_ConvertSymbolToClrString = CallInstruction.CacheFunc<IronRuby.Builtins.RubySymbol, System.String>(RubyOps.ConvertSymbolToClrString)); } }
         private static MethodInfo _ConvertSymbolToClrString;
         public static MethodInfo/*!*/ CreateArgumentsError { get { return _CreateArgumentsError ?? (_CreateArgumentsError = CallInstruction.CacheFunc<System.String, System.ArgumentException>(RubyOps.CreateArgumentsError)); } }
@@ -270,6 +270,8 @@ namespace IronRuby.Compiler {
         private static MethodInfo _GetParentLocals;
         public static MethodInfo/*!*/ GetParentScope { get { return _GetParentScope ?? (_GetParentScope = CallInstruction.CacheFunc<IronRuby.Runtime.RubyScope, IronRuby.Runtime.RubyScope>(RubyOps.GetParentScope)); } }
         private static MethodInfo _GetParentScope;
+        public static MethodInfo/*!*/ GetProcArity { get { return _GetProcArity ?? (_GetProcArity = CallInstruction.CacheFunc<IronRuby.Builtins.Proc, int>(RubyOps.GetProcArity)); } }
+        private static MethodInfo _GetProcArity;
         public static MethodInfo/*!*/ GetProcSelf { get { return _GetProcSelf ?? (_GetProcSelf = CallInstruction.CacheFunc<IronRuby.Builtins.Proc, System.Object>(RubyOps.GetProcSelf)); } }
         private static MethodInfo _GetProcSelf;
         public static MethodInfo/*!*/ GetQualifiedConstant { get { return _GetQualifiedConstant ?? (_GetQualifiedConstant = CallInstruction.CacheFunc<IronRuby.Runtime.RubyScope, IronRuby.Runtime.ConstantSiteCache, System.String[], System.Boolean, System.Object>(RubyOps.GetQualifiedConstant)); } }

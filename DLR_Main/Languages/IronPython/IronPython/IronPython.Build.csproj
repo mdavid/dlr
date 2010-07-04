@@ -208,7 +208,6 @@
       <!--                           -->
       <!--          Runtime          -->
       <!--                           -->
-      <Compile Include="Runtime\AttributesDictionaryStorage.cs" />
       <Compile Include="Runtime\BindingWarnings.cs" />
       <Compile Include="Runtime\BuiltinsDictionaryStorage.cs" />
       <Compile Include="Runtime\ByteArray.cs" />
@@ -227,6 +226,7 @@
       <Compile Include="Runtime\ConversionWrappers.cs" />
       <Compile Include="Runtime\Converter.cs" />
       <Compile Include="Runtime\CustomDictionaryStorage.cs" />
+      <Compile Include="Runtime\DebuggerDictionaryStorage.cs" />
       <Compile Include="Runtime\DefaultContext.cs" />
       <Compile Include="Runtime\Descriptors.cs" />
       <Compile Include="Runtime\DictionaryOps.cs" />

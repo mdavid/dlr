@@ -95,6 +95,11 @@ namespace IronRuby.Runtime {
         }
 
         [Emitted]
+        public static int GetProcArity(Proc/*!*/ proc) {
+            return proc.Dispatcher.Arity;
+        }
+
+        [Emitted]
         public static void InitializeScope(RubyScope/*!*/ scope, MutableTuple locals, string[] variableNames, 
             InterpretedFrame interpretedFrame) {
 
@@ -127,6 +132,10 @@ namespace IronRuby.Runtime {
         [Emitted]
         public static RubyModuleScope/*!*/ CreateModuleScope(MutableTuple locals, string[] variableNames, 
             RubyScope/*!*/ parent, RubyModule/*!*/ module) {
+
+            if (parent.RubyContext != module.Context) {
+                throw RubyExceptions.CreateTypeError("Cannot open a module `{0}' defined in a foreign runtime #{1}", module.Name, module.Context.RuntimeId);
+            }
 
             RubyModuleScope scope = new RubyModuleScope(parent, module);
             scope.SetDebugName((module.IsClass ? "class" : "module") + " " + module.Name);
@@ -2020,7 +2029,7 @@ namespace IronRuby.Runtime {
         }
 
         [Emitted] // ProtocolConversionAction
-        public static string/*!*/ ConvertSymbolIdToClrString(RubyContext/*!*/ context, int value) {
+        public static string/*!*/ ConvertRubySymbolToClrString(RubyContext/*!*/ context, int value) {
             context.ReportWarning("do not use Fixnums as Symbols");
 
             RubySymbol result = context.FindSymbol(value);

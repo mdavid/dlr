@@ -68,7 +68,6 @@
       <Compile Include="CompilerOptions.cs" />
       <Compile Include="ErrorSink.cs" />
       <Compile Include="GlobalSuppressions.cs" />
-      <Compile Include="IAttributesCollection.cs" />
       <Compile Include="IndexSpan.cs" />
       <Compile Include="InvalidImplementationException.cs" />
       <Compile Include="LanguageOptions.cs" />
@@ -83,8 +82,6 @@
       <Compile Include="SourceUnit.cs" />
       <Compile Include="SpecSharp.cs" />
       <Compile Include="Stubs.cs" />
-      <Compile Include="SymbolId.cs" />
-      <Compile Include="SymbolTable.cs" />
       <Compile Include="SyntaxErrorException.cs" />
       <Compile Include="TextContentProvider.cs" />
       <Compile Include="TokenCategory.cs" />
@@ -142,7 +139,6 @@
       <!--                           -->
       <!--          Runtime          -->
       <!--                           -->
-      <Compile Include="Runtime\BaseSymbolDictionary.cs" />
       <Compile Include="Runtime\ContextId.cs" />
       <Compile Include="Runtime\DlrConfiguration.cs" />
       <Compile Include="Runtime\DocumentationProvider.cs" />
@@ -153,6 +149,7 @@
       <Compile Include="Runtime\LanguageBoundTextContentProvider.cs" />
       <Compile Include="Runtime\LanguageContext.cs" />
       <Compile Include="Runtime\NotNullAttribute.cs" />
+      <Compile Include="Runtime\ObjectDictionaryExpando.cs" />
       <Compile Include="Runtime\ParamDictionaryAttribute.cs" />
       <Compile Include="Runtime\ParserSink.cs" />
       <Compile Include="Runtime\Scope.cs" />
@@ -163,11 +160,10 @@
       <Compile Include="Runtime\SharedIO.cs" />
       <Compile Include="Runtime\SourceStringContentProvider.cs" />
       <Compile Include="Runtime\StreamContentProvider.cs" />
-      <Compile Include="Runtime\SymbolDictionary.cs" />
+      <Compile Include="Runtime\StringDictionaryExpando.cs" />
       <Compile Include="Runtime\TokenInfo.cs" />
       <Compile Include="Runtime\TokenizerService.cs" />
       <Compile Include="Runtime\TokenTriggers.cs" />
-      <Compile Include="Runtime\TransformDictEnumerator.cs" />
     </ItemGroup>
     <ItemGroup>
       <!--                         -->

@@ -281,6 +281,10 @@ namespace IronRuby.Builtins {
         // MRO walk: this, _mixins[0], _mixins[1], ..., _mixins[n-1], super, ...
         private RubyModule[]/*!*/ _mixins;
 
+        // A list of extension methods included into this type or null if none were included.
+        // { method-name -> methods }
+        internal Dictionary<string, List<ExtensionMethodInfo>> _extensionMethods;
+        
         #endregion
 
         #region Dynamic Sites
@@ -343,6 +347,10 @@ namespace IronRuby.Builtins {
 
         internal WeakReference/*!*/ WeakSelf {
             get { return _weakSelf; }
+        }
+
+        internal Dictionary<string, List<ExtensionMethodInfo>> ExtensionMethods {
+            get { return _extensionMethods; }
         }
 
         // default allocator:
@@ -556,8 +564,8 @@ namespace IronRuby.Builtins {
             // copy namespace members:
             if (module._namespaceTracker != null) {
                 Debug.Assert(_constants != null);
-                foreach (KeyValuePair<SymbolId, object> constant in module._namespaceTracker.SymbolAttributes) {
-                    _constants.Add(SymbolTable.IdToString(constant.Key), new ConstantStorage(constant.Value));
+                foreach (KeyValuePair<string, object> constant in module._namespaceTracker) {
+                    _constants.Add(constant.Key, new ConstantStorage(constant.Value));
                 }
             }
 
@@ -980,12 +988,6 @@ namespace IronRuby.Builtins {
             }
         }
 
-        internal bool TryGetConstant(RubyContext/*!*/ callerContext, RubyGlobalScope autoloadScope, string/*!*/ name, out ConstantStorage value) {
-            return callerContext != Context ?
-                TryGetConstant(autoloadScope, name, out value) :
-                TryGetConstantNoLock(autoloadScope, name, out value);
-        }
-
         internal bool TryResolveConstant(RubyContext/*!*/ callerContext, RubyGlobalScope autoloadScope, string/*!*/ name, out ConstantStorage value) {
             return callerContext != Context ?
                 TryResolveConstant(autoloadScope, name, out value) :
@@ -1122,7 +1124,7 @@ namespace IronRuby.Builtins {
 
             if (_namespaceTracker != null) {
                 object value;
-                if (_namespaceTracker.TryGetValue(SymbolTable.StringToId(name), out value)) {
+                if (_namespaceTracker.TryGetValue(name, out value)) {
                     storage = new ConstantStorage( _context.TrackerToModule(value));
                     return true;
                 }
@@ -1167,7 +1169,7 @@ namespace IronRuby.Builtins {
             }
 
             object namespaceValue;
-            if (_namespaceTracker != null && _namespaceTracker.TryGetValue(SymbolTable.StringToId(name), out namespaceValue)) {
+            if (_namespaceTracker != null && _namespaceTracker.TryGetValue(name, out namespaceValue)) {
                 _constants[name] = ConstantStorage.Removed;
                 _context.ConstantAccessVersion++;
                 value = namespaceValue;
@@ -1194,8 +1196,8 @@ namespace IronRuby.Builtins {
             }
 
             if (_namespaceTracker != null) {
-                foreach (KeyValuePair<SymbolId, object> constant in _namespaceTracker.SymbolAttributes) {
-                    string name = SymbolTable.IdToString(constant.Key);
+                foreach (KeyValuePair<string, object> constant in _namespaceTracker) {
+                    string name = constant.Key;
                     // we check if we haven't already yielded the value so that we don't yield values hidden by a user defined constant:
                     if (!_constants.ContainsKey(name) && action(this, name, constant.Value)) {
                         return true;
@@ -1326,6 +1328,54 @@ namespace IronRuby.Builtins {
 
             InitializeMethodsNoLock();
             _methods[name] = method;
+        }
+
+        internal void AddExtensionMethodsNoLock(List<ExtensionMethodInfo>/*!*/ extensions) {
+            Context.RequiresClassHierarchyLock();
+
+            PrepareExtensionMethodsUpdate(extensions);
+
+            if (_extensionMethods == null) {
+                _extensionMethods = new Dictionary<string, List<ExtensionMethodInfo>>();
+            }
+
+            foreach (var extension in extensions) {
+                List<ExtensionMethodInfo> overloads;
+                if (!_extensionMethods.TryGetValue(extension.Method.Name, out overloads)) {
+                    _extensionMethods.Add(extension.Method.Name, overloads = new List<ExtensionMethodInfo>());
+                }
+
+                // If the signature of the extension is the same as other overloads the overload resolver should prefer non extension method.
+                overloads.Add(extension);
+            }
+        }
+
+        // TODO: constraints
+        private static bool IsPartiallyInstantiated(Type/*!*/ type) {
+            if (type.IsGenericParameter) {
+                return false;
+            }
+
+            if (type.IsArray) {
+                return !type.GetElementType().IsGenericParameter;
+            }
+
+            foreach (var arg in type.GetGenericArguments()) {
+                if (!arg.IsGenericParameter) {
+                    Debug.Assert(arg.DeclaringMethod != null);
+                    return true;
+                }
+            }
+
+            return false;
+        }
+
+        internal virtual void PrepareExtensionMethodsUpdate(List<ExtensionMethodInfo>/*!*/ extensions) {
+            if (_dependentClasses != null) {
+                foreach (var cls in _dependentClasses) {
+                    cls.PrepareExtensionMethodsUpdate(extensions);
+                }
+            }
         }
 
         internal virtual void PrepareMethodUpdate(string/*!*/ methodName, RubyMemberInfo/*!*/ method) {
@@ -1907,7 +1957,7 @@ namespace IronRuby.Builtins {
         }
 
         // Requires hierarchy lock
-        internal static RubyModule[]/*!*/ ExpandMixinsNoLock(RubyClass superClass, RubyModule/*!*/[]/*!*/ modules) {
+        public static RubyModule[]/*!*/ ExpandMixinsNoLock(RubyClass superClass, RubyModule/*!*/[]/*!*/ modules) {
             return ExpandMixinsNoLock(superClass, EmptyArray, modules);
         }
 

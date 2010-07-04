@@ -45,7 +45,7 @@
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
     <RunCodeAnalysis>false</RunCodeAnalysis>
-    <TargetFrameworkVersion>v2.0</TargetFrameworkVersion>
+    <TargetFrameworkVersion>v3.5</TargetFrameworkVersion>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'v2Release|AnyCPU' ">
     <DebugType>pdbonly</DebugType>
@@ -55,7 +55,7 @@
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
     <RunCodeAnalysis>false</RunCodeAnalysis>
-    <TargetFrameworkVersion>v2.0</TargetFrameworkVersion>
+    <TargetFrameworkVersion>v3.5</TargetFrameworkVersion>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Silverlight3Debug|AnyCPU' ">
     <DebugSymbols>true</DebugSymbols>
@@ -69,7 +69,7 @@
     <AllowUnsafeBlocks>false</AllowUnsafeBlocks>
     <SilverlightBuild>true</SilverlightBuild>
     <SilverlightPath Condition="'$(SilverlightPath)' == ''">$(Silverlight3Path)</SilverlightPath>
-    <TargetFrameworkVersion>v2.0</TargetFrameworkVersion>
+    <TargetFrameworkVersion>v3.5</TargetFrameworkVersion>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Silverlight3Release|AnyCPU' ">
     <OutputPath>$(SolutionDir)..\bin\Silverlight3Release</OutputPath>
@@ -81,7 +81,7 @@
     <ErrorReport>prompt</ErrorReport>
     <SilverlightBuild>true</SilverlightBuild>
     <SilverlightPath Condition="'$(SilverlightPath)' == ''">$(Silverlight3Path)</SilverlightPath>
-    <TargetFrameworkVersion>v2.0</TargetFrameworkVersion>
+    <TargetFrameworkVersion>v3.5</TargetFrameworkVersion>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <DebugSymbols>true</DebugSymbols>
@@ -195,7 +195,6 @@
     <Compile Include="Ast\SourceFileInformation.cs" />
     <Compile Include="Ast\LightDynamicExpression.cs" />
     <Compile Include="Ast\Utils.cs" />
-    <Compile Include="Ast\VariableDictionaryExpression.cs" />
     <Compile Include="Ast\NewArrayExpression.cs" />
     <Compile Include="Ast\NewExpression.cs" />
     <Compile Include="Ast\UnaryExpression.cs" />
@@ -307,7 +306,6 @@
     <Compile Include="Runtime\Generator.cs" />
     <Compile Include="Ast\GeneratorExpression.cs" />
     <Compile Include="Ast\GeneratorRewriter.cs" />
-    <Compile Include="Ast\SymbolConstantExpression.cs" />
     <Compile Include="Actions\Calls\Candidate.cs" />
     <Compile Include="Ast\YieldExpression.cs" />
     <Compile Include="Generation\DelegateHelpers.cs" />
@@ -435,10 +433,9 @@
     <Compile Include="Generation\IExpressionSerializable.cs" />
     <Compile Include="Generation\ToDiskRewriter.cs" />
     <Compile Include="Runtime\AssemblyTypeNames.cs" />
-    <Compile Include="Runtime\BaseSymbolDictionary.cs" />
     <Compile Include="Runtime\BinderType.cs" />
     <Compile Include="Runtime\CallTargets.cs" />
-    <Compile Include="Runtime\CustomSymbolDictionary.cs" />
+    <Compile Include="Runtime\CustomStringDictionary.cs" />
     <Compile Include="Runtime\DlrCachedCodeAttribute.cs" />
     <Compile Include="Runtime\DocumentationAttribute.cs" />
     <Compile Include="Runtime\ExceptionHelpers.cs" />
@@ -457,8 +454,6 @@
     <Compile Include="Runtime\ReflectionCache.cs" />
     <Compile Include="Runtime\ScriptingRuntimeHelpers.cs" />
     <Compile Include="Runtime\StaticExtensionMethodAttribute.cs" />
-    <Compile Include="Runtime\SymbolDictionary.cs" />
-    <Compile Include="Runtime\TransformDictEnumerator.cs" />
     <Compile Include="Runtime\Uninitialized.cs" />
     <Compile Include="Utils\ArrayUtils.cs" />
     <Compile Include="Utils\AssemblyQualifiedTypeName.cs" />
@@ -482,7 +477,7 @@
     <Reference Include="System.Xml" />
     <Reference Include="System.Configuration" />
     <Reference Include="System.Numerics" Condition=" '$(TargetFrameworkVersion)' == 'v4.0' " />
-    <Reference Include="System.Core" Condition=" '$(TargetFrameworkVersion)' == 'v4.0' " />
+    <Reference Include="System.Core" />
     <Reference Include="System.Data" />
     <Reference Include="System.Runtime.Remoting" />
   </ItemGroup>
@@ -495,7 +490,7 @@
       <SpecificVersion>False</SpecificVersion>
       <HintPath>$(SilverlightPath)\System.dll</HintPath>
     </Reference>
-    <Reference Include="System.Core, Version=2.0.5.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e" Condition=" '$(TargetFrameworkVersion)' == 'v4.0' ">
+    <Reference Include="System.Core, Version=2.0.5.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e">
       <SpecificVersion>False</SpecificVersion>
       <HintPath>$(SilverlightPath)\System.Core.dll</HintPath>
     </Reference>
@@ -509,10 +504,6 @@
       <Project>{2AE75F5A-CD1F-4925-9647-AF4D1C282FB4}</Project>
       <Name>Microsoft.Scripting.Core</Name>
       <Private>False</Private>
-    </ProjectReference>
-    <ProjectReference Include="..\Microsoft.Scripting.Core\Microsoft.Scripting.ExtensionAttribute.csproj" Condition="'$(TargetFrameworkVersion)' != 'v4.0'">
-      <Project>{8B0F1074-750E-4D64-BF23-A1E0F54261E5}</Project>
-      <Name>Microsoft.Scripting.ExtensionAttribute</Name>
     </ProjectReference>
     <ProjectReference Include="..\Microsoft.Scripting\Microsoft.Scripting.csproj">
       <Project>{02FF0909-F5AD-48CF-A86A-345E721B7E40}</Project>

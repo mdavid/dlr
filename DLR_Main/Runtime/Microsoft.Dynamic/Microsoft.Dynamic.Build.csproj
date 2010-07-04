@@ -198,11 +198,9 @@
       <Compile Include="Ast\NewArrayExpression.cs" />
       <Compile Include="Ast\NewExpression.cs" />
       <Compile Include="Ast\SourceFileInformation.cs" />
-      <Compile Include="Ast\SymbolConstantExpression.cs" />
       <Compile Include="Ast\TryStatementBuilder.cs" />
       <Compile Include="Ast\UnaryExpression.cs" />
       <Compile Include="Ast\Utils.cs" />
-      <Compile Include="Ast\VariableDictionaryExpression.cs" />
       <Compile Include="Ast\YieldExpression.cs" />
     </ItemGroup>
     <ItemGroup>
@@ -378,7 +376,6 @@
       <Compile Include="Runtime\AmbiguousFileNameException.cs" />
       <Compile Include="Runtime\ArgumentArray.cs" />
       <Compile Include="Runtime\AssemblyTypeNames.cs" />
-      <Compile Include="Runtime\BaseSymbolDictionary.cs" />
       <Compile Include="Runtime\BinderOps.cs" />
       <Compile Include="Runtime\BinderType.cs" />
       <Compile Include="Runtime\BindingRestrictionsHelpers.cs" />
@@ -388,7 +385,7 @@
       <Compile Include="Runtime\Cast.Generated.cs" />
       <Compile Include="Runtime\CodeDomCodeGen.cs" />
       <Compile Include="Runtime\CompilerContext.cs" />
-      <Compile Include="Runtime\CustomSymbolDictionary.cs" />
+      <Compile Include="Runtime\CustomStringDictionary.cs" />
       <Compile Include="Runtime\DelegateInfo.cs" />
       <Compile Include="Runtime\DelegateSignatureInfo.cs" />
       <Compile Include="Runtime\DlrCachedCodeAttribute.cs" />
@@ -429,9 +426,7 @@
       <Compile Include="Runtime\ScriptingRuntimeHelpers.cs" />
       <Compile Include="Runtime\SourceStringContentProvider.cs" />
       <Compile Include="Runtime\StaticExtensionMethodAttribute.cs" />
-      <Compile Include="Runtime\SymbolDictionary.cs" />
       <Compile Include="Runtime\TokenizerBuffer.cs" />
-      <Compile Include="Runtime\TransformDictEnumerator.cs" />
       <Compile Include="Runtime\Uninitialized.cs" />
     </ItemGroup>
     <ItemGroup>

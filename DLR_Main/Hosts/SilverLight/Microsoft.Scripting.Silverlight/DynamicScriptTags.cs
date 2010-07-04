@@ -17,8 +17,8 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 using System.Windows.Browser;
-using Microsoft.Scripting.Hosting;
 using System.IO;
+using Microsoft.Scripting.Hosting;
 using Microsoft.Scripting.Utils;
 
 namespace Microsoft.Scripting.Silverlight {
@@ -206,6 +206,7 @@ namespace Microsoft.Scripting.Silverlight {
                             );
                         scope = engine.CreateScope();
                     } else if (sc.Inline != null) {
+                        Assert.NotNull(DynamicApplication.HtmlPageUri);
                         var page = BrowserPAL.PAL.VirtualFilesystem.GetFileContents(DynamicApplication.HtmlPageUri);
                         var code = AlignSourceLines(sc.Inline, page);
                         sourceCode =

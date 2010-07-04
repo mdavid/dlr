@@ -712,6 +712,11 @@ namespace Microsoft.Scripting.Actions.Calls {
                 }
             }
 
+            // prefer regular methods over extensions:
+            if (one.Overload.IsExtension != two.Overload.IsExtension) {
+                return one.Overload.IsExtension ? Candidate.Two : Candidate.One;
+            }
+
             return Candidate.Equivalent;
         }
 
@@ -924,11 +929,6 @@ namespace Microsoft.Scripting.Actions.Calls {
             Assert.NotNull(metaObject, toType);
 
             return _binder.ConvertExpression(metaObject.Expression, toType, ConversionResultKind.ExplicitCast, null);
-        }
-
-        // TODO: revisit
-        public virtual Func<object[], object> GetConvertor(int index, DynamicMetaObject metaObject, ParameterInfo info, Type toType) {
-            throw new NotImplementedException();
         }
 
         // TODO: revisit
