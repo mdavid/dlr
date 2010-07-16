@@ -2,18 +2,16 @@
  *
  * Copyright (c) Microsoft Corporation. 
  *
- * This source code is subject to terms and conditions of the Microsoft Public License. A 
+ * This source code is subject to terms and conditions of the Apache License, Version 2.0. A 
  * copy of the license can be found in the License.html file at the root of this distribution. If 
- * you cannot locate the  Microsoft Public License, please send an email to 
+ * you cannot locate the  Apache License, Version 2.0, please send an email to 
  * dlr@microsoft.com. By using this source code in any fashion, you are agreeing to be bound 
- * by the terms of the Microsoft Public License.
+ * by the terms of the Apache License, Version 2.0.
  *
  * You must not remove this notice, or any other, from this software.
  *
  *
  * ***************************************************************************/
-#if !SILVERLIGHT
-
 using System;
 using System.Configuration.Assemblies;
 using System.Reflection;
@@ -632,8 +630,8 @@ namespace Microsoft.Scripting.Metadata {
     internal sealed class FieldMarshalTable {
         internal const int TableIndex = 0x0d;
         internal readonly int NumberOfRows;
-        private readonly bool IsHasFieldMarshalRefSizeSmall;
-        private readonly bool IsBlobHeapRefSizeSmall;
+        // private readonly bool IsHasFieldMarshalRefSizeSmall;
+        // private readonly bool IsBlobHeapRefSizeSmall;
         private readonly int ParentOffset;
         private readonly int NativeTypeOffset;
         private readonly int RowSize;
@@ -641,14 +639,14 @@ namespace Microsoft.Scripting.Metadata {
 
         internal FieldMarshalTable(int numberOfRows, int hasFieldMarshalRefSize, int blobHeapRefSize, int start, MemoryBlock block) {
             NumberOfRows = numberOfRows;
-            IsHasFieldMarshalRefSizeSmall = hasFieldMarshalRefSize == 2;
-            IsBlobHeapRefSizeSmall = blobHeapRefSize == 2;
+            // IsHasFieldMarshalRefSizeSmall = hasFieldMarshalRefSize == 2;
+            // IsBlobHeapRefSizeSmall = blobHeapRefSize == 2;
             ParentOffset = 0;
             NativeTypeOffset = ParentOffset + hasFieldMarshalRefSize;
             RowSize = NativeTypeOffset + blobHeapRefSize;
             Table = block.GetRange(start, RowSize * numberOfRows);
         }
-
+#if TODO
         internal int GetFieldMarshalRowId(MetadataToken token) {
             int foundRowNumber = Table.BinarySearchReference(
                 NumberOfRows,
@@ -659,13 +657,14 @@ namespace Microsoft.Scripting.Metadata {
             );
             return foundRowNumber + 1;
         }
+#endif
     }
 
     internal sealed class DeclSecurityTable {
         internal const int TableIndex = 0x0e;
         internal readonly int NumberOfRows;
-        private readonly bool IsHasDeclSecurityRefSizeSmall;
-        private readonly bool IsBlobHeapRefSizeSmall;
+        // private readonly bool IsHasDeclSecurityRefSizeSmall;
+        // private readonly bool IsBlobHeapRefSizeSmall;
         private readonly int ActionOffset;
         private readonly int ParentOffset;
         private readonly int PermissionSetOffset;
@@ -674,15 +673,15 @@ namespace Microsoft.Scripting.Metadata {
 
         internal DeclSecurityTable(int numberOfRows, int hasDeclSecurityRefSize, int blobHeapRefSize, int start, MemoryBlock block) {
             NumberOfRows = numberOfRows;
-            IsHasDeclSecurityRefSizeSmall = hasDeclSecurityRefSize == 2;
-            IsBlobHeapRefSizeSmall = blobHeapRefSize == 2;
+            // IsHasDeclSecurityRefSizeSmall = hasDeclSecurityRefSize == 2;
+            // IsBlobHeapRefSizeSmall = blobHeapRefSize == 2;
             ActionOffset = 0;
             ParentOffset = ActionOffset + sizeof(UInt16);
             PermissionSetOffset = ParentOffset + hasDeclSecurityRefSize;
             RowSize = PermissionSetOffset + blobHeapRefSize;
             Table = block.GetRange(start, RowSize * numberOfRows);
         }
-
+#if TODO
         internal int FindSecurityAttributesForToken(MetadataToken token, out int securityAttributeCount) {
             uint searchCodedTag = HasDeclSecurityTag.ConvertToTag(token);
             return BinarySearchTag(searchCodedTag, out securityAttributeCount);
@@ -721,12 +720,13 @@ namespace Microsoft.Scripting.Metadata {
             securityAttributeCount = endRowNumber - startRowNumber + 1;
             return startRowNumber + 1;
         }
+#endif
     }
 
     internal sealed class ClassLayoutTable {
         internal const int TableIndex = 0x0f;
         internal int NumberOfRows;
-        private readonly bool IsTypeDefTableRowRefSizeSmall;
+        // private readonly bool IsTypeDefTableRowRefSizeSmall;
         private readonly int PackagingSizeOffset;
         private readonly int ClassSizeOffset;
         private readonly int ParentOffset;
@@ -735,14 +735,14 @@ namespace Microsoft.Scripting.Metadata {
 
         internal ClassLayoutTable(int numberOfRows, int typeDefTableRowRefSize, int start, MemoryBlock block) {
             NumberOfRows = numberOfRows;
-            IsTypeDefTableRowRefSizeSmall = typeDefTableRowRefSize == 2;
+            // IsTypeDefTableRowRefSizeSmall = typeDefTableRowRefSize == 2;
             PackagingSizeOffset = 0;
             ClassSizeOffset = PackagingSizeOffset + sizeof(UInt16);
             ParentOffset = ClassSizeOffset + sizeof(UInt32);
             RowSize = ParentOffset + typeDefTableRowRefSize;
             Table = block.GetRange(start, RowSize * numberOfRows);
         }
-
+#if TODO
         internal ushort GetPackingSize(int typeRowId) {
             int foundRowNumber = Table.BinarySearchReference(
                 NumberOfRows,
@@ -776,12 +776,13 @@ namespace Microsoft.Scripting.Metadata {
             int rowOffset = foundRowNumber * RowSize;
             return Table.ReadUInt32(rowOffset + ClassSizeOffset);
         }
+#endif
     }
 
     internal sealed class FieldLayoutTable {
         internal const int TableIndex = 0x10;
         internal readonly int NumberOfRows;
-        private readonly bool IsFieldTableRowRefSizeSmall;
+        // private readonly bool IsFieldTableRowRefSizeSmall;
         private readonly int OffsetOffset;
         private readonly int FieldOffset;
         private readonly int RowSize;
@@ -789,13 +790,13 @@ namespace Microsoft.Scripting.Metadata {
 
         internal FieldLayoutTable(int numberOfRows, int fieldTableRowRefSize, int start, MemoryBlock block) {
             NumberOfRows = numberOfRows;
-            IsFieldTableRowRefSizeSmall = fieldTableRowRefSize == 2;
+            // IsFieldTableRowRefSizeSmall = fieldTableRowRefSize == 2;
             OffsetOffset = 0;
             FieldOffset = OffsetOffset + sizeof(UInt32);
             RowSize = FieldOffset + fieldTableRowRefSize;
             Table = block.GetRange(start, RowSize * numberOfRows);
         }
-
+#if TODO
         internal uint GetOffset(int rowId) {
             int foundRowNumber = Table.BinarySearchReference(
                 NumberOfRows,
@@ -812,6 +813,7 @@ namespace Microsoft.Scripting.Metadata {
             int rowOffset = foundRowNumber * RowSize;
             return Table.ReadUInt32(rowOffset + OffsetOffset);
         }
+#endif
     }
 
     internal sealed class StandAloneSigTable {
@@ -1152,7 +1154,7 @@ namespace Microsoft.Scripting.Metadata {
         internal const int TableIndex = 0x19;
         internal readonly int NumberOfRows;
         private readonly bool IsTypeDefTableRowRefSizeSmall;
-        private readonly bool IsMethodDefOrRefRefSizeSmall;
+        // private readonly bool IsMethodDefOrRefRefSizeSmall;
         private readonly int ClassOffset;
         private readonly int MethodBodyOffset;
         private readonly int MethodDeclarationOffset;
@@ -1162,7 +1164,7 @@ namespace Microsoft.Scripting.Metadata {
         internal MethodImplTable(int numberOfRows, int typeDefTableRowRefSize, int methodDefOrRefRefSize, int start, MemoryBlock block) {
             NumberOfRows = numberOfRows;
             IsTypeDefTableRowRefSizeSmall = typeDefTableRowRefSize == 2;
-            IsMethodDefOrRefRefSizeSmall = methodDefOrRefRefSize == 2;
+            // IsMethodDefOrRefRefSizeSmall = methodDefOrRefRefSize == 2;
             ClassOffset = 0;
             MethodBodyOffset = ClassOffset + typeDefTableRowRefSize;
             MethodDeclarationOffset = MethodBodyOffset + methodDefOrRefRefSize;
@@ -1252,9 +1254,9 @@ namespace Microsoft.Scripting.Metadata {
     internal sealed class ImplMapTable {
         internal const int TableIndex = 0x1c;
         internal readonly int NumberOfRows;
-        private readonly bool IsModuleRefTableRowRefSizeSmall;
+        // private readonly bool IsModuleRefTableRowRefSizeSmall;
         private readonly bool IsMemberForwardRowRefSizeSmall;
-        private readonly bool IsStringHeapRefSizeSmall;
+        // private readonly bool IsStringHeapRefSizeSmall;
         private readonly int FlagsOffset;
         private readonly int MemberForwardedOffset;
         private readonly int ImportNameOffset;
@@ -1264,9 +1266,9 @@ namespace Microsoft.Scripting.Metadata {
 
         internal ImplMapTable(int numberOfRows, int moduleRefTableRowRefSize, int memberForwardedRefSize, int stringHeapRefSize, int start, MemoryBlock block) {
             NumberOfRows = numberOfRows;
-            IsModuleRefTableRowRefSizeSmall = moduleRefTableRowRefSize == 2;
+            // IsModuleRefTableRowRefSizeSmall = moduleRefTableRowRefSize == 2;
             IsMemberForwardRowRefSizeSmall = memberForwardedRefSize == 2;
-            IsStringHeapRefSizeSmall = stringHeapRefSize == 2;
+            // IsStringHeapRefSizeSmall = stringHeapRefSize == 2;
             FlagsOffset = 0;
             MemberForwardedOffset = FlagsOffset + sizeof(UInt16);
             ImportNameOffset = MemberForwardedOffset + memberForwardedRefSize;
@@ -1537,7 +1539,7 @@ namespace Microsoft.Scripting.Metadata {
     internal sealed class AssemblyRefProcessorTable {
         internal const int TableIndex = 0x24;
         internal readonly int NumberOfRows;
-        private readonly bool IsAssemblyRefTableRowSizeSmall;
+        // private readonly bool IsAssemblyRefTableRowSizeSmall;
         private readonly int ProcessorOffset;
         private readonly int AssemblyRefOffset;
         private readonly int RowSize;
@@ -1545,7 +1547,7 @@ namespace Microsoft.Scripting.Metadata {
 
         internal AssemblyRefProcessorTable(int numberOfRows, int assembyRefTableRowRefSize, int start, MemoryBlock block) {
             NumberOfRows = numberOfRows;
-            IsAssemblyRefTableRowSizeSmall = assembyRefTableRowRefSize == 2;
+            // IsAssemblyRefTableRowSizeSmall = assembyRefTableRowRefSize == 2;
             ProcessorOffset = 0;
             AssemblyRefOffset = ProcessorOffset + sizeof(UInt32);
             RowSize = AssemblyRefOffset + assembyRefTableRowRefSize;
@@ -1556,7 +1558,7 @@ namespace Microsoft.Scripting.Metadata {
     internal sealed class AssemblyRefOSTable {
         internal const int TableIndex = 0x25;
         internal readonly int NumberOfRows;
-        private readonly bool IsAssemblyRefTableRowRefSizeSmall;
+        // private readonly bool IsAssemblyRefTableRowRefSizeSmall;
         private readonly int OSPlatformIdOffset;
         private readonly int OSMajorVersionIdOffset;
         private readonly int OSMinorVersionIdOffset;
@@ -1566,7 +1568,7 @@ namespace Microsoft.Scripting.Metadata {
 
         internal AssemblyRefOSTable(int numberOfRows, int assembyRefTableRowRefSize, int start, MemoryBlock block) {
             NumberOfRows = numberOfRows;
-            IsAssemblyRefTableRowRefSizeSmall = assembyRefTableRowRefSize == 2;
+            // IsAssemblyRefTableRowRefSizeSmall = assembyRefTableRowRefSize == 2;
             OSPlatformIdOffset = 0;
             OSMajorVersionIdOffset = OSPlatformIdOffset + sizeof(UInt32);
             OSMinorVersionIdOffset = OSMajorVersionIdOffset + sizeof(UInt32);
@@ -1940,5 +1942,3 @@ namespace Microsoft.Scripting.Metadata {
         }
     }
 }
-
-#endif

@@ -2,17 +2,19 @@
  *
  * Copyright (c) Microsoft Corporation. 
  *
- * This source code is subject to terms and conditions of the Microsoft Public License. A 
+ * This source code is subject to terms and conditions of the Apache License, Version 2.0. A 
  * copy of the license can be found in the License.html file at the root of this distribution. If 
- * you cannot locate the  Microsoft Public License, please send an email to 
+ * you cannot locate the  Apache License, Version 2.0, please send an email to 
  * dlr@microsoft.com. By using this source code in any fashion, you are agreeing to be bound 
- * by the terms of the Microsoft Public License.
+ * by the terms of the Apache License, Version 2.0.
  *
  * You must not remove this notice, or any other, from this software.
  *
  *
  * ***************************************************************************/
-#if !SILVERLIGHT
+#if MONO
+using Mono.Unix.Native;
+#endif
 
 using System;
 using System.IO;
@@ -20,9 +22,7 @@ using System.Runtime.CompilerServices;
 using System.Runtime.ConstrainedExecution;
 using System.Runtime.InteropServices;
 using Microsoft.Win32.SafeHandles;
-#if MONO_TODO
-using Mono.Unix.Native;
-#endif
+using System.Security;
 
 namespace Microsoft.Scripting.Metadata {
     /// <summary>
@@ -60,6 +60,11 @@ namespace Microsoft.Scripting.Metadata {
             if (path == null) {
                 throw new ArgumentNullException("path");
             }
+#if !CLR2
+            if (!AppDomain.CurrentDomain.IsFullyTrusted) {
+                throw new SecurityException("MemoryMapping can't be used in partially trusted AppDomains");
+            }
+#endif
             if (IsWindows) {
                 return WindowsCreate(path);
             } else {
@@ -84,19 +89,22 @@ namespace Microsoft.Scripting.Metadata {
                     if (mappingHandle != IntPtr.Zero) {
                         mapping._pointer = UnsafeNativeMethods.MapViewOfFile(mappingHandle, FILE_MAP_READ, 0, 0, (IntPtr)size);
                         UnsafeNativeMethods.CloseHandle(mappingHandle);
+                    } else {
                     }
                 }
 
                 if (mapping._pointer == null) {
-                    throw new IOException("Unable to create memory map: " + path, Marshal.GetLastWin32Error());
+                    int error = Marshal.GetLastWin32Error();
+                    throw new IOException("Unable to create memory map: " + path, error);
                 }
             }
 
             return mapping;
         }
 
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Usage", "CA1801:ReviewUnusedParameters")]
         private static MemoryMapping UnixCreate(string path) {
-#if MONO_TODO
+#if MONO
             int size;
             int fileDescriptor = 0;
             MemoryMapping mapping = null;
@@ -123,10 +131,11 @@ namespace Microsoft.Scripting.Metadata {
 
             return mapping;
 #else
-            return null;
+            throw new NotImplementedException();
 #endif
         }
 
+        [SecuritySafeCritical]
         ~MemoryMapping() {
             if (_pointer == null) {
                 // uninitialized:
@@ -140,7 +149,7 @@ namespace Microsoft.Scripting.Metadata {
             if (IsWindows) {
                 UnsafeNativeMethods.UnmapViewOfFile(_pointer);
             } else {
-#if MONO_TODO
+#if MONO
                 Syscall.munmap(new IntPtr(_pointer), (ulong)_capacity);
 #endif
             }
@@ -167,21 +176,20 @@ namespace Microsoft.Scripting.Metadata {
     }
 
     internal static class UnsafeNativeMethods {
-        [DllImport("kernel32.dll", CharSet = CharSet.Auto, SetLastError = true)]
+        [DllImport("kernel32.dll", CharSet = CharSet.Unicode, SetLastError = true)]
         internal static extern unsafe IntPtr CreateFileMapping(
             SafeFileHandle hFile, void* lpAttributes, int fProtect, int dwMaximumSizeHigh, int dwMaximumSizeLow, String lpName
         );
 
-        [DllImport("kernel32.dll", CharSet = CharSet.Auto, SetLastError = true)]
+        [DllImport("kernel32.dll", SetLastError = true)]
         internal static extern unsafe byte* MapViewOfFile(IntPtr hFileMappingObject, int dwDesiredAccess, int dwFileOffsetHigh, int dwFileOffsetLow, IntPtr dwNumberOfBytesToMap);
 
-        [DllImport("kernel32.dll", CharSet = CharSet.Auto, SetLastError = true)]
+        [DllImport("kernel32.dll", SetLastError = true)]
         [return: MarshalAs(UnmanagedType.Bool)]
         internal static extern unsafe bool UnmapViewOfFile(void* lpBaseAddress);
 
-        [DllImport("kernel32.dll", CharSet = CharSet.Auto, SetLastError = true)]
+        [DllImport("kernel32.dll", SetLastError = true)]
         [return: MarshalAs(UnmanagedType.Bool)]
         internal static extern bool CloseHandle(IntPtr handle);
     }
 }
-#endif

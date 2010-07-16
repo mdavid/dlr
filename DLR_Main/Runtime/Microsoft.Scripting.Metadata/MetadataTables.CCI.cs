@@ -2,30 +2,22 @@
  *
  * Copyright (c) Microsoft Corporation. 
  *
- * This source code is subject to terms and conditions of the Microsoft Public License. A 
+ * This source code is subject to terms and conditions of the Apache License, Version 2.0. A 
  * copy of the license can be found in the License.html file at the root of this distribution. If 
- * you cannot locate the  Microsoft Public License, please send an email to 
+ * you cannot locate the  Apache License, Version 2.0, please send an email to 
  * dlr@microsoft.com. By using this source code in any fashion, you are agreeing to be bound 
- * by the terms of the Microsoft Public License.
+ * by the terms of the Apache License, Version 2.0.
  *
  * You must not remove this notice, or any other, from this software.
  *
  *
  * ***************************************************************************/
-#if !SILVERLIGHT
-
-// TODO: remove
-#if CLR4
-using System.Diagnostics.Contracts;
-#else
-using Contract = Microsoft.Scripting.Utils.ContractUtils;
-#endif
-
 using System;
 using System.Configuration.Assemblies;
 using System.Reflection;
 using System.Security;
 using System.IO;
+using System.Diagnostics.Contracts;
 
 namespace Microsoft.Scripting.Metadata {
     [Serializable]
@@ -57,9 +49,22 @@ namespace Microsoft.Scripting.Metadata {
     }
 
     public partial class MetadataTables {
-        internal MetadataTables(MetadataImport import, string path) {
+        private readonly Module m_module;
+
+        internal MetadataTables(MetadataImport import, string path, Module module) {
             m_import = import;
             m_path = path;
+            m_module = module;
+        }
+
+        /// <summary>
+        /// Gets the module whose metadata tables this instance represents.
+        /// Null if the tables reflect unloaded module file.
+        /// </summary>
+        public Module Module {
+            get {
+                return m_module;
+            }
         }
 
         public bool IsValidToken(MetadataToken token) {
@@ -70,10 +75,25 @@ namespace Microsoft.Scripting.Metadata {
             return m_import.GetMetadataName(blob);
         }
 
-        public static MetadataTables OpenFile(string fileName) {
-            var file = MemoryMapping.Create(fileName);
-            var import = new MetadataImport(file.GetRange(0, (int)System.Math.Min(file.Capacity, Int32.MaxValue)));
-            return new MetadataTables(import, fileName);
+        public static MetadataTables OpenFile(string path) {
+            if (path == null) {
+                throw new ArgumentNullException("path");
+            }
+            
+            return new MetadataTables(CreateImport(path), path, null);
+        }
+
+        public static MetadataTables OpenModule(Module module) {
+            if (module == null) {
+                throw new ArgumentNullException("module");
+            }
+
+            return new MetadataTables(CreateImport(module.FullyQualifiedName), null, module);
+        }
+
+        private static MetadataImport CreateImport(string path) {
+            var file = MemoryMapping.Create(path);
+            return new MetadataImport(file.GetRange(0, (int)System.Math.Min(file.Capacity, Int32.MaxValue)));
         }
 
 #if DEBUG
@@ -115,10 +135,13 @@ namespace Microsoft.Scripting.Metadata {
                 return m_parent.Tables.GetRowCount((int)m_type >> 24);
             }
 
-            // TODO: more efficient implementation (no need to allocate the enumerator)
-            using (var enumerator = GetEnumerator()) {
-                return enumerator.Count;
-            }
+            int start, count;
+            m_parent.Import.GetEnumeratorRange(m_type, m_parent.Token, out start, out count);
+            return count;
+        }
+
+        public MetadataTableEnumerator GetEnumerator() {
+            return new MetadataTableEnumerator(m_parent, m_type);
         }
     }
 
@@ -284,7 +307,6 @@ namespace Microsoft.Scripting.Metadata {
         /// <summary>
         /// Finds type-def that declares this field. The search time is logarithmic in the number of types defined in the owning module.
         /// </summary>
-        [SecuritySafeCritical]
         public TypeDef FindDeclaringType() {
             return new MetadataRecord(
                 new MetadataToken(MetadataTokenType.TypeDef, m_record.Import.TypeDefTable.FindTypeContainingField(m_record.Rid, m_record.Import.FieldTable.NumberOfRows)), 
@@ -691,11 +713,9 @@ namespace Microsoft.Scripting.Metadata {
             }
         }
 
-        public byte[] PublicKey {
-            get {
-                var import = m_record.Import;
-                return import.GetBlob(import.AssemblyTable.GetPublicKey(m_record.Rid));
-            }
+        public byte[] GetPublicKey() {
+            var import = m_record.Import;
+            return import.GetBlob(import.AssemblyTable.GetPublicKey(m_record.Rid));
         }
 
         public MetadataName Name {
@@ -717,11 +737,9 @@ namespace Microsoft.Scripting.Metadata {
             m_record = record;
         }
 
-        public byte[] HashValue {
-            get {
-                var import = m_record.Import;
-                return import.GetBlob(import.AssemblyRefTable.GetHashValue(m_record.Rid));
-            }
+        public byte[] GetHashValue() {
+            var import = m_record.Import;
+            return import.GetBlob(import.AssemblyRefTable.GetHashValue(m_record.Rid));
         }
 
         public Version Version {
@@ -736,11 +754,9 @@ namespace Microsoft.Scripting.Metadata {
             }
         }
 
-        public byte[] PublicKeyOrToken {
-            get {
-                var import = m_record.Import;
-                return import.GetBlob(import.AssemblyRefTable.GetPublicKeyOrToken(m_record.Rid));
-            }
+        public byte[] GetPublicKeyOrToken() {
+            var import = m_record.Import;
+            return import.GetBlob(import.AssemblyRefTable.GetPublicKeyOrToken(m_record.Rid));
         }
 
         public MetadataName Name {
@@ -774,11 +790,9 @@ namespace Microsoft.Scripting.Metadata {
             }
         }
 
-        public byte[] HashValue {
-            get {
-                var import = m_record.Import;
-                return import.GetBlob(import.FileTable.GetHashValue(m_record.Rid));
-            }
+        public byte[] GetHashValue() {
+            var import = m_record.Import;
+            return import.GetBlob(import.FileTable.GetHashValue(m_record.Rid));
         }
     }
 
@@ -952,5 +966,3 @@ namespace Microsoft.Scripting.Metadata {
         }
     }
 }
-
-#endif

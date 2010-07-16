@@ -2,11 +2,11 @@
 #
 #  Copyright (c) Microsoft Corporation. All rights reserved.
 #
-# This source code is subject to terms and conditions of the Microsoft Public License. A 
+# This source code is subject to terms and conditions of the Apache License, Version 2.0. A 
 # copy of the license can be found in the License.html file at the root of this distribution. If 
-# you cannot locate the  Microsoft Public License, please send an email to 
+# you cannot locate the  Apache License, Version 2.0, please send an email to 
 # ironpy@microsoft.com. By using this source code in any fashion, you are agreeing to be bound 
-# by the terms of the Microsoft Public License.
+# by the terms of the Apache License, Version 2.0.
 #
 # You must not remove this notice, or any other, from this software.
 #
@@ -414,6 +414,16 @@ function test-pymodes($pyexe)
 }
 	
 ###############################################################################
+function nodebug-helper
+{
+	$dlrexe = $args[0]
+	
+	$pyPath = $env:DLR_ROOT + "\External.LCA_RESTRICTED\Languages\IronPython\26\Lib\.*"
+	$pyPath = $pyPath.Replace("\", "\\")
+	echo $pyPath
+	hello-helper $dlrexe "-D" "-X:NoDebug" $pyPath
+}
+
 function assembliesdir-helper
 {
 	$dlrexe = $args[0]
@@ -708,6 +718,12 @@ function test-dlrmodes($dlrexe)
 	$stuff = dlrexe -O -D -c "print __debug__"
 	if ($stuff -ne "False") { show-failure "Failed: $stuff";  }
 
+	#------------------------------------------------------------------------------
+	## -X:NoDebug
+	echo ""
+	echo "Testing -X:NoDebug..."	
+    nodebug-helper $dlrexe
+    
 	#------------------------------------------------------------------------------
 	## -X:AssembliesDir
 	echo ""

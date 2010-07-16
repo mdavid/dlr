@@ -308,6 +308,7 @@
       <Compile Include="Runtime\Win32Native.cs" />
       <Compile Include="Runtime\WrapperDescriptorAttribute.cs" />
       <Compile Include="Runtime\WrapperDictionary.cs" />
+      <Compile Include="Runtime\XamlObjectWriterSettings.cs" />
       <Compile Include="Runtime\XRange.cs" />
     </ItemGroup>
     <ItemGroup>
@@ -331,6 +332,7 @@
       <Compile Include="Runtime\Binding\IFastInvokable.cs" />
       <Compile Include="Runtime\Binding\IFastSettable.cs" />
       <Compile Include="Runtime\Binding\IPythonConvertible.cs" />
+      <Compile Include="Runtime\Binding\IPythonExpandable.cs" />
       <Compile Include="Runtime\Binding\IPythonGetable.cs" />
       <Compile Include="Runtime\Binding\IPythonInvokable.cs" />
       <Compile Include="Runtime\Binding\IPythonOperable.cs" />

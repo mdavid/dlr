@@ -27,13 +27,13 @@ namespace SymplSample {
             AddAssemblyNamesAndTypes();
         }
 
-		// _addNamespacesAndTypes builds a tree of ExpandoObjects representing
-		// .NET namespaces, with TypeModel objects at the leaves.  Though Sympl is
-		// case-insensitive, we store the names as they appear in .NET reflection
-		// in case our globals object or a namespace object gets passed as an IDO
-		// to another language or library, where they may be looking for names
-		// case-sensitively using EO's default lookup.
-		//
+        // _addNamespacesAndTypes builds a tree of ExpandoObjects representing
+        // .NET namespaces, with TypeModel objects at the leaves.  Though Sympl is
+        // case-insensitive, we store the names as they appear in .NET reflection
+        // in case our globals object or a namespace object gets passed as an IDO
+        // to another language or library, where they may be looking for names
+        // case-sensitively using EO's default lookup.
+        //
         public void AddAssemblyNamesAndTypes() {
             foreach (var assm in _assemblies) {
                 foreach (var typ in assm.GetExportedTypes()) {
@@ -59,10 +59,10 @@ namespace SymplSample {
             }
         }
 
-		// ExecuteFile executes the file in a new module scope and stores the
-		// scope on Globals, using either the provided name, globalVar, or the
-		// file's base name.  This function returns the module scope.
-		//
+        // ExecuteFile executes the file in a new module scope and stores the
+        // scope on Globals, using either the provided name, globalVar, or the
+        // file's base name.  This function returns the module scope.
+        //
         public IDynamicMetaObjectProvider ExecuteFile(string filename) {
             return ExecuteFile(filename, null);
         }
@@ -78,10 +78,10 @@ namespace SymplSample {
             return moduleEO;
         }
 
-		// ExecuteFileInScope executes the file in the given module scope.  This
-		// does NOT store the module scope on Globals.  This function returns
-		// nothing.
-		//
+        // ExecuteFileInScope executes the file in the given module scope.  This
+        // does NOT store the module scope on Globals.  This function returns
+        // nothing.
+        //
         public void ExecuteFileInScope(string filename,
                                        IDynamicMetaObjectProvider moduleEO) {
             var f = new StreamReader(filename);
@@ -353,11 +353,11 @@ namespace SymplSample {
     // TypeModel and TypeModelMetaObject
     ////////////////////////////////////
 
-	// TypeModel wraps System.Runtimetypes. When Sympl code encounters
-	// a type leaf node in Sympl.Globals and tries to invoke a member, wrapping
-	// the ReflectionTypes in TypeModels allows member access to get the type's
-	// members and not ReflectionType's members.
-	//
+    // TypeModel wraps System.Runtimetypes. When Sympl code encounters
+    // a type leaf node in Sympl.Globals and tries to invoke a member, wrapping
+    // the ReflectionTypes in TypeModels allows member access to get the type's
+    // members and not ReflectionType's members.
+    //
     public class TypeModel : IDynamicMetaObjectProvider {
         private Type _reflType;
 
@@ -379,9 +379,9 @@ namespace SymplSample {
         public TypeModel TypeModel { get { return _typeModel; } }
         public Type ReflType { get { return _typeModel.ReflType; } }
 
-		// Constructor takes ParameterExpr to reference CallSite, and a TypeModel
-		// that the new TypeModelMetaObject represents.
-		//
+        // Constructor takes ParameterExpr to reference CallSite, and a TypeModel
+        // that the new TypeModelMetaObject represents.
+        //
         public TypeModelMetaObject(Expression objParam, TypeModel typeModel)
             : base(objParam, BindingRestrictions.Empty, typeModel) {
                 _typeModel = typeModel;
@@ -391,7 +391,7 @@ namespace SymplSample {
             var flags = BindingFlags.IgnoreCase | BindingFlags.Static | 
                         BindingFlags.Public;
             // consider BindingFlags.Instance if want to return wrapper for
-			// inst members that is callable.
+            // inst members that is callable.
             var members = ReflType.GetMember(binder.Name, flags);
             if (members.Length == 1) {
                 return new DynamicMetaObject(
@@ -402,8 +402,8 @@ namespace SymplSample {
                             null,
                             members[0])),
                     // Don't need restriction test for name since this
-					// rule is only used where binder is used, which is
-					// only used in sites with this binder.Name.
+                    // rule is only used where binder is used, which is
+                    // only used in sites with this binder.Name.
                     this.Restrictions.Merge(
                         BindingRestrictions.GetInstanceRestriction(
                             this.Expression,
@@ -458,7 +458,7 @@ namespace SymplSample {
                 }
                 if (res.Count == 0) {
                     // Sometimes when binding members on TypeModels the member
-                    // is an intance member since the Type is an instance of Type.
+                    // is an instance member since the Type is an instance of Type.
                     // We fallback to the binder with the Type instance to see if
                     // it binds.  The SymplInvokeMemberBinder does handle this.
                     var typeMO = RuntimeHelpers.GetRuntimeTypeMoFromModel(this);

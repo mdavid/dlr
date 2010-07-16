@@ -2,11 +2,11 @@
  *
  * Copyright (c) Microsoft Corporation. 
  *
- * This source code is subject to terms and conditions of the Microsoft Public License. A 
+ * This source code is subject to terms and conditions of the Apache License, Version 2.0. A 
  * copy of the license can be found in the License.html file at the root of this distribution. If 
- * you cannot locate the  Microsoft Public License, please send an email to 
+ * you cannot locate the  Apache License, Version 2.0, please send an email to 
  * dlr@microsoft.com. By using this source code in any fashion, you are agreeing to be bound 
- * by the terms of the Microsoft Public License.
+ * by the terms of the Apache License, Version 2.0.
  *
  * You must not remove this notice, or any other, from this software.
  *
@@ -21,11 +21,12 @@ using System.Reflection;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using System.Text;
+using System.Xml;
 
 using Microsoft.Scripting;
+using Microsoft.Scripting.Generation;
 using Microsoft.Scripting.Runtime;
 using Microsoft.Scripting.Utils;
-using Microsoft.Scripting.Generation;
 
 using IronPython.Runtime;
 using IronPython.Runtime.Exceptions;
@@ -299,6 +300,57 @@ the assembly object.")]
 
             return ((PythonContext)context.LanguageContext).GetSetCommandDispatcher(dispatcher);
         }
+
+#if !CLR2 && !SILVERLIGHT
+        /// <summary>
+        /// Loads XAML from the specified filename and returns the deserialized object.  Any event handlers
+        /// are bound to methods defined in the provided module.
+        /// </summary>
+        public static object LoadComponent(CodeContext context, string filename, object self) {
+            if (filename == null) {
+                throw PythonOps.TypeError("expected str, got None");
+            } else if (self == null) {
+                throw PythonOps.TypeError("expected module, got None");
+            }
+
+            return DynamicXamlReader.LoadComponent(self, context.LanguageContext.Operations, filename);
+        }
+
+        /// <summary>
+        /// Loads XAML from the specified stream and returns the deserialized object.  Any event handlers
+        /// are bound to methods defined in the provided module.
+        /// </summary>
+        public static object LoadComponent(CodeContext context, [NotNull]Stream stream, object self) {
+            if (self == null) {
+                throw PythonOps.TypeError("expected module, got None");
+            }
+
+            return DynamicXamlReader.LoadComponent(self, context.LanguageContext.Operations, stream);
+        }
+
+        /// <summary>
+        /// Loads XAML from the specified XmlReader and returns the deserialized object.  Any event handlers
+        /// are bound to methods defined in the provided module.
+        /// </summary>
+        public static object LoadComponent(CodeContext context, [NotNull]XmlReader xmlReader, object self) {
+            if (self == null) {
+                throw PythonOps.TypeError("expected module, got None");
+            }
+
+            return DynamicXamlReader.LoadComponent(self, context.LanguageContext.Operations, xmlReader);
+        }
+
+        /// <summary>
+        /// Loads XAML from the specified TextReader and returns the deserialized object.  Any event handlers
+        /// are bound to methods defined in the provided module.
+        /// </summary>
+        public static object LoadComponent(CodeContext context, [NotNull]TextReader filename, object self) {
+            if (self == null) {
+                throw PythonOps.TypeError("expected module, got None");
+            }
+            return DynamicXamlReader.LoadComponent(self, context.LanguageContext.Operations, filename);
+        }
+#endif
 
         #endregion
 

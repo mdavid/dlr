@@ -2,11 +2,11 @@
  *
  * Copyright (c) Microsoft Corporation. 
  *
- * This source code is subject to terms and conditions of the Microsoft Public License. A 
+ * This source code is subject to terms and conditions of the Apache License, Version 2.0. A 
  * copy of the license can be found in the License.html file at the root of this distribution. If 
- * you cannot locate the  Microsoft Public License, please send an email to 
+ * you cannot locate the  Apache License, Version 2.0, please send an email to 
  * dlr@microsoft.com. By using this source code in any fashion, you are agreeing to be bound 
- * by the terms of the Microsoft Public License.
+ * by the terms of the Apache License, Version 2.0.
  *
  * You must not remove this notice, or any other, from this software.
  *
@@ -31,6 +31,7 @@ using System.Reflection;
 using System.Runtime.CompilerServices;
 using System.Security;
 using System.Text;
+using System.Text.RegularExpressions;
 using System.Threading;
 
 using Microsoft.Scripting;
@@ -50,12 +51,13 @@ using IronPython.Runtime.Types;
 using Debugging = Microsoft.Scripting.Debugging;
 using PyAst = IronPython.Compiler.Ast;
 
+
 namespace IronPython.Runtime {
     public delegate void CommandDispatcher(Delegate command);
     public delegate int HashDelegate(object o, ref HashDelegate dlg);
 
     public sealed partial class PythonContext : LanguageContext {
-        internal const string/*!*/ IronPythonDisplayName = "IronPython 2.6.1";
+        internal const string/*!*/ IronPythonDisplayName = "IronPython 2.7 Alpha 1";
         internal const string/*!*/ IronPythonNames = "IronPython;Python;py";
         internal const string/*!*/ IronPythonFileExtensions = ".py";
 
@@ -184,7 +186,6 @@ namespace IronPython.Runtime {
         private DynamicMetaObjectBinder _invokeTwoConvertToInt;
         private static CultureInfo _CCulture;
         private DynamicDelegateCreator _delegateCreator;
-
         // tracing / in-proc debugging support
         private Debugging.CompilerServices.DebugContext _debugContext;
         private Debugging.ITracePipeline _tracePipeline;
@@ -636,6 +637,20 @@ namespace IronPython.Runtime {
             ));
         }
 
+        public PythonType EnsureModuleException(object key, PythonType baseType, Type underlyingType, PythonDictionary dict, string name, string module, Func<string, Exception> exceptionMaker) {
+            return (PythonType)(dict[name] = GetOrCreateModuleState(
+                key,
+                () => PythonExceptions.CreateSubType(this, baseType, underlyingType, name, module, "", exceptionMaker)
+            ));
+        }
+
+        public PythonType EnsureModuleException(object key, PythonType[] baseTypes, Type underlyingType, PythonDictionary dict, string name, string module) {
+            return (PythonType)(dict[name] = GetOrCreateModuleState(
+                key,
+                () => PythonExceptions.CreateSubType(this, baseTypes, underlyingType, name, module, "", PythonType.DefaultMakeException)
+            ));
+        }
+
         internal PythonOptions/*!*/ PythonOptions {
             get {
                 return _options;
@@ -787,6 +802,10 @@ namespace IronPython.Runtime {
             SysModule.PerformModuleReload(this, _systemState.__dict__);
         }
 
+        internal bool EmitDebugSymbols(SourceUnit sourceUnit) {
+            return sourceUnit.EmitDebugSymbols && (PythonOptions.NoDebug == null || !PythonOptions.NoDebug.IsMatch(sourceUnit.Path));
+        }
+
         private void InitializeSysFlags() {
             // sys.flags
             SysModule.SysFlags flags = new SysModule.SysFlags();
@@ -834,7 +853,7 @@ namespace IronPython.Runtime {
         internal bool ShouldInterpret(PythonCompilerOptions options, SourceUnit source) {
             // We have to turn off adaptive compilation in debug mode to
             // support mangaged debuggers. Also turn off in optimized mode.
-            bool adaptiveCompilation = !_options.NoAdaptiveCompilation && !source.EmitDebugSymbols;
+            bool adaptiveCompilation = !_options.NoAdaptiveCompilation && !EmitDebugSymbols(source);
 
             return options.Interpreted || adaptiveCompilation;
         }
@@ -1894,7 +1913,7 @@ namespace IronPython.Runtime {
             dict["executable"] = _initialExecutable;
             SystemState.__dict__["prefix"] =  _initialPrefix;
             dict["exec_prefix"] = _initialPrefix;
-            SetVersionVariables(dict, 2, 6, 1, "release", _initialVersionString);
+            SetVersionVariables(dict, 2, 7, 0, "alpha", _initialVersionString);
         }
 
         private static void SetVersionVariables(PythonDictionary dict, byte major, byte minor, byte build, string level, string versionString) {

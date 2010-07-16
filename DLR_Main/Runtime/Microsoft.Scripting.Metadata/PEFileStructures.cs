@@ -2,18 +2,16 @@
  *
  * Copyright (c) Microsoft Corporation. 
  *
- * This source code is subject to terms and conditions of the Microsoft Public License. A 
+ * This source code is subject to terms and conditions of the Apache License, Version 2.0. A 
  * copy of the license can be found in the License.html file at the root of this distribution. If 
- * you cannot locate the  Microsoft Public License, please send an email to 
+ * you cannot locate the  Apache License, Version 2.0, please send an email to 
  * dlr@microsoft.com. By using this source code in any fashion, you are agreeing to be bound 
- * by the terms of the Microsoft Public License.
+ * by the terms of the Apache License, Version 2.0.
  *
  * You must not remove this notice, or any other, from this software.
  *
  *
  * ***************************************************************************/
-#if !SILVERLIGHT
-
 using System;
 
 namespace Microsoft.Scripting.Metadata {
@@ -269,6 +267,8 @@ namespace Microsoft.Scripting.Metadata {
         Fire = 0x0020,
     }
 
+    [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Design", "CA1028:EnumStorageShouldBeInt32")]
+    [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Design", "CA1027:MarkEnumsWithFlags")]
     public enum ElementType : byte {
         End = 0x00,
         Void = 0x01,
@@ -300,7 +300,7 @@ namespace Microsoft.Scripting.Metadata {
         UIntPtr = 0x19,
         FunctionPointer = 0x1b,
         Object = 0x1c,
-        SzArray = 0x1d,
+        Vector = 0x1d,
         
         GenericMethodParameter = 0x1e,
         
@@ -314,8 +314,8 @@ namespace Microsoft.Scripting.Metadata {
         Modifier = 0x40,
         Sentinel = 0x41,
         Pinned = 0x45,
-        SingleHFA = 0x54, //  What is this?
-        DoubleHFA = 0x55, //  What is this?
+        // SingleHFA = 0x54, //  What is this?
+        // DoubleHFA = 0x55, //  What is this?
     }
 
     // TODO: merge with MetadataSignature
@@ -642,6 +642,7 @@ namespace Microsoft.Scripting.Metadata {
             return new MetadataToken(tokenType, hasCustomAttribute >> HasCustomAttributeTag.NumberOfBits);
         }
 
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Maintainability", "CA1502:AvoidExcessiveComplexity")]
         internal static uint ConvertToTag(MetadataToken token) {
             uint rowId = (uint)token.Rid;
             switch (token.TokenType) {
@@ -917,5 +918,3 @@ namespace Microsoft.Scripting.Metadata {
 
     #endregion 
 }
-
-#endif

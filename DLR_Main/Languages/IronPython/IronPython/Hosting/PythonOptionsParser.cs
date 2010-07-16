@@ -2,11 +2,11 @@
  *
  * Copyright (c) Microsoft Corporation. 
  *
- * This source code is subject to terms and conditions of the Microsoft Public License. A 
+ * This source code is subject to terms and conditions of the Apache License, Version 2.0. A 
  * copy of the license can be found in the License.html file at the root of this distribution. If 
- * you cannot locate the  Microsoft Public License, please send an email to 
+ * you cannot locate the  Apache License, Version 2.0, please send an email to 
  * dlr@microsoft.com. By using this source code in any fashion, you are agreeing to be bound 
- * by the terms of the Microsoft Public License.
+ * by the terms of the Apache License, Version 2.0.
  *
  * You must not remove this notice, or any other, from this software.
  *
@@ -16,6 +16,7 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Text.RegularExpressions;
 using Microsoft.Scripting;
 using Microsoft.Scripting.Hosting;
 using Microsoft.Scripting.Hosting.Shell;
@@ -185,6 +186,16 @@ namespace IronPython.Hosting {
                     LanguageSetup.Options["Debug"] = ScriptingRuntimeHelpers.True;
                     break;
 
+                case "-X:NoDebug":
+                    string regex = PopNextArg();
+                    try {
+                        LanguageSetup.Options["NoDebug"] = new Regex(regex);
+                    } catch {
+                        throw InvalidOptionValue("-X:NoDebug", regex);
+                    }
+                    
+                    break;
+
                 default:
                     base.ParseArgument(arg);
 
@@ -246,6 +257,7 @@ namespace IronPython.Hosting {
                 { "-X:GCStress",            "Specifies the GC stress level (the generation to collect each statement)" },
                 { "-X:MaxRecursion",        "Set the maximum recursion level" },
                 { "-X:Debug",               "Enable application debugging (preferred over -D)" },
+                { "-X:NoDebug <regex>",     "Provides a regular expression of files which should not be emitted in debug mode"},
                 { "-X:MTA",                 "Run in multithreaded apartment" },
                 { "-X:Python30",            "Enable available Python 3.0 features" },
                 { "-X:EnableProfiler",      "Enables profiling support in the compiler" },

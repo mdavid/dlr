@@ -2,11 +2,11 @@
  *
  * Copyright (c) Microsoft Corporation. 
  *
- * This source code is subject to terms and conditions of the Microsoft Public License. A 
+ * This source code is subject to terms and conditions of the Apache License, Version 2.0. A 
  * copy of the license can be found in the License.html file at the root of this distribution. If 
- * you cannot locate the  Microsoft Public License, please send an email to 
+ * you cannot locate the  Apache License, Version 2.0, please send an email to 
  * dlr@microsoft.com. By using this source code in any fashion, you are agreeing to be bound 
- * by the terms of the Microsoft Public License.
+ * by the terms of the Apache License, Version 2.0.
  *
  * You must not remove this notice, or any other, from this software.
  *
@@ -16,8 +16,11 @@
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
-using IronPython.Runtime.Exceptions;
+using System.Text.RegularExpressions;
+
 using Microsoft.Scripting;
+
+using IronPython.Runtime.Exceptions;
 
 namespace IronPython {
 
@@ -49,6 +52,7 @@ namespace IronPython {
         private readonly bool _verbose;
         private readonly bool _frames, _fullFrames, _tracing;
         private readonly Version _version;
+        private readonly Regex _noDebug;
         private readonly int? _gcStress;
         private bool _enableProfiler;
         private readonly bool _lightweightScopes;
@@ -223,6 +227,15 @@ namespace IronPython {
             get { return _gcStress; }            
         }
 
+        /// <summary>
+        /// Returns a regular expression of Python files which should not be emitted in debug mode.
+        /// </summary>
+        public Regex NoDebug {
+            get {
+                return _noDebug;
+            }
+        }
+
         public PythonOptions() 
             : this(null) {
         }
@@ -262,6 +275,7 @@ namespace IronPython {
             _frames = _fullFrames || GetOption(options, "Frames", false);
             _gcStress = GetOption<int?>(options, "GCStress", null);
             _tracing = GetOption(options, "Tracing", false);
+            _noDebug = GetOption(options, "NoDebug", (Regex)null);
 
             object value;
             if (options != null && options.TryGetValue("PythonVersion", out value)) {
@@ -273,11 +287,11 @@ namespace IronPython {
                     throw new ValueErrorException("Expected string or Version for PythonVersion");
                 }
 
-                if (_version != new Version(2, 6) && _version != new Version(3, 0)) {
-                    throw new ValueErrorException("Expected Version to be 2.6 or 3.0");
+                if (_version != new Version(2, 7) && _version != new Version(3, 0)) {
+                    throw new ValueErrorException("Expected Version to be 2.7 or 3.0");
                 }
             } else {
-                _version = new Version(2, 6);
+                _version = new Version(2, 7);
             }
 
             _python30 = _version == new Version(3, 0);

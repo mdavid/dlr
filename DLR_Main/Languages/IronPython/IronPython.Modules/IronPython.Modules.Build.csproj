@@ -100,6 +100,7 @@
       <Compile Include="_fileio.cs" />
       <Compile Include="_functools.cs" />
       <Compile Include="_heapq.cs" />
+      <Compile Include="_io.cs" />
       <Compile Include="_locale.cs" />
       <Compile Include="_md5.cs" />
       <Compile Include="_multibytecodec.cs" />

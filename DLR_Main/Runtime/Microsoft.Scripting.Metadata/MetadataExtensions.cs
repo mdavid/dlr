@@ -2,21 +2,22 @@
  *
  * Copyright (c) Microsoft Corporation. 
  *
- * This source code is subject to terms and conditions of the Microsoft Public License. A 
+ * This source code is subject to terms and conditions of the Apache License, Version 2.0. A 
  * copy of the license can be found in the License.html file at the root of this distribution. If 
- * you cannot locate the  Microsoft Public License, please send an email to 
+ * you cannot locate the  Apache License, Version 2.0, please send an email to 
  * dlr@microsoft.com. By using this source code in any fashion, you are agreeing to be bound 
- * by the terms of the Microsoft Public License.
+ * by the terms of the Apache License, Version 2.0.
  *
  * You must not remove this notice, or any other, from this software.
  *
  *
  * ***************************************************************************/
-#if !SILVERLIGHT
-
 using System;
 using System.Globalization;
 using System.Reflection;
+using System.Collections.Generic;
+using System.Text;
+using System.Security;
 
 namespace Microsoft.Scripting.Metadata {
     public static class MetadataExtensions {
@@ -36,11 +37,11 @@ namespace Microsoft.Scripting.Metadata {
         }
 
         public static AssemblyName GetAssemblyName(this AssemblyRef assemblyRef) {
-            return CreateAssemblyName(assemblyRef.Name, assemblyRef.Culture, assemblyRef.Version, assemblyRef.NameFlags, assemblyRef.PublicKeyOrToken);
+            return CreateAssemblyName(assemblyRef.Name, assemblyRef.Culture, assemblyRef.Version, assemblyRef.NameFlags, assemblyRef.GetPublicKeyOrToken());
         }
 
         public static AssemblyName GetAssemblyName(this AssemblyDef assemblyDef) {
-            return CreateAssemblyName(assemblyDef.Name, assemblyDef.Culture, assemblyDef.Version, assemblyDef.NameFlags, assemblyDef.PublicKey);
+            return CreateAssemblyName(assemblyDef.Name, assemblyDef.Culture, assemblyDef.Version, assemblyDef.NameFlags, assemblyDef.GetPublicKey());
         }
 
         private static AssemblyName CreateAssemblyName(MetadataName name, MetadataName culture, Version version, AssemblyNameFlags flags, byte[] publicKeyOrToken) {
@@ -70,5 +71,3 @@ namespace Microsoft.Scripting.Metadata {
         }
     }
 }
-
-#endif

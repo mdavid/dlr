@@ -2,11 +2,11 @@
  *
  * Copyright (c) Microsoft Corporation. 
  *
- * This source code is subject to terms and conditions of the Microsoft Public License. A 
+ * This source code is subject to terms and conditions of the Apache License, Version 2.0. A 
  * copy of the license can be found in the License.html file at the root of this distribution. If 
- * you cannot locate the  Microsoft Public License, please send an email to 
+ * you cannot locate the  Apache License, Version 2.0, please send an email to 
  * ironruby@microsoft.com. By using this source code in any fashion, you are agreeing to be bound 
- * by the terms of the Microsoft Public License.
+ * by the terms of the Apache License, Version 2.0.
  *
  * You must not remove this notice, or any other, from this software.
  *
@@ -355,6 +355,24 @@ scope.y = 2
 p scope.x + scope.y
 ", @"
 3
+");
+        }
+
+        public void RubyHosting_Scopes2() {
+            var s = Engine.CreateScope();
+            Context.ObjectClass.SetConstant("S", s);
+            s.SetVariable("FooBar", 123);
+
+            TestOutput(@"
+p S.get_variable('FooBar')
+p S.get_variable('foo_bar')
+p S.GetVariable('FooBar')
+p S.GetVariable('foo_bar')
+", @"
+123
+123
+123
+123
 ");
         }
 

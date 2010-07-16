@@ -148,6 +148,7 @@
     <Compile Include="Compiler\PythonDynamicExpression.cs" />
     <Compile Include="Compiler\UncollectableCompilationMode.Generated.cs" />
     <Compile Include="Compiler\RunnableScriptCode.cs" />
+    <Compile Include="Runtime\Binding\IPythonExpandable.cs" />
     <Compile Include="Runtime\ConstantDictionaryStorage.cs" />
     <Compile Include="Runtime\DictionaryTypeInfoAttribute.cs" />
     <Compile Include="Modules\imp.cs" />
@@ -518,6 +519,7 @@
     <Compile Include="Runtime\Win32Native.cs" />
     <Compile Include="Runtime\WrapperDescriptorAttribute.cs" />
     <Compile Include="Runtime\WrapperDictionary.cs" />
+    <Compile Include="Runtime\XamlObjectWriterSettings.cs" />
     <Compile Include="Runtime\XRange.cs" />
     <Compile Include="..\AssemblyVersion.cs">
       <Link>Properties\AssemblyVersion.cs</Link>

@@ -2,18 +2,16 @@
  *
  * Copyright (c) Microsoft Corporation. 
  *
- * This source code is subject to terms and conditions of the Microsoft Public License. A 
+ * This source code is subject to terms and conditions of the Apache License, Version 2.0. A 
  * copy of the license can be found in the License.html file at the root of this distribution. If 
- * you cannot locate the  Microsoft Public License, please send an email to 
+ * you cannot locate the  Apache License, Version 2.0, please send an email to 
  * dlr@microsoft.com. By using this source code in any fashion, you are agreeing to be bound 
- * by the terms of the Microsoft Public License.
+ * by the terms of the Apache License, Version 2.0.
  *
  * You must not remove this notice, or any other, from this software.
  *
  *
  * ***************************************************************************/
-#if !SILVERLIGHT
-
 using System;
 using System.Diagnostics;
 using System.Reflection;
@@ -41,7 +39,7 @@ namespace Microsoft.Scripting.Metadata {
         private int _numberOfSections;
         private OptionalHeaderDirectoryEntries _optionalHeaderDirectoryEntries;
         private SectionHeader[] _sectionHeaders;
-        private MemoryBlock _win32ResourceBlock;
+        // private MemoryBlock _win32ResourceBlock;
 
         private void ReadOptionalHeaderDirectoryEntries(MemoryReader memReader) {
             // ExportTableDirectory
@@ -141,7 +139,7 @@ namespace Microsoft.Scripting.Metadata {
             ReadOptionalHeaderDirectoryEntries(memReader);
             ReadSectionHeaders(memReader);
 
-            _win32ResourceBlock = DirectoryToMemoryBlock(_optionalHeaderDirectoryEntries.ResourceTableDirectory);
+            // _win32ResourceBlock = DirectoryToMemoryBlock(_optionalHeaderDirectoryEntries.ResourceTableDirectory);
         }
 
         internal MemoryBlock RvaToMemoryBlock(uint rva, uint size) {
@@ -184,8 +182,8 @@ namespace Microsoft.Scripting.Metadata {
 
         private MetadataStreamKind _metadataStreamKind;
         private MemoryBlock _metadataTableStream;
-        private MemoryBlock _resourceMemoryBlock;
-        private MemoryBlock _strongNameSignatureBlock;
+        // private MemoryBlock _resourceMemoryBlock;
+        // private MemoryBlock _strongNameSignatureBlock;
 
         private void ReadCOR20Header() {
             MemoryBlock memBlock = DirectoryToMemoryBlock(_optionalHeaderDirectoryEntries.COR20HeaderTableDirectory);
@@ -342,8 +340,8 @@ namespace Microsoft.Scripting.Metadata {
             ReadStreamHeaders(memReader);
             ProcessAndCacheStreams(metadataRoot);
 
-            _resourceMemoryBlock = DirectoryToMemoryBlock(_cor20Header.ResourcesDirectory);
-            _strongNameSignatureBlock = DirectoryToMemoryBlock(_cor20Header.StrongNameSignatureDirectory);
+            // _resourceMemoryBlock = DirectoryToMemoryBlock(_cor20Header.ResourcesDirectory);
+            // _strongNameSignatureBlock = DirectoryToMemoryBlock(_cor20Header.StrongNameSignatureDirectory);
         }
 
         #endregion Methods [CORModule]
@@ -501,8 +499,9 @@ namespace Microsoft.Scripting.Metadata {
             return isAllReferencedTablesSmall ? 2 : 4;
         }
 
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Maintainability", "CA1505:AvoidUnmaintainableCode")]
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Maintainability", "CA1506:AvoidExcessiveClassCoupling")]
         private void ProcessAndCacheMetadataTableBlocks(MemoryBlock metadataTablesMemoryBlock) {
-
             int[] rowCountArray = _tableRowCounts = new int[TableCount];
             int[] rowRefSizeArray = new int[TableCount];
             int[] rowCountCompressedArray = _metadataTableHeader.CompressedMetadataTableRowCount;
@@ -939,6 +938,7 @@ namespace Microsoft.Scripting.Metadata {
             return (int)start;
         }
 
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Maintainability", "CA1502:AvoidExcessiveComplexity")]
         internal EnumerationIndirection GetEnumeratorRange(MetadataTokenType type, MetadataToken parent, out int startRid, out int count) {
             Debug.Assert(IsValidToken(parent));
 
@@ -1121,9 +1121,9 @@ namespace Microsoft.Scripting.Metadata {
                 output.WriteLine("  OffsetToRawData                  {0}", section.OffsetToRawData);
             }
 
-            output.WriteLine();
-            output.WriteLine("Win32Resources:");
-            output.WriteLine("  +{0:X8} {1}", _win32ResourceBlock.Pointer - _image.Pointer, _win32ResourceBlock.Length);
+            //output.WriteLine();
+            //output.WriteLine("Win32Resources:");
+            //output.WriteLine("  +{0:X8} {1}", _win32ResourceBlock.Pointer - _image.Pointer, _win32ResourceBlock.Length);
 
             output.WriteLine();
             output.WriteLine("COR20 Header:");
@@ -1147,7 +1147,7 @@ namespace Microsoft.Scripting.Metadata {
             output.WriteLine("GUIDStream:              +{0:X8}", _guidStream.Pointer - _image.Pointer);
             output.WriteLine("UserStringStream:        +{0:X8}", _userStringStream != null ? (_userStringStream.Pointer - _image.Pointer) : 0);
             output.WriteLine("MetadataTableStream:     +{0:X8}", _metadataTableStream.Pointer - _image.Pointer);
-            output.WriteLine("ResourceMemoryReader:    +{0:X8}", _resourceMemoryBlock != null ? (_resourceMemoryBlock.Pointer - _image.Pointer) : 0);
+            //output.WriteLine("ResourceMemoryReader:    +{0:X8}", _resourceMemoryBlock != null ? (_resourceMemoryBlock.Pointer - _image.Pointer) : 0);
             
             output.WriteLine();
             output.WriteLine("Misc:");
@@ -1158,5 +1158,3 @@ namespace Microsoft.Scripting.Metadata {
         #endregion
     }
 }
-
-#endif

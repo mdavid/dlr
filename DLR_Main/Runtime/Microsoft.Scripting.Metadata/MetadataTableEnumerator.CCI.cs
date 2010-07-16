@@ -2,18 +2,16 @@
  *
  * Copyright (c) Microsoft Corporation. 
  *
- * This source code is subject to terms and conditions of the Microsoft Public License. A 
+ * This source code is subject to terms and conditions of the Apache License, Version 2.0. A 
  * copy of the license can be found in the License.html file at the root of this distribution. If 
- * you cannot locate the  Microsoft Public License, please send an email to 
+ * you cannot locate the  Apache License, Version 2.0, please send an email to 
  * dlr@microsoft.com. By using this source code in any fashion, you are agreeing to be bound 
- * by the terms of the Microsoft Public License.
+ * by the terms of the Apache License, Version 2.0.
  *
  * You must not remove this notice, or any other, from this software.
  *
  *
  * ***************************************************************************/
-#if !SILVERLIGHT
-
 using System;
 using System.Collections.Generic;
 using System.Text;
@@ -31,7 +29,7 @@ namespace Microsoft.Scripting.Metadata {
         Param = 5,
     }
 
-    public sealed class MetadataTableEnumerator : IEnumerator<MetadataRecord> {
+    public sealed class MetadataTableEnumerator {
         private readonly int m_startRid;
         private readonly int m_endRid;
         private readonly MetadataTokenType m_type;
@@ -56,11 +54,6 @@ namespace Microsoft.Scripting.Metadata {
 
         public int Count {
             get { return m_endRid - m_startRid; }
-        }
-
-        public void Dispose() {
-            m_tables = null;
-            m_currentRid = Int32.MaxValue;
         }
 
         public void Reset() {
@@ -109,10 +102,6 @@ namespace Microsoft.Scripting.Metadata {
             return true;
         }
 
-        object IEnumerator.Current {
-            get { return Current; }
-        }
-
         public MetadataRecord Current {
             get { 
                 return new MetadataRecord(m_currentToken, m_tables); 
@@ -121,5 +110,3 @@ namespace Microsoft.Scripting.Metadata {
     }
 
 }
-
-#endif

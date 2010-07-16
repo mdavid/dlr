@@ -2,28 +2,20 @@
  *
  * Copyright (c) Microsoft Corporation. 
  *
- * This source code is subject to terms and conditions of the Microsoft Public License. A 
+ * This source code is subject to terms and conditions of the Apache License, Version 2.0. A 
  * copy of the license can be found in the License.html file at the root of this distribution. If 
- * you cannot locate the  Microsoft Public License, please send an email to 
+ * you cannot locate the  Apache License, Version 2.0, please send an email to 
  * dlr@microsoft.com. By using this source code in any fashion, you are agreeing to be bound 
- * by the terms of the Microsoft Public License.
+ * by the terms of the Apache License, Version 2.0.
  *
  * You must not remove this notice, or any other, from this software.
  *
  *
  * ***************************************************************************/
-#if !SILVERLIGHT
-
-// TODO:
-#if CLR2
-using Contract = Microsoft.Scripting.Utils.ContractUtils;
-#else
-using System.Diagnostics.Contracts;
-#endif
-
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Diagnostics.Contracts;
 using System.Globalization;
 using System.Reflection;
 using System.Security;
@@ -56,11 +48,13 @@ namespace Microsoft.Scripting.Metadata {
 namespace System.Reflection {
     using Microsoft.Scripting.Metadata;
 #endif
+    [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Naming", "CA1717:OnlyFlagsEnumsShouldHavePluralNames")]
     public enum AssemblyFileAttributes {
         ContainsMetadata = 0x00000000,
         ContainsNoMetadata = 0x00000001,
     }
 
+    [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Usage", "CA2217:DoNotMarkEnumsWithFlags")]
     [Flags]
     public enum ManifestResourceAttributes {
         PublicVisibility = 0x00000001,
@@ -93,14 +87,28 @@ namespace System.Reflection {
             m_value = ((int)type << 24) | rowId;
         }
 
+        // SECURITY: Nothing unsafe here.
+        [SecuritySafeCritical]
         public override bool Equals(object obj) {
             return obj is MetadataToken && Equals((MetadataToken)obj);
         }
 
+        // SECURITY: Nothing unsafe here.
+        [SecuritySafeCritical]
         public bool Equals(MetadataToken other) {
             return m_value == other.m_value;
         }
 
+        public static bool operator ==(MetadataToken self, MetadataToken other) {
+            return self.Equals(other);
+        }
+
+        public static bool operator !=(MetadataToken self, MetadataToken other) {
+            return self.Equals(other);
+        }
+
+        // SECURITY: Nothing unsafe here.
+        [SecuritySafeCritical]
         public override int GetHashCode() {
             return m_value;
         }
@@ -162,14 +170,28 @@ namespace Microsoft.Scripting.Metadata {
             get { return m_token; }
         }
 
+        // SECURITY: Nothing unsafe here.
+        [SecuritySafeCritical]
         public override bool Equals(object obj) {
             return obj is MetadataRecord && Equals((MetadataRecord)obj);
         }
 
+        // SECURITY: Nothing unsafe here.
+        [SecuritySafeCritical]
         public bool Equals(MetadataRecord other) {
             return m_token.Equals(other.m_token) && ReferenceEquals(m_tables, other.m_tables);
         }
 
+        public static bool operator ==(MetadataRecord self, MetadataRecord other) {
+            return self.Equals(other);
+        }
+
+        public static bool operator !=(MetadataRecord self, MetadataRecord other) {
+            return self.Equals(other);
+        }
+
+        // SECURITY: Nothing unsafe here.
+        [SecuritySafeCritical]
         public override int GetHashCode() {
             return m_token.GetHashCode() ^ m_tables.GetHashCode();
         }
@@ -251,20 +273,6 @@ namespace Microsoft.Scripting.Metadata {
         internal readonly string m_path;
 
         /// <summary>
-        /// Gets the module whose metadata tables this instance represents.
-        /// Null if the tables reflect unloaded module file.
-        /// </summary>
-        public Module Module {
-            get { 
-#if CCI
-                return null;
-#else
-                return m_import.m_keepalive; 
-#endif
-            }
-        }
-
-        /// <summary>
         /// Gets the path of the module whose metadata tables this instance represents.
         /// Null for in-memory modules that are not backed by a file.
         /// </summary>
@@ -280,6 +288,7 @@ namespace Microsoft.Scripting.Metadata {
         /// <summary>
         /// Returns AssemblyDef for manifest modules, null token otherwise.
         /// </summary>
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Design", "CA1065:DoNotRaiseExceptionsInUnexpectedLocations")]
         public AssemblyDef AssemblyDef {
             get {
                 switch (GetRowCount((int)MetadataTokenType.Assembly >> 24)) {
@@ -359,25 +368,13 @@ namespace Microsoft.Scripting.Metadata {
         }
     }
 
-    public partial struct MetadataTableView : IEnumerable<MetadataRecord> {
+    public partial struct MetadataTableView {
         private readonly MetadataTokenType m_type;
         private readonly MetadataRecord m_parent;
 
         internal MetadataTableView(MetadataRecord parent, MetadataTokenType type) {
             m_type = type;
             m_parent = parent;
-        }
-
-        public MetadataTableEnumerator GetEnumerator() {
-            return new MetadataTableEnumerator(m_parent, m_type);
-        }
-
-        IEnumerator<MetadataRecord> IEnumerable<MetadataRecord>.GetEnumerator() {
-            return GetEnumerator();
-        }
-
-        System.Collections.IEnumerator System.Collections.IEnumerable.GetEnumerator() {
-            return GetEnumerator();
         }
     }
 
@@ -726,6 +723,7 @@ namespace Microsoft.Scripting.Metadata {
         public MethodDef Getter { get { return new MetadataRecord(m_getter, m_property.Record.Tables).MethodDef; } }
         public MethodDef Setter { get { return new MetadataRecord(m_setter, m_property.Record.Tables).MethodDef; } }
 
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Design", "CA1065:DoNotRaiseExceptionsInUnexpectedLocations")]
         public IEnumerable<MethodDef> Others {
             get {
                 // TODO: 
@@ -767,7 +765,7 @@ namespace Microsoft.Scripting.Metadata {
         private readonly MetadataToken m_add, m_remove, m_fire;
 
         internal EventAccessors(EventDef eventDef, MetadataToken add, MetadataToken remove, MetadataToken fire) {
-            Contract.Assert(add.IsMethodDef );
+            Contract.Assert(add.IsMethodDef);
             Contract.Assert(remove.IsMethodDef);
             Contract.Assert(fire.IsMethodDef);
             m_add = add;
@@ -788,6 +786,7 @@ namespace Microsoft.Scripting.Metadata {
         public MethodDef Remove { get { return new MetadataRecord(m_remove, m_event.Record.Tables).MethodDef; } }
         public MethodDef Fire { get { return new MetadataRecord(m_fire, m_event.Record.Tables).MethodDef; } }
 
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Design", "CA1065:DoNotRaiseExceptionsInUnexpectedLocations")]
         public IEnumerable<MethodDef> Others {
             get {
                 // TODO: 
@@ -1029,5 +1028,3 @@ namespace Microsoft.Scripting.Metadata {
         }
     }
 }
-
-#endif

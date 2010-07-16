@@ -2,11 +2,11 @@
  *
  * Copyright (c) Microsoft Corporation. 
  *
- * This source code is subject to terms and conditions of the Microsoft Public License. A 
+ * This source code is subject to terms and conditions of the Apache License, Version 2.0. A 
  * copy of the license can be found in the License.html file at the root of this distribution. If 
- * you cannot locate the  Microsoft Public License, please send an email to 
+ * you cannot locate the  Apache License, Version 2.0, please send an email to 
  * ironruby@microsoft.com. By using this source code in any fashion, you are agreeing to be bound 
- * by the terms of the Microsoft Public License.
+ * by the terms of the Apache License, Version 2.0.
  *
  * You must not remove this notice, or any other, from this software.
  *
@@ -34,7 +34,7 @@ namespace IronRuby.Builtins {
     // That's a common operation String methods do.
     [Serializable]
     [DebuggerDisplay("{GetDebugValue()}", Type = "{GetDebugType()}")]
-    public partial class MutableString : IEquatable<MutableString>, IComparable<MutableString>, IRubyObjectState, IDuplicable {
+    public partial class MutableString : IEquatable<MutableString>, IComparable<MutableString>, IComparable, IRubyObjectState, IDuplicable {
         private Content/*!*/ _content;
         private RubyEncoding/*!*/ _encoding;
         
@@ -787,6 +787,10 @@ namespace IronRuby.Builtins {
             }
 
             return _content.OrdinalCompareTo(other._content) == 0;
+        }
+
+        public int CompareTo(object obj) {
+            return CompareTo(obj as MutableString);
         }
 
         public int CompareTo(MutableString other) {

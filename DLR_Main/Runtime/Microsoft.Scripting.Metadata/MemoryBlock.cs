@@ -2,21 +2,19 @@
  *
  * Copyright (c) Microsoft Corporation. 
  *
- * This source code is subject to terms and conditions of the Microsoft Public License. A 
+ * This source code is subject to terms and conditions of the Apache License, Version 2.0. A 
  * copy of the license can be found in the License.html file at the root of this distribution. If 
- * you cannot locate the  Microsoft Public License, please send an email to 
+ * you cannot locate the  Apache License, Version 2.0, please send an email to 
  * dlr@microsoft.com. By using this source code in any fashion, you are agreeing to be bound 
- * by the terms of the Microsoft Public License.
+ * by the terms of the Apache License, Version 2.0.
  *
  * You must not remove this notice, or any other, from this software.
  *
  *
  * ***************************************************************************/
-#if !SILVERLIGHT
 using System;
 using System.Diagnostics;
 using System.Runtime.InteropServices;
-using System.Security;
 using System.Text;
 
 namespace Microsoft.Scripting.Metadata {
@@ -24,20 +22,18 @@ namespace Microsoft.Scripting.Metadata {
     /// Represents a block in memory.
     /// </summary>
     public unsafe sealed class MemoryBlock {
-        [SecurityCritical]
         private readonly byte* _pointer;
 
         private readonly int _length;
         private readonly object _owner;
 
-        [SecurityCritical]
+        // [SecurityCritical]
         internal MemoryBlock(object owner, byte* pointer, int length) {
             _pointer = pointer;
             _length = length;
             _owner = owner;
         }
 
-        [SecuritySafeCritical]
         public MemoryBlock GetRange(int start, int length) {
             if (start < 0) {
                 throw new ArgumentOutOfRangeException("start");
@@ -50,7 +46,6 @@ namespace Microsoft.Scripting.Metadata {
 
         [CLSCompliant(false)]
         public byte* Pointer {
-            [SecurityCritical]
             get { return _pointer; }
         }
 
@@ -58,57 +53,51 @@ namespace Microsoft.Scripting.Metadata {
             get { return _length; }
         }
 
-        [SecuritySafeCritical]
         public byte ReadByte(int offset) {
             if (offset < 0 || offset > _length - sizeof(byte)) {
-                throw new ArgumentOutOfRangeException();
+                throw new ArgumentOutOfRangeException("offset");
             }
             var result = *(_pointer + offset);
             GC.KeepAlive(_owner);
             return result;
         }
 
-        [SecuritySafeCritical]
         public short ReadInt16(int offset) {
             if (offset < 0 || offset > _length - sizeof(short)) {
-                throw new ArgumentOutOfRangeException();
+                throw new ArgumentOutOfRangeException("offset");
             }
             var result = *(short*)(_pointer + offset);
             GC.KeepAlive(_owner);
             return result;
         }
 
-        [SecuritySafeCritical]
         public int ReadInt32(int offset) {
             if (offset < 0 || offset > _length - sizeof(int)) {
-                throw new ArgumentOutOfRangeException();
+                throw new ArgumentOutOfRangeException("offset");
             }
             var result = *(int*)(_pointer + offset);
             GC.KeepAlive(_owner);
             return result;
         }
 
-        [SecuritySafeCritical]
         public long ReadInt64(int offset) {
             if (offset < 0 || offset > _length - sizeof(long)) {
-                throw new ArgumentOutOfRangeException();
+                throw new ArgumentOutOfRangeException("offset");
             }
             var result = *(long*)(_pointer + offset);
             GC.KeepAlive(_owner);
             return result;
         }
 
-        [SecuritySafeCritical]
         public Guid ReadGuid(int offset) {
             if (offset < 0 || offset > _length - sizeof(Guid)) {
-                throw new ArgumentOutOfRangeException();
+                throw new ArgumentOutOfRangeException("offset");
             }
             var result = *(Guid*)(_pointer + offset);
             GC.KeepAlive(_owner);
             return result;
         }
 
-        [SecuritySafeCritical]
         public void Read(int offset, byte[] result) {
             if (result == null) {
                 throw new ArgumentNullException("result");
@@ -131,7 +120,6 @@ namespace Microsoft.Scripting.Metadata {
             GC.KeepAlive(_owner);
         }
 
-        [SecuritySafeCritical]
         public string ReadUtf16(int offset, int byteCount) {
             if (offset < 0 || offset > _length - byteCount) {
                 throw new ArgumentOutOfRangeException("offset");
@@ -148,7 +136,6 @@ namespace Microsoft.Scripting.Metadata {
             return ReadAscii(offset, _length - offset);
         }
 
-        [SecuritySafeCritical]
         public string ReadAscii(int offset, int maxByteCount) {
             if (maxByteCount < 0) {
                 throw new ArgumentOutOfRangeException("maxByteCount");
@@ -229,7 +216,6 @@ namespace Microsoft.Scripting.Metadata {
             return result;
         }
 
-        [SecuritySafeCritical]
         internal MetadataName ReadName(uint offset) {
             if (offset >= _length) {
                 throw new BadImageFormatException();
@@ -319,5 +305,3 @@ namespace Microsoft.Scripting.Metadata {
         #endregion
     }
 }
-
-#endif

@@ -2,20 +2,19 @@
  *
  * Copyright (c) Microsoft Corporation. 
  *
- * This source code is subject to terms and conditions of the Microsoft Public License. A 
+ * This source code is subject to terms and conditions of the Apache License, Version 2.0. A 
  * copy of the license can be found in the License.html file at the root of this distribution. If 
- * you cannot locate the  Microsoft Public License, please send an email to 
+ * you cannot locate the  Apache License, Version 2.0, please send an email to 
  * dlr@microsoft.com. By using this source code in any fashion, you are agreeing to be bound 
- * by the terms of the Microsoft Public License.
+ * by the terms of the Apache License, Version 2.0.
  *
  * You must not remove this notice, or any other, from this software.
  *
  *
  * ***************************************************************************/
-#if !SILVERLIGHT
-
 using System;
 using System.Diagnostics;
+using System.Diagnostics.Contracts;
 using System.Security;
 using System.Text;
 
@@ -26,20 +25,17 @@ namespace Microsoft.Scripting.Metadata {
     /// Doesn't cache hashcode, byte or character count.
     /// </summary>
     public unsafe struct MetadataName : IEquatable<MetadataName>, IEquatable<MetadataNamePart> {
-        [SecurityCritical]
         internal readonly byte* m_data;
         internal readonly object m_keepAlive;
 
         public static readonly MetadataName Empty = default(MetadataName);
 
-        [SecurityCritical]
         internal MetadataName(byte* data, object keepAlive) {
             m_data = data;
             m_keepAlive = keepAlive;
         }
 
         public bool IsEmpty {
-            [SecuritySafeCritical]
             get {
                 bool result = m_data == null || *m_data == 0;
                 GC.KeepAlive(m_keepAlive);
@@ -47,11 +43,14 @@ namespace Microsoft.Scripting.Metadata {
             }
         }
 
+        // SECURITY: The method is actually not safe. We must make sure that this object is not leaked to partially-trusted code.
+        [SecuritySafeCritical]
         public override bool Equals(object obj) {
             return obj is MetadataName && Equals((MetadataName)obj)
                 || obj is MetadataNamePart && Equals((MetadataNamePart)obj);
         }
 
+        // SECURITY: The method is actually not safe. We must make sure that this object is not leaked to partially-trusted code.
         [SecuritySafeCritical]
         public bool Equals(MetadataName other) {
             bool result = Equals(m_data, other.m_data);
@@ -60,12 +59,29 @@ namespace Microsoft.Scripting.Metadata {
             return result;
         }
 
+        // SECURITY: The method is actually not safe. We must make sure that this object is not leaked to partially-trusted code.
         [SecuritySafeCritical]
         public bool Equals(MetadataNamePart other) {
             return other.Equals(this);
         }
 
-        [SecuritySafeCritical]
+        public static bool operator ==(MetadataName self, MetadataNamePart other) {
+            return self.Equals(other);
+        }
+
+        public static bool operator ==(MetadataName self, MetadataName other) {
+            return self.Equals(other);
+        }
+
+        public static bool operator !=(MetadataName self, MetadataNamePart other) {
+            return self.Equals(other);
+        }
+
+        public static bool operator !=(MetadataName self, MetadataName other) {
+            return self.Equals(other);
+        }
+
+        // safe
         public bool Equals(byte[] bytes, int start, int count) {
             if (bytes == null) {
                 throw new ArgumentNullException("bytes");
@@ -85,6 +101,7 @@ namespace Microsoft.Scripting.Metadata {
             return result;
         }
 
+        // SECURITY: The method is actually not safe. We must make sure that this object is not leaked to partially-trusted code.
         [SecuritySafeCritical]
         public override string ToString() {
             if (m_data == null) {
@@ -105,10 +122,10 @@ namespace Microsoft.Scripting.Metadata {
             return result;
         }
 
-        [SecuritySafeCritical]
+        // safe
         internal string ToString(int byteCount) {
             if (m_data == null) {
-                Debug.Assert(byteCount == 0);
+                Contract.Assert(byteCount == 0);
                 return string.Empty;
             }
 
@@ -118,6 +135,7 @@ namespace Microsoft.Scripting.Metadata {
             return result;
         }
 
+        // SECURITY: The method is actually not safe. We must make sure that this object is not leaked to partially-trusted code.
         [SecuritySafeCritical]
         public override int GetHashCode() {
             int result = GetByteHashCode(m_data);
@@ -125,14 +143,14 @@ namespace Microsoft.Scripting.Metadata {
             return result;
         }
 
-        [SecuritySafeCritical]
+        // safe
         internal int GetHashCode(int start, int count) {
             int result = GetByteHashCode((m_data != null) ? m_data + start : null, count);
             GC.KeepAlive(m_keepAlive);
             return result;
         }
 
-        [SecuritySafeCritical]
+        // safe
         public int GetLength() {
             int result = GetLength(m_data);
             GC.KeepAlive(m_keepAlive);
@@ -143,26 +161,26 @@ namespace Microsoft.Scripting.Metadata {
             return new MetadataNamePart(this, GetLength());
         }
 
-        [SecuritySafeCritical]
+        // safe
         internal MetadataName GetSuffix(int start) {
             return (m_data != null) ? new MetadataName(m_data + start, m_keepAlive) : Empty;
         }
 
-        [SecuritySafeCritical]
+        // safe
         internal int IndexOf(byte b) {
             int result = IndexOf(m_data, b);
             GC.KeepAlive(m_keepAlive);
             return result;
         }
 
-        [SecuritySafeCritical]
+        // safe
         internal int IndexOf(byte b, int start, int count) {
             int result = IndexOf(m_data, b, start, count);
             GC.KeepAlive(m_keepAlive);
             return result;
         }
 
-        [SecuritySafeCritical]
+        // safe
         internal int LastIndexOf(byte b, int start, int count) {
             if (m_data == null) return -1;
             byte* ptr = FindPrevious(m_data + start, m_data + start - count + 1, b);
@@ -170,7 +188,6 @@ namespace Microsoft.Scripting.Metadata {
             return ptr != null ? (int)(ptr - m_data) : -1;
         }
 
-        [SecurityCritical]
         internal static int GetLength(byte* bytes) {
             if (bytes == null) {
                 return 0;
@@ -182,7 +199,6 @@ namespace Microsoft.Scripting.Metadata {
             return (int)(ptr - bytes);
         }
 
-        [SecurityCritical]
         internal static int IndexOf(byte* bytes, byte b) {
             if (bytes == null) {
                 return -1;
@@ -197,7 +213,6 @@ namespace Microsoft.Scripting.Metadata {
             return (int)(ptr - bytes);
         }
 
-        [SecurityCritical]
         internal static int IndexOf(byte* bytes, byte b, int start, int count) {
             if (bytes == null) {
                 return -1;
@@ -214,10 +229,9 @@ namespace Microsoft.Scripting.Metadata {
             }
             return -1;
         }
-
-        [SecurityCritical]
+        
         internal static byte* FindPrevious(byte* start, byte* last, byte b) {
-            Debug.Assert(start != null && last != null);
+            Contract.Assert(start != null && last != null);
             byte* ptr = start - 1;
             while (true) {
                 if (ptr < last) {
@@ -230,7 +244,6 @@ namespace Microsoft.Scripting.Metadata {
             }
         }
 
-        [SecurityCritical]
         internal static int GetByteHashCode(byte* bytes) {
             int hash1 = 5381;
             int hash2 = hash1;
@@ -251,9 +264,8 @@ namespace Microsoft.Scripting.Metadata {
             return hash1 + (hash2 * 1566083941);
         }
 
-        [SecurityCritical]
         internal static int GetByteHashCode(byte* bytes, int count) {
-            Debug.Assert(bytes != null || count == 0);
+            Contract.Assert(bytes != null || count == 0);
 
             int hash1 = 5381;
             int hash2 = hash1;
@@ -273,7 +285,6 @@ namespace Microsoft.Scripting.Metadata {
             return hash1 + (hash2 * 1566083941);
         }
 
-        [SecurityCritical]
         internal static bool Equals(byte* p, byte* q) {
             if (p == q) {
                 return true;
@@ -297,7 +308,6 @@ namespace Microsoft.Scripting.Metadata {
             }
         }
 
-        [SecurityCritical]
         internal static bool Equals(byte* p, byte* q, int qCount) {
             if (p == null) {
                 return qCount == 0;
@@ -316,7 +326,6 @@ namespace Microsoft.Scripting.Metadata {
             }
         }
 
-        [SecurityCritical]
         internal static bool Equals(byte* p, int pCount, byte* q, int qCount) {
             if (pCount != qCount) {
                 return false;
@@ -393,20 +402,26 @@ namespace Microsoft.Scripting.Metadata {
             return new MetadataNamePart(m_name.GetSuffix(start), count);
         }
 
+        // SECURITY: The method is actually not safe. We must make sure that this object is not leaked to partially-trusted code.
+        [SecuritySafeCritical]
         public override string ToString() {
             return m_name.ToString(m_byteCount);
         }
 
+        // SECURITY: The method is actually not safe. We must make sure that this object is not leaked to partially-trusted code.
         [SecuritySafeCritical]
         public override int GetHashCode() {
             return m_name.GetHashCode(0, m_byteCount);
         }
 
+        // SECURITY: The method is actually not safe. We must make sure that this object is not leaked to partially-trusted code.
+        [SecuritySafeCritical]
         public override bool Equals(object obj) {
             return obj is MetadataNamePart && Equals((MetadataNamePart)obj)
                 || obj is MetadataName && Equals((MetadataName)obj);
         }
 
+        // SECURITY: The method is actually not safe. We must make sure that this object is not leaked to partially-trusted code.
         [SecuritySafeCritical]
         public unsafe bool Equals(MetadataNamePart other) {
             bool result = MetadataName.Equals(m_name.m_data, m_byteCount, other.m_name.m_data, other.m_byteCount);
@@ -415,6 +430,7 @@ namespace Microsoft.Scripting.Metadata {
             return result;
         }
 
+        // SECURITY: The method is actually not safe. We must make sure that this object is not leaked to partially-trusted code.
         [SecuritySafeCritical]
         public unsafe bool Equals(MetadataName other) {
             bool result = MetadataName.Equals(other.m_data, m_name.m_data, m_byteCount);
@@ -422,7 +438,21 @@ namespace Microsoft.Scripting.Metadata {
             GC.KeepAlive(other.m_keepAlive);
             return result;
         }
+
+        public static bool operator ==(MetadataNamePart self, MetadataNamePart other) {
+            return self.Equals(other);
+        }
+
+        public static bool operator ==(MetadataNamePart self, MetadataName other) {
+            return self.Equals(other);
+        }
+
+        public static bool operator !=(MetadataNamePart self, MetadataNamePart other) {
+            return self.Equals(other);
+        }
+
+        public static bool operator !=(MetadataNamePart self, MetadataName other) {
+            return self.Equals(other);
+        }
     }
 }
-
-#endif
