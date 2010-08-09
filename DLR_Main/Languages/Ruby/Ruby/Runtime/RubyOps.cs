@@ -2355,6 +2355,11 @@ namespace IronRuby.Runtime {
         }
 
         [Emitted]
+        public static bool IsObjectUntrusted(RubyInstanceData instanceData) {
+            return instanceData != null && instanceData.Untrusted;
+        }
+
+        [Emitted]
         public static void FreezeObject(ref RubyInstanceData instanceData) {
             RubyOps.GetInstanceData(ref instanceData).Freeze();
         }
@@ -2362,6 +2367,11 @@ namespace IronRuby.Runtime {
         [Emitted]
         public static void SetObjectTaint(ref RubyInstanceData instanceData, bool value) {
             RubyOps.GetInstanceData(ref instanceData).Tainted = value;
+        }
+
+        [Emitted]
+        public static void SetObjectTrustiness(ref RubyInstanceData instanceData, bool untrusted) {
+            RubyOps.GetInstanceData(ref instanceData).Untrusted = untrusted;
         }
 
 #if !SILVERLIGHT // serialization
@@ -2428,6 +2438,61 @@ namespace IronRuby.Runtime {
             return method.Info.Context.DelegateCreator.GetDelegate(method, type);
         }
 
+        #endregion
+
+        #region Tuples
+
+        // Instance variable storages needs MT<n> to be a subclass of MT<m> for all n > m.
+        // This property is not true if we used DynamicNull as a generic argument for arities that are not powers of 2 like MutableTuple.MakeTupleType does.
+        // We make this property true for all simple tuples, thus instance variable storages can only use tuples of size <= 128.
+        internal static Type/*!*/ MakeObjectTupleType(int fieldCount) {
+            if (fieldCount <= MutableTuple.MaxSize) {
+                if (fieldCount <= 1) {
+                    return typeof(MutableTuple<object>);
+                } else if (fieldCount <= 2) {
+                    return typeof(MutableTuple<object, object>);
+                } else if (fieldCount <= 4) {
+                    return typeof(MutableTuple<object, object, object, object>);
+                } else if (fieldCount <= 8) {
+                    return typeof(MutableTuple<object, object, object, object, object, object, object, object>);
+                } else if (fieldCount <= 16) {
+                    return typeof(MutableTuple<object, object, object, object, object, object, object, object, object, object, object, object, object, object, object, object>);
+                } else if (fieldCount <= 32) {
+                    return typeof(MutableTuple<object, object, object, object, object, object, object, object, object, object, object, object, object, object, object, object, object, object, object, object, object, object, object, object, object, object, object, object, object, object, object, object>);
+                } else if (fieldCount <= 64) {
+                    return typeof(MutableTuple<object, object, object, object, object, object, object, object, object, object, object, object, object, object, object, object, object, object, object, object, object, object, object, object, object, object, object, object, object, object, object, object, object, object, object, object, object, object, object, object, object, object, object, object, object, object, object, object, object, object, object, object, object, object, object, object, object, object, object, object, object, object, object, object>);
+                } else {
+                    return typeof(MutableTuple<object, object, object, object, object, object, object, object, object, object, object, object, object, object, object, object, object, object, object, object, object, object, object, object, object, object, object, object, object, object, object, object, object, object, object, object, object, object, object, object, object, object, object, object, object, object, object, object, object, object, object, object, object, object, object, object, object, object, object, object, object, object, object, object, object, object, object, object, object, object, object, object, object, object, object, object, object, object, object, object, object, object, object, object, object, object, object, object, object, object, object, object, object, object, object, object, object, object, object, object, object, object, object, object, object, object, object, object, object, object, object, object, object, object, object, object, object, object, object, object, object, object, object, object, object, object, object, object>);
+                }
+            }
+
+            Type[] types = new Type[fieldCount];
+            for (int i = 0; i < types.Length; i++) {
+                types[i] = typeof(object);
+            }
+            return MutableTuple.MakeTupleType(types);
+        }
+
+        internal static MutableTuple/*!*/ CreateObjectTuple(int fieldCount) {
+            Debug.Assert(fieldCount <= MutableTuple.MaxSize);
+            if (fieldCount <= 1) {
+                return new MutableTuple<object>();
+            } else if (fieldCount <= 2) {
+                return new MutableTuple<object, object>();
+            } else if (fieldCount <= 4) {
+                return new MutableTuple<object, object, object, object>();
+            } else if (fieldCount <= 8) {
+                return new MutableTuple<object, object, object, object, object, object, object, object>();
+            } else if (fieldCount <= 16) {
+                return new MutableTuple<object, object, object, object, object, object, object, object, object, object, object, object, object, object, object, object>();
+            } else if (fieldCount <= 32) {
+                return new MutableTuple<object, object, object, object, object, object, object, object, object, object, object, object, object, object, object, object, object, object, object, object, object, object, object, object, object, object, object, object, object, object, object, object>();
+            } else if (fieldCount <= 64) {
+                return new MutableTuple<object, object, object, object, object, object, object, object, object, object, object, object, object, object, object, object, object, object, object, object, object, object, object, object, object, object, object, object, object, object, object, object, object, object, object, object, object, object, object, object, object, object, object, object, object, object, object, object, object, object, object, object, object, object, object, object, object, object, object, object, object, object, object, object>();
+            } else {
+                return new MutableTuple<object, object, object, object, object, object, object, object, object, object, object, object, object, object, object, object, object, object, object, object, object, object, object, object, object, object, object, object, object, object, object, object, object, object, object, object, object, object, object, object, object, object, object, object, object, object, object, object, object, object, object, object, object, object, object, object, object, object, object, object, object, object, object, object, object, object, object, object, object, object, object, object, object, object, object, object, object, object, object, object, object, object, object, object, object, object, object, object, object, object, object, object, object, object, object, object, object, object, object, object, object, object, object, object, object, object, object, object, object, object, object, object, object, object, object, object, object, object, object, object, object, object, object, object, object, object, object, object>();
+            }
+        }
         #endregion
 
         [Emitted]

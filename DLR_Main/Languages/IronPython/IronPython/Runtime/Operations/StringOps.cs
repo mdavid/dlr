@@ -1277,7 +1277,7 @@ namespace IronPython.Runtime.Operations {
         /// replacement_field =  "{" field_name ["!" conversion] [":" format_spec] "}"
         /// field_name        =  (identifier | integer) ("." identifier | "[" element_index "]")*
         /// 
-        /// format_spec: [[fill]align][sign][#][0][width][.precision][type]
+        /// format_spec: [[fill]align][sign][#][0][width][,][.precision][type]
         /// 
         /// Conversion can be 'r' for repr or 's' for string.
         /// </summary>
@@ -2644,21 +2644,21 @@ namespace IronPython.Runtime.Operations {
             }
 
             public override int GetCharCount(byte[] bytes, int index, int count) {
-                StringBuilder builder = new StringBuilder();
+                char[] tmpChars = new char[count];
                 for (int i = 0; i < count; i++) {
-                    builder.Append((char)bytes[i + index]);
+                    tmpChars[i] = (char)bytes[i + index];
                 }
 
-                return LiteralParser.ParseString(builder.ToString(), _raw, true).Length;
+                return LiteralParser.ParseString(tmpChars, 0, tmpChars.Length, _raw, true, false).Length;
             }
 
             public override int GetChars(byte[] bytes, int byteIndex, int byteCount, char[] chars, int charIndex) {
-                StringBuilder builder = new StringBuilder();
+                char[] tmpChars = new char[byteCount];
                 for (int i = 0; i < byteCount; i++) {
-                    builder.Append((char)bytes[i + byteIndex]);
+                    chars[i] = (char)bytes[i + byteIndex];
                 }
 
-                string res = LiteralParser.ParseString(builder.ToString(), _raw, true);
+                string res = LiteralParser.ParseString(tmpChars, 0, tmpChars.Length, _raw, true, false);
                 for (int i = 0; i < res.Length; i++) {
                     chars[i + charIndex] = (char)res[i];
                 }

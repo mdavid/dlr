@@ -1,9 +1,12 @@
+using IronPython.Hosting;
 using System;
 using System.Collections.Generic;
 using System.Dynamic;
 using System.IO;
+using System.Reflection;
 using System.Runtime.Remoting;
-using IronPython.Hosting;
+using System.Security.Policy;
+using System.Security;
 using Microsoft.CSharp.RuntimeBinder;
 using Microsoft.Scripting;
 using Microsoft.Scripting.Hosting;
@@ -36,7 +39,6 @@ namespace Scenarios {
         #endregion
 
         static void Main(string[] args) {
-
             //Scenario_REPL(ConsoleLines());
 
             // level 1
@@ -53,14 +55,15 @@ namespace Scenarios {
                 ".rb",
                 "p x"
             }));
-            
+
             Scenario_CompiledCode();
-            
+
             //// level 3:
             Scenario_Introspection();
             Scenario_RemoteIntrospection(true);
             Scenario_RemoteIntrospection(false);
             Scenario_RemoteEvaluation();
+            Scenario_RemoteEvaluationInSandbox();
         }
 
         #region Level 1
@@ -288,6 +291,30 @@ C
             ObjectHandle result = ops.CreateInstance(classC, 17);
             int intResult = ops.Unwrap<int>(result);
             Console.WriteLine(intResult);
+        }
+
+        public static void Scenario_RemoteEvaluationInSandbox() {
+            // creates a sandbox:
+            Evidence e = new Evidence();
+            e.AddHostEvidence(new Zone(SecurityZone.Internet));
+            AppDomainSetup setup = new AppDomainSetup();
+            setup.ApplicationBase = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
+            var ps = SecurityManager.GetStandardSandbox(e);
+            AppDomain sandbox = AppDomain.CreateDomain("Tests", null, setup, ps);
+
+            // creates a remote runtime:
+            var runtime = ScriptRuntime.CreateRemote(sandbox, ScriptRuntimeSetup.ReadConfiguration());
+            var engine = runtime.GetEngine("python");
+
+            ObjectHandle exception;
+            engine.CreateScriptSourceFromString(@"raise TypeError('this is wrong')").ExecuteAndWrap(out exception);
+
+            if (exception != null) {
+                string message, typeName;
+                engine.GetService<ExceptionOperations>().GetExceptionMessage(exception, out message, out typeName);
+                Console.WriteLine(typeName);
+                Console.WriteLine(message);
+            }
         }
 
         #endregion
